@@ -8,9 +8,9 @@
 
 <p align="center">
   <a href="https://github.com/NumberOneBot/ChairPlay/releases/latest"><img src="https://img.shields.io/github/v/release/NumberOneBot/ChairPlay?style=flat&amp;label=Latest%20release" alt="Latest release"></a>
-  <a href="https://github.com/NumberOneBot/ChairPlay/releases"><img src="https://img.shields.io/github/downloads/NumberOneBot/ChairPlay/total?style=flat&amp;label=Downloads" alt="Total downloads"></a>
   <a href="#what-you-need"><img src="https://img.shields.io/badge/Windows-10%20%2F%2011%20%C2%B7%20x64-0078D4?style=flat" alt="Windows 10 / 11 · x64"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="License: GPL-3.0"></a>
+  <a href="https://github.com/NumberOneBot/ChairPlay/releases"><img src="https://img.shields.io/github/downloads/NumberOneBot/ChairPlay/total?style=flat&amp;label=Downloads" alt="Total downloads"></a>
 </p>
 
 <p align="center">
@@ -117,7 +117,9 @@ ChairPlay is a hobby project I build and test on real hardware in my spare time.
 under GPL-3.0, and donations are the only way I earn anything from this work. If it saves you a trip to the car,
 helps you build CarPlay apps, or makes your desk a little more fun, you can buy me a coffee.
 
-<a href="https://www.buymeacoffee.com/alexstrelets"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217"></a>
+<p align="center">
+  <a href="https://www.buymeacoffee.com/alexstrelets"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217"></a>
+</p>
 
 ## Good to know
 
