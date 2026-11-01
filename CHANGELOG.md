@@ -2,7 +2,7 @@
 
 User-visible changes and release tooling updates for ChairPlay.
 
-## 1.0.4 - Unreleased
+## 1.0.4 - 2026-11-01
 
 ### Added
 
