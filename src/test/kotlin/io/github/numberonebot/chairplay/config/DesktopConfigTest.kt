@@ -16,6 +16,11 @@ import java.nio.file.Path
 
 class DesktopConfigTest {
     @Test
+    fun `desktop advertises HEVC to the phone`() {
+        assertTrue(AirPlayInfoPlist.build(configWith().airPlay).containsKey("hevcInfo"))
+    }
+
+    @Test
     fun `identity persists across loads`() {
         val dir = Files.createTempDirectory("chairplay-config")
         writeTestSettings(dir)

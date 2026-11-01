@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.media
 
 import com.shilapi.xcertplay.media.MediaCodecSupport
+import com.shilapi.xcertplay.airplay.VideoCodec
 import org.bytedeco.ffmpeg.avcodec.AVCodecContext
 import org.bytedeco.ffmpeg.avcodec.AVPacket
 import org.bytedeco.ffmpeg.avutil.AVDictionary
@@ -67,7 +68,7 @@ internal class FramePool {
 }
 
 /**
- * Software H.264 decoder over FFmpeg. Not thread-safe by design: it is driven from the one thread
+ * Software H.264/HEVC decoder over FFmpeg. Not thread-safe by design: it is driven from the one thread
  * that reads the screen stream, and [onFrame] runs on that thread.
  *
  * [onError] reports a packet the decoder rejected (or a picture format it cannot show). The caller
@@ -76,6 +77,7 @@ internal class FramePool {
 class VideoDecoder(
     private val onFrame: (DecodedFrame) -> Unit,
     private val onError: (String) -> Unit = {},
+    private val videoCodec: VideoCodec = VideoCodec.H264,
 ) : Closeable {
     private val context: AVCodecContext
     private val packet: AVPacket = av_packet_alloc()
@@ -87,24 +89,33 @@ class VideoDecoder(
     internal val pool = FramePool()
 
     init {
-        val codec = avcodec_find_decoder(AV_CODEC_ID_H264) ?: error("FFmpeg has no H.264 decoder")
+        val codecId = when (videoCodec) {
+            VideoCodec.H264 -> AV_CODEC_ID_H264
+            VideoCodec.H265 -> AV_CODEC_ID_HEVC
+        }
+        val codec = avcodec_find_decoder(codecId) ?: error("FFmpeg has no $videoCodec decoder")
         context = avcodec_alloc_context3(codec)
         // Low delay and slice threading: frame threading would hold pictures back for several frames.
         context.flags(context.flags() or AV_CODEC_FLAG_LOW_DELAY)
         context.thread_type(FF_THREAD_SLICE)
         context.thread_count(Runtime.getRuntime().availableProcessors().coerceIn(1, 4))
-        check(avcodec_open2(context, codec, null as AVDictionary?) >= 0) { "cannot open the H.264 decoder" }
+        check(avcodec_open2(context, codec, null as AVDictionary?) >= 0) { "cannot open the $videoCodec decoder" }
     }
 
     /**
-     * Takes SPS and PPS from the avcC record. Frames arrive in Annex B without them, so they are put in
+     * Takes parameter sets from avcC or hvcC. Frames arrive in Annex B without them, so they are put in
      * front of the next frame; a new configuration also drops the pictures of the previous stream.
      */
     @Synchronized
-    fun configure(avcC: ByteArray) {
+    fun configure(codecData: ByteArray) {
         if (closed) return
-        val (sps, pps) = MediaCodecSupport.avcParameterSets(avcC)
-        parameterSets = if (sps.isEmpty() || pps.isEmpty()) null else START_CODE + sps + START_CODE + pps
+        parameterSets = when (videoCodec) {
+            VideoCodec.H264 -> {
+                val (sps, pps) = MediaCodecSupport.avcParameterSets(codecData)
+                if (sps.isEmpty() || pps.isEmpty()) null else START_CODE + sps + START_CODE + pps
+            }
+            VideoCodec.H265 -> MediaCodecSupport.hevcCodecSpecificData(codecData).takeIf { it.isNotEmpty() }
+        }
         avcodec_flush_buffers(context)
     }
 

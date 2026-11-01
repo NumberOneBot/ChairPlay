@@ -205,7 +205,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
         main = display.airPlay(),
         rightHandDrive = display.rightHandDrive,
         port = 7000,
-        hevc = false,
+        hevc = true,
         microphone = true,
         // Without Opus the wireless iPhone opens no audio stream at all and plays on its own speaker.
         microphoneOpus = true,

@@ -57,7 +57,7 @@ class DesktopMediaSink(
     private inner class Screen(private val type: Int, private val window: VideoWindow) {
         private val lock = Any()
         private var decoder: VideoDecoder? = null
-        var h264 = true
+        private var codec = VideoCodec.H264
         private var lastRecoveryNanos = 0L
         private val firstFramePending = AtomicBoolean()
 
@@ -74,10 +74,18 @@ class DesktopMediaSink(
             }
         }
 
+        fun selectCodec(value: VideoCodec) = synchronized(lock) {
+            if (codec != value) {
+                decoder?.close()
+                decoder = null
+                codec = value
+            }
+        }
+
         /** A configuration starts a stream, so it starts a fresh decoder and awaits that stream's first picture. */
         fun configure(codecData: ByteArray) = synchronized(lock) {
             decoder?.close()
-            decoder = VideoDecoder(window::show, ::recover).also { it.configure(codecData) }
+            decoder = VideoDecoder(window::show, ::recover, codec).also { it.configure(codecData) }
             firstFramePending.set(true)
         }
 
@@ -101,17 +109,17 @@ class DesktopMediaSink(
 
     override fun onVideoCodec(type: Int, codec: VideoCodec) {
         val screen = screens[type] ?: return
-        screen.h264 = codec == VideoCodec.H264
-        if (!screen.h264) log("video codec $codec of screen $type is not supported; frames are ignored")
+        screen.selectCodec(codec)
+        log("video codec $codec of screen $type")
     }
 
     override fun onVideoConfig(type: Int, codecData: ByteArray) {
-        val screen = screens[type]?.takeIf { it.h264 } ?: return
+        val screen = screens[type] ?: return
         screen.configure(codecData)
     }
 
     override fun onVideoFrame(type: Int, naluBytes: ByteArray, senderNanos: Long, arrivalNanos: Long) {
-        val screen = screens[type]?.takeIf { it.h264 } ?: return
+        val screen = screens[type] ?: return
         screen.decode(naluBytes)
     }
 
