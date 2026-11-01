@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.media
 
 import com.shilapi.xcertplay.media.MediaCodecSupport
 import com.shilapi.xcertplay.airplay.VideoCodec
+import org.bytedeco.ffmpeg.avcodec.AVCodec
 import org.bytedeco.ffmpeg.avcodec.AVCodecContext
 import org.bytedeco.ffmpeg.avcodec.AVPacket
 import org.bytedeco.ffmpeg.avutil.AVDictionary
@@ -67,45 +68,61 @@ internal class FramePool {
     }
 }
 
-/**
- * Software H.264/HEVC decoder over FFmpeg. Not thread-safe by design: it is driven from the one thread
- * that reads the screen stream, and [onFrame] runs on that thread.
- *
- * [onError] reports a packet the decoder rejected (or a picture format it cannot show). The caller
- * answers by asking the iPhone for a new keyframe.
- */
-class VideoDecoder(
+/** H.264/HEVC decoder with D3D11 download to the existing renderer and software recovery on failure. */
+class VideoDecoder internal constructor(
     private val onFrame: (DecodedFrame) -> Unit,
     private val onError: (String) -> Unit = {},
     private val videoCodec: VideoCodec = VideoCodec.H264,
+    private val log: (String) -> Unit = {},
+    private val useHardware: Boolean = true,
+    private val hardwareFactory: (AVCodecContext, AVCodec) -> D3D11Video? = D3D11Video::open,
 ) : Closeable {
-    private val context: AVCodecContext
+    private val codec = avcodec_find_decoder(if (videoCodec == VideoCodec.H264) AV_CODEC_ID_H264 else AV_CODEC_ID_HEVC)
+        ?: error("FFmpeg has no $videoCodec decoder")
+    private var hardware: D3D11Video? = null
+    private var context = openContext(useHardware)
     private val packet: AVPacket = av_packet_alloc()
     private val frame: AVFrame = av_frame_alloc()
     private var parameterSets: ByteArray? = null
+    private var prependParameters = false
+    private var waitingForKeyframe = false
+    private var reportedHardware: Boolean? = null
     private var closed = false
-
-    /** Released pictures come back here; one decoder per stream, so a new stream starts empty. */
     internal val pool = FramePool()
+    private val copier = VideoFrameCopy(pool)
+    internal var hardwareFrames = 0L
+        private set
 
-    init {
-        val codecId = when (videoCodec) {
-            VideoCodec.H264 -> AV_CODEC_ID_H264
-            VideoCodec.H265 -> AV_CODEC_ID_HEVC
+    private fun openContext(tryHardware: Boolean): AVCodecContext {
+        val ctx = avcodec_alloc_context3(codec)
+        ctx.flags(ctx.flags() or AV_CODEC_FLAG_LOW_DELAY)
+        ctx.thread_type(2) // FF_THREAD_SLICE: frame threading adds latency.
+        ctx.thread_count(Runtime.getRuntime().availableProcessors().coerceIn(1, 4))
+        if (tryHardware) {
+            try {
+                hardware = hardwareFactory(ctx, codec)
+            } catch (error: Exception) {
+                log("$videoCodec D3D11 unavailable: ${error.message}")
+                avcodec_free_context(ctx)
+                hardware?.close()
+                hardware = null
+                return openContext(false)
+            }
         }
-        val codec = avcodec_find_decoder(codecId) ?: error("FFmpeg has no $videoCodec decoder")
-        context = avcodec_alloc_context3(codec)
-        // Low delay and slice threading: frame threading would hold pictures back for several frames.
-        context.flags(context.flags() or AV_CODEC_FLAG_LOW_DELAY)
-        context.thread_type(FF_THREAD_SLICE)
-        context.thread_count(Runtime.getRuntime().availableProcessors().coerceIn(1, 4))
-        check(avcodec_open2(context, codec, null as AVDictionary?) >= 0) { "cannot open the $videoCodec decoder" }
+        val result = avcodec_open2(ctx, codec, null as AVDictionary?)
+        if (result < 0) {
+            avcodec_free_context(ctx)
+            if (hardware != null) {
+                hardware?.close()
+                hardware = null
+                log("$videoCodec D3D11 open failed ($result); using software")
+                return openContext(false)
+            }
+            error("cannot open the $videoCodec decoder ($result)")
+        }
+        return ctx
     }
 
-    /**
-     * Takes parameter sets from avcC or hvcC. Frames arrive in Annex B without them, so they are put in
-     * front of the next frame; a new configuration also drops the pictures of the previous stream.
-     */
     @Synchronized
     fun configure(codecData: ByteArray) {
         if (closed) return
@@ -116,72 +133,79 @@ class VideoDecoder(
             }
             VideoCodec.H265 -> MediaCodecSupport.hevcCodecSpecificData(codecData).takeIf { it.isNotEmpty() }
         }
+        prependParameters = true
+        waitingForKeyframe = false
         avcodec_flush_buffers(context)
     }
 
     @Synchronized
     fun decode(annexB: ByteArray) {
         if (closed) return
-        val data = parameterSets?.let { it + annexB } ?: annexB
-        parameterSets = null
+        if (waitingForKeyframe) {
+            if (!MediaCodecSupport.isRandomAccess(annexB, videoCodec)) return
+            waitingForKeyframe = false
+        }
+        val data = if (prependParameters) parameterSets?.let { it + annexB } ?: annexB else annexB
+        prependParameters = false
         if (av_new_packet(packet, data.size) < 0) return onError("cannot allocate a packet of ${data.size} bytes")
-        try {
+        val sent = try {
             packet.data().put(data, 0, data.size)
-            val sent = avcodec_send_packet(context, packet)
-            if (sent < 0) onError("send_packet failed: ${errorText(sent)}")
+            avcodec_send_packet(context, packet)
         } finally {
             av_packet_unref(packet)
         }
-        drain()
-    }
-
-    private fun drain() {
-        while (true) {
-            val received = avcodec_receive_frame(context, frame)
-            if (received == AVERROR_EAGAIN() || received == AVERROR_EOF) return
-            if (received < 0) return onError("receive_frame failed: ${errorText(received)}")
-            try {
-                if (frame.format() != AV_PIX_FMT_YUV420P && frame.format() != AV_PIX_FMT_YUVJ420P) {
-                    onError("unsupported pixel format ${frame.format()}")
-                } else {
-                    onFrame(copyOut())
-                }
-            } finally {
-                av_frame_unref(frame)
+        val failure = if (sent < 0) "send_packet failed: ${errorText(sent)}" else drain()
+        if (failure != null) {
+            if (hardware == null) onError(failure) else {
+                // Native calls have returned: it is now safe to close the context and its callback.
+                avcodec_free_context(context)
+                hardware?.close()
+                hardware = null
+                context = openContext(false)
+                prependParameters = true
+                waitingForKeyframe = true
+                log("$videoCodec D3D11 failed; using software: $failure")
+                if (MediaCodecSupport.isRandomAccess(annexB, videoCodec)) decode(annexB)
+                else onError("software decoder needs a keyframe after D3D11 failure")
             }
         }
     }
 
-    private fun copyOut(): DecodedFrame {
-        val width = frame.width()
-        val height = frame.height()
-        val picture = pool.take(width, height)
-        val chromaHeight = (height + 1) / 2
-        fill(picture.y, 0, picture.strides[0], height)
-        fill(picture.u, 1, picture.strides[1], chromaHeight)
-        fill(picture.v, 2, picture.strides[2], chromaHeight)
-        return picture
-    }
-
-    private fun fill(packed: ByteBuffer, index: Int, width: Int, height: Int) {
-        val stride = frame.linesize(index)
-        val source = frame.data(index).capacity(stride.toLong() * (height - 1) + width).asByteBuffer()
-        packed.clear()
-        for (row in 0 until height) {
-            source.limit(row * stride + width).position(row * stride)
-            packed.put(source)
+    private fun drain(): String? {
+        while (true) {
+            val received = avcodec_receive_frame(context, frame)
+            if (received == AVERROR_EAGAIN() || received == AVERROR_EOF) return null
+            if (received < 0) return "receive_frame failed: ${errorText(received)}"
+            var picture: DecodedFrame? = null
+            try {
+                val onGpu = frame.format() == AV_PIX_FMT_D3D11
+                val readable = if (onGpu) checkNotNull(hardware).download(frame) else frame
+                picture = copier.copy(readable)
+                if (onGpu) hardwareFrames++
+                if (reportedHardware != onGpu) {
+                    reportedHardware = onGpu
+                    log("$videoCodec decoder: ${if (onGpu) "D3D11VA" else "software"}")
+                }
+            } catch (error: Exception) {
+                return error.message ?: "cannot copy decoded video frame"
+            } finally {
+                av_frame_unref(frame)
+            }
+            // Consumer errors must not be mistaken for a hardware decoder failure.
+            onFrame(checkNotNull(picture))
         }
-        packed.flip()
     }
 
     @Synchronized
     override fun close() {
         if (closed) return
         closed = true
-        // The free functions take pointer-to-pointer and null the handle they are given.
         avcodec_free_context(context)
+        hardware?.close()
+        hardware = null
         av_packet_free(packet)
         av_frame_free(frame)
+        copier.close()
     }
 
     private fun errorText(code: Int): String {
@@ -192,8 +216,5 @@ class VideoDecoder(
 
     private companion object {
         val START_CODE = byteArrayOf(0, 0, 0, 1)
-
-        // libavcodec's FF_THREAD_SLICE macro, which the presets do not export.
-        const val FF_THREAD_SLICE = 2
     }
 }

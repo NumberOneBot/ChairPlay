@@ -25,6 +25,18 @@ const chosen = (group: string) =>
     .map((button) => button.textContent)
 
 describe('CarPlay page, display', () => {
+  it('saves codec capability and decoder preference separately', async () => {
+    const backend = await carplay()
+    fireEvent.click(radio('Video codec', 'H264'))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'video.codecs': 'h264' }]))
+    fireEvent.click(radio('Decoding', 'Software'))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'video.codecs': 'h264' }, { 'video.decoder': 'software' }]))
+    fireEvent.click(radio('Video codec', 'H265'))
+    await waitFor(() => expect(backend.saved.at(-1)).toEqual({ 'video.codecs': 'h264+h265' }))
+    fireEvent.click(radio('Decoding', 'Hardware'))
+    await waitFor(() => expect(backend.saved.at(-1)).toEqual({ 'video.decoder': 'hardware' }))
+  })
+
   // display.width and display.height are blank in the file: the size the app runs at is the one chosen.
   it('picks the preset of the size the app runs at, and saves a preset as both numbers', async () => {
     const backend = await carplay()

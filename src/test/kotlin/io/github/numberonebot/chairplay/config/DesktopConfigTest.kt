@@ -17,7 +17,32 @@ import java.nio.file.Path
 class DesktopConfigTest {
     @Test
     fun `desktop advertises HEVC to the phone`() {
-        assertTrue(AirPlayInfoPlist.build(configWith().airPlay).containsKey("hevcInfo"))
+        val config = configWith()
+        assertTrue(AirPlayInfoPlist.build(config.airPlay).containsKey("hevcInfo"))
+        assertTrue(config.hardwareVideo)
+        assertFalse(configWith("video.decoder=software").hardwareVideo)
+    }
+
+    @Test
+    fun `codec choice controls the HEVC capability on reconnect`() {
+        val dir = Files.createTempDirectory("chairplay-config")
+        writeTestSettings(dir)
+        val file = SettingsFile(dir.resolve("settings.properties"))
+        file.write(mapOf("video.codecs" to "h264"))
+        val config = DesktopConfig(dir)
+        assertFalse(AirPlayInfoPlist.build(config.airPlay).containsKey("hevcInfo"))
+        file.write(mapOf("video.codecs" to "h264+h265"))
+        assertTrue(config.now().airPlay.hevc)
+    }
+
+    @Test
+    fun `video modes are validated and apply on reconnect`() {
+        for ((key, values) in mapOf("video.codecs" to listOf("h264", "h264+h265"),
+            "video.decoder" to listOf("software", "hardware"))) {
+            values.forEach { assertTrue(EditableSettings.validate(mapOf(key to it), emptyMap()).isEmpty()) }
+            assertTrue(EditableSettings.validate(mapOf(key to "unsupported"), emptyMap()).containsKey(key))
+            assertEquals(Applies.RECONNECT, EditableSettings.applies(key))
+        }
     }
 
     @Test

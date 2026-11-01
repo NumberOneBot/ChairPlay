@@ -40,7 +40,8 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
             changed()
         }
         val renderer = AudioRenderer(::log, output, volume::gain, musicStart::get)
-        sink = DesktopMediaSink(window, renderer, ::log, input, config.echoCancellation, altscreen, duckSetting::get)
+        sink = DesktopMediaSink(window, renderer, ::log, input, config.echoCancellation, altscreen, duckSetting::get,
+            hardwareDecoding = { config.now().hardwareVideo })
     }
 
     /** The Audio page saved [saved]: the music's start and the prompts' ducking take what the file reads now. */

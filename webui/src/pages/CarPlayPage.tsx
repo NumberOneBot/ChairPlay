@@ -20,6 +20,8 @@ const DISPLAY_KEYS = [
   'display.width',
   'display.height',
   'display.fps',
+  'video.codecs',
+  'video.decoder',
   'display.physical.width.mm',
   'display.physical.height.mm',
   'display.ppi',
@@ -51,6 +53,16 @@ export function CarPlayPage({ state, backend, settings }: { state: AppState; bac
         after={<ActualSize sizes={state.mainWindow} window="main" backend={backend} />}
         pending={pending}
       />
+      <Row label="Physical size" title="Leave blank for 200 mm wide, with the height from the aspect ratio">
+        {field('display.physical.width.mm', 'Physical width', '200', 'short c')}
+        <span className="x times">×</span>
+        {field('display.physical.height.mm', 'Physical height', 'auto', 'short c')}
+        <span className="unit">mm</span>
+        <span className="x">or</span>
+        {field('display.ppi', 'Pixels per inch', 'auto', 'short c')}
+        <span className="unit">ppi</span>
+        <Changed keys={['display.physical.width.mm', 'display.physical.height.mm', 'display.ppi']} pending={pending} />
+      </Row>
       <Row label="Frame rate">
         {choice(
           'display.fps',
@@ -64,15 +76,27 @@ export function CarPlayPage({ state, backend, settings }: { state: AppState; bac
           'fps',
         )}
       </Row>
-      <Row label="Physical size" title="Leave blank for 200 mm wide, with the height from the aspect ratio">
-        {field('display.physical.width.mm', 'Physical width', '200', 'short c')}
-        <span className="x times">×</span>
-        {field('display.physical.height.mm', 'Physical height', 'auto', 'short c')}
-        <span className="unit">mm</span>
-        <span className="x">or</span>
-        {field('display.ppi', 'Pixels per inch', 'auto', 'short c')}
-        <span className="unit">ppi</span>
-        <Changed keys={['display.physical.width.mm', 'display.physical.height.mm', 'display.ppi']} pending={pending} />
+      <Row label="Video codec" title="Codecs offered to the iPhone for both screens">
+        {choice('video.codecs', 'Video codec', 'h264+h265', [
+          ['h264+h265', 'H265'],
+          ['h264', 'H264'],
+        ])}
+      </Row>
+      <Row label="Decoding" title="Hardware decoding automatically falls back to software if the GPU is unavailable or decoding fails">
+        {choice('video.decoder', 'Decoding', 'hardware', [
+          ['hardware', 'Hardware', 'Use the GPU for both screens; fall back to software if unavailable or decoding fails'],
+          ['software', 'Software', 'Decode both screens on the CPU'],
+        ])}
+      </Row>
+      <Row className="hint-row">
+        <span className="hint">
+          With H265 selected, both codecs are offered and the iPhone chooses which to use
+        </span>
+      </Row>
+      <Row className="hint-row">
+        <span className="hint">
+          Hardware decoding automatically falls back to software if the GPU is unavailable or decoding fails
+        </span>
       </Row>
       <Group title="Look" note={note(LOOK_KEYS)} />
       <Row label="Theme">

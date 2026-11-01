@@ -81,6 +81,14 @@ internal val SETTINGS_TEMPLATE = listOf(
         "display.width" to "1280", "display.height" to "720", "display.fps" to "60",
     ),
     SettingBlock(
+        "Video for both screens: h264, or h264+h265 to let the iPhone choose. Reconnect to apply.",
+        "video.codecs" to "h264+h265",
+    ),
+    SettingBlock(
+        "Video decoding: hardware (D3D11VA, with software fallback), or software. Reconnect to apply.",
+        "video.decoder" to "hardware",
+    ),
+    SettingBlock(
         "Its physical size: the millimetres, or a pixel density. Blank (best) uses 200 mm wide with the height\n" +
             "from the aspect ratio; other proportions than the pixels' squeeze or stretch the picture.",
         "display.physical.width.mm" to "", "display.physical.height.mm" to "", "display.ppi" to "",

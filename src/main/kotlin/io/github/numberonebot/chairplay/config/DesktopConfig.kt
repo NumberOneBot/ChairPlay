@@ -205,7 +205,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
         main = display.airPlay(),
         rightHandDrive = display.rightHandDrive,
         port = 7000,
-        hevc = true,
+        hevc = settings.choiceSetting("video.codecs", true, mapOf("h264" to false, "h264+h265" to true)),
         microphone = true,
         // Without Opus the wireless iPhone opens no audio stream at all and plays on its own speaker.
         microphoneOpus = true,
@@ -215,6 +215,8 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
         oemLabel = settings.getProperty("car.label")?.trim()?.ifEmpty { null } ?: DEFAULT_CAR_LABEL,
         icons = listOf(carIcon(dir, settings.getProperty("car.icon"))),
     )
+
+    val hardwareVideo: Boolean = settings.choiceSetting("video.decoder", true, mapOf("hardware" to true, "software" to false))
 
     /** The settings as settings.properties has them now, with this start's identity and pairings. */
     fun now(): DesktopConfig = DesktopConfig(dir, this)

@@ -69,7 +69,7 @@ class VideoWindow(
     private val fullscreen = WindowFullscreen()
     fun toggleFullscreen() { fullscreen.toggle(); wake() }
     private val screenshotRequest = AtomicReference<((BufferedImage) -> Unit)?>()
-    private val titles = WindowTitle()
+    internal val titles = WindowTitle()
     private val shownRequest = AtomicReference<Boolean?>()
     private val resizeRequest = AtomicReference<WindowSize?>()
     private val clearRequest = AtomicBoolean()

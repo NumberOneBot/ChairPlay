@@ -32,8 +32,8 @@ class HevcVideoTest {
                         assertNotNull("No $codec picture for screen $type, frame $index", frame)
                         frame!!
                         try {
-                            assertEquals(if (hevc) 64 else 320, frame.width)
-                            assertEquals(if (hevc) 48 else 240, frame.height)
+                            assertEquals(320, frame.width)
+                            assertEquals(240, frame.height)
                             if (hevc) {
                                 // The fixture is solid red in limited-range YUV420, not merely a valid frame size.
                                 assertEquals(81.0, (frame.y.get(0).toInt() and 255).toDouble(), 3.0)

@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.media
 
 import io.github.numberonebot.chairplay.input.Size
+import com.shilapi.xcertplay.airplay.VideoCodec
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.min
@@ -13,13 +14,18 @@ import kotlin.math.min
  */
 internal class WindowTitle {
     private val wanted = AtomicReference<String?>()
+    private val selectedCodec = AtomicReference<VideoCodec?>()
     private var shown: String? = null
 
     fun base(title: String) = wanted.set(title)
 
+    fun codec(codec: VideoCodec?) = selectedCodec.set(codec)
+
     fun next(framebuffer: Size, picture: Size): String? {
         val base = wanted.get() ?: return null
-        val title = scale(framebuffer, picture)?.let { scale ->
+        val codec = selectedCodec.get()?.let { if (it == VideoCodec.H265) "H.265" else "H.264" }
+        val suffix = listOfNotNull(codec, scale(framebuffer, picture)).joinToString(" · ").takeIf { it.isNotEmpty() }
+        val title = suffix?.let { scale ->
             // Right after the resolution ("1280×720"), or last when the title has none.
             RESOLUTION.find(base)?.let { base.replaceRange(it.range, "${it.value} · $scale") } ?: "$base · $scale"
         } ?: base

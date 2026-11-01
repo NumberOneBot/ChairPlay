@@ -22,10 +22,11 @@ dependencies {
     implementation("net.java.dev.jna:jna-platform:5.15.0")
     // Native classifiers are pinned to windows-x86_64: the *-platform artifacts of javacpp presets pull
     // every OS, hundreds of megabytes this Windows-only app never loads.
-    implementation("org.bytedeco:javacpp:1.5.11")
-    implementation("org.bytedeco:javacpp:1.5.11:windows-x86_64")
-    implementation("org.bytedeco:ffmpeg:7.1-1.5.11")
-    implementation("org.bytedeco:ffmpeg:7.1-1.5.11:windows-x86_64")
+    implementation("org.bytedeco:javacpp:1.5.12")
+    implementation("org.bytedeco:javacpp:1.5.12:windows-x86_64")
+    // 7.1.1 fixes the HEVC WPP slice-thread deadlock in software decoding (FFmpeg 79c47dfd).
+    implementation("org.bytedeco:ffmpeg:7.1.1-1.5.12")
+    implementation("org.bytedeco:ffmpeg:7.1.1-1.5.12:windows-x86_64")
     implementation("org.lwjgl:lwjgl:3.3.4")
     implementation("org.lwjgl:lwjgl-glfw:3.3.4")
     implementation("org.lwjgl:lwjgl-opengl:3.3.4")

@@ -1,30 +1,11 @@
 # Ethernet connection
 
-Connect the PC by cable and the iPhone by Wi-Fi to the same router. Bluetooth is still required for CarPlay setup.
-Launch ChairPlay normally; no script or IP entry is needed.
+Connect the PC by cable and the iPhone by Wi-Fi to the same router. Bluetooth is still required for CarPlay setup. Launch ChairPlay normally; no script or IP entry is needed.
 
-When the PC has an active Wi-Fi association, ChairPlay uses that connection. Otherwise, Get started and
-Settings > Connection list active physical Ethernet adapters with usable IPv4 addresses. A single adapter is
-selected automatically, and the PC connection section is hidden. With several adapters, select one by name
-and address; the section also appears when the connection needs attention.
-The saved selection is the Windows adapter GUID, so a DHCP change is picked up at the next connection.
-If a saved adapter disappears, select an available one; ChairPlay does not silently move to another network.
-Without an available address, connect the cable and wait for the screen to refresh.
+When the PC has an active Wi-Fi association, ChairPlay uses that connection. Otherwise, Get started and Settings > Connection list active physical Ethernet adapters with usable IPv4 addresses. A single adapter is selected automatically, and the PC connection section is hidden. With several adapters, select one by name and address; the section also appears when the connection needs attention. The saved selection is the Windows adapter GUID, so a DHCP change is picked up at the next connection. If a saved adapter disappears, select an available one; ChairPlay does not silently move to another network. Without an available address, connect the cable and wait for the screen to refresh.
 
-The separate iPhone Wi-Fi section describes the router's wireless network, not a required PC Wi-Fi connection.
-The current iAP2 bootstrap sends the SSID, password, and security type to the iPhone over Bluetooth in
-Accessory Wi-Fi Configuration and Start Session. The password is stored locally in settings.properties.
-The Ethernet profile advertises the PC's wired address, omits the AP BSSID, and uses channel 0, matching
-upstream's explicit-interface profile. Windows adapter discovery remains desktop-specific because upstream's
-ExistingWifiManager depends on Android APIs. Replace the desktop manager when upstream provides equivalent
-platform-neutral behavior.
+The separate iPhone Wi-Fi section describes the router's wireless network, not a required PC Wi-Fi connection. The current iAP2 bootstrap sends the SSID, password, and security type to the iPhone over Bluetooth in Accessory Wi-Fi Configuration and Start Session. The password is stored locally in settings.properties. The Ethernet profile advertises the PC's wired address, omits the AP BSSID, and uses channel 0, matching upstream's explicit-interface profile. Windows adapter discovery remains desktop-specific because upstream's ExistingWifiManager depends on Android APIs. Replace the desktop manager when upstream provides equivalent platform-neutral behavior.
 
-The owner confirmed a working physical connection with the earlier explicit-IP experiment. On November 1,
-the installed automatic-adapter build selected the main PC's Ethernet address without manual entry and reached
-an active CarPlay session with no Wi-Fi association. Credential-free startup on an already-connected
-iPhone has not been established; do not substitute a made-up password or claim these fields are optional.
+The owner confirmed a working physical connection with the earlier explicit-IP experiment. On November 1, the installed automatic-adapter build selected the main PC's Ethernet address without manual entry and reached an active CarPlay session with no Wi-Fi association. Credential-free startup on an already-connected iPhone has not been established; do not substitute a made-up password or claim these fields are optional.
 
-For UI review without Ethernet, start the web UI development server and open `/ethernet-preview.html`.
-The preview uses the real screens with simulated adapters and does not call the desktop API. Its links switch
-between zero, one, or several adapters and between Get started and Connection settings. It is a separate
-development entry point and is not bundled into the desktop UI.
+For UI review without Ethernet, start the web UI development server and open `/ethernet-preview.html`. The preview uses the real screens with simulated adapters and does not call the desktop API. Its links switch between zero, one, or several adapters and between Get started and Connection settings. It is a separate development entry point and is not bundled into the desktop UI.

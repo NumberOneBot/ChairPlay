@@ -2,18 +2,26 @@
 
 User-visible changes and release tooling updates for ChairPlay.
 
+## 1.0.4 - Unreleased
+
+### Added
+
+- H.265 (HEVC) video for CarPlay and AltScreen. Both H.264 and H.265 are offered by default, and the iPhone chooses the stream format. H.264-only mode is available in Settings > CarPlay.
+- Hardware video decoding for both screens, enabled by default, with automatic software fallback. Software decoding can also be selected in Settings > CarPlay.
+- The active video codec in each window title, after the resolution.
+
+[Release notes](docs/RELEASE-NOTES-1.0.4.md)
+
 ## 1.0.3 - 2026-11-01
 
 ### Added
 
-- Ethernet connection. A single adapter is selected automatically;
-  multiple adapters can be selected in Get started and Settings > Connection.
+- Ethernet connection. A single adapter is selected automatically; multiple adapters can be selected in Get started and Settings > Connection.
 - Brief volume and mute feedback in the Controls window title, or the main window title when Controls is hidden.
 
 ### Changed
 
-- Update the CarPlay core to DiPlay 0.2.22: bound network control input and binary plist decoding, and restrict
-  secondary connections and timing replies to the connected iPhone.
+- Update the CarPlay core to DiPlay 0.2.22: bound network control input and binary plist decoding, and restrict secondary connections and timing replies to the connected iPhone.
 - Avoid building protocol trace dumps when trace logging is disabled.
 - Use smaller PCM microphone packets when needed to fit the network MTU.
 

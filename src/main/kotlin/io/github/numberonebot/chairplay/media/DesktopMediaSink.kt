@@ -34,6 +34,7 @@ class DesktopMediaSink(
     private val altscreen: VideoWindow? = null,
     /** audio.duck.*: how low a navigation prompt puts the music, read at each prompt. */
     private val duckSetting: () -> DuckSetting = { DuckSetting() },
+    private val hardwareDecoding: () -> Boolean = { true },
 ) : MediaSink, AudioDuckSink, Closeable {
     private val diagnosticHandlers = ConcurrentHashMap<Int, (String) -> Unit>()
     private val recoveryHandlers = ConcurrentHashMap<Int, () -> Unit>()
@@ -75,6 +76,7 @@ class DesktopMediaSink(
         }
 
         fun selectCodec(value: VideoCodec) = synchronized(lock) {
+            window.titles.codec(value)
             if (codec != value) {
                 decoder?.close()
                 decoder = null
@@ -85,7 +87,8 @@ class DesktopMediaSink(
         /** A configuration starts a stream, so it starts a fresh decoder and awaits that stream's first picture. */
         fun configure(codecData: ByteArray) = synchronized(lock) {
             decoder?.close()
-            decoder = VideoDecoder(window::show, ::recover, codec).also { it.configure(codecData) }
+            decoder = VideoDecoder(window::show, ::recover, codec, { log("video screen $type: $it") }, hardwareDecoding())
+                .also { it.configure(codecData) }
             firstFramePending.set(true)
         }
 
@@ -94,6 +97,7 @@ class DesktopMediaSink(
         fun stop() = synchronized(lock) {
             decoder?.close()
             decoder = null
+            window.titles.codec(null)
         }
 
         /** The decoder rejected a packet: ask the iPhone for a keyframe of this screen, at most once a second. */

@@ -52,6 +52,8 @@ object EditableSettings {
         "display.width" to Setting(Applies.RECONNECT, check = ::checkPositiveEven),
         "display.height" to Setting(Applies.RECONNECT, check = ::checkPositiveEven),
         "display.fps" to Setting(Applies.RECONNECT, check = ::checkFps),
+        "video.codecs" to choice("h264", "h264+h265", applies = Applies.RECONNECT),
+        "video.decoder" to choice("hardware", "software", applies = Applies.RECONNECT),
         "display.physical.width.mm" to Setting(Applies.RECONNECT, check = ::checkOptionalPositive),
         "display.physical.height.mm" to Setting(Applies.RECONNECT, check = ::checkOptionalPositive),
         "display.ppi" to Setting(Applies.RECONNECT, check = ::checkOptionalPositive),
