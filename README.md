@@ -27,11 +27,14 @@ Useful for building and testing CarPlay apps and navigation without a car, for d
 ## What you need
 
 - **An iPhone** with CarPlay.
-- **A Windows 10 or 11 PC (64-bit)** with Bluetooth and Wi-Fi. A USB Bluetooth adapter works if it supports classic
+- **A Windows 10 or 11 PC (64-bit)** with Bluetooth and Wi-Fi or Ethernet. A USB Bluetooth adapter works if it supports classic
   Bluetooth, not only Bluetooth Low Energy.
-- **One Wi-Fi network for the PC and the iPhone.** The PC must be on Wi-Fi, not only on a cable. The network must let
+- **One router for the PC and the iPhone.** Connect the iPhone by Wi-Fi and the PC by Wi-Fi or Ethernet. The network must let
   devices see each other: most home networks do, guest networks usually don't. It must use WPA2 or no password;
   WPA3-only networks don't work yet.
+
+With Ethernet, ChairPlay selects a single available adapter automatically and offers a choice when there are
+several. See [Ethernet setup](docs/ETHERNET.md).
 
 ## Get started
 
@@ -50,7 +53,7 @@ A newer installer updates ChairPlay and keeps your settings, pairing and MFi fil
 delete them too.
 
 See the [changelog](CHANGELOG.md) for changes between versions and the
-[1.0.2 release notes](docs/RELEASE-NOTES-1.0.2.md) for the upcoming update.
+[1.0.3 release notes](docs/RELEASE-NOTES-1.0.3.md) for the upcoming update.
 
 ## Features
 

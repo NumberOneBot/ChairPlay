@@ -47,7 +47,7 @@ export function ConnectionPage(props: {
           ? 'Applies at the next connection' : undefined} />
         <NetworkConnection state={state} settings={settings} />
       </>}
-      <Group title="iPhone Wi-Fi" note="Sent to the iPhone during Bluetooth pairing" />
+      <Group title="Wi-Fi network" note="Sent to the iPhone during Bluetooth pairing" />
       <Row label="Network">
         {field('wifi.ssid', 'Network', 'Network name')}
         <Select

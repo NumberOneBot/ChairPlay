@@ -27,6 +27,7 @@ export type WindowsPlace =
   | 'discussions'
   | 'pull-requests'
   | 'author'
+  | 'buy-me-a-coffee'
   | 'source'
   | 'releases'
   | 'notices'

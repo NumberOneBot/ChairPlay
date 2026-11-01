@@ -133,7 +133,7 @@ export function GetStarted(props: {
           <Waiting>Waiting for a paired iPhone…</Waiting>
         </div>
       </Step>
-      <Step n={2 + optionalCount} title={showNetworkConnection(state) ? 'Connection' : 'iPhone Wi-Fi'} {...steps.wifi}>
+      <Step n={2 + optionalCount} title={showNetworkConnection(state) ? 'Connection' : 'Wi-Fi network'} {...steps.wifi}>
         <NetworkConnection state={state} settings={settings} />
         {problem?.kind === 'failed' ? (
           <span className="errtext">
@@ -145,8 +145,7 @@ export function GetStarted(props: {
           </span>
         ) : (
           <span>
-            Enter the router’s Wi-Fi network for the iPhone. ChairPlay sends these details to the phone when
-            CarPlay connects.
+            Sent to the iPhone during Bluetooth pairing
           </span>
         )}
         <Row label="Network">

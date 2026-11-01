@@ -44,6 +44,7 @@ internal class UiPlaces(
         "discussions" -> "$PROJECT/discussions"
         "pull-requests" -> "$PROJECT/pulls"
         "author" -> "https://github.com/NumberOneBot"
+        "buy-me-a-coffee" -> "https://www.buymeacoffee.com/alexstrelets"
         "source" -> PROJECT
         "releases" -> "$PROJECT/releases"
         "diplay" -> "https://github.com/shihabal3amri/DiPlay"
@@ -82,7 +83,7 @@ internal class UiPlaces(
         val PLACES = listOf(
             "bluetooth", "wifi", "firewall", "firewall-rules", "mfi-folder", "location",
             "issues", "discussions", "pull-requests", "author", "source", "releases", "notices", "diplay", "xcertplay", "rgi",
-            "logs", "screenshots",
+            "logs", "screenshots", "buy-me-a-coffee",
         )
 
         /** The project's home on GitHub. */

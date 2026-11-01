@@ -16,7 +16,7 @@ export function describe(state: Pick<AppState, 'phase' | 'knownIphone'>): Status
     case 'idle':
       return { title: 'Not connected', detail: 'Press Connect when the iPhone is nearby.', tone: 'idle' }
     case 'starting':
-      return { title: 'Starting', detail: 'Preparing the Wi-Fi and the CarPlay service.', tone: 'busy' }
+      return { title: 'Starting…', detail: 'Preparing the Wi-Fi and the CarPlay service.', tone: 'busy' }
     case 'calling':
       return {
         title: 'Waiting for the iPhone…',
