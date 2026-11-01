@@ -58,7 +58,7 @@ describe('Get started', () => {
     expect(screen.queryByText('MFi files', { selector: '.st > span:first-child' })).toBeNull()
     expect(stateOf('Firewall')).toBe('now')
     expect(stateOf('Pair the iPhone')).toBe('todo')
-    expect(stateOf('Wi-Fi network')).toBe('todo')
+    expect(stateOf('iPhone Wi-Fi')).toBe('todo')
   })
 
   // With the firewall off there is nothing to let ChairPlay through: the guide is a step shorter.
@@ -122,11 +122,11 @@ describe('Get started, the Wi-Fi step', () => {
   // The network starts as the one this PC is on; saving the password saves it with the network.
   it('fills in the network this PC is on and saves it with the password', async () => {
     const backend = await guide(firstStart({ ...everything }))
-    expect(stateOf('Wi-Fi network')).toBe('now')
-    const network = within(step('Wi-Fi network')).getByRole('textbox', { name: 'Network' }) as HTMLInputElement
+    expect(stateOf('iPhone Wi-Fi')).toBe('now')
+    const network = within(step('iPhone Wi-Fi')).getByRole('textbox', { name: 'Network' }) as HTMLInputElement
     expect(network.value).toBe('ChairPlay-5G')
 
-    const password = within(step('Wi-Fi network')).getByLabelText('Password')
+    const password = within(step('iPhone Wi-Fi')).getByLabelText('Password')
     fireEvent.change(password, { target: { value: 'secret123' } })
     fireEvent.keyDown(password, { key: 'Enter' })
 
@@ -138,7 +138,7 @@ describe('Get started, the Wi-Fi step', () => {
   it('keeps the step open while the network is not the one this PC is on', async () => {
     await guide(firstStart({ ...everything }, { wifi: { ssid: 'Office', security: 'WPA_WPA2', passphraseSet: true } }))
 
-    expect(stateOf('Wi-Fi network')).toBe('now')
+    expect(stateOf('iPhone Wi-Fi')).toBe('now')
   })
 
   // The join timed out: a Wi-Fi problem, most likely the password, though the error names Bluetooth.
@@ -146,7 +146,7 @@ describe('Get started, the Wi-Fi step', () => {
     const error = { message: 'Bluetooth control ended TIMEOUT before the iPhone joined over Wi-Fi', at: '14:02:11' }
     await guide(firstStart({ ...everything }, { ...wifiSet, error }))
 
-    expect(stateOf('Wi-Fi network')).toBe('now')
+    expect(stateOf('iPhone Wi-Fi')).toBe('now')
     expect(stateOf('Pair the iPhone')).toBe('done')
     const connect = screen.getByRole('button', { name: 'Connect' }) as HTMLButtonElement
     expect(connect.disabled).toBe(true)

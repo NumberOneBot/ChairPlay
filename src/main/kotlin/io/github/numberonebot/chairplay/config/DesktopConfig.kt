@@ -59,6 +59,8 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     /** The Wi-Fi network as settings.properties has it now: the start screen may have changed it since the start. */
     fun currentWifi(): SavedWifi? = savedWifi(readSettings())
 
+    fun currentEthernetAdapter(): String = readSettings().getProperty("network.ethernet.adapter", "").trim()
+
     /** ui.autoconnect: the app connects to the iPhone as it starts; false waits for Connect on the start screen. */
     val autoconnect: Boolean = settings.booleanSetting("ui.autoconnect", true)
 

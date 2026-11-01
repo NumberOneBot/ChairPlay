@@ -69,6 +69,7 @@ class ChairPlayUi(
     private val checks = SetupChecks(
         pairedIphone = { pairedIphoneName(WindowsBluetooth.pairedDevices(), config.iphoneAddress) },
         pcWifi = { WlanApi.currentConnections().firstOrNull()?.ssid },
+        ethernet = io.github.numberonebot.chairplay.network.EthernetAdapters::current,
         firewall = readFirewall,
         startFirewall = firewall,
         active = { model.state.showsUi },

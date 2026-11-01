@@ -7,6 +7,7 @@ import { Field, PasswordField, Select } from '../shell/fields'
 import { ShieldIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import type { Steps, StepState } from './steps'
+import { NetworkConnection, showNetworkConnection } from '../pages/NetworkConnection'
 
 function Tick() {
   return (
@@ -132,7 +133,8 @@ export function GetStarted(props: {
           <Waiting>Waiting for a paired iPhone…</Waiting>
         </div>
       </Step>
-      <Step n={2 + optionalCount} title="Wi-Fi network" {...steps.wifi}>
+      <Step n={2 + optionalCount} title={showNetworkConnection(state) ? 'Connection' : 'iPhone Wi-Fi'} {...steps.wifi}>
+        <NetworkConnection state={state} settings={settings} />
         {problem?.kind === 'failed' ? (
           <span className="errtext">
             The iPhone didn’t join “{problem.ssid}”. Check the password and save it again.
@@ -143,8 +145,8 @@ export function GetStarted(props: {
           </span>
         ) : (
           <span>
-            The network this PC and the iPhone share; the iPhone joins it for CarPlay. It starts with the network this
-            PC is on.
+            Enter the router’s Wi-Fi network for the iPhone. ChairPlay sends these details to the phone when
+            CarPlay connects.
           </span>
         )}
         <Row label="Network">

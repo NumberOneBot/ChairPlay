@@ -5,6 +5,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import io.github.numberonebot.chairplay.network.EthernetAdapter
 
 /** The MFi files the iAP2 authentication signs with, which Get started asks for. */
 private val MFI_FILES = listOf("identity.pk8", "certificate.p7b")
@@ -16,7 +17,18 @@ internal fun mfiFilesPresent(dir: Path): Boolean = MFI_FILES.all { Files.isRegul
  * What Get started and the Connection page check on the PC: the paired iPhone's name, the PC's network, the firewall,
  * and whether the MFi files are in their folder.
  */
-data class SetupSnapshot(val pairedIphone: String?, val pcWifi: String?, val firewall: FirewallStatus, val mfiPresent: Boolean = false)
+data class SetupSnapshot(
+    val pairedIphone: String?, val pcWifi: String?, val firewall: FirewallStatus, val mfiPresent: Boolean = false,
+    val ethernet: List<EthernetAdapter> = emptyList(), val networkError: Boolean = false,
+)
+
+internal fun networkSetupFields(snapshot: SetupSnapshot?, selected: String): Array<Pair<String, Any?>> = arrayOf(
+    "ethernet" to snapshot?.ethernet.orEmpty().map {
+        mapOf("id" to it.id, "label" to it.label, "addresses" to it.addresses)
+    },
+    "ethernetSelected" to io.github.numberonebot.chairplay.network.selectEthernet(snapshot?.ethernet.orEmpty(), selected)?.id,
+    "networkError" to (snapshot?.networkError ?: false),
+)
 
 /**
  * The setup as it is now, read again every few seconds so the steps tick themselves as the PC changes: an iPhone
@@ -33,6 +45,7 @@ class SetupChecks(
     private val active: () -> Boolean,
     private val now: () -> Long = System::nanoTime,
     private val mfiPresent: () -> Boolean = { false },
+    private val ethernet: () -> List<EthernetAdapter> = { emptyList() },
 ) {
     @Volatile
     var snapshot = SetupSnapshot(null, null, startFirewall)
@@ -52,9 +65,12 @@ class SetupChecks(
             firewallRead = time
             firewallNow = runCatching(firewall).getOrDefault(firewallNow)
         }
+        val wifi = runCatching(pcWifi).getOrNull()
+        val adapters = if (wifi == null) runCatching(ethernet) else Result.success(emptyList())
         val after = SetupSnapshot(
-            runCatching(pairedIphone).getOrNull(), runCatching(pcWifi).getOrNull(), firewallNow,
+            runCatching(pairedIphone).getOrNull(), wifi, firewallNow,
             runCatching(mfiPresent).getOrDefault(false),
+            adapters.getOrDefault(emptyList()), adapters.isFailure,
         )
         snapshot = after
         return after != before

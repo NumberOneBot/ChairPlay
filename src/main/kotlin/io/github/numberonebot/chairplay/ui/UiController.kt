@@ -252,6 +252,7 @@ class UiController(
                 "firewall" to (checks?.snapshot?.firewall ?: setup.firewall).name.lowercase(),
                 "pairedIphone" to checks?.snapshot?.pairedIphone,
                 "pcWifi" to checks?.snapshot?.pcWifi,
+                *networkSetupFields(checks?.snapshot, values["network.ethernet.adapter"].orEmpty()),
                 "firewallCommands" to setup.firewallCommands,
                 "settingsFile" to setup.settingsFile.toString(),
             ),

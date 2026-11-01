@@ -35,6 +35,9 @@ object EditableSettings {
     // Everything the app reads only as it starts applies after a restart: the iPhone's, the screens', and the sound's.
     // What the iPhone learns of its screen it asks at each connection, so that applies at the next one.
     private val settings: Map<String, Setting> = mapOf(
+        "network.ethernet.adapter" to Setting(Applies.RECONNECT) { value ->
+            if (value.isEmpty() || value.matches(Regex("[a-fA-F0-9{}-]{36,38}"))) null else "Select an Ethernet adapter"
+        },
         "wifi.ssid" to Setting(Applies.RECONNECT, check = ::checkSsid),
         // Checked together with the security in validate().
         "wifi.passphrase" to Setting(Applies.RECONNECT) { null },

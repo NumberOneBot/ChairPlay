@@ -4,6 +4,7 @@ import { Field, PasswordField, Select } from '../shell/fields'
 import type { Settings } from '../shell/useSettings'
 import { ErrorMessage, SetupMessages } from './messages'
 import { Changed, pendingOf } from './parts'
+import { NetworkConnection, showNetworkConnection } from './NetworkConnection'
 
 /** wifi.security as DesktopConfig names it, and as the page shows it. */
 export const SECURITY_CHOICES: readonly Choice[] = [
@@ -41,7 +42,12 @@ export function ConnectionPage(props: {
     <>
       <ErrorMessage state={state} backend={backend} onShowGuide={props.onShowGuide} />
       <SetupMessages state={state} backend={backend} onShowGuide={props.onShowGuide} />
-      <Group title="Wi-Fi" note="Applies at the next connection" />
+      {showNetworkConnection(state) && <>
+        <Group title="PC connection" note={(state.setup.ethernet?.length ?? 0) > 1
+          ? 'Applies at the next connection' : undefined} />
+        <NetworkConnection state={state} settings={settings} />
+      </>}
+      <Group title="iPhone Wi-Fi" note="Sent to the iPhone during Bluetooth pairing" />
       <Row label="Network">
         {field('wifi.ssid', 'Network', 'Network name')}
         <Select

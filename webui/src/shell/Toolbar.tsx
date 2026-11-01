@@ -5,6 +5,7 @@ import type { Steps } from '../setup/steps'
 import { describe, type Status } from '../status'
 import { AltScreenIcon, CarPlayIcon, ControlsIcon, DisconnectIcon, ReconnectIcon } from './icons'
 import { SECTIONS, sectionsOf } from './sections'
+import { networkWaits } from '../pages/NetworkConnection'
 
 const DOT = { ok: 'ok', busy: 'busy', warn: 'warn', idle: '' } as const
 
@@ -25,7 +26,7 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
         ? { title: 'Not connected', detail: 'Every step is done.', tone: 'idle' }
         : { title: 'Not set up', detail: 'Finish the steps below.', tone: 'warn' }
       : describe(state)
-  const connectWaits = guide ? guide.connectWaits : state.phase === 'setup' ? 'Enter the Wi-Fi network first' : null
+  const connectWaits = networkWaits(state) ?? (guide ? guide.connectWaits : state.phase === 'setup' ? 'Enter the iPhone Wi-Fi network first' : null)
   return (
     <header className="tb">
       <button

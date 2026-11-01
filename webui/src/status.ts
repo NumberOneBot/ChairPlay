@@ -19,13 +19,13 @@ export function describe(state: Pick<AppState, 'phase' | 'knownIphone'>): Status
       return { title: 'Starting', detail: 'Preparing the Wi-Fi and the CarPlay service.', tone: 'busy' }
     case 'calling':
       return {
-        title: 'Waiting for the iPhone',
+        title: 'Waiting for the iPhone…',
         detail: 'Calling it over Bluetooth. Keep its Bluetooth and Wi-Fi on.',
         tone: 'busy',
       }
     case 'joining':
       return {
-        title: 'Connecting',
+        title: 'Connecting…',
         detail: state.knownIphone ? 'The iPhone is joining the Wi-Fi.' : 'Accept CarPlay on the iPhone if it asks.',
         tone: 'busy',
       }

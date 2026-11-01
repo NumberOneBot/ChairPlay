@@ -9,7 +9,9 @@ internal fun defaultLogLevel(version: String?) = if (version != null) "warning" 
 
 /** settings.properties as the first start writes it, and what an older file is completed with. */
 internal val SETTINGS_TEMPLATE = listOf(
-    SettingBlock("Wi-Fi network shared by this PC and the iPhone.", "wifi.ssid" to "", "wifi.passphrase" to ""),
+    SettingBlock("Router Wi-Fi details sent to the iPhone when CarPlay connects.", "wifi.ssid" to "", "wifi.passphrase" to ""),
+    SettingBlock("Ethernet adapter GUID; blank selects the only active physical adapter when Wi-Fi is disconnected.",
+        "network.ethernet.adapter" to ""),
     SettingBlock("'NONE', 'WEP', 'WPA_WPA2', 'WPA3_TRANSITION' or 'WPA3_ONLY'", "wifi.security" to "WPA_WPA2"),
     SettingBlock("Paired iPhone's Bluetooth address, needed only when several phones are paired.", "iphone.address" to ""),
     SettingBlock(

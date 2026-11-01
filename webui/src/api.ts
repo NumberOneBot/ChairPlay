@@ -157,6 +157,9 @@ export interface AppState {
     pairedIphone: string | null
     /** The Wi-Fi network this PC is on; null when it is on none. */
     pcWifi: string | null
+    ethernet?: { id: string; label: string; addresses: string[] }[]
+    ethernetSelected?: string | null
+    networkError?: boolean
     settingsFile: string
   }
 }

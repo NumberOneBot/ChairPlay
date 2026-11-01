@@ -22,7 +22,7 @@ import io.github.numberonebot.chairplay.bluetooth.selectIphone
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.data.DataSubscriptions
 import io.github.numberonebot.chairplay.discovery.DesktopBonjour
-import io.github.numberonebot.chairplay.network.SameLanNetwork
+import io.github.numberonebot.chairplay.network.DesktopNetwork
 import java.io.Closeable
 import java.io.IOException
 import java.net.InetAddress
@@ -61,8 +61,9 @@ internal class DesktopParts(private val config: DesktopConfig, private val log: 
     override val mfi = LocalMfiAuthenticationClient.load(config.mfiDirectory())
 
     /** Read for each bring-up, so a network changed on the start screen applies with the next connection. */
-    override fun network() = SameLanNetwork(
+    override fun network() = DesktopNetwork(
         config.currentWifi() ?: throw IOException("no Wi-Fi network is set: enter it on the start screen (wifi.ssid)"),
+        config.currentEthernetAdapter(),
     )
 
     override fun radioAddress() = WindowsBluetooth.localRadioAddress()

@@ -1,5 +1,6 @@
 import type { AppState } from '../api'
 import { errorKind } from '../status'
+import { networkWaits } from '../pages/NetworkConnection'
 
 export type StepState = 'done' | 'now' | 'todo'
 
@@ -38,7 +39,8 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null): Ste
     error !== null && state.phase !== 'active' && errorKind(error.message) === 'join' && error.at !== joinFailureSeen
   const passwordNeeded = wifi.security !== 'NONE' && !wifi.passphraseSet
   const otherNetwork = wifi.ssid !== '' && setup.pcWifi !== null && setup.pcWifi !== wifi.ssid
-  const wifiDone = wifi.ssid !== '' && !passwordNeeded && !otherNetwork && !failed
+  const networkProblem = networkWaits(state)
+  const wifiDone = wifi.ssid !== '' && !passwordNeeded && !otherNetwork && !failed && !networkProblem
   const done = [setup.mfiPresent, firewallDone, setup.pairedIphone !== null, wifiDone]
   const open = done.indexOf(false)
   const stateOf = (index: number): StepState => (done[index] ? 'done' : index === open ? 'now' : 'todo')
@@ -51,7 +53,7 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null): Ste
   }[setup.firewall]
   const wifiNote = wifiDone
     ? wifi.ssid
-    : failed
+    : networkProblem ? 'Connection needed' : failed
       ? 'iPhone didn’t join'
       : otherNetwork
         ? 'Not this PC’s network'
@@ -62,7 +64,7 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null): Ste
     'Put the MFi files in place first',
     'Let ChairPlay through the firewall first',
     'Pair the iPhone first',
-    failed ? 'Check the Wi-Fi password first' : 'Enter the Wi-Fi network first',
+    networkProblem ?? (failed ? 'Check the Wi-Fi password first' : 'Enter the iPhone Wi-Fi network first'),
   ]
   return {
     mfi: setup.mfiPresent ? null : { state: stateOf(0), note: 'Not found' },

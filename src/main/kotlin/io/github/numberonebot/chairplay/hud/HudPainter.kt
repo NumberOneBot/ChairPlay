@@ -269,4 +269,4 @@ class HudPainter(
 }
 
 /** What the HUD says while no iPhone is connected, in the main window's words. */
-internal const val HUD_WAITING = "Waiting for the iPhone"
+internal const val HUD_WAITING = "Waiting for the iPhone…"
