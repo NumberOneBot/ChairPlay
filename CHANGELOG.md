@@ -6,16 +6,11 @@ User-visible changes and release tooling updates for ChairPlay.
 
 ### Added
 
-- Ethernet connection without a launch script or manual IP entry. A single adapter is selected automatically;
+- Ethernet connection. A single adapter is selected automatically;
   multiple adapters can be selected in Get started and Settings > Connection.
 - Brief volume and mute feedback in the Controls window title, or the main window title when Controls is hidden.
-- Buy Me a Coffee button beside the author's name in About.
 
 ### Changed
-
-- Hide adapter selection when a single usable Ethernet adapter is already selected, and clarify the Wi-Fi
-  details sent to the iPhone during Bluetooth pairing.
-- Keep Network and Security on the same row, and use ellipses for Starting, Waiting, and Connecting statuses.
 
 - Update the CarPlay core to DiPlay 0.2.22: bound network control input and binary plist decoding, and restrict
   secondary connections and timing replies to the connected iPhone.

@@ -2,6 +2,12 @@
 
 Read and follow [CLAUDE.md](CLAUDE.md) for the project's development, build, and test rules.
 
+## Release notes and changelog
+
+- Include only new features and fixed bugs in the release's change list.
+- Do not list donation requests or donation buttons as release changes.
+- Do not include internal experiments, temporary development workflows, or test results in release notes.
+
 ## Updating upstream
 
 - Audit ChairPlay's patches, copied classes, wrappers, and bug workarounds against every upstream update.
