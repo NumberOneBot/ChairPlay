@@ -11,6 +11,7 @@
   <a href="#what-you-need"><img src="https://img.shields.io/badge/Windows-10%20%2F%2011%20%C2%B7%20x64-0078D4?style=flat" alt="Windows 10 / 11 · x64"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="License: GPL-3.0"></a>
   <a href="https://github.com/NumberOneBot/ChairPlay/releases"><img src="https://img.shields.io/github/downloads/NumberOneBot/ChairPlay/total?style=flat&amp;label=Downloads" alt="Total downloads"></a>
+  <a href="https://github.com/NumberOneBot/ChairPlay/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/m/NumberOneBot/ChairPlay?style=plastic&amp;color=blue" alt="Monthly commit activity"></a>
 </p>
 
 <p align="center">
@@ -101,6 +102,7 @@ ChairPlay is a hobby project I build and test on real hardware in my spare time.
 
 ## Good to know
 
+- **Audio → Music → Buffered** enables buffered AAC stereo for supported iPhone apps. Reconnect to apply. Standard remains the default. In Buffered mode, stream state and buffered audio in seconds and KB replace **Startup silence**, including when no stream is available. The buffer limit is fixed at 120 seconds or 8 MiB, whichever is reached first; Startup silence only affects standard streams.
 - Close ChairPlay with its window. If it's killed mid-session, from Task Manager for example, the iPhone may ignore new connections until you restart the iPhone.
 - It works over Wi-Fi only, not over USB or a hotspot shared by the PC.
 - Calls sound best with headphones. Echo cancellation for speakers is experimental and off by default.

@@ -37,6 +37,7 @@ export class FakeBackend implements Backend {
     },
     passphraseSet: true,
     applies: {
+      'audio.music.mode': 'reconnect',
       'wifi.ssid': 'reconnect',
       'wifi.passphrase': 'reconnect',
       'wifi.security': 'reconnect',

@@ -2,6 +2,12 @@
 
 User-visible changes and release tooling updates for ChairPlay.
 
+## Unreleased
+
+### Added
+
+- Buffered AAC music playback for supported iPhone apps, selectable in Audio settings, with stream state and buffered audio shown in seconds and KB.
+
 ## 1.0.4 - 2026-11-01
 
 ### Added

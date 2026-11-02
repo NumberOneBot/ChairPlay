@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference
  * prompt puts it, and the sink that plays the iPhone's streams and shows its pictures in [window] and [altscreen].
  * [changed] tells the controls window's page that the volume changed.
  */
-internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, altscreen: VideoWindow, changed: () -> Unit) {
+internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, altscreen: VideoWindow, private val changed: () -> Unit) {
     /** The app's own volume (Ctrl+Up, Ctrl+Down, Ctrl+M), kept from the last run. */
     val volume: Volume
 
@@ -25,6 +25,9 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
     private val musicStart = AtomicReference(StartFade(config.musicStartSilenceMillis, config.musicStartFadeMillis))
     private val duckSetting = AtomicReference(config.duckSetting)
     val sink: DesktopMediaSink
+    private val renderer: AudioRenderer
+    fun bufferedAudio(): Map<String, Any>? = sink.bufferedAudio.state()
+    fun updateBufferedAudio() { if (sink.bufferedAudio.poll()) changed() }
 
     init {
         // A device name matching nothing stops here, before any connection, with the devices listed.
@@ -39,7 +42,7 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
             runCatching { volumeStore.save(volume.level, volume.muted) }.onFailure { log("volume not saved: $it") }
             changed()
         }
-        val renderer = AudioRenderer(::log, output, volume::gain, musicStart::get)
+        renderer = AudioRenderer(::log, output, volume::gain, musicStart::get, changed)
         sink = DesktopMediaSink(window, renderer, ::log, input, config.echoCancellation, altscreen, duckSetting::get,
             hardwareDecoding = { config.now().hardwareVideo })
     }

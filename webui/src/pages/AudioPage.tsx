@@ -21,7 +21,8 @@ function deviceChoices(devices: readonly string[], saved: string): Choice[] {
 export function AudioPage({ state, backend, settings }: { state: AppState; backend: Backend; settings: Settings }) {
   const { value, save, data } = settings
   const pending = pendingOf(state)
-  const { field, note } = parts(settings, pending)
+  const { field, choice, note } = parts(settings, pending)
+  const buffered = value('audio.music.mode') === 'buffered'
   const devices = data?.audio ?? { outputs: [], inputs: [] }
   const device = (key: string, label: string, names: readonly string[]) => (
     <Row label={label}>
@@ -67,19 +68,36 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
       <Row className="hint-row">
         <span className="hint">For calls through speakers rather than headphones</span>
       </Row>
-      <Group title="Music fade" note="From the next stream" />
-      <Row
-        label="Buffering pause"
-        title="The iPhone's first second or two of music come in bursts: how long the music stays silent while they buffer"
-      >
-        {field('audio.start.silence.ms', 'Buffering pause', '2000')}
-        <span className="unit">ms</span>
+      <Group title="Music" note="Mode applies at the next connection" />
+      <Row label="Playback mode" title="Buffered playback lets supported iPhone apps send music ahead to cover Wi-Fi gaps">
+        {choice('audio.music.mode', 'Playback mode', 'standard', [
+          ['standard', 'Standard'],
+          ['buffered', 'Buffered'],
+        ])}
+        {settings.error('audio.music.mode') && <span className="errtext">{settings.error('audio.music.mode')}</span>}
       </Row>
-      <Row
-        label="Fade"
-        title="How long the music takes to rise after the pause, and to fade out as CarPlay disconnects or ChairPlay closes"
+      {buffered || state.bufferedAudio ? (
+        <Row label="Buffer" title="Unplayed audio in the receiver and output queue">
+          <span role="status" aria-label="Buffered playback" aria-live="off">
+            {state.bufferedAudio
+              ? { loading: 'Loading', playing: 'Playing', paused: 'Paused', empty: 'Empty' }[state.bufferedAudio.state]
+              : 'No stream'}
+            {' · '}{(state.bufferedAudio?.seconds ?? 0).toFixed(1)} s
+            {' · '}{((state.bufferedAudio?.bytes ?? 0) / 1024).toFixed(1)} KB
+          </span>
+        </Row>
+      ) : <Row
+        label="Startup silence"
+        title="How long each new standard music stream stays silent before the volume rises"
       >
-        {field('audio.start.fade.ms', 'Fade', '800')}
+        {field('audio.start.silence.ms', 'Startup silence', '2000')}
+        <span className="unit">ms</span>
+      </Row>}
+      <Row
+        label="Volume fade"
+        title="How long standard music streams take to rise after the pause, and all streams take to fade out as CarPlay disconnects or ChairPlay closes"
+      >
+        {field('audio.start.fade.ms', 'Volume fade', '800')}
         <span className="unit">ms</span>
       </Row>
       <Group title="Navigation prompts" note="From the next prompt" />

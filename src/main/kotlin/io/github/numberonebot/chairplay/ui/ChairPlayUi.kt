@@ -63,6 +63,7 @@ class ChairPlayUi(
     gps: (() -> Map<String, Any?>)? = null,
     /** The GPS car's calls: drive mode, the car driven by a script, and the CarPlay screens saved. */
     private val driving: UiDriving? = null,
+    bufferedAudio: () -> Map<String, Any>? = { null },
 ) : Closeable {
     val model = UiModel(config.wifi != null, config.autoconnect, config.autoshow, setupDone = SetupStore(dir).done())
 
@@ -104,6 +105,7 @@ class ChairPlayUi(
         onSaved = onSaved,
         demo = demo,
         gps = gps,
+        bufferedAudio = bufferedAudio,
     )
 
     private val checking = checks.start { controller.setupChanged() }

@@ -14,6 +14,7 @@ export function appState(overrides: Partial<AppState> = {}): AppState {
     waiting: false,
     demo: { playing: null, available: true },
     gps: null,
+    bufferedAudio: null,
     embedded: true,
     wifi: { ssid: 'Home', security: 'WPA_WPA2', passphraseSet: true },
     reconnectPending: [],

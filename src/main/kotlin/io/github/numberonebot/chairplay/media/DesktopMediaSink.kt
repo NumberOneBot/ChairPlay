@@ -35,7 +35,11 @@ class DesktopMediaSink(
     /** audio.duck.*: how low a navigation prompt puts the music, read at each prompt. */
     private val duckSetting: () -> DuckSetting = { DuckSetting() },
     private val hardwareDecoding: () -> Boolean = { true },
-) : MediaSink, AudioDuckSink, Closeable {
+) : MediaSink, AudioDuckSink, BufferedAudioStatusSink, Closeable {
+    val bufferedAudio = BufferedAudioMonitor()
+    override fun bufferedAudioOpened(owner: Any) = bufferedAudio.bufferedAudioOpened(owner)
+    override fun bufferedAudioUpdated(owner: Any, status: BufferedAudioStatus) = bufferedAudio.bufferedAudioUpdated(owner, status)
+    override fun bufferedAudioClosed(owner: Any) = bufferedAudio.bufferedAudioClosed(owner)
     private val diagnosticHandlers = ConcurrentHashMap<Int, (String) -> Unit>()
     private val recoveryHandlers = ConcurrentHashMap<Int, () -> Unit>()
     // The handler sends a command, and a failed send closes the session, which stops this stream and

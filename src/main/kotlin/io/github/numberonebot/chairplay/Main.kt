@@ -50,7 +50,7 @@ private const val PREVIOUS_RUN_WAIT_MILLIS = 15_000L
 
 /** Held for the life of the process; the system lets go of it when the process ends. */
 private val instanceLock = AtomicReference<InstanceLock?>()
-private const val GPS_PAGE_MILLIS = 250L
+private const val STATUS_PAGE_MILLIS = 250L
 
 /** The app folder, where the settings, keys and pairings live. */
 internal fun dataDirectory(): Path {
@@ -169,7 +169,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
             // A saved turn card moves at once, as Shift+F11 moves it.
             saved["altscreen.cards"]?.let(altView::cardsSaved)
         },
-        demo = altView.demos, gps = driving::state, driving = uiDriving(driving, window, ::screenshots, ::log))
+        demo = altView.demos, gps = driving::state, driving = uiDriving(driving, window, ::screenshots, ::log),
+        bufferedAudio = audio::bufferedAudio)
     altView.onWindowsChanged = { ui.windowsChanged() }
     // The CarPlay page offers Actual size while the window's size differs from the picture's.
     window.onResize = { ui.windowsChanged() }
@@ -219,7 +220,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     driving.savePlace = { place -> ui.saveSettings(place) }
     themeWatch.scheduleWithFixedDelay({
         if (driving.state()["listening"] != true) driving.onSent()
-    }, GPS_PAGE_MILLIS, GPS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
+        audio.updateBufferedAudio()
+    }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
     // The iPhone's route, song, call and battery messages, for later screens and, with log.carplay.data, a file.
     val carPlayData = CarPlayData(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
     // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it.

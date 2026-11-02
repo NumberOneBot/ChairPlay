@@ -37,6 +37,35 @@ val upstreamCore by tasks.registering(Sync::class) {
     // views each have their own. Patched into the copy, each anchor checked once, so a newer DiPlay that moved one
     // stops the build here instead of dropping the patch.
     val patches = mapOf(
+        // Desktop-only buffer telemetry. Remove these hooks when upstream exposes equivalent snapshots.
+        "com/shilapi/xcertplay/airplay/BufferedAudioStream.kt" to listOf(
+            "import android.util.Log" to "import android.util.Log\n" +
+                "import io.github.numberonebot.chairplay.media.BufferedAudioStatus\n" +
+                "import io.github.numberonebot.chairplay.media.BufferedAudioStatusSink",
+            "        Thread({ receive() }, \"airplay-buffered-rx\")" to
+                "        synchronized(lock) {\n" +
+                "            if (closed.get()) return\n" +
+                "            (sink as? BufferedAudioStatusSink)?.bufferedAudioOpened(this)\n" +
+                "        }\n" +
+                "        Thread({ receive() }, \"airplay-buffered-rx\")",
+            "                    retireFedLocked()" to
+                "                    retireFedLocked()\n                    publishDesktopStatusLocked()",
+            "    private fun leadMillisLocked(): Long {" to """
+                |    private fun publishDesktopStatusLocked() {
+                |        val observer = sink as? BufferedAudioStatusSink ?: return
+                |        val audible = feedStartTimestamp != null &&
+                |            nanoTime() - feedStartNs >= START_LATENCY_MILLIS * 1_000_000L
+                |        observer.bufferedAudioUpdated(this, BufferedAudioStatus.snapshot(
+                |            rate, anchorNtp != null, audible, queue.size, fed.map { it.timestamp },
+                |            positionLocked(), format.sampleRate, queuedBytes))
+                |    }
+                |
+                |    private fun leadMillisLocked(): Long {
+            """.trimMargin(),
+            "                outputCleanupComplete = true" to
+                "                outputCleanupComplete = true\n" +
+                "                (sink as? BufferedAudioStatusSink)?.bufferedAudioClosed(this)",
+        ),
         // Upstream now includes the lane limits. Only MHI2Q's destination and maneuver lengths remain extra.
         "com/shilapi/xcertplay/iap2/catalog/Iap2Endpoint.kt" to listOf(
             "                    field(4, \"MaxAfterManeuverRoadNameLength\", Iap2WireType.U16)," to
@@ -111,6 +140,7 @@ val upstreamCoreTests by tasks.registering(Sync::class) {
         val desktopProtocolTests = setOf(
             "AirPlayEventPeerTest.kt", "AirPlayTouchTraceCostTest.kt", "AudioDuckCommandTest.kt",
             "ControlReceiveBoundsTest.kt", "ScreenStreamPeerTest.kt",
+            "BufferedAudioSessionTest.kt", "CarPlayAudioStreamIsolationTest.kt",
         )
         eachFile {
             if (name in desktopProtocolTests) filter { line: String ->
@@ -138,8 +168,6 @@ val upstreamCoreTests by tasks.registering(Sync::class) {
         // Robolectric runner: needs an Android runtime.
         exclude(
             "com/shilapi/xcertplay/airplay/AirPlayCryptoAndroidCompatibilityTest.kt",
-            "com/shilapi/xcertplay/airplay/BufferedAudioSessionTest.kt",
-            "com/shilapi/xcertplay/airplay/CarPlayAudioStreamIsolationTest.kt",
             "com/shilapi/xcertplay/airplay/ClusterContentTest.kt",
             "com/shilapi/xcertplay/airplay/CurrentScreenListenerTest.kt",
             "com/shilapi/xcertplay/airplay/IphoneCornerMaskSessionTest.kt",

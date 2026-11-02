@@ -57,8 +57,8 @@ class UiController(
     private val demo: UiDemo? = null,
     /** The GPS car as the GPS page shows it; null without one. */
     private val gps: (() -> Map<String, Any?>)? = null,
-    /** Asks Windows where this PC is, for the GPS page. */
     private val locate: () -> WindowsLocation.Result = WindowsLocation::read,
+    private val bufferedAudio: () -> Map<String, Any>? = { null },
 ) : UiApi {
     private val places = UiPlaces(setup, launch, log, about, windowsVersion)
 
@@ -226,6 +226,7 @@ class UiController(
             "waiting" to state.waiting,
             "demo" to demo?.let { mapOf("playing" to it.playing, "available" to it.available) },
             "gps" to gps?.invoke(),
+            "bufferedAudio" to bufferedAudio(),
             "embedded" to embedded,
             "wifi" to mapOf(
                 "ssid" to values["wifi.ssid"].orEmpty(),
