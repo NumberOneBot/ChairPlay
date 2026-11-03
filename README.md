@@ -8,10 +8,10 @@
 
 <p align="center">
   <a href="https://github.com/NumberOneBot/ChairPlay/releases/latest"><img src="https://img.shields.io/github/v/release/NumberOneBot/ChairPlay?style=flat&amp;label=Latest%20release" alt="Latest release"></a>
-  <a href="#what-you-need"><img src="https://img.shields.io/badge/Windows-10%20%2F%2011%20%C2%B7%20x64-0078D4?style=flat" alt="Windows 10 / 11 · x64"></a>
+  <a href="https://github.com/NumberOneBot/ChairPlay/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/m/NumberOneBot/ChairPlay?style=flat&amp;color=blue" alt="Monthly commit activity"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat" alt="License: GPL-3.0"></a>
+  <a href="#what-you-need"><img src="https://img.shields.io/badge/Windows-10%20%2F%2011%20%C2%B7%20x64-0078D4?style=flat" alt="Windows 10 / 11 · x64"></a>
   <a href="https://github.com/NumberOneBot/ChairPlay/releases"><img src="https://img.shields.io/github/downloads/NumberOneBot/ChairPlay/total?style=flat&amp;label=Downloads" alt="Total downloads"></a>
-  <a href="https://github.com/NumberOneBot/ChairPlay/graphs/commit-activity"><img src="https://img.shields.io/github/commit-activity/m/NumberOneBot/ChairPlay?style=plastic&amp;color=blue" alt="Monthly commit activity"></a>
 </p>
 
 <p align="center">
