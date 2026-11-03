@@ -31,7 +31,9 @@ describe('Audio page volume', () => {
   // The music starts silent while the iPhone's first bursts buffer, then rises; it fades out over the same time as
   // CarPlay disconnects or the app closes.
   it('sets how the music fades in and out', async () => {
-    const backend = await audio()
+    const backend = new FakeBackend()
+    backend.data.values['audio.music.mode'] = 'standard'
+    await audio(backend)
 
     const silence = screen.getByRole('textbox', { name: 'Startup silence' }) as HTMLInputElement
     fireEvent.change(silence, { target: { value: '1500' } })
@@ -65,6 +67,7 @@ describe('Audio page volume', () => {
 describe('Audio page', () => {
   it('replaces startup silence only while a buffered stream exists and restores it after teardown', async () => {
     const backend = new FakeBackend()
+    backend.data.values['audio.music.mode'] = 'standard'
     const state = appState({ phase: 'active', canShowCarPlay: true })
     const view = render(<Shell state={state} backend={backend} />)
     await screen.findByRole('textbox', { name: 'Network' })
@@ -82,6 +85,7 @@ describe('Audio page', () => {
 
   it('hides standard startup silence in buffered mode and preserves it when switching back', async () => {
     const backend = new FakeBackend()
+    backend.data.values['audio.music.mode'] = 'standard'
     backend.data.values['audio.start.silence.ms'] = '1500'
     await audio(backend)
     const pause = screen.getByRole('textbox', { name: 'Startup silence' }) as HTMLInputElement
@@ -141,11 +145,23 @@ describe('Audio page', () => {
   })
 
   it('saves buffered music without interrupting the current session', async () => {
-    const backend = await audio()
+    const backend = new FakeBackend()
+    backend.data.values['audio.music.mode'] = 'standard'
+    await audio(backend)
     expect(screen.getByRole('radio', { name: 'Standard' }).getAttribute('aria-checked')).toBe('true')
     fireEvent.click(screen.getByRole('radio', { name: 'Buffered' }))
     await waitFor(() => expect(backend.saved).toEqual([{ 'audio.music.mode': 'buffered' }]))
     expect(screen.getByRole('radio', { name: 'Buffered' }).getAttribute('aria-checked')).toBe('true')
+    expect(backend.reconnects).toBe(0)
+  })
+
+  it('uses buffered when no mode is saved and can save standard without reconnecting', async () => {
+    const backend = await audio()
+    expect(screen.getByRole('radio', { name: 'Buffered' }).getAttribute('aria-checked')).toBe('true')
+    expect(screen.queryByRole('textbox', { name: 'Startup silence' })).toBeNull()
+    fireEvent.click(screen.getByRole('radio', { name: 'Standard' }))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'audio.music.mode': 'standard' }]))
+    expect(screen.getByRole('radio', { name: 'Standard' }).getAttribute('aria-checked')).toBe('true')
     expect(backend.reconnects).toBe(0)
   })
 

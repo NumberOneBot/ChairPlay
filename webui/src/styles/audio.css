@@ -1,0 +1,4 @@
+/* Match the buffer readout to the music controls beside it. */
+.shell .buffer-status {
+  font: 12px var(--ui);
+}

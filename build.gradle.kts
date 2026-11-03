@@ -54,6 +54,8 @@ tasks.test {
 }
 
 apply(from = "gradle/upstream.gradle.kts")
+apply(from = "gradle/apap-upstream.gradle.kts")
+apply(from = "gradle/spatial-session.gradle.kts")
 
 sourceSets {
     test {
@@ -125,6 +127,7 @@ tasks.processResources {
 }
 
 apply(from = "gradle/native.gradle.kts")
+apply(from = "gradle/spatial.gradle.kts")
 apply(from = "gradle/web.gradle.kts")
 apply(from = "gradle/package.gradle.kts")
 apply(from = "gradle/installer.gradle.kts")

@@ -37,6 +37,13 @@ class AudioRenderer internal constructor(
 
     private val streams = ConcurrentHashMap<AudioStreamId, AudioOutput>()
     private val ducking = MediaDucking(log)
+    var spatialAudio: io.github.numberonebot.chairplay.media.apac.SpatialAudioBridge? = null
+        private set
+
+    internal fun configureSpatial(plan: () -> io.github.numberonebot.chairplay.media.apac.SpatialPlan) {
+        spatialAudio = io.github.numberonebot.chairplay.media.apac.SpatialAudioBridge(
+            plan, volume, ducking::gain, { ducking.reset() }, log)
+    }
 
     /** [echoReference], for a call, receives what this stream plays, for the microphone's echo canceller. */
     internal fun start(id: AudioStreamId, format: AudioFormat, echoReference: EchoReference? = null) {
@@ -66,6 +73,7 @@ class AudioRenderer internal constructor(
      */
     fun fadeOut(durationMillis: Long = startFade().fadeMillis) {
         val now = clock()
+        spatialAudio?.fadeOut(now, durationMillis * 1_000_000)
         streams.values.forEach { it.fadeOut(now, durationMillis * 1_000_000) }
     }
 
@@ -110,6 +118,7 @@ class AudioRenderer internal constructor(
     internal fun droppedPackets(id: AudioStreamId) = streams[id]?.dropped?.get() ?: 0
 
     override fun close() {
+        spatialAudio?.close()
         streams.keys.toList().forEach(::stop)
     }
 

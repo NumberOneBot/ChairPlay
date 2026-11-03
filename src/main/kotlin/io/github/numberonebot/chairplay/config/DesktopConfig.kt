@@ -210,7 +210,8 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
         // Without Opus the wireless iPhone opens no audio stream at all and plays on its own speaker.
         microphoneOpus = true,
         videoInCar = false,
-        mainBufferedAudio = settings.choiceSetting("audio.music.mode", false, mapOf("standard" to false, "buffered" to true)),
+        mainBufferedAudio = settings.choiceSetting("audio.music.mode", true, mapOf("standard" to false, "buffered" to true, "spatial" to true)),
+        spatialAudio = io.github.numberonebot.chairplay.media.apac.spatialConfigured(dir, settings),
         cluster = altscreenDisplay,
         oemLabel = settings.getProperty("car.label")?.trim()?.ifEmpty { null } ?: DEFAULT_CAR_LABEL,
         icons = listOf(carIcon(dir, settings.getProperty("car.icon"))),

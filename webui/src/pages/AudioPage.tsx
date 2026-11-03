@@ -1,5 +1,5 @@
 import type { AppState, Backend } from '../api'
-import { Group, Row, Slider, Switch, type Choice } from '../shell/controls'
+import { Group, Row, Segmented, Slider, Switch, type Choice } from '../shell/controls'
 import { Select } from '../shell/fields'
 import type { Settings } from '../shell/useSettings'
 import { Changed, parts, pendingOf } from './parts'
@@ -21,8 +21,10 @@ function deviceChoices(devices: readonly string[], saved: string): Choice[] {
 export function AudioPage({ state, backend, settings }: { state: AppState; backend: Backend; settings: Settings }) {
   const { value, save, data } = settings
   const pending = pendingOf(state)
-  const { field, choice, note } = parts(settings, pending)
-  const buffered = value('audio.music.mode') === 'buffered'
+  const { field, note } = parts(settings, pending)
+  const savedMode = value('audio.music.mode') || 'buffered'
+  const mode = savedMode === 'spatial' ? 'buffered' : savedMode
+  const buffered = mode !== 'standard'
   const devices = data?.audio ?? { outputs: [], inputs: [] }
   const device = (key: string, label: string, names: readonly string[]) => (
     <Row label={label}>
@@ -70,20 +72,22 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
       </Row>
       <Group title="Music" note="Mode applies at the next connection" />
       <Row label="Playback mode" title="Buffered playback lets supported iPhone apps send music ahead to cover Wi-Fi gaps">
-        {choice('audio.music.mode', 'Playback mode', 'standard', [
-          ['standard', 'Standard'],
-          ['buffered', 'Buffered'],
-        ])}
+        <Segmented label="Playback mode" value={mode}
+          options={[['buffered', 'Buffered'], ['standard', 'Standard']]}
+          onChange={(selected) => save({ 'audio.music.mode': selected })} />
+        <Changed keys={['audio.music.mode']} pending={pending} />
         {settings.error('audio.music.mode') && <span className="errtext">{settings.error('audio.music.mode')}</span>}
       </Row>
       {buffered || state.bufferedAudio ? (
         <Row label="Buffer" title="Unplayed audio in the receiver and output queue">
-          <span role="status" aria-label="Buffered playback" aria-live="off">
+          <span className="buffer-status" role="status" aria-label="Buffered playback" aria-live="off">
             {state.bufferedAudio
               ? { loading: 'Loading', playing: 'Playing', paused: 'Paused', empty: 'Empty' }[state.bufferedAudio.state]
               : 'No stream'}
             {' · '}{(state.bufferedAudio?.seconds ?? 0).toFixed(1)} s
             {' · '}{((state.bufferedAudio?.bytes ?? 0) / 1024).toFixed(1)} KB
+            {state.bufferedAudio?.multichannelOutput === 'surround' && ' · 5.1'}
+            {state.bufferedAudio?.multichannelOutput === 'downmix' && ' · 5.1 → stereo'}
           </span>
         </Row>
       ) : <Row

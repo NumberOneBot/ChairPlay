@@ -11,6 +11,24 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 class BufferedAudioStatusTest : AudioRendererFixture() {
+    @Test fun `format changes notify the UI without requiring a buffer size change`() {
+        val monitor = BufferedAudioMonitor()
+        val owner = Any()
+        monitor.bufferedAudioOpened(owner)
+        val plain = BufferedAudioStatus("playing", 48_000, 48_000, 4096)
+        monitor.bufferedAudioUpdated(owner, plain)
+        assertTrue(monitor.poll())
+        assertFalse(monitor.state()!!.containsKey("multichannelOutput"))
+        for (output in listOf("surround", "downmix", null)) {
+            monitor.bufferedAudioUpdated(owner, plain.copy(multichannelOutput = output))
+            assertTrue(monitor.poll())
+            assertEquals(output, monitor.state()?.get("multichannelOutput"))
+            assertFalse(monitor.poll())
+        }
+        monitor.bufferedAudioClosed(owner)
+        assertNull(monitor.state())
+    }
+
     @Test fun `close cannot leave a late opened monitor behind`() {
         val monitor = BufferedAudioMonitor()
         val opened = java.util.concurrent.CountDownLatch(1)

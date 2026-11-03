@@ -43,6 +43,9 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
             changed()
         }
         renderer = AudioRenderer(::log, output, volume::gain, musicStart::get, changed)
+        renderer.configureSpatial {
+            io.github.numberonebot.chairplay.media.apac.SpatialRuntime.requirePlan(dir, config.audioOutput)
+        }
         sink = DesktopMediaSink(window, renderer, ::log, input, config.echoCancellation, altscreen, duckSetting::get,
             hardwareDecoding = { config.now().hardwareVideo })
     }

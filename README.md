@@ -102,7 +102,7 @@ ChairPlay is a hobby project I build and test on real hardware in my spare time.
 
 ## Good to know
 
-- **Audio → Music → Buffered** enables buffered AAC stereo for supported iPhone apps. Reconnect to apply. Standard remains the default. In Buffered mode, stream state and buffered audio in seconds and KB replace **Startup silence**, including when no stream is available. The buffer limit is fixed at 120 seconds or 8 MiB, whichever is reached first; Startup silence only affects standard streams.
+- **Audio → Music → Buffered** is the default for supported iPhone apps and supports AAC stereo plus APAC when its decoder and output are available. Reconnect to apply. APAC output follows the selected Windows device automatically: 5.1 or stereo downmix. The Buffer status shows **5.1** or **5.1 → stereo** only while APAC plays. Stream state and buffered audio in seconds and KB replace **Startup silence**, including when no stream is available. The buffer limit is 120 seconds or 8 MiB for legacy AAC transport, or 21,168,000 bytes for APAP, whichever is reached first; Startup silence only affects standard streams.
 - Close ChairPlay with its window. If it's killed mid-session, from Task Manager for example, the iPhone may ignore new connections until you restart the iPhone.
 - It works over Wi-Fi only, not over USB or a hotspot shared by the PC.
 - Calls sound best with headphones. Echo cancellation for speakers is experimental and off by default.

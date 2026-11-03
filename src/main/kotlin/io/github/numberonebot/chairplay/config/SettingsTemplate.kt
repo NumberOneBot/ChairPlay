@@ -53,8 +53,8 @@ internal val SETTINGS_TEMPLATE = listOf(
         "audio.echo.cancellation" to "false",
     ),
     SettingBlock(
-        "Music playback: 'standard' or 'buffered' (AAC stereo). Reconnect to apply.",
-        "audio.music.mode" to "standard",
+        "Music playback: 'buffered' (AAC and APAC when available) or 'standard'. Reconnect to apply.",
+        "audio.music.mode" to "buffered",
     ),
     SettingBlock(
         "How standard CarPlay music starts, since the iPhone's first audio comes in bursts: silent for this many\n" +
