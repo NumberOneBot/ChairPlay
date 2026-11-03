@@ -17,6 +17,8 @@ import type {
 import { controlsData } from './testing'
 
 export class FakeBackend implements Backend {
+  updateChecks = 0
+  async checkUpdates(): Promise<boolean> { this.updateChecks++; return true }
   saved: Record<string, string>[] = []
   shown: Screen[] = []
   windows: { name: WindowName; visible: boolean }[] = []

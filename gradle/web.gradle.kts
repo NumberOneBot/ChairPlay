@@ -212,7 +212,7 @@ val webviewDll by tasks.registering(Exec::class) {
     commandLine(
         zigExe.path, "c++", "-target", "x86_64-windows-gnu", "-shared", "-O2", "-std=c++17",
         "-I${sources.resolve("core/include").path}", "-I${sdk.resolve("build/native/include").path}", "-Icompat",
-        "chairplay_webview.cc", "-ladvapi32", "-lole32", "-lshell32", "-lshlwapi", "-luser32", "-lversion",
+        "chairplay_webview.cc", "update_dialog.cc", "update_dialog.rc", "-ladvapi32", "-lole32", "-lshell32", "-lshlwapi", "-luser32", "-lversion",
         "-o", work.resolve("chairplay_webview.dll").path,
     )
     doLast {

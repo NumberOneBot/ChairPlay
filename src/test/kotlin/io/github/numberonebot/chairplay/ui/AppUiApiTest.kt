@@ -7,6 +7,16 @@ import org.junit.Test
 import java.nio.file.Files
 
 class AppUiApiTest : UiControllerFixture() {
+    @Test fun `About requests the app update check and reports when it is busy`() {
+        var calls = 0
+        var accepted = true
+        val api = AppUiApi(controller(), { calls++; accepted }) { null }
+        assertEquals(200, postRoute(api, "check-updates", emptyMap<String, Any>()).first)
+        accepted = false
+        assertEquals(409, postRoute(api, "check-updates", emptyMap<String, Any>()).first)
+        assertEquals(2, calls)
+    }
+
     // The wrapper once lacked the forwarding method and answered the default, an empty map.
     @Test
     fun `the folder sizes come through the app's API from the real folders`() {

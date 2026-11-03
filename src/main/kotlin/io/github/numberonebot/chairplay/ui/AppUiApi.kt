@@ -6,8 +6,11 @@ package io.github.numberonebot.chairplay.ui
  */
 internal class AppUiApi(
     private val controller: UiController,
+    private val updateCheck: () -> Boolean = { false },
     private val driving: () -> UiDriving?,
 ) : UiApi by controller {
+    override fun checkUpdates(): Boolean = updateCheck()
+
     override fun gpsDrive(throttle: Double, brake: Double, steer: Double) =
         driving()?.gpsDrive(throttle, brake, steer) ?: false
 

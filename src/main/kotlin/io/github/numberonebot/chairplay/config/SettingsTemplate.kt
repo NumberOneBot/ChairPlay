@@ -22,6 +22,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "'true' connects to the iPhone as the app starts, 'false' waits for Connect.",
         "ui.autoconnect" to "true",
     ),
+    SettingBlock("Check for a newer ChairPlay release at startup.", "updates.check.on.start" to "true"),
     SettingBlock(
         "'true' shows CarPlay over the settings as soon as the iPhone connects, 'false' stays on the settings\n" +
             "until you choose CarPlay.",

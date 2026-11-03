@@ -295,6 +295,6 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         }
     }, "instance-lock").apply { isDaemon = true }.start()
     // GLFW needs its windows and event loop on this, the main, thread; the bring-up runs on its own.
-    runWindows(window, *listOfNotNull(altscreen, controlsWindow).toTypedArray(), pass = windowPass(driving, appControls), opened = { windowsOpen(); appControls.global.pass() })
+    runWindows(window, *listOfNotNull(altscreen, controlsWindow).toTypedArray(), pass = windowPass(driving, appControls), opened = { windowsOpen(); appControls.global.pass(); ui.checkUpdatesAtStart() })
     exitProcess(0)
 }

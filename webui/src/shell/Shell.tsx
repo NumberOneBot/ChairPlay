@@ -132,7 +132,7 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
               {settings.data && section === 'experiments' && (
                 <ExperimentsPage state={state} backend={backend} settings={settings} />
               )}
-              {section === 'about' && <AboutPage state={state} backend={backend} onShowGuide={showGuide} />}
+              {section === 'about' && <AboutPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />}
             </div>
           </div>
         </div>

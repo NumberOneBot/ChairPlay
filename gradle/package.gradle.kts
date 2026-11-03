@@ -52,6 +52,8 @@ val appImageModules = listOf(
     "jdk.unsupported", "jdk.crypto.ec", "jdk.crypto.cryptoki", "jdk.crypto.mscapi",
     // The UI's local HTTP server (com.sun.net.httpserver).
     "jdk.httpserver",
+    // The release checker uses java.net.http.HttpClient; the bundled runtime must include it too.
+    "java.net.http",
 )
 
 val jpackageImage by tasks.registering(Exec::class) {

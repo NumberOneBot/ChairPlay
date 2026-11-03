@@ -14,6 +14,16 @@ function answer(status: number) {
 }
 
 describe('Api', () => {
+  it('requests the desktop update check and reports when it is busy', async () => {
+    const requests = answer(200)
+    expect(await new Api('key').checkUpdates()).toBe(true)
+    expect(requests[0].url).toBe('/api/check-updates')
+    expect(requests[0].init.method).toBe('POST')
+    expect(requests[0].init.headers).toMatchObject({ Authorization: 'Bearer key' })
+    answer(409)
+    expect(await new Api('key').checkUpdates()).toBe(false)
+  })
+
   it('asks the app to show or hide a window', async () => {
     const requests = answer(200)
 

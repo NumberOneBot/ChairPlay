@@ -237,6 +237,8 @@ export interface Backend {
   altscreen(content: AltscreenContent): Promise<boolean>
   /** Opens a Windows page or the MFi folder; false when Windows did not open it. */
   open(place: WindowsPlace): Promise<boolean>
+  /** Checks for an update and keeps the request pending until its Windows dialog is dismissed. */
+  checkUpdates(): Promise<boolean>
   /** The logs and screenshots folders' sizes in bytes; 0 for an empty or missing one. */
   folderSizes(): Promise<FolderSizes>
   /** Resizes [window] to one screen pixel per picture pixel; false when there is no such window. */

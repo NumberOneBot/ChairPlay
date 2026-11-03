@@ -109,6 +109,9 @@ internal fun postRoute(api: UiApi, route: String, body: Map<*, *>): Pair<Int, Ma
             }
         }
         "windows-location" -> json(200, api.windowsLocation())
+        "check-updates" ->
+            if (api.checkUpdates()) json(200, mapOf("ok" to true))
+            else json(409, mapOf("error" to "Could not start the update check. Try again after closing any update dialog."))
         "gps-drive" -> {
             // Each pedal and the wheel as a number, a missing one at rest.
             val values = listOf("throttle", "brake", "steer").map { key -> body[key]?.let { it as? Number ?: return@map null }?.toDouble() ?: 0.0 }

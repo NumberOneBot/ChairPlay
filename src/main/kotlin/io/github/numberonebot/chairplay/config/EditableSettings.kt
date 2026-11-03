@@ -43,6 +43,7 @@ object EditableSettings {
         "wifi.passphrase" to Setting(Applies.RECONNECT) { null },
         "wifi.security" to Setting(Applies.RECONNECT, check = ::checkSecurity),
         "ui.autoconnect" to switch(Applies.RESTART),
+        "updates.check.on.start" to switch(Applies.NOW),
         "ui.autoshow" to switch(Applies.NOW),
         "ui.controls.keys" to switch(Applies.NOW),
         "keyboard.text.input" to switch(Applies.RECONNECT),

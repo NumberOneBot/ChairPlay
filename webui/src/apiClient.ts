@@ -68,6 +68,10 @@ export class Api implements Backend {
     return (await this.request('POST', 'windows-location', {})).data as WindowsLocation
   }
 
+  async checkUpdates(): Promise<boolean> {
+    return (await this.request('POST', 'check-updates', {})).status === 200
+  }
+
   async driveMode(on: boolean): Promise<boolean> {
     return (await this.request('POST', 'drive-mode', { on })).status === 200
   }

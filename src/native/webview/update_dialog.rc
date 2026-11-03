@@ -1,0 +1,2 @@
+#include <windows.h>
+2 RT_MANIFEST "update_dialog.manifest"

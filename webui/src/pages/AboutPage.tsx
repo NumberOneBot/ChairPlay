@@ -4,6 +4,8 @@ import coffeeButton from '../assets/buy-me-a-coffee-dark.png'
 import type { ReactNode } from 'react'
 import type { AppState, Backend, BuildCommit, WindowsPlace } from '../api'
 import { Group, Row } from '../shell/controls'
+import type { Settings } from '../shell/useSettings'
+import { UpdateSettings } from './UpdateSettings'
 import { CopyButton } from './messages'
 
 function Commit({ commit }: { commit: BuildCommit | null }) {
@@ -20,10 +22,12 @@ export function AboutPage({
   state,
   backend,
   onShowGuide,
+  settings,
 }: {
   state: AppState
   backend: Backend
   onShowGuide: () => void
+  settings: Settings
 }) {
   // The links open in the browser, or the notices in Notepad; they are buttons that read as links.
   const link = (place: WindowsPlace, text: string, title?: string): ReactNode => (
@@ -47,6 +51,7 @@ export function AboutPage({
       <Row label="DiPlay core">
         <Commit commit={state.about.core} />
       </Row>
+      <UpdateSettings backend={backend} settings={settings} />
       <Group title="Credits" />
       <Row label="Author" className="author-credit">
         {link('author', 'Oleksiy Strelets', "Open the author's GitHub profile")}

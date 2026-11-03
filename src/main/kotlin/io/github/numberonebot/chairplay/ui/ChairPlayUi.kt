@@ -11,6 +11,7 @@ import io.github.numberonebot.chairplay.input.ControlsFile
 import io.github.numberonebot.chairplay.session.BringUpStatus
 import io.github.numberonebot.chairplay.session.addFirewallRules
 import io.github.numberonebot.chairplay.session.firewallHint
+import io.github.numberonebot.chairplay.update.UpdateChecks
 import java.io.Closeable
 import java.nio.file.Path
 
@@ -66,6 +67,11 @@ class ChairPlayUi(
     bufferedAudio: () -> Map<String, Any>? = { null },
 ) : Closeable {
     val model = UiModel(config.wifi != null, config.autoconnect, config.autoshow, setupDone = SetupStore(dir).done())
+    private val settingsFile = SettingsFile(dir.resolve(DesktopConfig.SETTINGS_FILE))
+    private val updates = UpdateChecks(BuildInfo.load().version, log = log)
+
+    /** Called once the app's windows are open; the network request runs on its own daemon thread. */
+    fun checkUpdatesAtStart() = updates.start(!settingsFile.read()["updates.check.on.start"].orEmpty().trim().equals("false", true))
 
     private val checks = SetupChecks(
         pairedIphone = { pairedIphoneName(WindowsBluetooth.pairedDevices(), config.iphoneAddress) },
@@ -78,7 +84,7 @@ class ChairPlayUi(
     )
 
     private val controller = UiController(
-        SettingsFile(dir.resolve(DesktopConfig.SETTINGS_FILE)),
+        settingsFile,
         model,
         SetupInfo(
             mfiDirectory = config.mfiDirectory().toPath(),
@@ -122,7 +128,7 @@ class ChairPlayUi(
     /** Saves [changes] from one of the app's own keys, as a page saves them: the app and an open page hear of it alike. */
     fun saveSettings(changes: Map<String, String>) = controller.saveSettings(changes)
 
-    private val api = AppUiApi(controller) { driving }
+    private val api = AppUiApi(controller, { updates.check() }) { driving }
 
     private val server = UiServer(api, pageAssets(), System.getenv("CHAIRPLAY_UI_PORT")?.toIntOrNull() ?: 0, log = log)
 
@@ -187,6 +193,7 @@ class ChairPlayUi(
     }
 
     override fun close() {
+        updates.close()
         checking.close()
         server.close()
     }

@@ -177,6 +177,9 @@ interface UiApi {
     /** Opens the Windows page or folder [place] names ([UiController.open]); false when there is none or it failed. */
     fun open(place: String): Boolean
 
+    /** Checks for a new release and shows the result in a Windows dialog. */
+    fun checkUpdates(): Boolean = false
+
     /** The logs and screenshots folders' sizes in bytes, by name ([UiPlaces.folderSizes]). */
     fun folderSizes(): Map<String, Long> = emptyMap()
 
