@@ -34,6 +34,7 @@ export type WindowsPlace =
   | 'location'
   | 'diplay'
   | 'xcertplay'
+  | 'livi'
   | 'rgi'
   | 'logs'
   | 'screenshots'
@@ -47,6 +48,7 @@ export interface ControlsState {
   altscreen: AltscreenContent | null
   /** Alt is held in one of ChairPlay's windows: the buttons show their keys. */
   altHeld: boolean
+  globalKeyboard?: { enabled: boolean; error: string | null }
   /** The iPhone plays (its now playing says so): the play/pause button shows pause. */
   playing: boolean
 }
@@ -230,6 +232,7 @@ export interface Backend {
    * it. [everything] over the controls window; over the settings the app takes only its own keys (F11, F12 and such).
    */
   key(name: string, phase: KeyPhase, everything: boolean): Promise<void>
+  keyboardFocus(client: string, focused: boolean): Promise<void>
   /** Shows [content] on the AltScreen; false when it cannot be shown now. */
   altscreen(content: AltscreenContent): Promise<boolean>
   /** Opens a Windows page or the MFi folder; false when Windows did not open it. */

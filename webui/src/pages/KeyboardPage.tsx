@@ -7,11 +7,12 @@ import { LockIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import { bindingName, isModifier } from './keyNames'
 import { TextInputSettings } from './TextInputSettings'
+import { GlobalShortcuts } from './GlobalShortcuts'
 
 /** The actions by group, in the page's order: each setting, the name the page gives it, and its tooltip. */
 const GROUPS: [group: string, actions: [key: string, label: string, title?: string][]][] = [
   [
-    'Knob',
+    'CarPlay',
     [
       ['key.knob.left', 'Left', 'Tilt the knob left to move the focus left'],
       ['key.knob.right', 'Right', 'Tilt the knob right'],
@@ -21,16 +22,19 @@ const GROUPS: [group: string, actions: [key: string, label: string, title?: stri
       ['key.knob.previous', 'Turn back', 'Turn the knob one step back'],
       ['key.select', 'Select', 'Press the knob'],
       ['key.back', 'Back'],
+      ['key.home', 'Home', 'CarPlay home screen'],
+      ['key.siri', 'Siri'],
     ],
   ],
   [
-    'CarPlay',
+    'Media and calls',
     [
-      ['key.home', 'Home', 'CarPlay home screen'],
-      ['key.siri', 'Siri'],
       ['key.media.previous', 'Previous track'],
       ['key.media.playpause', 'Play or pause'],
       ['key.media.next', 'Next track'],
+      ['key.volume.up', 'Volume up', "ChairPlay's own volume; the Windows volume stays"],
+      ['key.volume.down', 'Volume down'],
+      ['key.volume.mute', 'Mute'],
       ['key.call.answer', 'Answer call'],
       ['key.call.end', 'End call'],
     ],
@@ -45,15 +49,7 @@ const GROUPS: [group: string, actions: [key: string, label: string, title?: stri
     ],
   ],
   [
-    'Volume',
-    [
-      ['key.volume.up', 'Volume up', "ChairPlay's own volume; the Windows volume stays"],
-      ['key.volume.down', 'Volume down'],
-      ['key.volume.mute', 'Mute'],
-    ],
-  ],
-  [
-    'App',
+    'ChairPlay',
     [
       ['key.reconnect', 'Reconnect', 'End the CarPlay session gracefully and connect again'],
       ['key.screenshot', 'Screenshot', 'Save the CarPlay screen as a PNG file in the screenshots folder'],
@@ -242,8 +238,16 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
 
   return (
     <div className="keyboard">
+      <Group title="General" />
+      <GlobalShortcuts data={data} state={state} save={save} error={errors['global.enabled']} />
       <TextInputSettings state={state} settings={settings} />
-      <Group title="Mouse" />
+      <Row title="Hold Alt to see them for a moment">
+        <Switch
+          label="Show keys on the buttons"
+          checked={settings.value('ui.controls.keys') === 'true'}
+          onChange={(checked) => settings.save({ 'ui.controls.keys': String(checked) })}
+        />
+      </Row>
       <Row label="Wheel">
         <Segmented
           label="Wheel"
@@ -262,11 +266,10 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
         />
         {errors['wheel.action'] && <span className="errtext">{errors['wheel.action']}</span>}
       </Row>
-      <Row label="Step" title="Wheel notches for one knob step">
-        {numberField('wheel.notches.per.step', 'Step')}
+      <Row label="Wheel step" title="Wheel notches for one knob step">
+        {numberField('wheel.notches.per.step', 'Wheel step')}
         <span className="unit">notches</span>
       </Row>
-      <Group title="Held keys" />
       <Row label="Repeat every" title="A held key acts on every Nth repeat">
         {numberField('key.repeat.every', 'Repeat every')}
       </Row>
@@ -279,14 +282,6 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
           {actions.map(actionRow)}
         </div>
       ))}
-      <Group title="Controls window" />
-      <Row title="Hold Alt to see them for a moment">
-        <Switch
-          label="Show keys on the buttons"
-          checked={settings.value('ui.controls.keys') === 'true'}
-          onChange={(checked) => settings.save({ 'ui.controls.keys': String(checked) })}
-        />
-      </Row>
     </div>
   )
 }

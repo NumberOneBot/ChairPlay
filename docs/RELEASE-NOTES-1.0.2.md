@@ -7,7 +7,7 @@ This update adds keyboard text input, full screen, more CarPlay resolutions, and
 ## What's changed
 
 - **Simpler setup.** The installer includes the MFi files, so you no longer need to add a certificate and key manually.
-- **Keyboard text input.** Type in CarPlay fields using the iPhone's layout; letter shortcuts pause while typing. **Keyboard → Text input → Type in CarPlay** is on by default; reconnect after changing it. Shift, Caps Lock, Home/End, and text-selection shortcuts do not currently work in the tested CarPlay fields.
+- **Keyboard text input.** Type in CarPlay fields using the iPhone's layout; letter shortcuts pause while typing. **Keyboard → General → Type in CarPlay** is on by default; reconnect after changing it. Shift, Caps Lock, Home/End, and text-selection shortcuts do not currently work in the tested CarPlay fields.
 - **Full screen with F.** Toggle full screen independently for the focused CarPlay or AltScreen window; press F again to restore its previous size and position. The shortcut is configurable on the Keyboard page, and existing custom F bindings are preserved.
 - **More resolutions.** Added **1080×1080**, **2560×1080** (2.5K Wide), and **2560×1440** (2.5K). Reconnect to apply.
 - **Smaller windows.** CarPlay streams wider than 1280 pixels can fit a window **1280 screen pixels wide**, regardless of Windows display scaling. Aspect ratio locking keeps the picture's proportions.

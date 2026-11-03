@@ -107,6 +107,10 @@ val jpackageImage by tasks.registering(Exec::class) {
             from(installDir.get().file("bin/chairplay_audio.dll"))
             into(outDir.get().dir("ChairPlay"))
         }
+        ops.fs.copy {
+            from(installDir.get().dir("apac"))
+            into(outDir.get().dir("ChairPlay/apac"))
+        }
     }
 }
 

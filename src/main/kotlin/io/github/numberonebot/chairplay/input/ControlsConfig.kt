@@ -66,6 +66,7 @@ class ControlsConfig(
     val notchesPerStep: Int = 1,
     /** Each action's keys as the file names them, in its order. */
     private val keyNames: Map<ControlAction, List<String>> = emptyMap(),
+    val globalEnabled: Boolean = false,
 ) {
     /** The first key bound to [action], as the file names it ("Escape", "Ctrl+Up"), for a button's label; null for none. */
     fun firstKey(action: ControlAction): String? = keyNames[action]?.firstOrNull()
@@ -87,6 +88,7 @@ class ControlsConfig(
         private const val WHEEL = "wheel.action"
         private const val INVERT = "wheel.invert"
         private const val NOTCHES = "wheel.notches.per.step"
+        private const val GLOBAL = "global.enabled"
         private val MODIFIERS = mapOf("shift" to GLFW_MOD_SHIFT, "ctrl" to GLFW_MOD_CONTROL, "alt" to GLFW_MOD_ALT)
         internal const val MOD_MASK = GLFW_MOD_SHIFT or GLFW_MOD_CONTROL or GLFW_MOD_ALT
 
@@ -115,7 +117,7 @@ class ControlsConfig(
         internal fun parse(text: String): ControlsConfig = parse(Properties().apply { load(StringReader(text)) })
 
         private fun parse(settings: Properties): ControlsConfig {
-            val known = ControlAction.entries.map { it.key }.toSet() + setOf(REPEAT, ZOOM_REPEAT, WHEEL, INVERT, NOTCHES)
+            val known = ControlAction.entries.map { it.key }.toSet() + setOf(REPEAT, ZOOM_REPEAT, WHEEL, INVERT, NOTCHES, GLOBAL)
             settings.stringPropertyNames().firstOrNull { it !in known }?.let {
                 throw IllegalArgumentException("$FILE: unknown setting $it")
             }
@@ -171,6 +173,11 @@ class ControlsConfig(
                 },
                 notchesPerStep = positive(settings, NOTCHES, 1),
                 keyNames = keyNames,
+                globalEnabled = when (val raw = settings.getProperty(GLOBAL)?.trim()?.lowercase() ?: "false") {
+                    "true" -> true
+                    "false" -> false
+                    else -> throw IllegalArgumentException("$FILE: $GLOBAL must be true or false, not $raw")
+                },
             )
         }
 
@@ -240,6 +247,8 @@ class ControlsConfig(
             append("$REPEAT=3\n")
             append("# A held AltScreen zoom key steps on every N-th key repeat; '0' steps once a press.\n")
             append("$ZOOM_REPEAT=10\n")
+            append("# Use the same shortcuts in other apps too; the other app still receives every key.\n")
+            append("$GLOBAL=false\n")
             append("\n")
             append("# Mouse wheel: 'knob' turns the knob (scrolling down is forward), 'none' ignores the wheel.\n")
             append("$WHEEL=knob\n")

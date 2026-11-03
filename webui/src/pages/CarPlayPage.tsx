@@ -1,6 +1,7 @@
 import type { AppState, Backend } from '../api'
 import { Group, Row } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
+import { AlwaysOnTop } from './AlwaysOnTop'
 import { ActualSize, Changed, parts, pendingOf, SafeArea, SizeRows } from './parts'
 
 /** Common car and desktop display sizes, the 480 px tall ones first. */
@@ -98,7 +99,8 @@ export function CarPlayPage({ state, backend, settings }: { state: AppState; bac
           Hardware decoding automatically falls back to software if the GPU is unavailable or decoding fails
         </span>
       </Row>
-      <Group title="Look" note={note(LOOK_KEYS)} />
+      <AlwaysOnTop settings={settings} setting="window.always.on.top" />
+      <Group title="Appearance" note={note(LOOK_KEYS)} />
       <Row label="Theme">
         {choice('display.theme', 'Theme', 'windows', [
           ['windows', 'Windows'],

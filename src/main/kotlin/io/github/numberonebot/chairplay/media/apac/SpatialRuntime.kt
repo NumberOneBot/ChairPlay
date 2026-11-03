@@ -9,7 +9,7 @@ import java.util.Properties
 internal data class SpatialPlan(val library: ApacNativeLibrary, val device: String, val channels: Int)
 internal data class SpatialCapability(val available: Boolean, val reason: String? = null, val plan: SpatialPlan? = null)
 
-/** Optional external decoder; only ChairPlay's WASAPI adapter belongs to the default distribution. */
+/** Advertise APAC only when its decoder and the selected Windows output are available. */
 internal object SpatialRuntime {
     private val libraries = HashMap<Path, ApacNativeLibrary>()
     private val cache = HashMap<String, Pair<Long, SpatialCapability>>()

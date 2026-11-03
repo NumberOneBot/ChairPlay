@@ -60,6 +60,12 @@ internal fun postRoute(api: UiApi, route: String, body: Map<*, *>): Pair<Int, Ma
                 else -> json(404, mapOf("error" to "no button $action"))
             }
         }
+        "keyboard-focus" -> {
+            val client = body["client"] as? String
+            val focused = body["focused"] as? Boolean
+            if (client == null || client.length !in 1..80 || focused == null) json(400, mapOf("error" to "invalid focus lease"))
+            else { api.keyboardFocus(client, focused); json(200, mapOf("ok" to true)) }
+        }
         "key" -> {
             val name = body["name"] as? String
             val phase = body["phase"] as? String

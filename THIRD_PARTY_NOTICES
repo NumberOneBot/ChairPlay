@@ -12,6 +12,9 @@ MHI2Q CarPlay maneuver renderer   commit 0ae41e3 GPL-3.0-or-later (LICENSE)     
   pictures in chairplay.jar, hud/destination-flag.rgba; the copied files and ChairPlay's changes are listed in
   native/maneuver/README.md in ChairPlay's source)
 Bouncy Castle bcprov-jdk18on      1.79           MIT-style (Bouncy-Castle-LICENSE.txt)  https://www.bouncycastle.org/
+APAC decoder and ABI bridge      commit df73e06 See APAC-NOTICE.txt             https://github.com/luka-dev/mib2q-carplay-rgi
+  (apac/chairplay_apac.dll: LuKa's port of Apple's decoder from a Pioneer licensee binary;
+  source provenance and the donor's distribution notice are preserved in APAC-NOTICE.txt)
 JmDNS                             3.6.3          Apache-2.0 (Apache-2.0.txt)      https://github.com/jmdns/jmdns
 SLF4J API                         2.0.7          MIT (SLF4J-LICENSE.txt; in jar)  https://www.slf4j.org/
 Kotlin stdlib                     2.2.10         Apache-2.0 (Apache-2.0.txt)      https://kotlinlang.org/

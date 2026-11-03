@@ -1,0 +1,21 @@
+APAC decoder and ABI bridge
+
+Source: https://github.com/luka-dev/mib2q-carplay-rgi
+Revision: df73e061a29c4d996550716987f42a9243daa09a
+Port and bridge: Copyright (c) 2026 LuKa (@LuKa_dev).
+ChairPlay builds the unmodified decoder sources for Windows x64.
+
+The donor's GPL-3.0-or-later license covers its own code and documentation.
+Third-party material remains subject to its owners' terms and is not relicensed
+by the donor's LICENSE or NOTICE.md.
+
+The donor describes the APAC decoder as a port derived from Apple's decoder in
+a Pioneer licensee binary, with tables extracted from that binary. Its APAC
+codec documentation states:
+"The port is derived work lifted from a licensee's binary: fine locally, not publishable."
+
+https://github.com/luka-dev/mib2q-carplay-rgi/blob/df73e061a29c4d996550716987f42a9243daa09a/docs/audio/APAC_CODEC.md
+
+This notice records provenance; it does not grant redistribution rights to
+third-party material. The copied files and their hashes are listed in
+native/apac/sources.json in the ChairPlay source tree.

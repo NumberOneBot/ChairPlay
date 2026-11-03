@@ -64,10 +64,11 @@ export function AboutPage({
           <img src={coffeeButton} alt="Buy Me a Coffee" />
         </button>
       </Row>
+      <Row label="CarPlay foundation">{link('livi', 'LIVI')} by f-io</Row>
       <Row label="CarPlay core">
         {link('diplay', 'DiPlay')} by shihabal3amri, on {link('xcertplay', 'xcertplay')} by shilapi
       </Row>
-      <Row label="HUD maneuvers">LuKa, {link('rgi', 'mib2q-carplay-rgi')}</Row>
+      <Row label="Maneuvers, APAC">LuKa, {link('rgi', 'mib2q-carplay-rgi')}</Row>
       <Row label="License">GPL-3.0 · {link('notices', 'Third-party notices')}</Row>
       <Group title="Support" />
       <Row label="Get started">

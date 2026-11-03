@@ -60,6 +60,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
             "pull-requests" to "https://github.com/NumberOneBot/ChairPlay/pulls",
             "diplay" to "https://github.com/shihabal3amri/DiPlay",
             "xcertplay" to "https://github.com/shilapi/xcertplay",
+            "livi" to "https://github.com/f-io/LIVI",
             "rgi" to "https://github.com/luka-dev/mib2q-carplay-rgi",
         )
         for ((place, url) in pages) {

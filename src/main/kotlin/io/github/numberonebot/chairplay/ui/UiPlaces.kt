@@ -8,7 +8,7 @@ import java.nio.file.Path
  * The Windows pages, folders and web pages the screens link to, by the name the page gives, opened through [launch]:
  * Bluetooth or Wi-Fi in Settings, the firewall in Windows Security or its console with the rules, location, the MFi,
  * logs, and screenshots folders (made first if they are missing), and the About page's: the project's pages on GitHub
- * (a new issue with [details] filled in), DiPlay's, xcertplay's, the HUD renderer's, and the third-party notices beside
+ * (a new issue with [details] filled in), DiPlay's, xcertplay's, LIVI's, the HUD renderer's, and the third-party notices beside
  * the app ([setup]), in Notepad as the file has no extension. [about] and [windowsVersion] name the build in a report.
  */
 internal class UiPlaces(
@@ -49,6 +49,7 @@ internal class UiPlaces(
         "releases" -> "$PROJECT/releases"
         "diplay" -> "https://github.com/shihabal3amri/DiPlay"
         "xcertplay" -> "https://github.com/shilapi/xcertplay"
+        "livi" -> "https://github.com/f-io/LIVI"
         "rgi" -> "https://github.com/luka-dev/mib2q-carplay-rgi"
         "logs", "screenshots" -> Files.createDirectories(setup.settingsFile.resolveSibling(place)).toString()
         else -> Files.createDirectories(setup.mfiDirectory).toString()
@@ -82,7 +83,7 @@ internal class UiPlaces(
         /** The names the page may give ([open]). */
         val PLACES = listOf(
             "bluetooth", "wifi", "firewall", "firewall-rules", "mfi-folder", "location",
-            "issues", "discussions", "pull-requests", "author", "source", "releases", "notices", "diplay", "xcertplay", "rgi",
+            "issues", "discussions", "pull-requests", "author", "source", "releases", "notices", "diplay", "xcertplay", "livi", "rgi",
             "logs", "screenshots", "buy-me-a-coffee",
         )
 

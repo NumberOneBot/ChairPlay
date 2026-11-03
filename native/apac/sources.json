@@ -1,0 +1,226 @@
+{
+  "repository": "luka-dev/mib2q-carplay-rgi",
+  "revision": "df73e061a29c4d996550716987f42a9243daa09a",
+  "files": [
+    {
+      "path": "include/apac/bitstream.h",
+      "upstream_path": "apac_decoder/include/apac/bitstream.h",
+      "git_blob": "fe3d06058682a0545df42bb54ec0c292619e8ccd"
+    },
+    {
+      "path": "include/apac/bwe.h",
+      "upstream_path": "apac_decoder/include/apac/bwe.h",
+      "git_blob": "3b9700a41ab06092d0c7886852bef50e91f0c9ae"
+    },
+    {
+      "path": "include/apac/bwe_lpc.h",
+      "upstream_path": "apac_decoder/include/apac/bwe_lpc.h",
+      "git_blob": "42d371b9428e28b9b00b35a7ccbe00b8d61219a3"
+    },
+    {
+      "path": "include/apac/cac.h",
+      "upstream_path": "apac_decoder/include/apac/cac.h",
+      "git_blob": "e85ffbb4a6b7a2290543662e950656d485155cda"
+    },
+    {
+      "path": "include/apac/config.h",
+      "upstream_path": "apac_decoder/include/apac/config.h",
+      "git_blob": "88b37aa6352d643a5d53cdd6e7ba7f5f56598309"
+    },
+    {
+      "path": "include/apac/decoder.h",
+      "upstream_path": "apac_decoder/include/apac/decoder.h",
+      "git_blob": "693184bde950144ea42ca435cd521ebd9dec42e6"
+    },
+    {
+      "path": "include/apac/drc.h",
+      "upstream_path": "apac_decoder/include/apac/drc.h",
+      "git_blob": "0b946ce91f0aecaff84351142b1180eb5e5f2d11"
+    },
+    {
+      "path": "include/apac/element.h",
+      "upstream_path": "apac_decoder/include/apac/element.h",
+      "git_blob": "98cd29e4b557405bf96d376c2b556129f588479b"
+    },
+    {
+      "path": "include/apac/filterbank.h",
+      "upstream_path": "apac_decoder/include/apac/filterbank.h",
+      "git_blob": "e53ca2969ef9e0edf8bb4a921a9073d7dad4f6e1"
+    },
+    {
+      "path": "include/apac/huffman.h",
+      "upstream_path": "apac_decoder/include/apac/huffman.h",
+      "git_blob": "3c1145daee6922a57a5ce3743b06a2e36d67a5f8"
+    },
+    {
+      "path": "include/apac/ics_info.h",
+      "upstream_path": "apac_decoder/include/apac/ics_info.h",
+      "git_blob": "3d80baa7646134ec3a56e9c458241dbe4fdddff1"
+    },
+    {
+      "path": "include/apac/lpc.h",
+      "upstream_path": "apac_decoder/include/apac/lpc.h",
+      "git_blob": "c184454a9d4c00b3cc4ad3229eaef5fe5b2504a0"
+    },
+    {
+      "path": "include/apac/lrvq.h",
+      "upstream_path": "apac_decoder/include/apac/lrvq.h",
+      "git_blob": "0b20c08ea820c7f9e975a2c5511c81576b34a85e"
+    },
+    {
+      "path": "include/apac/sfb_offsets.h",
+      "upstream_path": "apac_decoder/include/apac/sfb_offsets.h",
+      "git_blob": "cfd438911896138de2121a00f1f086ac78e832c2"
+    },
+    {
+      "path": "include/apac/spectrum.h",
+      "upstream_path": "apac_decoder/include/apac/spectrum.h",
+      "git_blob": "4e35eafb2cf0b3129d0256d313b4dd1a01ffbb39"
+    },
+    {
+      "path": "include/apac/tns.h",
+      "upstream_path": "apac_decoder/include/apac/tns.h",
+      "git_blob": "b05c8f4d58f24e87fae3200b8ed650e46049c03c"
+    },
+    {
+      "path": "include/apac/transform.h",
+      "upstream_path": "apac_decoder/include/apac/transform.h",
+      "git_blob": "65c91d8f5bc13c830459cc5fa5334e47096ba394"
+    },
+    {
+      "path": "src/bitstream.cpp",
+      "upstream_path": "apac_decoder/src/bitstream.cpp",
+      "git_blob": "aa26c8eb37f01e61831a5c19806b5d89e17d39b3"
+    },
+    {
+      "path": "src/bwe.cpp",
+      "upstream_path": "apac_decoder/src/bwe.cpp",
+      "git_blob": "64802152f54a26e2a2369067083df486b3174d4a"
+    },
+    {
+      "path": "src/bwe_lpc.cpp",
+      "upstream_path": "apac_decoder/src/bwe_lpc.cpp",
+      "git_blob": "e42d1433fbe6d2d60957df7f9de8cbbb52ae3352"
+    },
+    {
+      "path": "src/bwe_tables.cpp",
+      "upstream_path": "apac_decoder/src/bwe_tables.cpp",
+      "git_blob": "07d6d9ff530b975e230ca7ad91242fa303dbc683"
+    },
+    {
+      "path": "src/cac.cpp",
+      "upstream_path": "apac_decoder/src/cac.cpp",
+      "git_blob": "4a4b4b97958a863a34ea4edfbaebeaa98bec6410"
+    },
+    {
+      "path": "src/cac_tables.cpp",
+      "upstream_path": "apac_decoder/src/cac_tables.cpp",
+      "git_blob": "77d273c5c5576b16be6df1e0e0fae57ee7d5f1e5"
+    },
+    {
+      "path": "src/config.cpp",
+      "upstream_path": "apac_decoder/src/config.cpp",
+      "git_blob": "949306466f9c623e392d96e37906046d8a57a13f"
+    },
+    {
+      "path": "src/decoder.cpp",
+      "upstream_path": "apac_decoder/src/decoder.cpp",
+      "git_blob": "31e0c03ee370ca8389c3edbddf949ac82acba9d5"
+    },
+    {
+      "path": "src/drc.cpp",
+      "upstream_path": "apac_decoder/src/drc.cpp",
+      "git_blob": "02f9cbcc0be80cc74a1f4538855d4acf20f45df3"
+    },
+    {
+      "path": "src/element.cpp",
+      "upstream_path": "apac_decoder/src/element.cpp",
+      "git_blob": "329a712c8c80a44d4259d87417b2d4c8cfb80255"
+    },
+    {
+      "path": "src/filterbank.cpp",
+      "upstream_path": "apac_decoder/src/filterbank.cpp",
+      "git_blob": "311f9620332deaf14e4eeeb4b7d0056e0ae86e60"
+    },
+    {
+      "path": "src/huff_tables.cpp",
+      "upstream_path": "apac_decoder/src/huff_tables.cpp",
+      "git_blob": "30c912147bc88afce6759d166bebaa4281e44564"
+    },
+    {
+      "path": "src/ics_info.cpp",
+      "upstream_path": "apac_decoder/src/ics_info.cpp",
+      "git_blob": "157a8bdac5177c7f6bf469f38fec998e77761b4a"
+    },
+    {
+      "path": "src/lpc.cpp",
+      "upstream_path": "apac_decoder/src/lpc.cpp",
+      "git_blob": "c631968d128f4c660a7023b273d0c44c43da3089"
+    },
+    {
+      "path": "src/lrvq.cpp",
+      "upstream_path": "apac_decoder/src/lrvq.cpp",
+      "git_blob": "2b9a15f721550eff7bd3ae2f1a0d56b3139349bb"
+    },
+    {
+      "path": "src/lrvq_frame.cpp",
+      "upstream_path": "apac_decoder/src/lrvq_frame.cpp",
+      "git_blob": "1bc0e0b88fdd1e89f0e052c9aea3f341ff46bca1"
+    },
+    {
+      "path": "src/lrvq_tables.cpp",
+      "upstream_path": "apac_decoder/src/lrvq_tables.cpp",
+      "git_blob": "ecb72562f68a707fbc09ffd89301b8d4effbcccf"
+    },
+    {
+      "path": "src/scale_factor_data.cpp",
+      "upstream_path": "apac_decoder/src/scale_factor_data.cpp",
+      "git_blob": "a664a52fba48535960d807732acca3fb7e6f18de"
+    },
+    {
+      "path": "src/sfb_tables.cpp",
+      "upstream_path": "apac_decoder/src/sfb_tables.cpp",
+      "git_blob": "0c3aaec56c1b33634e025c1a40289cd773c7f618"
+    },
+    {
+      "path": "src/spectral_data.cpp",
+      "upstream_path": "apac_decoder/src/spectral_data.cpp",
+      "git_blob": "377e9396a4af1015a5fcd6eb6270323893f1476b"
+    },
+    {
+      "path": "src/tns.cpp",
+      "upstream_path": "apac_decoder/src/tns.cpp",
+      "git_blob": "4ca1d7b81f9bffca2632d08079dde935e2832121"
+    },
+    {
+      "path": "src/transform.cpp",
+      "upstream_path": "apac_decoder/src/transform.cpp",
+      "git_blob": "8479d056eeb744308c2122cbc25f5834e63d0682"
+    },
+    {
+      "path": "src/transform_tables.cpp",
+      "upstream_path": "apac_decoder/src/transform_tables.cpp",
+      "git_blob": "609117b5c03346c693dd9754a621e9ad9a5f1967"
+    },
+    {
+      "path": "bridge/apac_bridge.cpp",
+      "upstream_path": "hook/audio/apac_bridge.cpp",
+      "git_blob": "d383cc8a95afc48c3df6b87ae4f7346ea9dba7f0"
+    },
+    {
+      "path": "bridge/apac_bridge.h",
+      "upstream_path": "hook/audio/apac_bridge.h",
+      "git_blob": "4c8c96d7c7bd63486ab4135c34fb3099a3262330"
+    },
+    {
+      "path": "NOTICE.md",
+      "upstream_path": "NOTICE.md",
+      "git_blob": "671d6203ac34f4b05cc51e9c5f98f645c5d6ead1"
+    },
+    {
+      "path": "LICENSE",
+      "upstream_path": "LICENSE",
+      "git_blob": "f288702d2fa16d3cdf0035b15a9fcbc552cd88e7"
+    }
+  ]
+}

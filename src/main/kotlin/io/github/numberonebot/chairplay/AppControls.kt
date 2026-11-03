@@ -8,6 +8,7 @@ import io.github.numberonebot.chairplay.input.ControlAction
 import io.github.numberonebot.chairplay.input.ControlPad
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.KeyControls
+import io.github.numberonebot.chairplay.input.KnobOwners
 import io.github.numberonebot.chairplay.input.PageKeys
 import io.github.numberonebot.chairplay.input.CarPlayTextInput
 import io.github.numberonebot.chairplay.media.Volume
@@ -42,6 +43,11 @@ internal class AppControls(
     /** The windows' keys and wheel as the bindings map them. */
     val keys = KeyControls { bindings.get() }
     val textInput = CarPlayTextInput(active, touchSender, ::log)
+    private val knobOwners = KnobOwners()
+    private var knobSession: AirPlaySession? = null
+    val global = AppGlobalKeys(bindings::get, active, { key, control, session ->
+        send(control, owner = "global:$key", expectedSession = session as AirPlaySession?)
+    }, driving.control::key, changed)
 
     // The controls window's page: a button pressed and released there makes the Controls a key does, through ControlPad.
     private val pad = ControlPad()
@@ -67,8 +73,15 @@ internal class AppControls(
     var gaugeSize: () -> Unit = {}
     var fullscreen: () -> Unit = {}
 
-    fun send(control: Control?, fullscreen: () -> Unit = this.fullscreen) {
+    fun close() {
+        global.close()
+        // Finish final releases before Main closes the CarPlay session and its sender.
+        runCatching { touchSender.submit {}.get(1, java.util.concurrent.TimeUnit.SECONDS) }
+    }
+
+    fun send(control: Control?, fullscreen: () -> Unit = this.fullscreen, owner: String = "local", expectedSession: AirPlaySession? = active()) {
         control ?: return
+        if (active() !== expectedSession) return
         if (control == Control.Fullscreen) {
             fullscreen()
             return
@@ -103,10 +116,12 @@ internal class AppControls(
             reconnect()
             return
         }
+        val session = expectedSession ?: return
         touchSender.execute {
-            val session = active() ?: return@execute
+            if (active() !== session) return@execute
+            if (knobSession !== session) { knobOwners.clear(); knobSession = session }
             when (control) {
-                is Control.Knob -> session.sendKnob(control.state, control.momentary)
+                is Control.Knob -> knobOwners.apply(owner, control).forEach { session.sendKnob(it.state, it.momentary) }
                 is Control.Media -> session.sendMedia(control.index)
                 is Control.Telephony -> session.sendTelephony(control.index)
                 Control.Siri -> session.invokeSiri()
@@ -130,13 +145,14 @@ internal class AppControls(
             val held = action != GLFW_RELEASE
             if (altHeld.getAndSet(held) != held) changed()
         }
-        if (!covered()) {
+        if (!covered() && !global.owns(key)) {
             if (text && (textInput.key(key, action, mods) || textInput.capturesKey(key, mods))) send(keys.key(key, GLFW_RELEASE, mods))
             else if (!driving.control.key(key, action, mods)) send(keys.key(key, action, mods), fullscreen)
         }
     }
 
     fun bindWindows(main: VideoWindow, alt: VideoWindow, controls: VideoWindow, mainVolumeTitle: (String?) -> Unit, covered: () -> Boolean) {
+        global.wake = main::repaint
         volumeTitle = VolumeTitle({ controls.visible }, { notice ->
             controls.setTitle(notice?.let { "Controls · $it" } ?: "Controls")
         }, mainVolumeTitle)
@@ -149,7 +165,9 @@ internal class AppControls(
 
     /** What the settings screen's pages and the controls window's buttons do. */
     val page = object : UiControls {
+        override fun keyboardFocus(client: String, focused: Boolean) = global.focus(client, focused)
         override fun key(name: String, phase: String, everything: Boolean): Boolean {
+            if (ControlsConfig.parseBinding(name)?.let { global.owns(it.key) } == true) return true
             val control = pageKeys.key(name, phase, everything) ?: return false
             send(control)
             return true
@@ -181,6 +199,7 @@ internal class AppControls(
             "altscreen" to altView.content?.key,
             "altHeld" to altHeld.get(),
             "playing" to playing(),
+            "globalKeyboard" to global.state(),
         )
     }
 }

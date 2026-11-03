@@ -132,6 +132,7 @@ export function controlsData(): ControlsData {
       'wheel.invert': 'false',
       'wheel.notches.per.step': '1',
       'key.repeat.every': '3',
+      'global.enabled': 'false',
       'key.zoom.repeat.every': '10',
     },
   }

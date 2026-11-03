@@ -66,8 +66,8 @@ class VideoWindow(
     private val latest = AtomicReference<DecodedFrame?>()
     private val closing = AtomicBoolean()
     private val minimizing = AtomicBoolean()
-    private val fullscreen = WindowFullscreen()
-    fun toggleFullscreen() { fullscreen.toggle(); wake() }
+    val commands = WindowCommands(::wake)
+    fun toggleFullscreen() = commands.toggleFullscreen()
     private val screenshotRequest = AtomicReference<((BufferedImage) -> Unit)?>()
     internal val titles = WindowTitle()
     private val shownRequest = AtomicReference<Boolean?>()
@@ -294,7 +294,7 @@ class VideoWindow(
         val size = aspect?.let { remembered.fittedTo(it) } ?: remembered
         val window = glfwCreateWindow(size.width, size.height, title, 0, 0)
         check(window != 0L) { "cannot create the window" }
-        handle = window
+        handle = window.also(commands::open)
         // Windows applies it to edge drags only, so a maximized window still fills the screen.
         aspect?.let { glfwSetWindowAspectRatio(window, it.width, it.height) }
         if (restore != null) glfwSetWindowPos(window, restore.x, restore.y)
@@ -411,7 +411,7 @@ class VideoWindow(
         glfwMakeContextCurrent(window)
         GL.setCapabilities(capabilities)
         val gl = checkNotNull(gl)
-        tracker?.let { fullscreen.apply(window, it) }
+        tracker?.let { commands.apply(window, it) }
         if (minimizing.getAndSet(false)) glfwIconifyWindow(window)
         shownRequest.getAndSet(null)?.let { applyShown(window, it) }
         streamRequest.getAndSet(null)?.let { size ->

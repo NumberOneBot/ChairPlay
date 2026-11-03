@@ -80,6 +80,14 @@ class UiServerTest {
     }
 
     // The Audio page's slider: a whole percent.
+    @Test fun `browser keyboard focus leases are validated and forwarded`() {
+        assertEquals(200, post("/api/keyboard-focus", """{"client":"page","focused":true}""").statusCode())
+        assertEquals(200, post("/api/keyboard-focus", """{"client":"page","focused":false}""").statusCode())
+        assertEquals(400, post("/api/keyboard-focus", """{"client":"","focused":true}""").statusCode())
+        assertEquals(400, post("/api/keyboard-focus", """{"client":"page"}""").statusCode())
+        assertEquals(listOf("keyboard focus page true", "keyboard focus page false"), api.calls)
+    }
+
     @Test
     fun `the volume is set from the page`() {
         assertEquals(200, post("/api/volume", """{"level":37}""").statusCode())

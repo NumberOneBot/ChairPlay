@@ -46,6 +46,7 @@ internal class FakeUiApi : UiApi {
         calls += "key $name $phase $everything"
         return name != "Up" || everything
     }
+    override fun keyboardFocus(client: String, focused: Boolean) { calls += "keyboard focus $client $focused" }
     override fun altscreenContent(content: String): Boolean {
         calls += "altscreen $content"
         return content == "hud"

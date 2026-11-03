@@ -128,6 +128,9 @@ export class Api implements Backend {
   async key(name: string, phase: KeyPhase, everything: boolean): Promise<void> {
     await this.request('POST', 'key', { name, phase, everything })
   }
+  async keyboardFocus(client: string, focused: boolean): Promise<void> {
+    await this.request('POST', 'keyboard-focus', { client, focused })
+  }
 
   async altscreen(content: AltscreenContent): Promise<boolean> {
     return (await this.request('POST', 'altscreen', { content })).status === 200

@@ -43,7 +43,7 @@ After that, open ChairPlay with your iPhone unlocked and nearby, and CarPlay sta
 
 A newer installer updates ChairPlay and keeps your settings, pairing and MFi files. Uninstalling asks whether to delete them too.
 
-See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.4 release notes](docs/RELEASE-NOTES-1.0.4.md) for the upcoming update.
+See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.5 release notes](docs/RELEASE-NOTES-1.0.5.md) for the upcoming update.
 
 ## Features
 
@@ -52,6 +52,7 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.4 re
 - Keyboard controls like a car's knob and buttons (see [Controls](#controls)), and on-screen car controls from the toolbar's Controls button.
 - Basic keyboard text input in CarPlay fields, using the iPhone's keyboard layout.
 - Sound and microphone on the devices you choose, with a volume separate from Windows'.
+- **Apple Spatial Audio:** APAC 5.1 playback from supported iPhone apps in Buffered mode, with automatic 5.1 output or stereo downmix for the selected Windows audio device. The decoder is included with the app.
 - **AltScreen** (experimental): a car's instrument cluster as a second CarPlay screen in its own window, with the map, the turn card or both, in a preset part of the cluster or a rectangle you draw. It can also show a **HUD**: the next turn with animated 3D maneuvers, the distance, the arrival time and the song.
 - **GPS spoofing** (experimental): the iPhone navigates by a virtual car you drive with the keyboard or a gamepad. See the [GPS guide](docs/GPS.md) for details and optional satellite reports.
 
@@ -90,7 +91,9 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 
 <br/>
 
-**Typing in CarPlay:** **Keyboard → Text input → Type in CarPlay** is on by default; reconnect after changing it. When CarPlay requests text input, letter shortcuts pause so you can type. Text follows the iPhone's layout, not the Windows layout. Shift, Caps Lock, Home/End, and text-selection shortcuts do not currently work in the tested CarPlay fields.
+**Typing in CarPlay:** **Keyboard → General → Type in CarPlay** is on by default; reconnect after changing it. When CarPlay requests text input, letter shortcuts pause so you can type. Text follows the iPhone's layout, not the Windows layout. Shift, Caps Lock, Home/End, and text-selection shortcuts do not currently work in the tested CarPlay fields.
+
+**Global shortcuts (Windows):** Turn on **Keyboard → Global shortcuts** to use the same bindings while another app has focus, including in full screen. The focused app still receives the keys. Changes apply immediately; global text input is not enabled. Background shortcuts pause while a ChairPlay settings or controls page has focus.
 
 ## Support the project
 
@@ -102,7 +105,8 @@ ChairPlay is a hobby project I build and test on real hardware in my spare time.
 
 ## Good to know
 
-- **Audio → Music → Buffered** is the default for supported iPhone apps and supports AAC stereo plus APAC when its decoder and output are available. Reconnect to apply. APAC output follows the selected Windows device automatically: 5.1 or stereo downmix. The Buffer status shows **5.1** or **5.1 → stereo** only while APAC plays. Stream state and buffered audio in seconds and KB replace **Startup silence**, including when no stream is available. The buffer limit is 120 seconds or 8 MiB for legacy AAC transport, or 21,168,000 bytes for APAP, whichever is reached first; Startup silence only affects standard streams.
+- **Audio → Music → Buffered** is the default for supported iPhone apps and supports AAC stereo plus APAC when its decoder and output are available. If the APAC decoder is missing or cannot load, ChairPlay offers Buffered AAC only. Reconnect to apply. APAC output follows the selected Windows device automatically: 5.1 or stereo downmix. The Buffer status shows **5.1** or **5.1 → stereo** only while APAC plays. Stream state and buffered audio in seconds and KB replace **Startup silence**, including when no stream is available. The buffer limit is 120 seconds or 8 MiB for legacy AAC transport, or 21,168,000 bytes for APAP, whichever is reached first; Startup silence only affects standard streams.
+- **CarPlay / AltScreen → Window → Always on top** keeps that window above other windows. Each screen has its own saved switch, off by default, and changes apply immediately.
 - Close ChairPlay with its window. If it's killed mid-session, from Task Manager for example, the iPhone may ignore new connections until you restart the iPhone.
 - It works over Wi-Fi only, not over USB or a hotspot shared by the PC.
 - Calls sound best with headphones. Echo cancellation for speakers is experimental and off by default.
@@ -129,10 +133,10 @@ This builds the app into `dist\ChairPlay`. [docs/SETUP.md](docs/SETUP.md) covers
 
 ## Licence and credits
 
-GPL-3.0, like DiPlay and xcertplay; see [LICENSE](LICENSE). The CarPlay protocol work is DiPlay's and xcertplay's.
+GPL-3.0, like DiPlay and xcertplay; see [LICENSE](LICENSE). The CarPlay protocol work builds on LIVI, xcertplay, and DiPlay.
 
-ChairPlay is built on [DiPlay](https://github.com/shihabal3amri/DiPlay) by shihabal3amri, a CarPlay receiver for Android car head units, which is based on [xcertplay](https://github.com/shilapi/xcertplay) by shilapi. ChairPlay is a separate project, not affiliated with their authors.
+ChairPlay is built on [DiPlay](https://github.com/shihabal3amri/DiPlay) by shihabal3amri, a CarPlay receiver for Android car head units, which is based on [xcertplay](https://github.com/shilapi/xcertplay) by shilapi. [LIVI](https://github.com/f-io/LIVI) by f-io provided a foundational CarPlay reference for xcertplay and, through it, DiPlay. ChairPlay is a separate project, not affiliated with their authors.
 
-The HUD's 3D maneuvers and destination flag are LuKa's, from [mib2q-carplay-rgi](https://github.com/luka-dev/mib2q-carplay-rgi) (GPL-3.0 or later); [native/maneuver/README.md](native/maneuver/README.md) lists what was taken and changed. The notices of the bundled libraries are in `THIRD_PARTY_NOTICES` and come with the app.
+The HUD's 3D maneuvers and destination flag are LuKa's, from [mib2q-carplay-rgi](https://github.com/luka-dev/mib2q-carplay-rgi) (GPL-3.0 or later); [native/maneuver/README.md](native/maneuver/README.md) lists what was taken and changed. APAC support also builds on LuKa's decoder and CarPlay protocol research in that project. The notices of the bundled libraries are in `THIRD_PARTY_NOTICES` and come with the app.
 
 CarPlay, iPhone, AirPlay and Siri are trademarks of Apple Inc. ChairPlay is not affiliated with Apple. No Apple MFi identity is stored in this repository.

@@ -34,8 +34,9 @@ internal fun uiDriving(driving: Driving, window: VideoWindow, screenshots: () ->
  * zoom ([GamepadControls]) sent to [controls], the GPS on or off; a gamepad there is looked at now and then.
  */
 internal fun windowPass(driving: Driving, controls: AppControls, buttons: GamepadControls = GamepadControls()): () -> Double? = {
+    val globalDue = controls.global.pass()
     val due = driving.pass()
     val pad = GlfwGamepad.buttons()
     buttons.pass(pad).forEach(controls::send)
-    listOfNotNull(due, controls.volumeTitlePass(), pad?.let { DriveControl.GAMEPAD_POLL_SECONDS }).minOrNull()
+    listOfNotNull(due, globalDue, controls.volumeTitlePass(), pad?.let { DriveControl.GAMEPAD_POLL_SECONDS }).minOrNull()
 }

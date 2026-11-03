@@ -2,6 +2,7 @@ import type { AltscreenContent, AppState, Backend } from '../api'
 import { keyLabel } from '../ControlsScreen'
 import { Group, Row, Segmented, Switch, type Choice } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
+import { AlwaysOnTop } from './AlwaysOnTop'
 import { AreaChooser, type AreaGroup } from './AreaChooser'
 import { CustomArea } from './CustomArea'
 import { ActualSize, Changed, parts, pendingOf, SafeArea, SizeRows } from './parts'
@@ -90,7 +91,8 @@ export function AltScreenPage({ state, backend, settings }: { state: AppState; b
             Most instrument clusters have an 8:3 aspect ratio, so the area presets below split the width into eighths
           </span>
         </Row>
-        <Group title="View" />
+        <AlwaysOnTop settings={settings} setting="altscreen.always.on.top" />
+        <Group title="Appearance" />
         <Row
           label="Content"
           title="What the AltScreen shows now, as the controls window switches it too; it opens on it again"

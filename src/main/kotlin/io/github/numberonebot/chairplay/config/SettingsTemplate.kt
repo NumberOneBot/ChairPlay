@@ -103,6 +103,10 @@ internal val SETTINGS_TEMPLATE = listOf(
         "window.width" to "", "window.height" to "",
     ),
     SettingBlock(
+        "Keep each window above other windows. Changes apply immediately.",
+        "window.always.on.top" to "false", "altscreen.always.on.top" to "false",
+    ),
+    SettingBlock(
         "'true' resizes the windows only with the picture's shape (a maximized one still fills the screen),\n" +
             "'false' lets them take any shape.",
         "window.keep.aspect" to "true",

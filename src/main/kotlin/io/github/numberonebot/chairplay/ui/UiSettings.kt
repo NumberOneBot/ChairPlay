@@ -95,6 +95,7 @@ internal class UiSettings(
                 )
             },
             "settings" to linkedMapOf(
+                "global.enabled" to config.globalEnabled.toString(),
                 "wheel.action" to if (config.wheel == WheelAction.NONE) "none" else "knob",
                 "wheel.invert" to config.wheelInvert.toString(),
                 "wheel.notches.per.step" to config.notchesPerStep.toString(),

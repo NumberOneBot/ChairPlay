@@ -139,6 +139,8 @@ export class FakeBackend implements Backend {
 
   /** Keys handed on from a page, as "name phase settings" or "name phase everything". */
   keys: string[] = []
+  keyboardFocusCalls: boolean[] = []
+  async keyboardFocus(_client: string, focused: boolean) { this.keyboardFocusCalls.push(focused) }
 
   async key(name: string, phase: KeyPhase, everything: boolean) {
     this.keys.push(`${name} ${phase} ${everything ? 'everything' : 'settings'}`)

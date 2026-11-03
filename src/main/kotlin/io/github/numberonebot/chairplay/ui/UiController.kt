@@ -184,7 +184,7 @@ class UiController(
     override fun saveControls(changes: Map<String, String>): SaveResult = settingsApi.saveControls(changes)
 
     override fun control(action: String, down: Boolean): Boolean = controls?.control(action, down) ?: false
-
+    override fun keyboardFocus(client: String, focused: Boolean) { controls?.keyboardFocus(client, focused) }
     override fun key(name: String, phase: String, everything: Boolean): Boolean =
         controls?.key(name, phase, everything) ?: false
 

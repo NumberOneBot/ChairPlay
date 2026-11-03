@@ -134,7 +134,7 @@ class UiControllerTest : UiControllerFixture() {
         assertEquals(ControlAction.entries.map { it.key }, actions.keys.toList())
         assertEquals(
             mapOf("wheel.action" to "knob", "wheel.invert" to "false", "wheel.notches.per.step" to "1", "key.repeat.every" to "3",
-                "key.zoom.repeat.every" to "10"),
+                "key.zoom.repeat.every" to "10", "global.enabled" to "false"),
             controls["settings"],
         )
         assertNull(controller().controls())

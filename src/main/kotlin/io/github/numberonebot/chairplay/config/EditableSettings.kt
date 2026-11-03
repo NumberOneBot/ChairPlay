@@ -70,6 +70,8 @@ object EditableSettings {
         "display.safe.right" to Setting(Applies.RECONNECT, check = ::checkNonNegative),
         "window.width" to Setting(Applies.RESTART) { checkOptionalSize(it, MAIN_WINDOW_MIN_SIZE.width) },
         "window.height" to Setting(Applies.RESTART) { checkOptionalSize(it, MAIN_WINDOW_MIN_SIZE.height) },
+        "window.always.on.top" to switch(Applies.NOW),
+        "altscreen.always.on.top" to switch(Applies.NOW),
         // The iPhone learns of the AltScreen as it connects; the turn card moves while it runs, as Shift+F11 moves it.
         "altscreen.enabled" to switch(Applies.RECONNECT),
         "altscreen.width" to Setting(Applies.RECONNECT, check = ::checkPositiveEven),

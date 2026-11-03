@@ -150,6 +150,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         put("controls", controlsWindow.asUiWindow())
     }, appControls.page, window.asUiMainWindow(), onBindings = { saved ->
         bindings.set(saved)
+        window.repaint()
         log(saved.summary())
     }, readFirewall = ::readFirewallStatus, altscreenWindow = altscreen.asUiMainWindow { altView.on },
         altscreenFrame = UiSafeAreaFrame { top, bottom, left, right, width, height ->
@@ -159,6 +160,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         onSaved = { saved ->
             saved["display.theme"]?.let(theme::saved)
             audio.saved(saved, config)
+            windows.saved(saved)
             saved["log.level"]?.let { LogLevel.of(it) }?.let { appLog.level = it }
             // A view's part saved: the view moves there at once, among the areas this connection declared.
             if (saved.keys.any { key -> AreaGroup.entries.any { areaKey(it) == key } }) {
@@ -207,6 +209,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     window.scrollHandler = { dy -> if (!ui.coversWindow) appControls.send(appControls.keys.scroll(dy)) }
     altscreen.scrollHandler = { dy -> appControls.send(appControls.keys.altscreenScroll(dy)) }
     fun sessionChanged() {
+        appControls.global.reset()
         pending.clear()
         tracker.reset()
         // The HUD's waiting line and the session's parts rise and fade as the session comes and goes.
@@ -266,6 +269,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     Runtime.getRuntime().addShutdownHook(Thread {
         // The window is gone at once; the sound fades over the seconds the session takes to end.
         sink.fadeOut()
+        appControls.close()
         driving.close()
         almanac.close()
         ui.close()
@@ -291,6 +295,6 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         }
     }, "instance-lock").apply { isDaemon = true }.start()
     // GLFW needs its windows and event loop on this, the main, thread; the bring-up runs on its own.
-    runWindows(window, *listOfNotNull(altscreen, controlsWindow).toTypedArray(), pass = windowPass(driving, appControls), opened = windowsOpen)
+    runWindows(window, *listOfNotNull(altscreen, controlsWindow).toTypedArray(), pass = windowPass(driving, appControls), opened = { windowsOpen(); appControls.global.pass() })
     exitProcess(0)
 }

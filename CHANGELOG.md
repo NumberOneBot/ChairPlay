@@ -1,12 +1,23 @@
 # Changelog
 
-User-visible changes and release tooling updates for ChairPlay.
+New features and fixed bugs in ChairPlay.
 
 ## Unreleased
 
 ### Added
 
-- Buffered AAC music playback for supported iPhone apps, selectable in Audio settings, with stream state and buffered audio shown in seconds and KB.
+- Buffered music playback for supported iPhone apps, now selected by default, with stream state and buffered audio shown in seconds and KB. A saved Standard preference is preserved.
+- Apple Spatial Audio through APAC 5.1 in Buffered mode, with its decoder included. Output automatically follows the Windows device's 5.1 or stereo configuration, and the buffer status shows 5.1 output or stereo downmix. If the decoder is unavailable, ChairPlay offers Buffered AAC only.
+- Optional global keyboard shortcuts on Windows, using the existing bindings while another app has focus, including full screen. The focused app still receives the keys.
+- Independent, saved Always on top switches for CarPlay and AltScreen, applied immediately from each screen's Window section.
+
+### Fixed
+
+- Held keyboard controls could remain pressed when a ChairPlay page lost focus or a modifier key was released before the main key.
+- Inconsistent Appearance section headings on the CarPlay and AltScreen settings pages.
+- Missing LIVI attribution and credit for LuKa's APAC work in the app and README.
+
+[1.0.5 release notes](docs/RELEASE-NOTES-1.0.5.md) · [Changes since v1.0.4](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.4...main)
 
 ## 1.0.4 - 2026-11-01
 

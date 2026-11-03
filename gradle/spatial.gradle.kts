@@ -1,4 +1,4 @@
-// ChairPlay-owned WASAPI output only. The optional APAC decoder is not distributed by this task.
+// ChairPlay-owned WASAPI output. gradle/apac.gradle.kts builds the separate APAC decoder.
 interface SpatialFileOps {
     @get:Inject val fs: FileSystemOperations
 }

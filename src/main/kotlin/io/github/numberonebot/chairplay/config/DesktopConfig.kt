@@ -86,6 +86,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
 
     /** The CarPlay window on the PC; the picture is scaled into it, so it needs not match the display. */
     val window = display.window
+    val windowOnTop = WindowOnTop(settings)
 
     /** What the iPhone is told about its screen, for the start-up log. */
     fun displaySummary(): String = display.summary()

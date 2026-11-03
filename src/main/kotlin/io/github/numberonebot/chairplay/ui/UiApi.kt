@@ -98,6 +98,7 @@ interface UiControls {
      * when the key does nothing there.
      */
     fun key(name: String, phase: String, everything: Boolean): Boolean = false
+    fun keyboardFocus(client: String, focused: Boolean) {}
 
     /** Shows [content] ("hud", "map", "map-card", "card") on the AltScreen; false when it cannot be shown. */
     fun altscreenContent(content: String): Boolean
@@ -167,7 +168,10 @@ interface UiApi {
     /** A key pressed on a page, handed on to the app ([UiControls.key]); false when it does nothing there. */
     fun key(name: String, phase: String, everything: Boolean): Boolean = false
 
-    /** The controls window's AltScreen modes ([UiControls.altscreenContent]); false when it cannot be shown. */
+    /** A focused browser page renews a short lease that pauses native background shortcuts. */
+    fun keyboardFocus(client: String, focused: Boolean) {}
+
+    /** The controls window's AltScreen modes. */
     fun altscreenContent(content: String): Boolean
 
     /** Opens the Windows page or folder [place] names ([UiController.open]); false when there is none or it failed. */

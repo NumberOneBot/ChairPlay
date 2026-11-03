@@ -15,9 +15,9 @@ import java.nio.file.Path
 internal data class ApacFormat(val sampleRate: Int, val channels: Int, val framesPerPacket: Int, val layoutTag: Int)
 
 /**
- * Optional external APAC codec, ABI v1 (mib2q-carplay-rgi apac_bridge.h).
+ * APAC codec, ABI v1 (mib2q-carplay-rgi apac_bridge.h).
  * This adapter contains no decoder implementation or extracted tables. The caller supplies
- * an absolute DLL path; release packaging must resolve decoder distribution separately.
+ * an absolute DLL path; an absent or incompatible DLL leaves APAC unavailable.
  * Keep the library alive for the process lifetime so no stream can call an unloaded function.
  */
 internal class ApacNativeLibrary private constructor(
