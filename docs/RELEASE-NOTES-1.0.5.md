@@ -1,6 +1,6 @@
 # ChairPlay 1.0.5
 
-This update adds buffered music playback, global keyboard shortcuts, and independent Always on top controls for CarPlay and AltScreen.
+This update adds Apple Spatial Audio, buffered music playback, global keyboard shortcuts, and independent Always on top controls for CarPlay and AltScreen.
 
 ## What's changed
 

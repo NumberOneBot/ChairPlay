@@ -36,25 +36,23 @@ With Ethernet, ChairPlay selects a single available adapter automatically and of
 
 1. **Install.** Download the latest `ChairPlay-…-setup.exe` from the [Releases page](https://github.com/NumberOneBot/ChairPlay/releases) and run it. No administrator rights needed. If Windows SmartScreen warns about an unrecognized app, choose **More info → Run anyway**.
 2. **Pair your iPhone** with the PC once, in Windows Settings → Bluetooth & devices, as you would headphones.
-3. **Open ChairPlay.** The **Get started** screen checks the firewall, your paired iPhone, and your Wi-Fi network. The firewall step is omitted when Windows Firewall is off.
+3. **Open ChairPlay.** The **Get started** screen checks the firewall, your paired iPhone, and your network connection. The firewall step is omitted when Windows Firewall is off.
 4. **Connect.** When the checks are complete, keep your iPhone unlocked and nearby and press **Connect**. Accept the CarPlay prompt on the iPhone. CarPlay comes up.
 
 After that, open ChairPlay with your iPhone unlocked and nearby, and CarPlay starts by itself.
 
 A newer installer updates ChairPlay and keeps your settings, pairing and MFi files. Uninstalling asks whether to delete them too.
 
-See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.5 release notes](docs/RELEASE-NOTES-1.0.5.md) for the upcoming update.
+See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.5 release notes](docs/RELEASE-NOTES-1.0.5.md) for this update.
 
 ## Features
 
-- CarPlay in a resizable window; the mouse works as touch.
-- Full screen for CarPlay and the AltScreen: focus either window and press **F** to enter or leave full screen. Leaving full screen restores the window's previous size, position, and maximized state.
-- Keyboard controls like a car's knob and buttons (see [Controls](#controls)), and on-screen car controls from the toolbar's Controls button.
-- Basic keyboard text input in CarPlay fields, using the iPhone's keyboard layout.
-- Sound and microphone on the devices you choose, with a volume separate from Windows'.
-- **Apple Spatial Audio:** APAC 5.1 playback from supported iPhone apps in Buffered mode, with automatic 5.1 output or stereo downmix for the selected Windows audio device. The decoder is included with the app.
-- **AltScreen** (experimental): a car's instrument cluster as a second CarPlay screen in its own window, with the map, the turn card or both, in a preset part of the cluster or a rectangle you draw. It can also show a **HUD**: the next turn with animated 3D maneuvers, the distance, the arrival time and the song.
-- **GPS spoofing** (experimental): the iPhone navigates by a virtual car you drive with the keyboard or a gamepad. See the [GPS guide](docs/GPS.md) for details and optional satellite reports.
+- **Connection:** wireless CarPlay with the PC connected over Wi-Fi or Ethernet.
+- **Displays:** customizable CarPlay layouts and appearance, plus an experimental AltScreen with maps, turn cards, and a HUD for navigation and music. Both screens support H.264/H.265 video with GPU decoding.
+- **Controls:** mouse, keyboard, and on-screen car controls. Type in CarPlay fields and use global shortcuts while another app has focus. See [Controls](#controls).
+- **Audio:** music, calls, and Siri through your chosen speakers and microphone, with independent volume and buffered music playback.
+- **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
+- **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation. See the [GPS guide](docs/GPS.md).
 
 Settings are in the app and save as you change them. Tested on Windows 11 with an iPhone 15 (iOS 18.6).
 
@@ -77,7 +75,7 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 | S                                         | Siri                                                           |
 | F3 / F4                                   | answer / end a call                                            |
 | F7 / F8 / F9                              | previous track / play or pause / next track                    |
-| F10                                       | drive the GPS car with the arrows (GPS spoofing on)            |
+| F10                                       | drive the GPS car with the arrows (GPS simulation on)          |
 | Shift+F10                                 | large or small gauges for the GPS car                          |
 | F11                                       | AltScreen: switch between the HUD and the map                  |
 | Shift+F11                                 | AltScreen: move the arrival time and turn card                 |
@@ -89,12 +87,6 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 
 </details>
 
-<br/>
-
-**Typing in CarPlay:** **Keyboard → General → Type in CarPlay** is on by default; reconnect after changing it. When CarPlay requests text input, letter shortcuts pause so you can type. Text follows the iPhone's layout, not the Windows layout. Shift, Caps Lock, Home/End, and text-selection shortcuts do not currently work in the tested CarPlay fields.
-
-**Global shortcuts (Windows):** Turn on **Keyboard → Global shortcuts** to use the same bindings while another app has focus, including in full screen. The focused app still receives the keys. Changes apply immediately; global text input is not enabled. Background shortcuts pause while a ChairPlay settings or controls page has focus.
-
 ## Support the project
 
 ChairPlay is a hobby project I build and test on real hardware in my spare time. It’s free and fully open source under GPL-3.0, and donations are the only way I earn anything from this work. If it saves you a trip to the car, helps you build CarPlay apps, or makes your desk a little more fun, you can buy me a coffee.
@@ -105,13 +97,11 @@ ChairPlay is a hobby project I build and test on real hardware in my spare time.
 
 ## Good to know
 
-- **Audio → Music → Buffered** is the default for supported iPhone apps and supports AAC stereo plus APAC when its decoder and output are available. If the APAC decoder is missing or cannot load, ChairPlay offers Buffered AAC only. Reconnect to apply. APAC output follows the selected Windows device automatically: 5.1 or stereo downmix. The Buffer status shows **5.1** or **5.1 → stereo** only while APAC plays. Stream state and buffered audio in seconds and KB replace **Startup silence**, including when no stream is available. The buffer limit is 120 seconds or 8 MiB for legacy AAC transport, or 21,168,000 bytes for APAP, whichever is reached first; Startup silence only affects standard streams.
-- **CarPlay / AltScreen → Window → Always on top** keeps that window above other windows. Each screen has its own saved switch, off by default, and changes apply immediately.
-- Close ChairPlay with its window. If it's killed mid-session, from Task Manager for example, the iPhone may ignore new connections until you restart the iPhone.
-- It works over Wi-Fi only, not over USB or a hotspot shared by the PC.
-- Calls sound best with headphones. Echo cancellation for speakers is experimental and off by default.
-- Music comes over Wi-Fi as AAC; the iPhone doesn't send lossless audio this way.
-- The iPhone's volume buttons don't change CarPlay's volume. Use ChairPlay's volume or Windows'.
+- Music uses AAC or, in Buffered mode, APAC for supported spatial content. The **Buffer** row shows **5.1** or **5.1 → stereo** during APAC playback. [Playback settings](docs/SETUP.md#music-playback).
+- USB CarPlay and hotspots shared by the PC are not supported.
+- Close ChairPlay through its window; force-closing an active session may require restarting the iPhone.
+- Calls work best with headphones. Speaker echo cancellation is experimental and off by default.
+- Adjust volume in ChairPlay or Windows; the iPhone's volume buttons do not control CarPlay.
 
 ## Report a problem
 

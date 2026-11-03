@@ -2,7 +2,7 @@
 
 New features and fixed bugs in ChairPlay.
 
-## Unreleased
+## 1.0.5 - 2026-11-03
 
 ### Added
 
@@ -17,7 +17,7 @@ New features and fixed bugs in ChairPlay.
 - Inconsistent Appearance section headings on the CarPlay and AltScreen settings pages.
 - Missing LIVI attribution and credit for LuKa's APAC work in the app and README.
 
-[1.0.5 release notes](docs/RELEASE-NOTES-1.0.5.md) · [Changes since v1.0.4](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.4...main)
+[Release notes](docs/RELEASE-NOTES-1.0.5.md) · [Changes since v1.0.4](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.4...v1.0.5)
 
 ## 1.0.4 - 2026-11-01
 

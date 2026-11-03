@@ -78,7 +78,7 @@ The files below live in the app folder, next to `ChairPlay.exe`.
    - `device.name`: the name the iPhone shows for the PC, in its CarPlay settings and on the network (default ChairPlay, at most 63 bytes); the window title stays ChairPlay;
    - `car.label` and `car.icon`: the label and the image of the car button on the CarPlay home screen (default `ChairPlay` and `carplay-icon.png`, ChairPlay's armchair written into the app folder on the first start). Replace the image with any square PNG, JPEG, BMP or GIF; it is sent at 192 pixels at most;
    - `audio.output` and `audio.input`: the sound device CarPlay plays on and the microphone, `default` (the Windows default, as before) or a part of a device name; `ChairPlay.exe devices` lists the names;
-   - `audio.music.mode` (default `buffered`): `buffered` lets supported iPhone apps send music ahead; `standard` uses ordinary playback. A saved `standard` choice is preserved. Reconnect after changing it. Buffer status shows state, seconds, and KB. The app includes the APAC decoder at `apac/chairplay_apac.dll`; APAC is offered automatically in Buffered only when the decoder and Windows output are available. Without the DLL, ChairPlay offers Buffered AAC only. The selected Windows device determines 5.1 output or stereo downmix, shown in the buffer status only for APAC. A legacy `spatial` value is treated as Buffered;
+   - `audio.music.mode` (default `buffered`): `buffered` lets supported iPhone apps send music ahead; `standard` uses ordinary playback. A saved `standard` choice is preserved, and a legacy `spatial` value is treated as Buffered. Reconnect after changing it. See [Music playback](#music-playback) for formats, output, and buffer limits;
    - `audio.echo.cancellation` (experimental, default `false`): `true` runs DiPlay's SpeexDSP echo canceller on calls, so the other side does not hear itself when CarPlay plays through speakers. It takes out of the microphone what the call stream played, as DiPlay does on head units. Siri and headphones do not need it; a canceller that fails stops for the rest of the call and logs why;
    - `log.carplay.data` (default `false`): `true` writes every message the iPhone sends about the route, the song, calls and its battery to a file in `logs\` (see [The CarPlay data log](#the-carplay-data-log));
    - `display.width` and `display.height`: the CarPlay screen size in pixels, positive even numbers (default 1280 x 720), and `display.fps`, 30 to 60 (default 60). The size alone decides how iOS draws: at @3x when both sides are at least about 1280 x 720, at @2x below that (the switch lies between 1200 x 676 and 1280 x 720; 960 x 720 and 1280 x 540 are still @2x). Above the switch more pixels give room for more, not sharper: at 1920 x 1080 the home screen holds 5 x 3 icons of the same size instead of 4 x 2. Tested on iOS 18.6;
@@ -104,6 +104,16 @@ The files below live in the app folder, next to `ChairPlay.exe`.
    Replace `<folder>` with the full path of `ChairPlay`, e.g. `C:\Apps\ChairPlay`.
 
    If Windows asks at the first start whether ChairPlay may use the network, answering Cancel creates a rule that blocks it, and a block rule wins over the ones above. At start the app names every enabled inbound block rule for its exe; delete those, or set them to Allow, in Windows Defender Firewall > Advanced settings > Inbound Rules. The check uses PowerShell's firewall cmdlets and finds rules whose program path is written out in full, not through an environment variable such as `%ProgramFiles%`.
+
+## Music playback
+
+**Audio → Music → Playback mode** offers Buffered and Standard. Buffered is the default and lets supported iPhone apps send music ahead to cover brief network interruptions. An existing Standard preference is preserved. Reconnect after changing the mode.
+
+Buffered supports AAC stereo and APAC 5.1 for Apple Spatial Audio. The iPhone chooses the format from those ChairPlay offers. APAC is offered only when the decoder at `apac/chairplay_apac.dll` and Windows output are available; a missing or incompatible DLL leaves Buffered AAC available. The selected Windows audio device determines whether APAC plays as 5.1 or is mixed down to stereo. Standard does not offer APAC.
+
+The **Buffer** row shows stream state and unplayed audio in seconds and KB, including audio already queued for output. During APAC playback it also shows **5.1** or **5.1 → stereo**; AAC has no multichannel label. In Buffered mode, this row replaces **Startup silence**, even when there is no stream. Startup silence applies only to standard streams.
+
+The buffer is limited to 120 seconds and a transport-specific byte capacity: 8 MiB for legacy AAC transport or 21,168,000 bytes for APAP. The first limit reached takes effect.
 
 ## Releases
 
