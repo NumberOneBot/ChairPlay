@@ -75,6 +75,27 @@ val installer by tasks.registering(Exec::class) {
     }
 }
 
+// The portable build: the app image in a ChairPlay folder of its own, to unpack anywhere the user can write. It holds
+// no data, which the app writes next to ChairPlay.exe at its first start, but the same MFi pair as the installer
+// (installer.mfiDir), so that it works as the installed app does.
+val portableZip by tasks.registering(Zip::class) {
+    group = "distribution"
+    description = "Packs build/jpackage/ChairPlay into build/portable/ChairPlay-<version>-portable.zip."
+    dependsOn("jpackageImage", validateInstallerMfi)
+    val image = layout.buildDirectory.dir("jpackage/ChairPlay")
+    from(image) { into("ChairPlay") }
+    if (mfiSource.isPresent) {
+        from(mfiSource.map { mfiDirectory()!! }) { include("identity.pk8", "certificate.p7b"); into("ChairPlay/offline-mfi") }
+    }
+    destinationDirectory = layout.buildDirectory.dir("portable")
+    archiveFileName = "ChairPlay-${appVersion ?: "0.0.0"}-portable.zip"
+    val data = appDataFiles.map { it.removeSuffix("/**") }
+    doFirst {
+        val found = data.filter { image.get().asFile.resolve(it).exists() }
+        check(found.isEmpty()) { "The app image holds app data (${found.joinToString()}); refusing to put it into the zip" }
+    }
+}
+
 // Without a version or Inno Setup, fail before the app image is built rather than after.
 gradle.taskGraph.whenReady {
     if (hasTask(installer.get())) {

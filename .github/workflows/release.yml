@@ -82,15 +82,16 @@ jobs:
           MFI_CERTIFICATE_B64: ${{ secrets.MFI_CERTIFICATE_B64 }}
         run: ./packaging/installer/PrepareMfi.ps1 -Destination (Join-Path $env:RUNNER_TEMP 'chairplay-mfi')
 
-      - name: Package the installer
+      # The portable zip carries the same optional MFi pair as the installer.
+      - name: Package the installer and the portable zip
         shell: pwsh
         run: |
-          $buildArgs = @('installer', "-Pchairplay.version=$env:VERSION", "-Pinno.iscc=${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", '--console=plain')
+          $buildArgs = @('installer', 'portableZip', "-Pchairplay.version=$env:VERSION", "-Pinno.iscc=${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", '--console=plain')
           if ($env:BUNDLE_MFI -eq 'true') {
             $buildArgs += "-Pinstaller.mfiDir=$(Join-Path $env:RUNNER_TEMP 'chairplay-mfi')"
           }
           ./gradlew.bat @buildArgs
-          if ($LASTEXITCODE -ne 0) { throw 'Installer packaging failed.' }
+          if ($LASTEXITCODE -ne 0) { throw 'Packaging failed.' }
 
       - name: Remove temporary MFi files
         if: always() && env.BUNDLE_MFI == 'true'
@@ -109,7 +110,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $ghArgs = @('release', 'create', $env:GITHUB_REF_NAME, "build/installer/ChairPlay-$env:VERSION-setup.exe", '--draft', '--title', $env:GITHUB_REF_NAME, '--notes=')
+          $ghArgs = @('release', 'create', $env:GITHUB_REF_NAME, "build/installer/ChairPlay-$env:VERSION-setup.exe", "build/portable/ChairPlay-$env:VERSION-portable.zip", '--draft', '--title', $env:GITHUB_REF_NAME, '--notes=')
           if ($env:VERSION.StartsWith('0.')) { $ghArgs += '--prerelease' }
           gh @ghArgs
           if ($LASTEXITCODE -ne 0) { throw "gh release create failed with exit code $LASTEXITCODE." }
@@ -120,4 +121,12 @@ jobs:
         with:
           name: ChairPlay-0.0.0-setup
           path: build/installer/ChairPlay-0.0.0-setup.exe
+          if-no-files-found: error
+
+      - name: Keep the dry run's portable zip
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ChairPlay-0.0.0-portable
+          path: build/portable/ChairPlay-0.0.0-portable.zip
           if-no-files-found: error
