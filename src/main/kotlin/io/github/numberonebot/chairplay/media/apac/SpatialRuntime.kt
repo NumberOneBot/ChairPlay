@@ -39,6 +39,10 @@ internal object SpatialRuntime {
         capability(dir, output, fresh = true).let { it.plan ?: throw IOException(it.reason) }
 }
 
+/**
+ * Whether a connection offers APAC: Buffered playback, the decoder loaded, the output device opened. Only a
+ * connection's configuration asks (DesktopConfig.now()): at the start, before any window, it took most of a second.
+ */
 internal fun spatialConfigured(dir: Path, settings: Properties): Boolean {
     // "spatial" is the old saved name for buffered playback with APAC enabled.
     val mode = settings.getProperty("audio.music.mode", "buffered").trim().lowercase().ifEmpty { "buffered" }

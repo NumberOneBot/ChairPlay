@@ -211,7 +211,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
         microphoneOpus = true,
         videoInCar = false,
         mainBufferedAudio = settings.choiceSetting("audio.music.mode", true, mapOf("standard" to false, "buffered" to true, "spatial" to true)),
-        spatialAudio = io.github.numberonebot.chairplay.media.apac.spatialConfigured(dir, settings),
+        spatialAudio = startedWith != null && io.github.numberonebot.chairplay.media.apac.spatialConfigured(dir, settings),
         cluster = altscreenDisplay,
         oemLabel = settings.getProperty("car.label")?.trim()?.ifEmpty { null } ?: DEFAULT_CAR_LABEL,
         icons = listOf(carIcon(dir, settings.getProperty("car.icon"))),

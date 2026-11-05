@@ -16,7 +16,9 @@ class SpatialMusicConfigTest {
         writeTestSettings(dir)
         val config = DesktopConfig(dir)
         assertTrue(config.airPlay.mainBufferedAudio)
-        assertTrue(config.airPlay.spatialAudio)
+        // The start does not load the decoder or open the device: each connection's configuration checks them.
+        assertFalse(config.airPlay.spatialAudio)
+        assertTrue(config.airPlayNow().spatialAudio)
         val settings = SettingsFile(dir.resolve("settings.properties"))
         for (mode in listOf("buffered", "spatial", "")) {
             settings.write(mapOf("audio.music.mode" to mode))
@@ -30,7 +32,6 @@ class SpatialMusicConfigTest {
         settings.write(mapOf("audio.music.mode" to "standard"))
         assertFalse(config.airPlayNow().mainBufferedAudio)
         assertFalse(config.airPlayNow().spatialAudio)
-        assertTrue(config.airPlay.spatialAudio)
     }
 
     @Test fun `missing decoder keeps spatial preference but offers buffered AAC`() {
