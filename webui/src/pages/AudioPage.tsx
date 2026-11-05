@@ -71,10 +71,19 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
         <span className="hint">For calls through speakers rather than headphones</span>
       </Row>
       <Group title="Music" note="Mode applies at the next connection" />
-      <Row label="Playback mode" title="Buffered playback lets supported iPhone apps send music ahead to cover Wi-Fi gaps">
-        <Segmented label="Playback mode" value={mode}
-          options={[['buffered', 'Buffered'], ['standard', 'Standard']]}
-          onChange={(selected) => save({ 'audio.music.mode': selected })} />
+      <Row
+        label="Playback mode"
+        title="Buffered playback lets supported iPhone apps send music ahead to cover Wi-Fi gaps"
+      >
+        <Segmented
+          label="Playback mode"
+          value={mode}
+          options={[
+            ['buffered', 'Buffered'],
+            ['standard', 'Standard'],
+          ]}
+          onChange={(selected) => save({ 'audio.music.mode': selected })}
+        />
         <Changed keys={['audio.music.mode']} pending={pending} />
         {settings.error('audio.music.mode') && <span className="errtext">{settings.error('audio.music.mode')}</span>}
       </Row>
@@ -84,19 +93,22 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
             {state.bufferedAudio
               ? { loading: 'Loading', playing: 'Playing', paused: 'Paused', empty: 'Empty' }[state.bufferedAudio.state]
               : 'No stream'}
-            {' · '}{(state.bufferedAudio?.seconds ?? 0).toFixed(1)} s
-            {' · '}{((state.bufferedAudio?.bytes ?? 0) / 1024).toFixed(1)} KB
+            {' · '}
+            {(state.bufferedAudio?.seconds ?? 0).toFixed(1)} s{' · '}
+            {((state.bufferedAudio?.bytes ?? 0) / 1024).toFixed(1)} KB
             {state.bufferedAudio?.multichannelOutput === 'surround' && ' · 5.1'}
             {state.bufferedAudio?.multichannelOutput === 'downmix' && ' · 5.1 → stereo'}
           </span>
         </Row>
-      ) : <Row
-        label="Startup silence"
-        title="How long each new standard music stream stays silent before the volume rises"
-      >
-        {field('audio.start.silence.ms', 'Startup silence', '2000')}
-        <span className="unit">ms</span>
-      </Row>}
+      ) : (
+        <Row
+          label="Startup silence"
+          title="How long each new standard music stream stays silent before the volume rises"
+        >
+          {field('audio.start.silence.ms', 'Startup silence', '2000')}
+          <span className="unit">ms</span>
+        </Row>
+      )}
       <Row
         label="Volume fade"
         title="How long standard music streams take to rise after the pause, and all streams take to fade out as CarPlay disconnects or ChairPlay closes"
@@ -122,7 +134,7 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
       </Row>
       <Row title="Use the level the iPhone sends with a prompt; Music at applies when it sends none">
         <Switch
-          label="Use iPhone ducking level"
+          label="Prefer iPhone ducking level"
           checked={value('audio.duck.iphone') !== 'false'}
           onChange={(checked) => save({ 'audio.duck.iphone': String(checked) })}
         />
