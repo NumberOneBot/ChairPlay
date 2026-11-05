@@ -33,8 +33,8 @@ internal fun networkSetupFields(snapshot: SetupSnapshot?, selected: String): Arr
 /**
  * The setup as it is now, read again every few seconds so the steps tick themselves as the PC changes: an iPhone
  * paired, the PC on a network, a firewall rule added, the MFi files put in place. Nothing is read while the page is not
- * shown ([active]). The firewall takes a PowerShell to read, so it is read again only while it is wrong (not while it is
- * off), and at most every [FIREWALL_EVERY_SECONDS]. A reader that fails reads as nothing found.
+ * shown ([active]). The firewall's rules take about a second to walk, so they are read again only while they are wrong (not
+ * while the firewall is off), and at most every [FIREWALL_EVERY_SECONDS]. A reader that fails reads as nothing found.
  */
 class SetupChecks(
     private val pairedIphone: () -> String?,

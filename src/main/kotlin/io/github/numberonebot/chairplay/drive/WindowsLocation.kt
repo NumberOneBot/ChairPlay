@@ -1,13 +1,11 @@
 package io.github.numberonebot.chairplay.drive
 
-import java.io.File
-import java.util.Base64
-import java.util.concurrent.TimeUnit
+import io.github.numberonebot.chairplay.windows.onComThread
 
 /**
- * Where Windows locates this PC, through its location service as desktop programs reach it (.NET's
- * GeoCoordinateWatcher, in Windows PowerShell), for putting the GPS car there. It answers within [WAIT_SECONDS], with a
- * place, a refusal (location off, or desktop apps not let use it), or no fix.
+ * Where Windows locates this PC, through its Location API (the one .NET's GeoCoordinateWatcher uses), for putting the
+ * GPS car there. It answers within [WAIT_SECONDS], with a place, a refusal (location off, or desktop apps not let use
+ * it), or no fix.
  */
 object WindowsLocation {
     sealed interface Result
@@ -22,52 +20,18 @@ object WindowsLocation {
 
     private const val WAIT_SECONDS = 10L
 
-    private val SCRIPT = """
-        ${'$'}ProgressPreference = 'SilentlyContinue'
-        Add-Type -AssemblyName System.Device
-        ${'$'}watcher = New-Object System.Device.Location.GeoCoordinateWatcher([System.Device.Location.GeoPositionAccuracy]::High)
-        if (-not ${'$'}watcher.TryStart(${'$'}false, [TimeSpan]::FromSeconds($WAIT_SECONDS)) -or ${'$'}watcher.Permission -eq 'Denied') { 'denied'; exit 0 }
-        ${'$'}until = (Get-Date).AddSeconds($WAIT_SECONDS)
-        while (${'$'}watcher.Position.Location.IsUnknown -and (Get-Date) -lt ${'$'}until) { Start-Sleep -Milliseconds 200 }
-        ${'$'}place = ${'$'}watcher.Position.Location
-        ${'$'}watcher.Stop()
-        if (${'$'}place.IsUnknown) { 'unknown' } else {
-            ${'$'}place.Latitude.ToString([cultureinfo]::InvariantCulture) + ',' + ${'$'}place.Longitude.ToString([cultureinfo]::InvariantCulture)
-        }
-    """.trimIndent()
+    /** Asks Windows; blocks for up to about [WAIT_SECONDS] and a few seconds more. */
+    fun read(): Result =
+        onComThread("location", (WAIT_SECONDS + 10) * 1000) {
+            val (status, place) = LocationApi.poll(WAIT_SECONDS * 1000)
+            result(status, place)
+        } ?: Unknown
 
-    /** Asks Windows; blocks for up to about twice [WAIT_SECONDS]. */
-    fun read(): Result {
-        val encoded = Base64.getEncoder().encodeToString(SCRIPT.toByteArray(Charsets.UTF_16LE))
-        // A file rather than a pipe, so a PowerShell that hangs cannot hold the caller past the timeout.
-        val output = File.createTempFile("chairplay-location", ".txt")
-        return try {
-            val process = ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded)
-                .redirectErrorStream(true)
-                .redirectOutput(output)
-                .start()
-            // With its standard input left open, powershell.exe can wait on it instead of exiting.
-            process.outputStream.close()
-            if (!process.waitFor(WAIT_SECONDS * 2 + 10, TimeUnit.SECONDS)) {
-                process.destroyForcibly()
-                Unknown
-            } else {
-                parse(output.readText(Charsets.UTF_8))
-            }
-        } catch (_: Exception) {
-            Unknown
-        } finally {
-            output.delete()
-        }
-    }
-
-    /**
-     * What the script printed: a line with a place as "latitude,longitude", or "denied"; anything else is no fix.
-     * PowerShell may write its progress records (CLIXML) around that line, so it is looked for among the others.
-     */
-    internal fun parse(output: String): Result {
-        val lines = output.lines().map(String::trim)
-        if ("denied" in lines) return Denied
-        return lines.firstNotNullOfOrNull(Coordinates::parse)?.let(::Found) ?: Unknown
+    /** What the report's [status] and its latitude and longitude, if one came, say; a place off the globe is none. */
+    internal fun result(status: Int, place: Pair<Double, Double>?): Result = when {
+        status == LocationApi.REPORT_ACCESS_DENIED -> Denied
+        status != LocationApi.REPORT_RUNNING || place == null -> Unknown
+        place.first !in -90.0..90.0 || place.second !in -180.0..180.0 -> Unknown
+        else -> Found(GeoPoint(place.first, place.second))
     }
 }

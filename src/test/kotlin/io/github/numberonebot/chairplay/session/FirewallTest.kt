@@ -3,18 +3,32 @@ package io.github.numberonebot.chairplay.session
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FirewallTest {
-    @Test
-    fun `report with our rule and a block rule from the first-run prompt`() {
-        val report = "\uFEFFallow\t3\r\n" +
-            "block\tPublic\tChairPlay\r\n" +
-            "block\tPrivate, Public\tЗаблоковано ChairPlay\r\n"
+    private val program = "C:\\Users\\kate\\AppData\\Local\\Programs\\ChairPlay\\ChairPlay.exe"
+    private val everyProfile = DOMAIN or PRIVATE or PUBLIC
 
-        val state = parseFirewallReport(report)!!
+    private fun rule(
+        name: String,
+        allow: Boolean,
+        app: String? = program,
+        profiles: Int = ALL_PROFILES,
+        enabled: Boolean = true,
+        inbound: Boolean = true,
+    ) = FirewallRule(name, enabled, inbound, allow, profiles, app)
+
+    private fun state(vararg rules: FirewallRule, enabled: Int = everyProfile, connected: Int = PRIVATE) =
+        firewallState(rules.toList(), program, enabled, connected)
+
+    @Test
+    fun `our rule and a block rule from the first-run prompt`() {
+        val state = state(
+            rule(FIREWALL_RULE, allow = true),
+            rule("ChairPlay", allow = false, profiles = PUBLIC),
+            rule("Заблоковано ChairPlay", allow = false, profiles = PRIVATE or PUBLIC),
+        )
 
         assertTrue(state.allowRule)
         assertEquals(
@@ -25,34 +39,92 @@ class FirewallTest {
 
     @Test
     fun `no rule of ours and nothing blocking`() {
-        assertEquals(FirewallState(allowRule = false, blocking = emptyList()), parseFirewallReport("allow\t0\n"))
+        assertEquals(FirewallState(allowRule = false, blocking = emptyList()), state())
+    }
+
+    // Only an enabled inbound allow rule of that name lets the iPhone in.
+    @Test
+    fun `our rule counts only enabled, inbound, and allowing`() {
+        assertFalse(state(rule(FIREWALL_RULE, allow = true, enabled = false)).allowRule)
+        assertFalse(state(rule(FIREWALL_RULE, allow = true, inbound = false)).allowRule)
+        assertFalse(state(rule(FIREWALL_RULE, allow = false)).allowRule)
+    }
+
+    // Our rule lets in the exe it names: one left for a folder moved or installed elsewhere lets this one nowhere.
+    @Test
+    fun `our rule for another exe does not count`() {
+        assertFalse(state(rule(FIREWALL_RULE, allow = true, app = "D:\\Old place\\ChairPlay.exe")).allowRule)
+        assertFalse(state(rule(FIREWALL_RULE, allow = true, app = null)).allowRule)
+        assertTrue(state(rule(FIREWALL_RULE, allow = true, app = program.lowercase())).allowRule)
+    }
+
+    // Adding the rule clears ours for an exe that is gone, once per exe; another copy's rule, whose exe is there, stays.
+    @Test
+    fun `adding the rule deletes ours for an exe that no longer exists`() {
+        val gone = "D:\\Old place\\ChairPlay.exe"
+        val other = "E:\\Portable\\ChairPlay.exe"
+        val rules = listOf(
+            rule(FIREWALL_RULE, allow = true, app = gone),
+            rule(FIREWALL_RULE, allow = true, app = gone),
+            rule(FIREWALL_RULE, allow = true, app = other),
+            rule("Someone else's rule", allow = true, app = "D:\\Gone\\tool.exe"),
+            rule(FIREWALL_RULE, allow = true, app = null),
+        )
+
+        val commands = staleRuleCommands(rules) { it == other }
+
+        assertEquals(listOf("netsh advfirewall firewall delete rule name=\"$FIREWALL_RULE\" program=\"$gone\""), commands)
+    }
+
+    // A path stored with a variable (%ProgramFiles%) is matched expanded but written as stored: netsh needs the stored one.
+    @Test
+    fun `a rule stored with a variable is deleted by the path as stored`() {
+        val stored = FirewallRule(FIREWALL_RULE, true, true, true, ALL_PROFILES, "C:\\Gone\\ChairPlay.exe", "%SystemDrive%\\Gone\\ChairPlay.exe")
+
+        assertEquals(
+            listOf("netsh advfirewall firewall delete rule name=\"$FIREWALL_RULE\" program=\"%SystemDrive%\\Gone\\ChairPlay.exe\""),
+            staleRuleCommands(listOf(stored)) { false },
+        )
+    }
+
+    // Windows stores the path as it was typed: any case, or with an environment variable expanded before the call.
+    @Test
+    fun `a block rule counts for this program only, in any case, enabled and inbound`() {
+        assertEquals(1, state(rule("ChairPlay", allow = false, app = program.uppercase())).blocking.size)
+        assertEquals(0, state(rule("Other", allow = false, app = "C:\\Other\\other.exe")).blocking.size)
+        assertEquals(0, state(rule("Every program", allow = false, app = null)).blocking.size)
+        assertEquals(0, state(rule("ChairPlay", allow = false, enabled = false)).blocking.size)
+        assertEquals(0, state(rule("ChairPlay", allow = false, inbound = false)).blocking.size)
+        assertEquals(listOf("\"ChairPlay\" (profiles Any)"), state(rule("ChairPlay", allow = false)).blocking)
     }
 
     // A firewall turned off for the network the PC is on lets the iPhone in without any rule.
     @Test
     fun `a firewall off for the connected network needs no rule`() {
-        val profiles = "allow\t0\nprofile\tDomain\tTrue\nprofile\tPrivate\tFalse\nprofile\tPublic\tTrue\n"
+        val privateOff = DOMAIN or PUBLIC
 
-        assertTrue(parseFirewallReport(profiles + "network\tPrivate\n")!!.off)
-        assertFalse(parseFirewallReport(profiles + "network\tPublic\n")!!.off)
-        assertFalse("every connected network counts", parseFirewallReport(profiles + "network\tPrivate\nnetwork\tPublic\n")!!.off)
-        assertFalse(parseFirewallReport(profiles + "network\tDomainAuthenticated\n")!!.off)
+        assertTrue(state(enabled = privateOff, connected = PRIVATE).off)
+        assertFalse(state(enabled = privateOff, connected = PUBLIC).off)
+        assertFalse("every connected network counts", state(enabled = privateOff, connected = PRIVATE or PUBLIC).off)
+        assertFalse(state(enabled = privateOff, connected = DOMAIN).off)
     }
 
     @Test
     fun `without a connected network the firewall is off only when every profile is`() {
-        assertTrue(parseFirewallReport("allow\t0\nprofile\tDomain\tFalse\nprofile\tPrivate\tFalse\nprofile\tPublic\tFalse\n")!!.off)
-        assertFalse(parseFirewallReport("allow\t0\nprofile\tDomain\tFalse\nprofile\tPrivate\tTrue\nprofile\tPublic\tFalse\n")!!.off)
-        assertFalse("no profiles read: assume it is on", parseFirewallReport("allow\t0\n")!!.off)
+        assertTrue(state(enabled = 0, connected = 0).off)
+        assertFalse(state(enabled = PRIVATE, connected = 0).off)
     }
 
+    // The rule's commands run in one netsh started with the administrator's consent: its script has no "netsh".
     @Test
-    fun `output without the allow line means the query failed`() {
-        assertNull(parseFirewallReport(""))
-        assertNull(parseFirewallReport("Get-NetFirewallRule : Access is denied.\n"))
+    fun `the rule's commands become one netsh script`() {
+        val script = netshScript(firewallHint(7000, program))
+
+        assertEquals(3, script.lines().size)
+        assertTrue(script, script.lines().all { it.startsWith("advfirewall firewall add rule ") })
     }
 
-    /** Reads this machine's rules (never changes them): the script must at least run and report. */
+    /** Reads this machine's rules (never changes them): the API must at least answer. */
     @Test
     fun `the query runs against the real firewall`() {
         val state = readFirewall("C:\\no such folder\\DiPlay test.exe")
