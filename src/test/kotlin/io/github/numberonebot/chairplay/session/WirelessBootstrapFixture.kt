@@ -70,8 +70,9 @@ abstract class WirelessBootstrapFixture {
         private val bootstrap = dir.let { dir ->
             writeTestSettings(dir)
             if (settings.isNotEmpty()) Files.writeString(dir.resolve("settings.properties"), "\n$settings\n", StandardOpenOption.APPEND)
-            // An AirPlay pairing record, as the first session with this iPhone leaves.
-            if (knownIphone) Files.createDirectories(dir.resolve("pairings")).resolve("6970686f6e65").let { Files.writeString(it, "00") }
+            // An AirPlay pairing record, as the first session with this iPhone leaves: its 32-byte key in hex. A shorter
+            // one is damaged, moved out of pairings/, and leaves the iPhone unknown.
+            if (knownIphone) Files.createDirectories(dir.resolve("pairings")).resolve("6970686f6e65").let { Files.writeString(it, "00".repeat(32)) }
             val listener = object : AirPlaySessionListener {
                 override fun onDebugLog(message: String) {
                     logs += message
