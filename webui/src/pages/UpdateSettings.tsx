@@ -27,8 +27,9 @@ export function UpdateSettings({ backend, settings }: { backend: Backend; settin
       {settings.error(key) && <span className="errtext">{settings.error(key)}</span>}
     </Row>
     <Row>
-      <button type="button" className="btn small" disabled={checking} onClick={check}>
-        {checking ? 'Checking…' : 'Check for updates'}
+      <button type="button" className="btn small" title="Look for a newer version of ChairPlay now" disabled={checking}
+        onClick={check}>
+        {checking ? 'Checking…' : 'Check'}
       </button>
       {failed && <span className="errtext">Couldn't check for updates. Close any update dialog and try again.</span>}
     </Row>
