@@ -24,6 +24,18 @@ class SetupChecksTest {
         now = { nanos },
     )
 
+    // The start reads the firewall after the windows open, not before: its answer takes the place of Not checked at once,
+    // without a read of its own.
+    @Test
+    fun `the firewall read after the start replaces the start's unknown at once`() {
+        val checks = checks(start = FirewallStatus.UNKNOWN)
+
+        assertTrue(checks.firewallChecked(FirewallStatus.MISSING))
+        assertEquals(FirewallStatus.MISSING, checks.snapshot.firewall)
+        assertFalse(checks.firewallChecked(FirewallStatus.MISSING))
+        assertEquals(0, firewallReads)
+    }
+
     // Get started says ChairPlay finds the MFi files on its own: a round must notice them arrive, as it does a pairing.
     @Test
     fun `a round notices the MFi files arrive and go`() {

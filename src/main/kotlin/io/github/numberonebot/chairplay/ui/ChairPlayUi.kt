@@ -38,7 +38,8 @@ interface UiDriving {
 class ChairPlayUi(
     dir: Path,
     config: DesktopConfig,
-    firewall: FirewallStatus,
+    /** The start's read of the firewall, with its log lines: run on a thread of its own, the windows not waiting. */
+    checkFirewall: () -> FirewallStatus,
     actions: UiActions,
     wake: () -> Unit,
     private val log: (String) -> Unit,
@@ -55,7 +56,7 @@ class ChairPlayUi(
     /** Puts the bindings the Keyboard page saved in force. */
     onBindings: (ControlsConfig) -> Unit = {},
     /** Reads the firewall again, quietly, for the live setup checks. */
-    readFirewall: () -> FirewallStatus = { firewall },
+    readFirewall: () -> FirewallStatus = checkFirewall,
     /** Hears the settings each save changed, for those that apply at once. */
     onSaved: (Map<String, String>) -> Unit = {},
     /** The HUD's demos on the AltScreen, for the Experiments page. */
@@ -78,7 +79,7 @@ class ChairPlayUi(
         pcWifi = { WlanApi.currentConnections().firstOrNull()?.ssid },
         ethernet = io.github.numberonebot.chairplay.network.EthernetAdapters::current,
         firewall = readFirewall,
-        startFirewall = firewall,
+        startFirewall = FirewallStatus.UNKNOWN,
         active = { model.state.showsUi },
         mfiPresent = { mfiFilesPresent(config.mfiDirectory().toPath()) },
     )
@@ -88,7 +89,7 @@ class ChairPlayUi(
         model,
         SetupInfo(
             mfiDirectory = config.mfiDirectory().toPath(),
-            firewall = firewall,
+            firewall = FirewallStatus.UNKNOWN,
             firewallCommands = firewallHint(config.airPlay.port, ProcessHandle.current().info().command().orElse("java.exe")),
             settingsFile = dir.resolve(DesktopConfig.SETTINGS_FILE),
             displayWidth = config.displayWidth,
@@ -115,6 +116,13 @@ class ChairPlayUi(
     )
 
     private val checking = checks.start { controller.setupChanged() }
+
+    // The firewall's rules take about a second to walk: Get started shows Not checked until they are read.
+    init {
+        Thread({
+            runCatching(checkFirewall).getOrNull()?.let { if (checks.firewallChecked(it)) controller.setupChanged() }
+        }, "firewall-check").apply { isDaemon = true }.start()
+    }
 
     /** Tells the page that a window was shown, hidden, or resized. */
     fun windowsChanged() = controller.windowsChanged()

@@ -76,6 +76,15 @@ class SetupChecks(
         return after != before
     }
 
+    /** The firewall as a read elsewhere found it, as the start's, made after the windows open; true when it changed. */
+    @Synchronized
+    fun firewallChecked(status: FirewallStatus): Boolean {
+        firewallRead = now()
+        val before = snapshot
+        snapshot = before.copy(firewall = status)
+        return snapshot != before
+    }
+
     /** Reads the firewall now, as after Add the rule, whatever it was. */
     @Synchronized
     fun firewallNow() {

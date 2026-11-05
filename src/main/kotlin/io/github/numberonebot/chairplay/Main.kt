@@ -74,7 +74,6 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     appLog.level = config.logLevel
     val controlsConfig = ControlsConfig.load(dir)
     log(controlsConfig.summary())
-    val firewall = checkFirewall(config.airPlay.port)
     log(config.displaySummary())
     log("airplay sourceVersion=${config.airPlay.sourceVersion} bootstrapRouteGuidance=${bootstrapRouteGuidance()} carPlayAvailability=${carPlayAvailability()}")
     val windows = AppWindows(dir, config, MainTitle.opening(config))
@@ -132,7 +131,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // Looks at the Windows theme for CarPlay's look, and at the GPS car for its page.
     val themeWatch = Executors.newSingleThreadScheduledExecutor { Thread(it, "theme-watch").apply { isDaemon = true } }
     val theme = CarPlayTheme(config.theme, themeWatch, touchSender, active::get)
-    val ui = ChairPlayUi(dir, config, firewall, object : UiActions {
+    val ui = ChairPlayUi(dir, config, { checkFirewall(config.airPlay.port) }, object : UiActions {
         override fun connect() = Thread({
             lockReady.await()
             title.connecting()
