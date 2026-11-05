@@ -13,8 +13,11 @@ class DrivingTest {
 
     private val placeSaved = mutableListOf<Map<String, String>>()
 
-    private fun driving(settings: GpsSettings) =
-        Driving(settings, gamepad = { null }, nanoTime = { now }).also { it.savePlace = { place -> placeSaved += place } }
+    private var asked = 0
+
+    private fun driving(settings: GpsSettings, windows: WindowsLocation.Result = WindowsLocation.Unknown) =
+        Driving(settings, gamepad = { null }, nanoTime = { now }, locate = { asked++; windows }, lookup = { it.run() })
+            .also { it.savePlace = { place -> placeSaved += place } }
 
     // gps.start is where the car is: it starts there, facing gps.heading.
     @Test
@@ -37,6 +40,54 @@ class DrivingTest {
         driving.saved(GpsSettings(true, start = kyiv), setOf("gps.start"))
         assertTrue(driving.placed)
         assertTrue(location.latestNmea()!!.startsWith("\$GPGGA"))
+    }
+
+    // The GPS turned on with no start: the car goes where Windows locates the PC, and that place is saved as the start.
+    @Test
+    fun `a GPS turned on without a start starts where Windows locates the PC`() {
+        val driving = driving(GpsSettings(false, headingDegrees = 90.0), windows = WindowsLocation.Found(kyiv))
+        driving.saved(GpsSettings(true, headingDegrees = 90.0), setOf("gps.enabled"))
+        assertTrue(driving.placed)
+        assertEquals(kyiv, driving.drive.snapshot().position)
+        assertEquals(mapOf("gps.start" to "50.45010, 30.52340", "gps.heading" to "90"), placeSaved.single())
+    }
+
+    // At launch with the GPS on and no start, Windows is asked once the place can be saved.
+    @Test
+    fun `a launch with the GPS on and no start asks Windows`() {
+        val driving = driving(GpsSettings(true), windows = WindowsLocation.Found(kyiv))
+        assertEquals(0, asked)
+        val saved = mutableListOf<Map<String, String>>()
+        driving.saveTo { saved += it }
+        assertEquals(1, asked)
+        assertEquals(kyiv, driving.drive.snapshot().position)
+        assertEquals("50.45010, 30.52340", saved.single()["gps.start"])
+    }
+
+    // A start already set, or the GPS off, leaves Windows unasked.
+    @Test
+    fun `Windows is asked only for a GPS on with no start`() {
+        driving(GpsSettings(true, start = lviv), windows = WindowsLocation.Found(kyiv)).apply {
+            saveTo {}
+            saved(GpsSettings(true, start = lviv), setOf("gps.enabled"))
+        }
+        driving(GpsSettings(false), windows = WindowsLocation.Found(kyiv)).apply {
+            saveTo {}
+            saved(GpsSettings(false), setOf("gps.enabled"))
+        }
+        assertEquals(0, asked)
+    }
+
+    // Windows refusing or finding nothing leaves the car nowhere, and nothing is saved.
+    @Test
+    fun `no Windows position leaves the car without a start`() {
+        for (answer in listOf(WindowsLocation.Denied, WindowsLocation.Unknown)) {
+            val driving = driving(GpsSettings(false), windows = answer)
+            driving.saved(GpsSettings(true), setOf("gps.enabled"))
+            assertFalse(driving.placed)
+        }
+        assertEquals(2, asked)
+        assertTrue(placeSaved.isEmpty())
     }
 
     // Saving a start or heading puts the car there at once; saving the car changes it where it is.

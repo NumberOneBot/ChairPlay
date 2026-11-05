@@ -219,7 +219,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // shows changed; the car's place goes into gps.start and gps.heading as it stops.
     val gpsShown = AtomicReference<Map<String, Any?>>()
     driving.onSent = { driving.state().let { now -> if (gpsShown.getAndSet(now) != now) ui.gpsChanged() } }
-    driving.savePlace = { place -> ui.saveSettings(place) }
+    driving.saveTo { place -> ui.saveSettings(place) }
     themeWatch.scheduleWithFixedDelay({
         if (driving.state()["listening"] != true) driving.onSent()
         audio.updateBufferedAudio()

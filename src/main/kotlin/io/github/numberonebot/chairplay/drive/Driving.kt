@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.drive
 
 import com.shilapi.xcertplay.transport.Iap2LocationProvider
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -9,7 +10,8 @@ import kotlin.math.roundToInt
  * The spoofed GPS's car for the app: placed at gps.start facing gps.heading, driven by [control] from the window loop,
  * sent to the iPhone by the [location] each connection makes, and shown on the GPS page by [state], as each update goes.
  * Its place goes back into gps.start and gps.heading ([savePlace]) as it stops and as the app closes, so the settings
- * always say where the car is and the next start begins there.
+ * always say where the car is and the next start begins there. A GPS on with no start starts where Windows locates the
+ * PC ([locate], run by [lookup]), as the app opens and as the GPS is turned on.
  */
 class Driving(
     settings: GpsSettings,
@@ -17,9 +19,19 @@ class Driving(
     gamepad: () -> FloatArray? = GlfwGamepad::axes,
     private val nanoTime: () -> Long = System::nanoTime,
     private val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
+    private val locate: () -> WindowsLocation.Result = WindowsLocation::read,
+    private val lookup: (Runnable) -> Unit = { Thread(it, "gps-start").apply { isDaemon = true }.start() },
 ) {
-    /** Saves the car's place as gps.start and gps.heading, as the GPS page saves them; the app sets it. */
+    /** Saves the car's place as gps.start and gps.heading, as the GPS page saves them; the app sets it ([saveTo]). */
     @Volatile var savePlace: (Map<String, String>) -> Unit = {}
+
+    private val looking = AtomicBoolean()
+
+    /** Saves the car's place with [save] from now on, and starts a GPS on with no start where Windows locates the PC. */
+    fun saveTo(save: (Map<String, String>) -> Unit) {
+        savePlace = save
+        findStart()
+    }
 
     /** Hears each update sent to the iPhone; the app shows the GPS page the car then. */
     @Volatile var onSent: () -> Unit = {}
@@ -94,6 +106,31 @@ class Driving(
         if (keys.any { it in CAR_KEYS }) {
             drive.respec(now.car)
             log("GPS car ${now.car.powerHp.roundToInt()} hp, ${now.car.massKg.roundToInt()} kg, ${now.car.handling.key} handling")
+        }
+        if ("gps.enabled" in keys) findStart()
+    }
+
+    /**
+     * For a GPS on with the car nowhere, asks Windows where the PC is, one ask at a time, and puts the car there facing
+     * as it does, saving the place as its start. A start set meanwhile wins; no answer leaves the car nowhere.
+     */
+    private fun findStart() {
+        if (!settings.enabled || settings.start != null || placed || !looking.compareAndSet(false, true)) return
+        lookup {
+            try {
+                when (val found = locate()) {
+                    is WindowsLocation.Found -> if (!placed) {
+                        drive.place(found.place, drive.snapshot().car.headingDegrees)
+                        placed = true
+                        log("GPS car placed where Windows locates this PC: ${found.place.latitude}, ${found.place.longitude}")
+                        remember(drive.snapshot())
+                    }
+                    WindowsLocation.Denied -> log("GPS start not found: Windows does not share this PC's location")
+                    WindowsLocation.Unknown -> log("GPS start not found: Windows found no position")
+                }
+            } finally {
+                looking.set(false)
+            }
         }
     }
 
