@@ -2,7 +2,6 @@ package io.github.numberonebot.chairplay.config
 
 import com.shilapi.xcertplay.airplay.AirPlayIcon
 import com.shilapi.xcertplay.airplay.AirPlayIdentity
-import com.shilapi.xcertplay.airplay.PairingStore
 import io.github.numberonebot.chairplay.config.DesktopConfig.Companion.DEFAULT_ICON_FILE
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
@@ -13,9 +12,6 @@ import java.util.HexFormat
 import java.util.Properties
 import javax.imageio.ImageIO
 import kotlin.io.path.exists
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
-import kotlin.io.path.readText
 import kotlin.io.path.reader
 import kotlin.io.path.writeText
 
@@ -42,20 +38,6 @@ internal fun loadIdentity(dir: Path): AirPlayIdentity {
                 "pairingId=${it.pairingId}\n",
         )
     }
-}
-
-/** pairings/: one file per iPhone, its name the identifier's hex, as identifiers may hold characters Windows forbids. */
-internal fun loadPairings(dir: Path): PairingStore {
-    val pairingDir = Files.createDirectories(dir.resolve("pairings"))
-    var loaded = false
-    val store = PairingStore { identifier, key ->
-        if (loaded) pairingDir.resolve(HEX.formatHex(identifier.toByteArray())).writeText(HEX.formatHex(key))
-    }
-    for (file in pairingDir.listDirectoryEntries()) {
-        store.save(String(HEX.parseHex(file.name)), HEX.parseHex(file.readText().trim()))
-    }
-    loaded = true
-    return store
 }
 
 /**
