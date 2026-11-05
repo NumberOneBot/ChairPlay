@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { AppState, Backend } from '../api'
 import { SECURITY_CHOICES } from '../pages/ConnectionPage'
 import { AddRule, CodeLine, CopyButton, OpenFolder } from '../pages/messages'
@@ -24,16 +24,28 @@ function Tick() {
   )
 }
 
-/** One step: its number, or a tick once done, its title and note; what to do shows while it is the open one. */
-function Step(props: { n: number; state: StepState; title: string; note: string; children: ReactNode }) {
+/**
+ * One step: its number, or a tick once done, its title and note; what to do shows while it is the open one, or while
+ * [open] keeps a step done open for a change. [action] sits at the line's end.
+ */
+function Step(props: {
+  n: number
+  state: StepState
+  title: string
+  note: string
+  open?: boolean
+  action?: ReactNode
+  children: ReactNode
+}) {
   return (
     <div className={`step ${props.state}`}>
       <span className="mark">{props.state === 'done' ? <Tick /> : props.n}</span>
       <div className="st">
         <span>{props.title}</span>
         <span className="note">{props.note}</span>
+        {props.action}
       </div>
-      {props.state === 'now' && <div className="bd">{props.children}</div>}
+      {(props.state === 'now' || props.open) && <div className="bd">{props.children}</div>}
     </div>
   )
 }
@@ -57,6 +69,8 @@ export function GetStarted(props: {
 }) {
   const { state, backend, settings, steps } = props
   const { setup } = state
+  // A Wi-Fi step done opened again: its tick says only that the settings are complete, not that the password is right.
+  const [editing, setEditing] = useState(false)
   // The network starts as the one this PC is on, and is saved with the password.
   const network = settings.value('wifi.ssid') || setup.pcWifi || ''
   const problem = steps.wifiProblem
@@ -133,7 +147,29 @@ export function GetStarted(props: {
           <Waiting>Waiting for a paired iPhone…</Waiting>
         </div>
       </Step>
-      <Step n={2 + optionalCount} title={showNetworkConnection(state) ? 'Connection' : 'Wi-Fi network'} {...steps.wifi}>
+      <Step
+        n={2 + optionalCount}
+        title={showNetworkConnection(state) ? 'Connection' : 'Wi-Fi network'}
+        {...steps.wifi}
+        open={editing}
+        action={
+          (editing || steps.wifi.state === 'done') && (
+            <button
+              type="button"
+              className="edit"
+              aria-label={editing ? 'Close Wi-Fi settings' : 'Edit Wi-Fi settings'}
+              title={
+                editing
+                  ? 'Fold the step back to its line'
+                  : 'Change the network or its password. The iPhone tries the password only when it connects.'
+              }
+              onClick={() => setEditing(!editing)}
+            >
+              {editing ? 'Done' : 'Edit'}
+            </button>
+          )
+        }
+      >
         <NetworkConnection state={state} settings={settings} />
         {problem?.kind === 'failed' ? (
           <span className="errtext">

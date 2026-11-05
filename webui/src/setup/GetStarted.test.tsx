@@ -154,6 +154,21 @@ describe('Get started, the Wi-Fi step', () => {
 })
 
 describe('Get started, all done', () => {
+  it('reopens the completed Wi-Fi step to correct its settings', async () => {
+    const backend = await guide(firstStart({ ...everything }, wifiSet))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Wi-Fi settings' }))
+    const network = screen.getByRole('textbox', { name: 'Network' })
+    fireEvent.change(network, { target: { value: 'Correct network' } })
+    fireEvent.keyDown(network, { key: 'Enter' })
+    await waitFor(() => expect(backend.saved).toEqual([{ 'wifi.ssid': 'Correct network' }]))
+    const password = screen.getByLabelText('Password')
+    fireEvent.change(password, { target: { value: 'correct-password' } })
+    fireEvent.keyDown(password, { key: 'Enter' })
+    await waitFor(() => expect(backend.saved).toEqual([
+      { 'wifi.ssid': 'Correct network' }, { 'wifi.passphrase': 'correct-password' },
+    ]))
+  })
+
   it('turns Connect on once every step is done', async () => {
     const backend = await guide(firstStart({ ...everything }, wifiSet))
 

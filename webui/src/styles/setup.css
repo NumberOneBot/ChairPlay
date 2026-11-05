@@ -97,6 +97,24 @@
   color: var(--green);
 }
 
+/* Edit after a step done's note: a link in the note's size, as quiet as Skip to settings */
+.shell .step .st .edit {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 400 12px var(--ui);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.shell .step .st .edit:hover {
+  color: var(--text);
+}
+
 .shell .step .bd {
   grid-column: 2;
   display: flex;
