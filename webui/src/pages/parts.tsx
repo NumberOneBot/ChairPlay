@@ -154,15 +154,15 @@ export function ActualSize(props: { sizes: WindowSizes | null; window: PictureWi
 }
 
 const EDGES = [
-  ['top', 'Top', 'c'],
-  ['left', 'Left', ''],
-  ['right', 'Right', 'l'],
-  ['bottom', 'Bottom', 'c'],
+  ['top', 'Top'],
+  ['left', 'Left'],
+  ['right', 'Right'],
+  ['bottom', 'Bottom'],
 ] as const
 
 /**
- * Four numbers round a little frame, one for each edge of [prefix] ("display.safe" or "altscreen.safe"): top and
- * bottom centred, the sides against the frame. A refused one turns red, with its reason under the frame.
+ * Four numbers round a little frame, one for each edge of [prefix] ("display.safe" or "altscreen.safe"), each centred
+ * in its field. A refused one turns red, with its reason under the frame.
  */
 export function SafeArea(props: {
   settings: Settings
@@ -176,14 +176,14 @@ export function SafeArea(props: {
 }) {
   const { settings, prefix, label } = props
   const reason = EDGES.map(([edge]) => settings.error(`${prefix}.${edge}`)).find(Boolean)
-  const [top, left, right, bottom] = EDGES.map(([edge, name, align]) => {
+  const [top, left, right, bottom] = EDGES.map(([edge, name]) => {
     const key = `${prefix}.${edge}`
     return (
       <Field
         key={key}
         label={name}
         title={name}
-        className={`short ${align}`}
+        className="short c"
         // A blank edge is no margin: it reads 0 as a saved 0 does, and stays blank in the file until it is changed.
         value={settings.value(key) || '0'}
         error={settings.error(key)}
