@@ -1,8 +1,8 @@
 package io.github.numberonebot.chairplay.session
 
 import io.github.numberonebot.chairplay.windows.runElevated
+import io.github.numberonebot.chairplay.windows.withLockedFile
 import java.io.File
-import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 
 /**
@@ -82,24 +82,26 @@ internal fun staleRuleCommands(rules: List<FirewallRule>, exists: (String) -> Bo
  * so Windows asks once, then deletes our rules for an exe that is gone ([staleRuleCommands]). They come last: netsh
  * stops at the first command that fails, and the rule for this exe matters more. True when the consent was given and
  * every command succeeded; false when it was refused, a command failed, or nothing came back within five minutes, as
- * a prompt left open would.
+ * a prompt left open would. The script is held locked while netsh runs ([withLockedFile]): what the administrator
+ * consented to is what runs.
  */
-fun addFirewallRules(commands: String): Boolean {
-    val script = Files.createTempFile("chairplay-firewall", ".txt")
-    return try {
-        val stale = WindowsFirewallApi.read()?.rules.orEmpty().let { rules -> staleRuleCommands(rules) { File(it).isFile } }
-        // netsh reads its script as UTF-8, with no byte-order mark: a path with any user name survives.
-        Files.writeString(script, netshScript((listOf(commands) + stale).joinToString("\n")))
+fun addFirewallRules(commands: String): Boolean = try {
+    val stale = WindowsFirewallApi.read()?.rules.orEmpty().let { rules -> staleRuleCommands(rules) { File(it).isFile } }
+    // netsh reads its script as UTF-8, with no byte-order mark: a path with any user name survives.
+    withLockedFile(netshScript((listOf(commands) + stale).joinToString("\n"))) { script ->
         val netsh = System.getenv("SystemRoot").orEmpty().ifEmpty { "C:\\Windows" } + "\\System32\\netsh.exe"
         runElevated(netsh, "-f \"$script\"", TimeUnit.MINUTES.toMillis(5)) == 0
-    } catch (_: Exception) {
-        false
-    } finally {
-        Files.deleteIfExists(script)
     }
+} catch (_: Exception) {
+    false
 }
 
-/** [commands] as a netsh script: the same commands without the "netsh" that starts each. */
+/**
+ * [commands] as a netsh script: the same commands without the "netsh" that starts each. Only firewall rule commands
+ * pass, as it runs as the administrator.
+ */
 internal fun netshScript(commands: String): String =
     commands.lines().map(String::trim).filter(String::isNotEmpty)
-        .joinToString("\r\n") { it.removePrefix("netsh").trim() }
+        .map { it.removePrefix("netsh").trim() }
+        .onEach { require(it.startsWith("advfirewall firewall add rule ") || it.startsWith("advfirewall firewall delete rule ")) { it } }
+        .joinToString("\r\n")

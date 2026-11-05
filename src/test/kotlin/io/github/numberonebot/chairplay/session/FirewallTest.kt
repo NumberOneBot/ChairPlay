@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.session
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -122,6 +123,13 @@ class FirewallTest {
 
         assertEquals(3, script.lines().size)
         assertTrue(script, script.lines().all { it.startsWith("advfirewall firewall add rule ") })
+    }
+
+    // The script runs as the administrator: anything but a firewall rule command stops it from being written.
+    @Test
+    fun `a netsh script takes only firewall rule commands`() {
+        assertThrows(IllegalArgumentException::class.java) { netshScript("netsh interface set interface Wi-Fi disable") }
+        assertThrows(IllegalArgumentException::class.java) { netshScript("netsh advfirewall reset") }
     }
 
     /** Reads this machine's rules (never changes them): the API must at least answer. */
