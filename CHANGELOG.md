@@ -6,6 +6,7 @@ New features and fixed bugs in ChairPlay.
 
 ### Added
 
+- A portable build, ChairPlay-1.0.6-portable.zip: unpack it to any folder you can write to and run ChairPlay.exe. Its data stays in that folder.
 - Update checks. At startup ChairPlay looks for a newer release and offers to open the Releases page. Turn it off, or check at any time, in About.
 - The Wi-Fi step of Get started can be reopened after it's done, from the pencil next to the network name, to correct the network or password.
 - A hint next to the Wi-Fi fields in Get started and Settings > Connection: use an existing network that both the PC and the iPhone can reach.

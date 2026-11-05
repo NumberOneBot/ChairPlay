@@ -43,6 +43,8 @@ After that, open ChairPlay with your iPhone unlocked and nearby, and CarPlay sta
 
 A newer installer updates ChairPlay and keeps your settings, pairing and MFi files. Uninstalling asks whether to delete them too.
 
+**Portable.** `ChairPlay-…-portable.zip` runs without installing: unpack it to a folder you can write to and open `ChairPlay.exe`. Its settings, pairing and logs stay in that folder. To update, close ChairPlay, delete the `app` and `runtime` folders, and unpack the new zip over the old one. After moving the folder, Get started asks for the firewall rule again.
+
 See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.6 release notes](docs/RELEASE-NOTES-1.0.6.md) for this update.
 
 ## Features

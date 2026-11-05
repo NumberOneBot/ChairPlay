@@ -1,9 +1,10 @@
 # ChairPlay 1.0.6
 
-This update fixes a black screen at 1920×1080 and silent YouTube audio in Buffered mode, keeps the iPhone's own keyboard available while CarPlay is connected, and adds update checks.
+This update adds a portable build and update checks, fixes a black screen at 1920×1080 and silent YouTube audio in Buffered mode, and keeps the iPhone's own keyboard available while CarPlay is connected.
 
 ## What's changed
 
+- **Portable build.** **ChairPlay-1.0.6-portable.zip** runs without installing: unpack it to a folder you can write to and open **ChairPlay.exe**. Settings, pairing and logs stay in that folder. To update, close ChairPlay, delete the **app** and **runtime** folders, and unpack the new zip over the old one.
 - **Update checks.** At startup ChairPlay looks for a newer release and offers to open the Releases page. **About > Check for updates at startup** turns this off, and **Check now** checks at any time.
 - **The iPhone keeps its keyboard.** While CarPlay was connected, the iPhone treated ChairPlay as a hardware keyboard and hid its own on-screen keyboard. It now keeps it. Typing in CarPlay from the PC keyboard works as before.
 - **Black screen at 1920×1080 fixed.** After reconnecting at this resolution the screen could stay black while touches still reached the iPhone.
@@ -18,7 +19,7 @@ This update fixes a black screen at 1920×1080 and silent YouTube audio in Buffe
 
 ## Install or update
 
-Download **ChairPlay-1.0.6-setup.exe** from the [Releases page](https://github.com/NumberOneBot/ChairPlay/releases) and run it. Installation does not require administrator rights. Updates preserve settings, iPhone pairing, and MFi files.
+Download **ChairPlay-1.0.6-setup.exe** from the [Releases page](https://github.com/NumberOneBot/ChairPlay/releases) and run it. Installation does not require administrator rights. Updates preserve settings, iPhone pairing, and MFi files. For the portable build, download **ChairPlay-1.0.6-portable.zip** instead.
 
 For problems, use **About > Report a problem** to include the app version in a new issue.
 
