@@ -2,6 +2,14 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.0.7 - 2026-11-06
+
+### Fixed
+
+- GPS simulation turned on with no coordinates started at 0, 0 and sent the iPhone no position. It now starts where Windows locates the PC, and saves that place as the start. Coordinates already set are kept.
+
+[Release notes](docs/RELEASE-NOTES-1.0.7.md) · [Changes since v1.0.6](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.6...v1.0.7)
+
 ## 1.0.6 - 2026-11-05
 
 ### Added
