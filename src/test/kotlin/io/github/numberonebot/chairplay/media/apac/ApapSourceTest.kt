@@ -22,6 +22,14 @@ class ApapSourceTest {
         assertThrows(IOException::class.java) { source.resolve(unit()) }
     }
 
+    // Seen with YouTube on iOS: SETMAGICCOOKIE gives the cookie, then the stream's packets name none.
+    @Test fun `a packet naming no cookie takes the one SETMAGICCOOKIE gave`() {
+        val source = ApapSource()
+        source.remember(7, aac)
+
+        assertArrayEquals(aac, source.resolve(unit()).metadata.cookie)
+    }
+
     @Test fun `state only packets retain cookie and loudness without manufacturing audio`() {
         val source = ApapSource()
         val metadata = ApapMetadata(cookie = aac, loudness = listOf(-18f, -1f, -2f), mediaKind = 1)

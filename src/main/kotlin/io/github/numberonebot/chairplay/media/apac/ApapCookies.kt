@@ -6,13 +6,15 @@ import java.io.IOException
 internal class ApapCookies {
     private val values = HashMap<Long, ByteArray>()
 
-    @Synchronized fun remember(id: Long, cookie: ByteArray, validate: (ByteArray) -> Unit = {}) {
-        if (values.containsKey(id)) return
+    /** True when [cookie] is now [id]'s; false when the ID already had one, which stays. */
+    @Synchronized fun remember(id: Long, cookie: ByteArray, validate: (ByteArray) -> Unit = {}): Boolean {
+        if (values.containsKey(id)) return false
         if (values.size >= MAX_COOKIES || cookie.size !in 1..MAX_COOKIE_BYTES) {
             throw IOException("APAP cookie registry limit exceeded")
         }
         validate(cookie)
         values[id] = cookie.copyOf()
+        return true
     }
 
     @Synchronized fun resolve(metadata: ApapMetadata): ByteArray? {

@@ -12,9 +12,13 @@ internal class ApapSource : Closeable {
     private var kind: Int? = null
     private var closed = false
 
+    /**
+     * SETMAGICCOOKIE: [id]'s cookie, and the one a packet naming none takes from now on, until a packet names another.
+     * The iPhone gives YouTube's stream its cookie this way only, its packets naming none.
+     */
     @Synchronized fun remember(id: Long, cookie: ByteArray) {
         if (closed) return
-        cookies.remember(id, cookie, ::validateSpatialCookie)
+        if (cookies.remember(id, cookie, ::validateSpatialCookie)) current = cookie.copyOf()
     }
 
     @Synchronized fun resolve(unit: ApapAccessUnit): ApapAccessUnit {
