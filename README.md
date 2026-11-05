@@ -43,7 +43,7 @@ After that, open ChairPlay with your iPhone unlocked and nearby, and CarPlay sta
 
 A newer installer updates ChairPlay and keeps your settings, pairing and MFi files. Uninstalling asks whether to delete them too.
 
-See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.5 release notes](docs/RELEASE-NOTES-1.0.5.md) for this update.
+See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.6 release notes](docs/RELEASE-NOTES-1.0.6.md) for this update.
 
 ## Features
 
@@ -54,7 +54,7 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.5 re
 - **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
 - **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation. See the [GPS guide](docs/GPS.md).
 
-Settings are in the app and save as you change them. Tested on Windows 11 with an iPhone 15 (iOS 18.6).
+Settings are in the app and save as you change them. Tested on Windows 11 with an iPhone 15 on iOS 18.6 and iOS 27.2.
 
 ## Controls
 

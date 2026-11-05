@@ -2,6 +2,33 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.0.6 - 2026-11-05
+
+### Added
+
+- Update checks. At startup ChairPlay looks for a newer release and offers to open the Releases page. Turn it off, or check at any time, in About.
+- The Wi-Fi step of Get started can be reopened after it's done, from the pencil next to the network name, to correct the network or password.
+- A hint next to the Wi-Fi fields in Get started and Settings > Connection: use an existing network that both the PC and the iPhone can reach.
+- Settings > Audio shows which device Windows default currently plays on and records from.
+
+### Changed
+
+- The iPhone keeps its own on-screen keyboard while CarPlay is connected. Typing in CarPlay from the PC keyboard works as before.
+- ChairPlay no longer runs PowerShell. It reads the firewall, network adapters and location through Windows directly, and adds the firewall rule with one administrator prompt.
+- The window opens sooner: the firewall is read after it opens, and spatial audio is checked at the connection.
+- The firewall check counts ChairPlay's rule only for this copy of the app. Adding the rule also removes ChairPlay's rules left for a copy that was moved or removed.
+- The WebView2 cache is kept in the app folder with the other data. The installer removes the old one.
+
+### Fixed
+
+- A black screen after reconnecting at 1920×1080, while touches still reached the iPhone.
+- No sound in Buffered mode from YouTube and some other apps, with YouTube's video holding still on the iPhone.
+- Replacing a shown Wi-Fi password: the field showed the old one again.
+- Letters typed as symbols (÷, ©, ≠) after switching the Windows keyboard layout with Alt+Shift.
+- ChairPlay could refuse to start over an unplugged audio device saved in the settings, which now gives way to the Windows default, or a damaged pairing file, now set aside. A settings file it can't read is now named in the error.
+
+[Release notes](docs/RELEASE-NOTES-1.0.6.md) · [Changes since v1.0.5](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.5...v1.0.6)
+
 ## 1.0.5 - 2026-11-03
 
 ### Added
