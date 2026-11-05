@@ -19,6 +19,9 @@ internal class KeyboardState {
             return listOf(without, reported.copyOf())
         }
         if (action == GLFW_PRESS) held += key else held -= key
+        // A modifier whose release Windows kept (switching the layout with Alt+Shift does) is up when this event's own
+        // state says so: held on, it would reach the iPhone with every key after.
+        held.removeAll { it != key && modifier(it) != 0 && mods and modifier(it) == 0 }
         var logicalMods = mods and (GLFW_MOD_SHIFT or GLFW_MOD_CONTROL or GLFW_MOD_ALT or GLFW_MOD_SUPER)
         if (action == GLFW_RELEASE) logicalMods = logicalMods and modifier(key).inv()
         held.forEach { logicalMods = logicalMods or modifier(it) }
