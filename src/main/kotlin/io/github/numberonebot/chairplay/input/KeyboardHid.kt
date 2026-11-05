@@ -16,10 +16,14 @@ internal object KeyboardHid {
         )
     }
 
-    /** Generic Desktop / Keyboard: modifiers, reserved byte, and six Keyboard/Keypad usage selectors. */
+    /**
+     * A keyboard's report (modifiers, reserved byte, six Keyboard/Keypad usage selectors) in a Consumer Control
+     * collection rather than Generic Desktop / Keyboard: iOS counts a declared keyboard as a hardware one and hides the
+     * iPhone's own on-screen keyboard while CarPlay runs, but takes these keys in CarPlay's text fields either way.
+     */
     internal fun descriptor(): ByteArray {
         val basic = intArrayOf(
-        0x05, 1, 0x09, 6, 0xa1, 1,
+        0x05, 0x0c, 0x09, 1, 0xa1, 1,
         0x05, 7, 0x19, 0xe0, 0x29, 0xe7, 0x15, 0, 0x25, 1, 0x75, 1, 0x95, 8, 0x81, 2,
         0x75, 8, 0x95, 1, 0x81, 1,
         0x19, 0, 0x29, 0x65, 0x15, 0, 0x25, 0x65, 0x75, 8, 0x95, 6, 0x81, 0, 0xc0,
