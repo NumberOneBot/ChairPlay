@@ -1,6 +1,7 @@
 import type { AppState, Backend } from '../api'
 import { Group, Row, Switch, type Choice } from '../shell/controls'
 import { Field, PasswordField, Select } from '../shell/fields'
+import { WarningIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import { ErrorMessage, SetupMessages } from './messages'
 import { Changed, pendingOf } from './parts'
@@ -14,6 +15,24 @@ export const SECURITY_CHOICES: readonly Choice[] = [
   ['WEP', 'WEP'],
   ['NONE', 'Open'],
 ]
+
+/**
+ * Under the network and its password, here and in Get started: ChairPlay makes no network of its own, so these name one
+ * that already exists and that both this PC and the iPhone can reach.
+ */
+export function ExistingNetworkHint() {
+  return (
+    <Row className="hint-row">
+      <span className="hint warning-hint">
+        <WarningIcon />
+        <span>
+          Use a Wi-Fi network you already have, one that both this PC and the iPhone can reach. ChairPlay doesn't create
+          one.
+        </span>
+      </span>
+    </Row>
+  )
+}
 
 /** What is wrong, if anything; then the Wi-Fi the iPhone joins, and how the iPhone is called and shown. */
 export function ConnectionPage(props: {
@@ -70,6 +89,19 @@ export function ConnectionPage(props: {
         />
         {later('wifi.passphrase')}
       </Row>
+      <ExistingNetworkHint />
+      {props.onShowGuide && (
+        <Row label="Get started">
+          <button
+            type="button"
+            className="btn small"
+            title="Go through the setup steps again"
+            onClick={props.onShowGuide}
+          >
+            Show again
+          </button>
+        </Row>
+      )}
       <Group title="iPhone" />
       {state.setup.pairedIphone ? (
         <Row label="Paired iPhone">
@@ -123,18 +155,6 @@ export function ConnectionPage(props: {
         />
         {later('ui.autoshow')}
       </Row>
-      {props.onShowGuide && (
-        <Row label="Get started">
-          <button
-            type="button"
-            className="btn small"
-            title="Go through the setup steps again"
-            onClick={props.onShowGuide}
-          >
-            Show again
-          </button>
-        </Row>
-      )}
     </>
   )
 }

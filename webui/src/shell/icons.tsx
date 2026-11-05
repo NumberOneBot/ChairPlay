@@ -235,6 +235,32 @@ export function EyeIcon() {
   )
 }
 
+/** A pencil, on a button that opens something done for a change. */
+export function PencilIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M10.6 2.6l2.8 2.8-7.9 7.9-3.5.7.7-3.5z M9.2 4l2.8 2.8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** A warning triangle before a hint that heads off a common mistake. */
+export function WarningIcon() {
+  return (
+    <svg className="warning" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 1.8 15 14H1z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M8 6v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="12" r="0.85" fill="currentColor" />
+    </svg>
+  )
+}
+
 /** A small padlock after a key that cannot be moved or removed. */
 export function LockIcon() {
   return (

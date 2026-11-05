@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import type { AppState, Backend } from '../api'
-import { SECURITY_CHOICES } from '../pages/ConnectionPage'
+import { ExistingNetworkHint, SECURITY_CHOICES } from '../pages/ConnectionPage'
 import { AddRule, CodeLine, CopyButton, OpenFolder } from '../pages/messages'
 import { Row } from '../shell/controls'
 import { Field, PasswordField, Select } from '../shell/fields'
-import { ShieldIcon } from '../shell/icons'
+import { PencilIcon, ShieldIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import type { Steps, StepState } from './steps'
 import { NetworkConnection, showNetworkConnection } from '../pages/NetworkConnection'
@@ -26,7 +26,7 @@ function Tick() {
 
 /**
  * One step: its number, or a tick once done, its title and note; what to do shows while it is the open one, or while
- * [open] keeps a step done open for a change. [action] sits at the line's end.
+ * [open] keeps a step done open for a change. [action] sits at the line's end, before the note.
  */
 function Step(props: {
   n: number
@@ -42,8 +42,8 @@ function Step(props: {
       <span className="mark">{props.state === 'done' ? <Tick /> : props.n}</span>
       <div className="st">
         <span>{props.title}</span>
-        <span className="note">{props.note}</span>
         {props.action}
+        <span className="note">{props.note}</span>
       </div>
       {(props.state === 'now' || props.open) && <div className="bd">{props.children}</div>}
     </div>
@@ -156,8 +156,9 @@ export function GetStarted(props: {
           (editing || steps.wifi.state === 'done') && (
             <button
               type="button"
-              className="edit"
-              aria-label={editing ? 'Close Wi-Fi settings' : 'Edit Wi-Fi settings'}
+              className={`edit ${editing ? 'on' : ''}`}
+              aria-label="Edit Wi-Fi settings"
+              aria-expanded={editing}
               title={
                 editing
                   ? 'Fold the step back to its line'
@@ -165,7 +166,7 @@ export function GetStarted(props: {
               }
               onClick={() => setEditing(!editing)}
             >
-              {editing ? 'Done' : 'Edit'}
+              <PencilIcon />
             </button>
           )
         }
@@ -216,6 +217,7 @@ export function GetStarted(props: {
             }}
           />
         </Row>
+        <ExistingNetworkHint />
       </Step>
       {steps.allDone && (
         <div className="step done all-set">

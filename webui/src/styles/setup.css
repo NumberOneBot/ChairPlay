@@ -97,22 +97,41 @@
   color: var(--green);
 }
 
-/* Edit after a step done's note: a link in the note's size, as quiet as Skip to settings */
+/*
+ * Edit before a step done's note: a 16 px pencil at the line's right end, which the note follows. Like the password
+ * field's eye, it brightens on a disc of its own; open, it keeps the accent.
+ */
 .shell .step .st .edit {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
   padding: 0;
   border: 0;
+  border-radius: 50%;
   background: none;
   color: var(--muted);
-  font: 400 12px var(--ui);
-  white-space: nowrap;
-  text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.3);
-  text-underline-offset: 2px;
-  cursor: pointer;
+  cursor: default;
+}
+
+.shell .step .st .edit + .note {
+  margin-left: 0;
+}
+
+.shell .step .st .edit svg {
+  display: block;
+  width: 16px;
+  height: 16px;
 }
 
 .shell .step .st .edit:hover {
+  background: rgb(118 118 128 / 32%);
+  box-shadow: 0 0 0 2px rgb(118 118 128 / 32%);
   color: var(--text);
+}
+
+.shell .step .st .edit.on {
+  color: var(--accent);
 }
 
 .shell .step .bd {
