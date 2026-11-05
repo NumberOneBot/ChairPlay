@@ -64,6 +64,8 @@ class DesktopMediaSink(
         private val lock = Any()
         private var decoder: VideoDecoder? = null
         private var codec = VideoCodec.H264
+        /** The running decoder's configuration; a new codec or a stop closes the decoder, so it counts only with one. */
+        private var configured: ByteArray? = null
         private var lastRecoveryNanos = 0L
         private val firstFramePending = AtomicBoolean()
 
@@ -89,8 +91,17 @@ class DesktopMediaSink(
             }
         }
 
-        /** A configuration starts a stream, so it starts a fresh decoder and awaits that stream's first picture. */
+        /**
+         * A configuration starts a stream, so it starts a fresh decoder and awaits that stream's first picture. The same
+         * one again keeps the decoder: at 1920x1080 the iPhone can repeat it right after the keyframe and send no new
+         * keyframe, which a fresh decoder would wait for (AndroidMediaSink keeps its decoder too).
+         */
         fun configure(codecData: ByteArray) = synchronized(lock) {
+            if (decoder != null && configured.contentEquals(codecData)) {
+                log("video screen $type: configuration unchanged; keeping the decoder")
+                return
+            }
+            configured = codecData
             decoder?.close()
             decoder = VideoDecoder(window::show, ::recover, codec, { log("video screen $type: $it") }, hardwareDecoding())
                 .also { it.configure(codecData) }

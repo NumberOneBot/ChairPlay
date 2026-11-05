@@ -86,6 +86,8 @@ class VideoDecoder internal constructor(
     private var parameterSets: ByteArray? = null
     private var prependParameters = false
     private var waitingForKeyframe = false
+    /** The keyframe waited for has been asked for once ([onError]); the frames until it are dropped silently. */
+    private var keyframeAsked = false
     private var reportedHardware: Boolean? = null
     private var closed = false
     internal val pool = FramePool()
@@ -134,7 +136,9 @@ class VideoDecoder internal constructor(
             VideoCodec.H265 -> MediaCodecSupport.hevcCodecSpecificData(codecData).takeIf { it.isNotEmpty() }
         }
         prependParameters = true
-        waitingForKeyframe = false
+        // A configuration starts the stream again: frames before its keyframe refer to pictures this decoder never had.
+        waitingForKeyframe = true
+        keyframeAsked = false
         avcodec_flush_buffers(context)
     }
 
@@ -142,7 +146,12 @@ class VideoDecoder internal constructor(
     fun decode(annexB: ByteArray) {
         if (closed) return
         if (waitingForKeyframe) {
-            if (!MediaCodecSupport.isRandomAccess(annexB, videoCodec)) return
+            if (!MediaCodecSupport.isRandomAccess(annexB, videoCodec)) {
+                // FFmpeg would drop it too, silently: the screen stays black unless the iPhone is asked for a keyframe.
+                if (!keyframeAsked) onError("waiting for a keyframe")
+                keyframeAsked = true
+                return
+            }
             waitingForKeyframe = false
         }
         val data = if (prependParameters) parameterSets?.let { it + annexB } ?: annexB else annexB
@@ -164,6 +173,7 @@ class VideoDecoder internal constructor(
                 context = openContext(false)
                 prependParameters = true
                 waitingForKeyframe = true
+                keyframeAsked = true
                 log("$videoCodec D3D11 failed; using software: $failure")
                 if (MediaCodecSupport.isRandomAccess(annexB, videoCodec)) decode(annexB)
                 else onError("software decoder needs a keyframe after D3D11 failure")

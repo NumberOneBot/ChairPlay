@@ -24,6 +24,25 @@ class VideoDecoderTest {
         }
     }
 
+    // A configuration starts the stream again: a frame before its keyframe refers to pictures this decoder never had, so
+    // it is dropped, and the decoder asks for a keyframe instead of staying black until the iPhone sends one.
+    @Test
+    fun `a frame before the first keyframe asks for one`() {
+        val frames = mutableListOf<DecodedFrame>()
+        val errors = mutableListOf<String>()
+        VideoDecoder(onFrame = { frames += it }, onError = { errors += it }).use { decoder ->
+            decoder.configure(resource("avcC.bin"))
+            decoder.decode(resource("frame1.h264"))
+            assertEquals(0, frames.size)
+            assertEquals(1, errors.size)
+
+            decoder.decode(resource("frame0.h264"))
+            decoder.decode(resource("frame1.h264"))
+        }
+        assertEquals(2, frames.size)
+        assertEquals(1, errors.size)
+    }
+
     @Test
     fun `released pictures are refilled instead of allocated`() {
         var shown = 0

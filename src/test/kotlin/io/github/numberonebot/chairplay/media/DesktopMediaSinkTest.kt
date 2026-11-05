@@ -41,6 +41,24 @@ class DesktopMediaSinkTest {
         sink.close()
     }
 
+    // At 1920x1080 the iPhone can send the same configuration again right after the keyframe, and no keyframe after it.
+    // A new decoder would wait for one; the running one goes on with the frames that follow, as AndroidMediaSink does.
+    @Test
+    fun `the same configuration again keeps the decoder`() {
+        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer())
+        var keyframesAsked = 0
+        sink.setVideoRecoveryHandler(110) { keyframesAsked++ }
+        sink.onVideoCodec(110, VideoCodec.H264)
+        sink.onVideoConfig(110, resource("avcC.bin"))
+        sink.onVideoFrame(110, resource("frame0.h264"), 0, 0)
+
+        sink.onVideoConfig(110, resource("avcC.bin"))
+        sink.onVideoFrame(110, resource("frame1.h264"), 0, 0)
+        sink.close()
+
+        assertEquals(0, keyframesAsked)
+    }
+
     // The AltScreen's state goes to the iPhone once per stream it sets up, on that stream's first picture: not on each
     // picture, nor on a decoder configured again, which a view asked for can bring and would ask again, in a loop.
     @Test
