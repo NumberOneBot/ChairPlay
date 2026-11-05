@@ -90,18 +90,6 @@ export function ConnectionPage(props: {
         />
         {later('wifi.passphrase')}
       </Row>
-      {props.onShowGuide && (
-        <Row label="Get started">
-          <button
-            type="button"
-            className="btn small"
-            title="Go through the setup steps again"
-            onClick={props.onShowGuide}
-          >
-            Show again
-          </button>
-        </Row>
-      )}
       <Group title="iPhone" />
       {state.setup.pairedIphone ? (
         <Row label="Paired iPhone">
