@@ -3,7 +3,8 @@
 /* Fields, as iOS fills them: a translucent gray with no outline, lighter under the pointer, ringed in the accent with focus */
 .shell input.t {
   height: 24px;
-  padding: 0 8px;
+  /* Narrow sides: a 44 px size field keeps four digits whole */
+  padding: 0 6px;
   border: 1px solid transparent;
   border-radius: 12px;
   outline: 0;
