@@ -250,13 +250,13 @@ export function PencilIcon() {
   )
 }
 
-/** A warning triangle before a hint that heads off a common mistake. */
-export function WarningIcon() {
+/** An "i" in a circle before a hint that heads off a common mistake. */
+export function InfoIcon() {
   return (
-    <svg className="warning" viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M8 1.8 15 14H1z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-      <path d="M8 6v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <circle cx="8" cy="12" r="0.85" fill="currentColor" />
+    <svg className="info" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M8 7.2v4.3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="8" cy="4.9" r="0.85" fill="currentColor" />
     </svg>
   )
 }

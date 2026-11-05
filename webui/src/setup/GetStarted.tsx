@@ -185,6 +185,7 @@ export function GetStarted(props: {
             Sent to the iPhone during Bluetooth pairing
           </span>
         )}
+        <ExistingNetworkHint inStep />
         <Row label="Network">
           <Field
             label="Network"
@@ -217,7 +218,6 @@ export function GetStarted(props: {
             }}
           />
         </Row>
-        <ExistingNetworkHint />
       </Step>
       {steps.allDone && (
         <div className="step done all-set">

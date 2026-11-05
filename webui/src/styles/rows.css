@@ -128,19 +128,27 @@
   font-size: 12px;
 }
 
-/* A hint that heads off a common mistake: an orange warning triangle beside its first line, the text wrapping by it */
-.shell .warning-hint {
+/* A hint above the fields it is about, rather than under them: clear of the group's line above, and of the fields */
+.shell .row.hint-row.above {
+  padding: 6px 0 4px;
+}
+
+/*
+ * A hint that heads off a common mistake: an "i" in the accent beside its first line, centred on it whatever the
+ * text's size, the text wrapping by it
+ */
+.shell .icon-hint {
   display: flex;
   align-items: flex-start;
   gap: 6px;
 }
 
-.shell .warning-hint .warning {
+.shell .icon-hint .info {
   flex: none;
   width: 14px;
   height: 14px;
-  margin-top: 1px;
-  color: var(--orange);
+  margin-top: calc((1lh - 14px) / 2);
+  color: var(--accent);
 }
 
 .shell .errtext {

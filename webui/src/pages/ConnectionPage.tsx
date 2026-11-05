@@ -1,7 +1,7 @@
 import type { AppState, Backend } from '../api'
 import { Group, Row, Switch, type Choice } from '../shell/controls'
 import { Field, PasswordField, Select } from '../shell/fields'
-import { WarningIcon } from '../shell/icons'
+import { InfoIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import { ErrorMessage, SetupMessages } from './messages'
 import { Changed, pendingOf } from './parts'
@@ -17,21 +17,21 @@ export const SECURITY_CHOICES: readonly Choice[] = [
 ]
 
 /**
- * Under the network and its password, here and in Get started: ChairPlay makes no network of its own, so these name one
- * that already exists and that both this PC and the iPhone can reach.
+ * Above the network and its password, here and in Get started: ChairPlay makes no network of its own, so these name one
+ * that already exists and that both this PC and the iPhone can reach. On this page it is a hint lined up with the
+ * fields; in a Get started step ([inStep]), it is the step's own text, in its place, size, and color.
  */
-export function ExistingNetworkHint() {
-  return (
-    <Row className="hint-row">
-      <span className="hint warning-hint">
-        <WarningIcon />
-        <span>
-          Use a Wi-Fi network you already have, one that both this PC and the iPhone can reach. ChairPlay doesn't create
-          one.
-        </span>
+export function ExistingNetworkHint({ inStep = false }: { inStep?: boolean }) {
+  const hint = (
+    <span className={inStep ? 'icon-hint' : 'hint icon-hint'}>
+      <InfoIcon />
+      <span>
+        Use a Wi-Fi network you already have, one that both this PC and the iPhone can reach. ChairPlay doesn't create
+        one.
       </span>
-    </Row>
+    </span>
   )
+  return inStep ? hint : <Row className="hint-row above">{hint}</Row>
 }
 
 /** What is wrong, if anything; then the Wi-Fi the iPhone joins, and how the iPhone is called and shown. */
@@ -67,6 +67,7 @@ export function ConnectionPage(props: {
         <NetworkConnection state={state} settings={settings} />
       </>}
       <Group title="Wi-Fi network" note="Sent to the iPhone during Bluetooth pairing" />
+      <ExistingNetworkHint />
       <Row label="Network">
         {field('wifi.ssid', 'Network', 'Network name')}
         <Select
@@ -89,7 +90,6 @@ export function ConnectionPage(props: {
         />
         {later('wifi.passphrase')}
       </Row>
-      <ExistingNetworkHint />
       {props.onShowGuide && (
         <Row label="Get started">
           <button
