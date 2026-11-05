@@ -23,7 +23,7 @@ describe('About page', () => {
     fireEvent.click(toggle)
     await waitFor(() => expect(backend.saved).toContainEqual({ 'updates.check.on.start': 'false' }))
     expect(toggle.checked).toBe(false)
-    fireEvent.click(screen.getByRole('button', { name: 'Check' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Check now' }))
     await waitFor(() => expect(backend.updateChecks).toBe(1))
   })
 
@@ -34,7 +34,7 @@ describe('About page', () => {
     render(<Shell state={appState()} backend={backend} />)
     await screen.findByRole('textbox', { name: 'Network' })
     fireEvent.click(screen.getByRole('tab', { name: 'About' }))
-    const button = screen.getByRole('button', { name: 'Check' }) as HTMLButtonElement
+    const button = screen.getByRole('button', { name: 'Check now' }) as HTMLButtonElement
     fireEvent.click(button)
     expect(button.disabled).toBe(true)
     fireEvent.click(button)

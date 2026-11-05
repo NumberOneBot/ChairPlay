@@ -29,7 +29,7 @@ export function UpdateSettings({ backend, settings }: { backend: Backend; settin
     <Row>
       <button type="button" className="btn small" title="Look for a newer version of ChairPlay now" disabled={checking}
         onClick={check}>
-        {checking ? 'Checking…' : 'Check'}
+        {checking ? 'Checking…' : 'Check now'}
       </button>
       {failed && <span className="errtext">Couldn't check for updates. Close any update dialog and try again.</span>}
     </Row>
