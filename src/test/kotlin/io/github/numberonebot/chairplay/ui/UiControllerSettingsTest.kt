@@ -195,6 +195,16 @@ class UiControllerSettingsTest : UiControllerFixture() {
         assertEquals(emptyList<String>(), none["outputs"])
     }
 
+    // Windows default names the device it stands for, so the page can show where the sound goes.
+    @Test
+    fun `the settings carry the devices Windows uses by default`() {
+        val names = AudioDeviceNames(listOf("Speakers (Realtek)"), listOf("Microphone Array"), "Speakers (Realtek(R) Audio)", null)
+        val audio = controller(audio = { names }).settings()["audio"] as Map<*, *>
+
+        assertEquals("Speakers (Realtek(R) Audio)", audio["defaultOutput"])
+        assertEquals(null, audio["defaultInput"])
+    }
+
     @Test
     fun `Disconnect ends the session and leaves the app idle`() {
         val ui = controller()

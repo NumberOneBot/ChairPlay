@@ -26,24 +26,32 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
   const mode = savedMode === 'spatial' ? 'buffered' : savedMode
   const buffered = mode !== 'standard'
   const devices = data?.audio ?? { outputs: [], inputs: [] }
-  const device = (key: string, label: string, names: readonly string[]) => (
-    <Row label={label}>
-      <Select
-        label={label}
-        className="w280"
-        value={value(key) || 'default'}
-        options={deviceChoices(names, value(key))}
-        onChange={(chosen) => save({ [key]: chosen })}
-      />
-      <Changed keys={[key]} pending={pending} />
-      {settings.error(key) && <span className="errtext">{settings.error(key)}</span>}
-    </Row>
+  // Under Windows default, the device it stands for now: a name of any length wraps there, where the list would cut it.
+  const device = (key: string, label: string, names: readonly string[], current: string | null | undefined, uses: string) => (
+    <>
+      <Row label={label}>
+        <Select
+          label={label}
+          className="w280"
+          value={value(key) || 'default'}
+          options={deviceChoices(names, value(key))}
+          onChange={(chosen) => save({ [key]: chosen })}
+        />
+        <Changed keys={[key]} pending={pending} />
+        {settings.error(key) && <span className="errtext">{settings.error(key)}</span>}
+      </Row>
+      {(value(key) || 'default') === 'default' && current && (
+        <Row className="hint-row">
+          <span className="hint">{`${uses} ${current}`}</span>
+        </Row>
+      )}
+    </>
   )
   const volume = state.controls?.volume
   return (
     <>
       <Group title="Devices" note={note(['audio.output', 'audio.input', 'audio.echo.cancellation'])} />
-      {device('audio.output', 'Output', devices.outputs)}
+      {device('audio.output', 'Output', devices.outputs, devices.defaultOutput, 'Plays on')}
       {volume && (
         <Row
           label="Volume"
@@ -57,7 +65,7 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
           />
         </Row>
       )}
-      {device('audio.input', 'Microphone', devices.inputs)}
+      {device('audio.input', 'Microphone', devices.inputs, devices.defaultInput, 'Records from')}
       <Row>
         <Switch
           label="Echo cancellation"

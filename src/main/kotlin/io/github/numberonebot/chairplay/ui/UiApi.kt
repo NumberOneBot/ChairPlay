@@ -3,6 +3,8 @@ package io.github.numberonebot.chairplay.ui
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.drive.WindowsLocation
+import io.github.numberonebot.chairplay.media.AudioDevices
+import io.github.numberonebot.chairplay.media.WindowsDefaultAudio
 import java.nio.file.Path
 
 // What the screens and the app ask of each other: the app's actions and windows as the screens see them, and the
@@ -132,7 +134,19 @@ data class SetupInfo(
 )
 
 /** The sound devices by the names audio.output and audio.input match against. */
-data class AudioDeviceNames(val outputs: List<String>, val inputs: List<String>)
+data class AudioDeviceNames(
+    val outputs: List<String>,
+    val inputs: List<String>,
+    /** The devices Windows default stands for, as Windows names them; null when Windows has none or did not say. */
+    val defaultOutput: String? = null,
+    val defaultInput: String? = null,
+)
+
+/** The sound devices the Audio page offers, as Java Sound names them, and those Windows default stands for. */
+fun currentAudioDevices(): AudioDeviceNames {
+    val defaults = WindowsDefaultAudio.read()
+    return AudioDeviceNames(AudioDevices.outputs().map { it.name }, AudioDevices.inputs().map { it.name }, defaults.output, defaults.input)
+}
 
 /** A save's outcome: the problems by key, or, when there are none, when each saved setting applies. */
 class SaveResult(val errors: Map<String, String>, val applies: Map<String, String>)

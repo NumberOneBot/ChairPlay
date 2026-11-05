@@ -53,7 +53,12 @@ export class FakeBackend implements Backend {
       'log.carplay.data': 'restart',
     },
     display: { width: 1280, height: 720 },
-    audio: { outputs: ['Speakers (Realtek Audio)', 'Headphones (USB Audio)'], inputs: ['Microphone (Realtek Audio)'] },
+    audio: {
+      outputs: ['Speakers (Realtek Audio)', 'Headphones (USB Audio)'],
+      inputs: ['Microphone (Realtek Audio)'],
+      defaultOutput: 'Speakers (Realtek(R) Audio)',
+      defaultInput: 'Microphone (Realtek(R) Audio)',
+    },
   }
 
   async settings() {

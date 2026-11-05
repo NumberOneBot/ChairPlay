@@ -47,7 +47,14 @@ internal class UiSettings(
             "applies" to EditableSettings.keys.associateWith { appliesName(EditableSettings.applies(it)) },
             "display" to mapOf("width" to setup.displayWidth, "height" to setup.displayHeight),
             "audio" to runCatching { audioDevices() }.getOrElse { AudioDeviceNames(emptyList(), emptyList()) }
-                .let { mapOf("outputs" to it.outputs, "inputs" to it.inputs) },
+                .let {
+                    mapOf(
+                        "outputs" to it.outputs,
+                        "inputs" to it.inputs,
+                        "defaultOutput" to it.defaultOutput,
+                        "defaultInput" to it.defaultInput,
+                    )
+                },
         )
     }
 

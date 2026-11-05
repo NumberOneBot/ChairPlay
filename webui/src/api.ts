@@ -177,8 +177,11 @@ export interface SettingsData {
   passphraseSet: boolean
   applies: Record<string, Applies>
   display: { width: number; height: number }
-  /** The sound devices Java Sound lists, by name; empty when it fails. */
-  audio: { outputs: string[]; inputs: string[] }
+  /**
+   * The sound devices Java Sound lists, by name; empty when it fails. The defaults name the devices Windows default
+   * stands for, as Windows names them; null when there is none, or Windows did not say.
+   */
+  audio: { outputs: string[]; inputs: string[]; defaultOutput?: string | null; defaultInput?: string | null }
 }
 
 /** One action of controls.properties, by its setting ("key.home"): its keys as the file names them, in order. */

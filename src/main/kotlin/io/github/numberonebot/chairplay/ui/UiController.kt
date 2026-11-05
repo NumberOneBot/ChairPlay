@@ -6,7 +6,6 @@ import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
-import io.github.numberonebot.chairplay.media.AudioDevices
 import java.time.format.DateTimeFormatter
 
 /**
@@ -28,9 +27,7 @@ class UiController(
     /** Starts a program with its arguments, for [open]. */
     private val launch: (List<String>) -> Unit = { ProcessBuilder(it).start() },
     /** The sound devices the Audio page offers, as Java Sound names them. */
-    private val audioDevices: () -> AudioDeviceNames = {
-        AudioDeviceNames(AudioDevices.outputs().map { it.name }, AudioDevices.inputs().map { it.name })
-    },
+    private val audioDevices: () -> AudioDeviceNames = ::currentAudioDevices,
     /** The main window, whose size the CarPlay page compares with the picture's; null in tests without one. */
     private val mainWindow: UiMainWindow? = null,
     /** controls.properties, which the Keyboard page changes; null where there is none to change. */
