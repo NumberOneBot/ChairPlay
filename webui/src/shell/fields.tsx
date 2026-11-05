@@ -1,5 +1,5 @@
 // The settings pages' fields: text and password fields that save as they are left, and drop-down lists.
-import { useState, type KeyboardEvent } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import type { Choice } from './controls'
 import { EyeIcon } from './icons'
 
@@ -87,15 +87,40 @@ export function PasswordField(props: {
 }) {
   const [reveal, setReveal] = useState(false)
   const [shown, setShown] = useState<string | null>(null)
+  const visible = useRef(false)
+  const reads = useRef(0)
+  const saving = useRef<Promise<unknown> | null>(null)
+  const commit = (text: string) => {
+    const pending = Promise.resolve(props.onCommit(text)).then((saved) => {
+      if (saved === true) {
+        // A read started before this save must not put the previous password back.
+        reads.current++
+        setShown(visible.current ? text : null)
+      }
+      return saved
+    }).finally(() => {
+      if (saving.current === pending) saving.current = null
+    })
+    saving.current = pending
+    return pending
+  }
   const eye = reveal ? 'Hide the password' : 'Show the password'
   const toggle = async () => {
-    if (reveal) {
-      setReveal(false)
+    const show = !visible.current
+    visible.current = show
+    const request = ++reads.current
+    setReveal(show)
+    if (!show) {
       setShown(null)
       return
     }
-    if (props.set && props.saved) setShown(await props.saved())
-    setReveal(true)
+    // Clicking the eye blurs the field and starts a save first; wait for that replacement.
+    if (saving.current && await saving.current !== true) return
+    if (request !== reads.current) return
+    if (props.set && props.saved) {
+      const value = await props.saved()
+      if (visible.current && request === reads.current) setShown(value)
+    }
   }
   return (
     <>
@@ -107,7 +132,7 @@ export function PasswordField(props: {
           className={`w200 ${props.set ? 'set' : ''} ${props.error ? 'err' : ''}`}
           value={shown ?? ''}
           placeholder={props.set ? '••••••••••' : 'Not set'}
-          onCommit={props.onCommit}
+          onCommit={commit}
         />
         <button type="button" className="eye" aria-label={eye} title={eye} onClick={() => void toggle()}>
           <EyeIcon />
