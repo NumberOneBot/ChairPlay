@@ -6,7 +6,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
 import kotlin.io.path.exists
-import kotlin.io.path.reader
+import io.github.numberonebot.chairplay.config.loadProperties
 import kotlin.io.path.writeText
 
 /**
@@ -110,7 +110,7 @@ class ControlsConfig(
                 Files.createDirectories(dir)
                 file.writeText(defaultText())
             }
-            return parse(Properties().apply { file.reader().use(::load) })
+            return parse(loadProperties(file, "delete it to get the default keys back"))
         }
 
         /** [FILE]'s [text] as the start reads it; a mistake throws with the setting named. */

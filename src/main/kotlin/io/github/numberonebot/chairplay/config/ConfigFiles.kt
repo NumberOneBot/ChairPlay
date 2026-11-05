@@ -9,10 +9,8 @@ import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.HexFormat
-import java.util.Properties
 import javax.imageio.ImageIO
 import kotlin.io.path.exists
-import kotlin.io.path.reader
 import kotlin.io.path.writeText
 
 // The receiver's own files in the app folder [dir], besides settings.properties: its AirPlay identity, the iPhones'
@@ -25,12 +23,14 @@ private val HEX = HexFormat.of()
 internal fun loadIdentity(dir: Path): AirPlayIdentity {
     val file = dir.resolve("identity.properties")
     if (file.exists()) {
-        val saved = Properties().apply { file.reader().use(::load) }
-        return AirPlayIdentity(
-            HEX.parseHex(saved.getProperty("privateKey")),
-            HEX.parseHex(saved.getProperty("publicKey")),
-            saved.getProperty("pairingId"),
-        )
+        val remedy = "delete it to make a new one; the iPhone then pairs with ChairPlay again"
+        val saved = loadProperties(file, remedy)
+        fun key(name: String): ByteArray = saved.getProperty(name)?.trim()
+            ?.let { runCatching { HEX.parseHex(it) }.getOrNull() }?.takeIf { it.isNotEmpty() }
+            ?: throw DamagedFileException(file, "has no valid $name", remedy.replaceFirstChar(Char::uppercase))
+        val pairingId = saved.getProperty("pairingId")?.trim()?.ifEmpty { null }
+            ?: throw DamagedFileException(file, "has no pairingId", remedy.replaceFirstChar(Char::uppercase))
+        return AirPlayIdentity(key("privateKey"), key("publicKey"), pairingId)
     }
     return AirPlayIdentity.generate().also {
         file.writeText(

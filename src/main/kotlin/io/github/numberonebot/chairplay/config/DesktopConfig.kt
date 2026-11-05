@@ -18,7 +18,6 @@ import kotlin.io.path.appendText
 import kotlin.io.path.exists
 import kotlin.io.path.name
 import kotlin.io.path.readText
-import kotlin.io.path.reader
 import kotlin.io.path.writeText
 
 data class WindowSize(val width: Int, val height: Int)
@@ -231,7 +230,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
 
     fun mfiDirectory(): File = dir.resolve("offline-mfi").toFile()
 
-    private fun readSettings() = Properties().apply { dir.resolve(SETTINGS_FILE).reader().use(::load) }
+    private fun readSettings() = loadProperties(dir.resolve(SETTINGS_FILE), SETTINGS_REMEDY)
 
     private fun loadSettings(): Properties {
         val file = dir.resolve(SETTINGS_FILE)
@@ -240,7 +239,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
             file.writeText(defaultSettingsText())
         } else {
             // A file from an older version gains what it lacks, after its own lines, which stay as they were.
-            val saved = Properties().apply { file.reader().use(::load) }
+            val saved = loadProperties(file, SETTINGS_REMEDY)
             val missing = SETTINGS_TEMPLATE.mapNotNull { block ->
                 block.entries.filter { (key, _) -> !saved.containsKey(key) }.takeIf { it.isNotEmpty() }?.let(block::text)
             }
@@ -249,7 +248,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
                 file.appendText((if (text.isEmpty() || text.endsWith("\n")) "" else "\n") + missing.joinToString(""))
             }
         }
-        return Properties().apply { file.reader().use(::load) }
+        return loadProperties(file, SETTINGS_REMEDY)
     }
 
     companion object {
@@ -266,6 +265,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
         const val DEFAULT_ICON_FILE = "carplay-icon.png"
         internal const val DEFAULT_CAR_LABEL = DEFAULT_DEVICE_NAME
         const val SETTINGS_FILE = "settings.properties"
+        private const val SETTINGS_REMEDY = "delete it to get the defaults back (the Wi-Fi too)"
         /** The blue the HUD's animated maneuvers fill with (native/maneuver/render.c, ice). */
         const val DEFAULT_ACCENT = "#52c4ff"
         /** audio.duck.db: from about a thirtieth of the volume to the full volume. */

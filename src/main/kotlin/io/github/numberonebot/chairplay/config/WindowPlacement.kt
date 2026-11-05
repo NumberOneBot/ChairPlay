@@ -4,7 +4,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
 import kotlin.io.path.exists
-import kotlin.io.path.reader
 import kotlin.io.path.writeText
 
 /**
@@ -191,10 +190,11 @@ private val WINDOW_STATE_HEADER = listOf(
     "# Delete this file to open them at their default place, size and view again.",
 )
 
+/** window.properties, or null without it; one the app cannot read leaves the windows at their defaults. */
 private fun readWindowState(dir: Path): Properties? {
     val file = dir.resolve(WindowPlacementStore.FILE)
     if (!file.exists()) return null
-    return Properties().apply { file.reader().use(::load) }
+    return runCatching { loadProperties(file, "") }.getOrNull()
 }
 
 /** Sets [values] in window.properties, each on its own line, leaving the other lines as they are. */
