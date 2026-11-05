@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay
 
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.VolumeStore
+import io.github.numberonebot.chairplay.log.LogLevel
 import io.github.numberonebot.chairplay.media.AudioDevices
 import io.github.numberonebot.chairplay.media.AudioRenderer
 import io.github.numberonebot.chairplay.media.DesktopMediaSink
@@ -30,9 +31,9 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
     fun updateBufferedAudio() { if (sink.bufferedAudio.poll()) changed() }
 
     init {
-        // A device name matching nothing stops here, before any connection, with the devices listed.
-        val output = AudioDevices.output(config.audioOutput)
-        val input = AudioDevices.input(config.audioInput)
+        // A device that is gone gives way to the Windows default, with a warning that lists the devices.
+        val output = AudioDevices.output(config.audioOutput) { appLog.log(LogLevel.WARNING, it) }
+        val input = AudioDevices.input(config.audioInput) { appLog.log(LogLevel.WARNING, it) }
         log("audio output: ${output?.name ?: "Windows default"}; microphone: ${input?.name ?: "Windows default"}")
         val volumeStore = VolumeStore(dir)
         volume = runCatching { volumeStore.load() }.getOrDefault(Volume.MAX to false).let { (level, muted) -> Volume(level, muted) }

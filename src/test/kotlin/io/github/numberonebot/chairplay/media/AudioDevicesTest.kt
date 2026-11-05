@@ -28,8 +28,19 @@ class AudioDevicesTest {
         assertEquals("SPDIF Interface (4- FX-AUDIO-DA", matchDevice("audio.output", "FX-AUDIO", outputs))
     }
 
+    // An unplugged headset or USB card named in the settings stopped the start; the Windows default plays instead.
     @Test
-    fun `no match or several matches stop the start and list the devices`() {
+    fun `a device that is gone gives way to the Windows default, with a warning`() {
+        val warnings = mutableListOf<String>()
+
+        assertNull(matchDeviceOrDefault("audio.output", "Headset", outputs, warnings::add))
+        assertEquals(1, warnings.size)
+        assertEquals("Speakers (Realtek(R) Audio)", matchDeviceOrDefault("audio.output", "speakers", outputs, warnings::add))
+        assertEquals(1, warnings.size)
+    }
+
+    @Test
+    fun `no match or several matches are refused with the devices listed`() {
         val none = runCatching { matchDevice("audio.input", "headset", outputs) }.exceptionOrNull()
         assertTrue(none is IllegalArgumentException)
         assertTrue(none!!.message!!, "audio.input" in none.message!! && "Speakers (Realtek(R) Audio)" in none.message!!)

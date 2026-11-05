@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.media.apac
 
-import io.github.numberonebot.chairplay.media.matchDevice
+import io.github.numberonebot.chairplay.media.matchDeviceOrDefault
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -23,7 +23,8 @@ internal object SpatialRuntime {
             if (!Files.isRegularFile(path)) throw IOException("Spatial audio decoder is unavailable")
             val library = libraries.getOrPut(path) { ApacNativeLibrary.load(path) }
             val all = WasapiOutput.devices()
-            val name = matchDevice("audio.output", output, all.map { it.name })
+            // As the rest of the sound: a device that is gone gives way to the Windows default (AppAudio warns once).
+            val name = matchDeviceOrDefault("audio.output", output, all.map { it.name }) {}
             val device = if (name == null) WasapiOutput.defaultDevice() else all.single { it.name == name }
             val channels = WasapiOutput.open(device.id, 0).use { it.channels }
             SpatialCapability(true, plan = SpatialPlan(library, device.id, channels))
