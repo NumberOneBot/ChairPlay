@@ -36,11 +36,21 @@ class InstallerScriptTest {
         assertTrue(appId, Regex("""\{\{[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}}""").matches(appId))
     }
 
+    // Besides the program folders, the WebView2 cache earlier versions kept outside the app folder: the folder it was in
+    // goes only when nothing else is left there.
     @Test
-    fun `clears only the app and runtime folders before an update`() {
-        val names = sections["installdelete"].orEmpty().map { param(it, "Name") }
-        assertEquals(setOf("{app}\\app", "{app}\\runtime"), names.toSet())
-        assertEquals(names.size, names.toSet().size)
+    fun `clears only the program folders and the old WebView2 cache before an update`() {
+        val entries = sections["installdelete"].orEmpty().map { param(it, "Name") to param(it, "Type") }
+        assertEquals(
+            setOf(
+                "{app}\\app" to "filesandordirs",
+                "{app}\\runtime" to "filesandordirs",
+                "{localappdata}\\ChairPlay\\WebView2" to "filesandordirs",
+                "{localappdata}\\ChairPlay" to "dirifempty",
+            ),
+            entries.toSet(),
+        )
+        assertEquals(entries.size, entries.toSet().size)
     }
 
     @Test
@@ -82,7 +92,7 @@ class InstallerScriptTest {
     companion object {
         private val userData = listOf(
             "settings.properties", "controls.properties", "window.properties", "identity.properties", "pairings",
-            "offline-mfi", "carplay-icon.png", "logs", "screenshots", "ChairPlay.lock",
+            "offline-mfi", "carplay-icon.png", "logs", "screenshots", "ChairPlay.lock", "webview2",
         )
 
         /** Lines of each `[Section]`, by its lower-case name, without blanks, `;` comments and `#` directives. */

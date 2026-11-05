@@ -55,6 +55,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\app"
 Type: filesandordirs; Name: "{app}\runtime"
+; Up to 1.0.5 the WebView2 cache was outside the app folder; it now lives in {app}\webview2 with the other data.
+Type: filesandordirs; Name: "{localappdata}\ChairPlay\WebView2"
+Type: dirifempty; Name: "{localappdata}\ChairPlay"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

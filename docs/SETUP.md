@@ -165,7 +165,7 @@ The **Keyboard** page lists every action with its keys: click a key to press ano
 
 While the page covers the window, the keyboard and the mouse are the page's; while CarPlay shows, the page is hidden and every key works as before.
 
-The page runs in Microsoft Edge WebView2, which Windows 11 and an updated Windows 10 carry. Without it (or without `chairplay_webview.dll`) the app opens the page in the default browser, says so in the log, and the car button minimizes the window as before. WebView2 keeps its profile (cache) in `%LOCALAPPDATA%\ChairPlay\WebView2`.
+The page runs in Microsoft Edge WebView2, which Windows 11 and an updated Windows 10 carry. Without it (or without `chairplay_webview.dll`) the app opens the page in the default browser, says so in the log, and the car button minimizes the window as before. WebView2 keeps its profile (cache) in the `webview2` folder next to `ChairPlay.exe`, with the app's other data.
 
 The page talks to the app over HTTP on `127.0.0.1` only, on a free port, with a random key in its address; the log has the whole address from the start (`UI at http://127.0.0.1:<port>/?token=<key>`), and any browser on the PC can open it, for example to look at the screens from a second monitor. Every API call carries the key, and a request naming another host than `127.0.0.1` or `localhost` is refused.
 

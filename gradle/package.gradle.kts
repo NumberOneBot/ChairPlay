@@ -128,7 +128,7 @@ val appHome: Provider<String> = providers.gradleProperty("chairplay.home")
 // installer (gradle/installer.gradle.kts) refuses an image holding any of them.
 val appDataFiles = listOf(
     "settings.properties", "controls.properties", "window.properties", "carplay-icon.png", "identity.properties",
-    "pairings/**", "offline-mfi/**", "logs/**", "screenshots/**", "ChairPlay.lock", "gps-almanac.yuma",
+    "pairings/**", "offline-mfi/**", "logs/**", "screenshots/**", "ChairPlay.lock", "gps-almanac.yuma", "webview2/**",
 )
 project.extra["appDataFiles"] = appDataFiles
 
