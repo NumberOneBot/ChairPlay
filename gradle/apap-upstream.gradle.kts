@@ -31,7 +31,8 @@ tasks.named<Sync>("upstreamCore") {
             |                    queue.addLast(frame)
         """.trimMargin())
         patch("            if (!closed.get()) log(\"Buffered audio: connection ended (\${error.javaClass.simpleName})\")",
-            "            if (!closed.get()) log(\"Buffered audio: connection ended (\${error.javaClass.simpleName})\")\n            if (apap != null) close()")
+            // APAP framing fails in many ways, each an IOException: its message says which one.
+            "            if (!closed.get()) log(\"Buffered audio: connection ended (\${error.javaClass.simpleName}: \${error.message})\")\n            if (apap != null) close()")
         patch("                                sink.onAudioStarted(id, format, frame.timestamp.toInt())",
             "                                if (apap != null) apap.begin() else sink.onAudioStarted(id, format, frame.timestamp.toInt())")
         patch("                            sink.onAudioRtp(id, format, frame.rtp, frame.timestamp.toInt())",
