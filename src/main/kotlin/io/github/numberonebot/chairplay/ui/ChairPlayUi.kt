@@ -10,6 +10,8 @@ import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
 import io.github.numberonebot.chairplay.session.BringUpStatus
 import io.github.numberonebot.chairplay.session.addFirewallRules
+import io.github.numberonebot.chairplay.appLog
+import io.github.numberonebot.chairplay.log.LogLevel
 import io.github.numberonebot.chairplay.session.firewallHint
 import io.github.numberonebot.chairplay.update.UpdateChecks
 import java.io.Closeable
@@ -82,6 +84,8 @@ class ChairPlayUi(
         startFirewall = FirewallStatus.UNKNOWN,
         active = { model.state.showsUi },
         mfiPresent = { mfiFilesPresent(config.mfiDirectory().toPath()) },
+        // A warning, as the log keeps by default: a report of no network can then say why.
+        log = { appLog.log(LogLevel.WARNING, it) },
     )
 
     private val controller = UiController(

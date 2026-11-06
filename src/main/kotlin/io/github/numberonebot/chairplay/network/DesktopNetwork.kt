@@ -13,7 +13,7 @@ import java.net.NetworkInterface
 class DesktopNetwork(
     private val saved: SavedWifi,
     private val selected: String,
-    private val wlan: () -> List<WlanConnection> = { runCatching { WlanApi.currentConnections() }.getOrDefault(emptyList()) },
+    private val wlan: () -> List<WlanConnection> = WlanApi::currentConnections,
     private val nics: () -> List<NicSnapshot> = {
         NetworkInterface.getNetworkInterfaces().toList().map {
             NicSnapshot(it.displayName, it.name, it.inetAddresses.toList(), it.isUp)
@@ -43,9 +43,12 @@ class DesktopNetwork(
     override fun close() { closed = true }
 
     private fun describe(): WirelessHotspotInfo {
-        val connections = wlan()
+        val wifi = runCatching(wlan)
+        val connections = wifi.getOrDefault(emptyList())
         if (connections.isNotEmpty()) return hotspotInfoFor(connections, nics(), saved)
         val adapters = ethernet()
+        // A Wi-Fi network Windows hides, with no cable either, fails as hidden: the cable is not what is missing.
+        if (adapters.isEmpty()) (wifi.exceptionOrNull() as? WifiHiddenException)?.let { throw it }
         val adapter = checkNotNull(selectEthernet(adapters, selected)) {
             if (adapters.isEmpty()) "No Ethernet address is available; connect a network cable"
             else "Select an available Ethernet adapter in Connection settings"

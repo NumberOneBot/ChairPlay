@@ -5,7 +5,7 @@ import { InfoIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import { ErrorMessage, SetupMessages } from './messages'
 import { Changed, pendingOf } from './parts'
-import { NetworkConnection, showNetworkConnection } from './NetworkConnection'
+import { NetworkConnection, showNetworkConnection, WifiHidden } from './NetworkConnection'
 
 /** wifi.security as DesktopConfig names it, and as the page shows it. */
 export const SECURITY_CHOICES: readonly Choice[] = [
@@ -67,6 +67,7 @@ export function ConnectionPage(props: {
         <NetworkConnection state={state} settings={settings} />
       </>}
       <Group title="Wi-Fi network" note="Sent to the iPhone during Bluetooth pairing" />
+      <WifiHidden state={state} backend={backend} />
       <ExistingNetworkHint />
       <Row label="Network">
         {field('wifi.ssid', 'Network', 'Network name')}

@@ -167,6 +167,8 @@ export interface AppState {
     ethernet?: { id: string; label: string; addresses: string[] }[]
     ethernetSelected?: string | null
     networkError?: boolean
+    /** The PC is on Wi-Fi, but Windows hides the network: location is off for desktop apps. */
+    wifiHidden?: boolean
     settingsFile: string
   }
 }

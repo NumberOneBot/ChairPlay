@@ -36,6 +36,14 @@ class DesktopNetworkTest {
         assertThrows(IllegalStateException::class.java) { network.validateReady() }
     }
 
+    // A Wi-Fi network Windows hides, with no cable either, fails as hidden rather than as no cable.
+    @Test fun `a hidden Wi-Fi network without Ethernet fails as hidden`() {
+        val hidden = DesktopNetwork(saved, "", { throw WifiHiddenException() }, { emptyList() }, { emptyList() })
+        assertThrows(WifiHiddenException::class.java) { hidden.start(1000) }
+        val cabled = DesktopNetwork(saved, "", { throw WifiHiddenException() }, { emptyList() }, { listOf(adapter("a", "192.168.1.20")) })
+        assertEquals("192.168.1.20", cabled.start(1000).hostAddress?.hostAddress)
+    }
+
     @Test fun `active Wi-Fi retains the existing path`() {
         val wifi = WlanConnection("Wi-Fi", "Router", byteArrayOf(1,2,3,4,5,6), 36)
         val nic = NicSnapshot("Wi-Fi", "wlan0", listOf(InetAddress.getByName("192.168.1.2")), true)

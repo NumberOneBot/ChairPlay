@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
+import io.github.numberonebot.chairplay.network.WifiHiddenException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -117,6 +118,30 @@ class SetupChecksTest {
         assertFalse(checks.check())
         assertNull(checks.snapshot.pairedIphone)
         assertEquals(0, firewallReads)
+    }
+
+    // Windows hiding the PC's Wi-Fi network is told apart from no Wi-Fi, for the page to say how to show it; a cable is
+    // still looked for, and the hiding is logged once.
+    @Test
+    fun `a Wi-Fi network Windows hides is told apart from none`() {
+        var hidden = true
+        var ethernetReads = 0
+        val logged = mutableListOf<String>()
+        val checks = SetupChecks({ iphone }, { if (hidden) throw WifiHiddenException() else wifi }, { firewall },
+            FirewallStatus.MISSING, { true }, { nanos }, ethernet = { ethernetReads++; emptyList() }, log = { logged += it })
+        assertTrue(checks.check())
+        assertTrue(checks.snapshot.wifiHidden)
+        assertNull(checks.snapshot.pcWifi)
+        assertEquals(1, ethernetReads)
+        assertEquals(true, networkSetupFields(checks.snapshot, "").toMap()["wifiHidden"])
+        assertFalse(checks.check())
+        assertEquals(1, logged.size)
+
+        hidden = false
+        wifi = "Home"
+        assertTrue(checks.check())
+        assertFalse(checks.snapshot.wifiHidden)
+        assertEquals("Home", checks.snapshot.pcWifi)
     }
 
     @Test

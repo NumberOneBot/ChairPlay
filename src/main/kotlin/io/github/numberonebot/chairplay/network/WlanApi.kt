@@ -14,6 +14,33 @@ class WlanConnection(
 )
 
 /**
+ * Windows hides the network of a connected Wi-Fi adapter: on Windows 11 24H2 and later, desktop apps that may not use
+ * location are refused it.
+ */
+class WifiHiddenException : IllegalStateException("Windows does not share the PC's Wi-Fi network: location is off for desktop apps")
+
+/** What an adapter says of its network: connected to one, connected with the network hidden, or on none. */
+internal sealed interface AdapterWifi {
+    data class Connected(val connection: WlanConnection) : AdapterWifi
+    data object Hidden : AdapterWifi
+    data object None : AdapterWifi
+
+    companion object {
+        private const val ERROR_ACCESS_DENIED = 5
+
+        /** A connected adapter whose network query failed with [status]: hidden when refused, else read as none. */
+        fun refused(status: Int): AdapterWifi = if (status == ERROR_ACCESS_DENIED) Hidden else None
+    }
+}
+
+/** The connections the adapters show; none shown while one is hidden throws [WifiHiddenException]. */
+internal fun connectionsOf(answers: List<AdapterWifi>): List<WlanConnection> {
+    val shown = answers.filterIsInstance<AdapterWifi.Connected>().map { it.connection }
+    if (shown.isEmpty() && AdapterWifi.Hidden in answers) throw WifiHiddenException()
+    return shown
+}
+
+/**
  * The connected Wi-Fi adapters as the Native Wifi API reports them. `netsh wlan` prints localised
  * labels, this API does not. Structure layouts are read by offset (x64, natural alignment) from
  * wlanapi.h and windot11.h:
@@ -66,9 +93,9 @@ object WlanApi {
             check(status == 0) { "WlanEnumInterfaces failed: $status" }
             val list = listRef.value
             try {
-                return (0 until list.getInt(0)).mapNotNull { index ->
+                return connectionsOf((0 until list.getInt(0)).map { index ->
                     connectionOf(handle, list.share((LIST_HEADER + index * INTERFACE_INFO_SIZE).toLong()))
-                }
+                })
             } finally {
                 wlan.WlanFreeMemory(list)
             }
@@ -77,10 +104,13 @@ object WlanApi {
         }
     }
 
-    private fun connectionOf(handle: Pointer, info: Pointer): WlanConnection? {
-        if (info.getInt(INTERFACE_STATE) != STATE_CONNECTED) return null
+    private fun connectionOf(handle: Pointer, info: Pointer): AdapterWifi {
+        if (info.getInt(INTERFACE_STATE) != STATE_CONNECTED) return AdapterWifi.None
         val description = info.getWideString(INTERFACE_DESCRIPTION)
-        val attributes = query(handle, info, OPCODE_CURRENT_CONNECTION) ?: return null
+        val attributesRef = PointerByReference()
+        val status = wlan.WlanQueryInterface(handle, info, OPCODE_CURRENT_CONNECTION, null, IntByReference(), attributesRef, null)
+        if (status != 0) return AdapterWifi.refused(status)
+        val attributes = attributesRef.value
         val ssid: String
         val bssid: ByteArray
         try {
@@ -90,13 +120,13 @@ object WlanApi {
         } finally {
             wlan.WlanFreeMemory(attributes)
         }
-        val channelData = query(handle, info, OPCODE_CHANNEL_NUMBER) ?: return null
+        val channelData = query(handle, info, OPCODE_CHANNEL_NUMBER) ?: return AdapterWifi.None
         val channel = try {
             channelData.getInt(0)
         } finally {
             wlan.WlanFreeMemory(channelData)
         }
-        return WlanConnection(description, ssid, bssid, channel)
+        return AdapterWifi.Connected(WlanConnection(description, ssid, bssid, channel))
     }
 
     /** The caller frees the returned block with WlanFreeMemory; null when the query fails. */

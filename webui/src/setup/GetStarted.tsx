@@ -7,7 +7,7 @@ import { Field, PasswordField, Select } from '../shell/fields'
 import { PencilIcon, ShieldIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import type { Steps, StepState } from './steps'
-import { NetworkConnection, showNetworkConnection } from '../pages/NetworkConnection'
+import { NetworkConnection, showNetworkConnection, WifiHidden } from '../pages/NetworkConnection'
 
 function Tick() {
   return (
@@ -185,6 +185,7 @@ export function GetStarted(props: {
             Sent to the iPhone during Bluetooth pairing
           </span>
         )}
+        <WifiHidden state={state} backend={backend} />
         <ExistingNetworkHint inStep />
         <Row label="Network">
           <Field

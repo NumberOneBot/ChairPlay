@@ -15,7 +15,8 @@ function Preview() {
     ethernet: [
       { id: '11111111-1111-1111-1111-111111111111', label: 'Ethernet', addresses: ['192.168.1.42'] },
       { id: '22222222-2222-2222-2222-222222222222', label: 'USB Ethernet', addresses: ['10.0.0.15'] },
-    ].slice(0, count), ethernetSelected: count === 1 ? '11111111-1111-1111-1111-111111111111' : null }
+    ].slice(0, count), ethernetSelected: count === 1 ? '11111111-1111-1111-1111-111111111111' : null,
+    wifiHidden: query.has('hidden') }
   const [state, setState] = useState(initial)
   const backend = useMemo(() => {
     const fake = new FakeBackend()

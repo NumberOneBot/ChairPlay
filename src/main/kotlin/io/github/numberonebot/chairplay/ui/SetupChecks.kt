@@ -6,6 +6,7 @@ import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import io.github.numberonebot.chairplay.network.EthernetAdapter
+import io.github.numberonebot.chairplay.network.WifiHiddenException
 
 /** The MFi files the iAP2 authentication signs with, which Get started asks for. */
 private val MFI_FILES = listOf("identity.pk8", "certificate.p7b")
@@ -20,6 +21,8 @@ internal fun mfiFilesPresent(dir: Path): Boolean = MFI_FILES.all { Files.isRegul
 data class SetupSnapshot(
     val pairedIphone: String?, val pcWifi: String?, val firewall: FirewallStatus, val mfiPresent: Boolean = false,
     val ethernet: List<EthernetAdapter> = emptyList(), val networkError: Boolean = false,
+    /** The PC is on Wi-Fi, but Windows hides the network from ChairPlay ([WifiHiddenException]). */
+    val wifiHidden: Boolean = false,
 )
 
 internal fun networkSetupFields(snapshot: SetupSnapshot?, selected: String): Array<Pair<String, Any?>> = arrayOf(
@@ -28,6 +31,7 @@ internal fun networkSetupFields(snapshot: SetupSnapshot?, selected: String): Arr
     },
     "ethernetSelected" to io.github.numberonebot.chairplay.network.selectEthernet(snapshot?.ethernet.orEmpty(), selected)?.id,
     "networkError" to (snapshot?.networkError ?: false),
+    "wifiHidden" to (snapshot?.wifiHidden ?: false),
 )
 
 /**
@@ -46,6 +50,7 @@ class SetupChecks(
     private val now: () -> Long = System::nanoTime,
     private val mfiPresent: () -> Boolean = { false },
     private val ethernet: () -> List<EthernetAdapter> = { emptyList() },
+    private val log: (String) -> Unit = {},
 ) {
     @Volatile
     var snapshot = SetupSnapshot(null, null, startFirewall)
@@ -65,12 +70,15 @@ class SetupChecks(
             firewallRead = time
             firewallNow = runCatching(firewall).getOrDefault(firewallNow)
         }
-        val wifi = runCatching(pcWifi).getOrNull()
+        val wifiRead = runCatching(pcWifi)
+        val wifi = wifiRead.getOrNull()
+        val hidden = wifiRead.exceptionOrNull() is WifiHiddenException
+        if (hidden && !before.wifiHidden) log("PC Wi-Fi network hidden by Windows: location is off for desktop apps")
         val adapters = if (wifi == null) runCatching(ethernet) else Result.success(emptyList())
         val after = SetupSnapshot(
             runCatching(pairedIphone).getOrNull(), wifi, firewallNow,
             runCatching(mfiPresent).getOrDefault(false),
-            adapters.getOrDefault(emptyList()), adapters.isFailure,
+            adapters.getOrDefault(emptyList()), adapters.isFailure, hidden,
         )
         snapshot = after
         return after != before

@@ -28,3 +28,18 @@ describe('Ethernet adapter selection', () => {
     })
   }
 })
+
+describe('Wi-Fi network hidden by Windows', () => {
+  for (const setupDone of [false, true]) {
+    it(`holds Connect and opens the location settings from ${setupDone ? 'settings' : 'Get started'}`, async () => {
+      const state = appState({ phase: 'idle', setupDone })
+      state.setup = { ...state.setup, mfiPresent: true, firewall: 'present', pairedIphone: 'iPhone', pcWifi: null,
+        ethernet: [], ethernetSelected: null, wifiHidden: true }
+      const backend = new FakeBackend()
+      render(<Shell state={state} backend={backend} />)
+      fireEvent.click(await screen.findByRole('button', { name: 'Open location settings' }))
+      expect(backend.opened).toEqual(['location'])
+      expect((screen.getByRole('button', { name: 'Connect' }) as HTMLButtonElement).disabled).toBe(true)
+    })
+  }
+})

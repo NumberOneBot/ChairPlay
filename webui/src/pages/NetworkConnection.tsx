@@ -1,12 +1,36 @@
-import type { AppState } from '../api'
-import { Row } from '../shell/controls'
+import type { AppState, Backend } from '../api'
+import { Message, Row } from '../shell/controls'
 import { Select } from '../shell/fields'
 import type { Settings } from '../shell/useSettings'
 import { Changed, pendingOf } from './parts'
 
+/** The PC is on Wi-Fi Windows hides, with no cable: said under the Wi-Fi hint rather than as a PC connection. */
+function wifiHidden(state: AppState): boolean {
+  const { setup } = state
+  return !setup.pcWifi && !!setup.wifiHidden && !setup.networkError && setup.ethernet?.length === 0
+}
+
+/** Under the Wi-Fi hint: Windows hides this PC's Wi-Fi network, and where to let ChairPlay see it. */
+export function WifiHidden({ state, backend }: { state: AppState; backend: Backend }) {
+  if (!wifiHidden(state)) return null
+  return (
+    <Message
+      tone="warn"
+      head="Windows hides this PC's Wi-Fi network from ChairPlay."
+      text="On this PC, open Settings › Privacy & security › Location and turn on Let desktop apps access your location."
+    >
+      <div className="acts">
+        <button type="button" className="btn small" title="Open location settings" onClick={() => void backend.open('location')}>
+          Open location settings
+        </button>
+      </div>
+    </Message>
+  )
+}
+
 export function showNetworkConnection(state: AppState): boolean {
   const { setup } = state
-  if (setup.pcWifi || setup.ethernet === undefined) return false
+  if (setup.pcWifi || setup.ethernet === undefined || wifiHidden(state)) return false
   if (setup.networkError) return true
   return setup.ethernet.length !== 1 || setup.ethernetSelected !== setup.ethernet[0].id
 }
@@ -34,7 +58,9 @@ export function NetworkConnection({ state, settings }: { state: AppState; settin
 export function networkWaits(state: AppState): string | null {
   if (state.setup.pcWifi || state.setup.ethernet === undefined) return null
   if (state.setup.networkError) return 'Check the network adapter in Windows first'
-  if (!state.setup.ethernet.length) return 'Connect a network cable first'
+  if (!state.setup.ethernet.length) {
+    return state.setup.wifiHidden ? 'Turn on location for desktop apps first' : 'Connect a network cable first'
+  }
   if (!state.setup.ethernetSelected) return 'Select an Ethernet adapter first'
   return null
 }
