@@ -4,7 +4,7 @@
 
 <h1 align="center">ChairPlay</h1>
 
-<p align="center"><strong>Wireless Apple CarPlay on your Windows PC.</strong></p>
+<p align="center"><strong>Wireless CarPlay on your Windows PC</strong></p>
 
 <p align="center">
   <a href="https://github.com/NumberOneBot/ChairPlay/releases/latest"><img src="https://img.shields.io/github/v/release/NumberOneBot/ChairPlay?style=flat&amp;label=Latest%20release" alt="Latest release"></a>
