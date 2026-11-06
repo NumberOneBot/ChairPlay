@@ -2,6 +2,23 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.0.8 - 2026-11-06
+
+### Added
+
+- An incoming call flashes the CarPlay window's taskbar button while it rings. Turn on **CarPlay > Window > Bring to front on a call** to also show the window and bring it to the front.
+
+### Changed
+
+- The GPS car's speed is limited only by the end of the speedometer, 300 km/h or 180 mph, with a seventh gear. It used to stop near 268 km/h.
+- Only one copy of ChairPlay runs at a time. A second copy started from another folder, installed or portable, says so and closes.
+
+### Fixed
+
+- When Windows hides the PC's Wi-Fi network from desktop apps (location off, on Windows 11 24H2 and later), ChairPlay said to connect a network cable. It now says to turn on location for desktop apps and opens the location settings.
+
+[Release notes](docs/RELEASE-NOTES-1.0.8.md) · [Changes since v1.0.7](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.7...v1.0.8)
+
 ## 1.0.7 - 2026-11-06
 
 ### Fixed
