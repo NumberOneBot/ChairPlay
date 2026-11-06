@@ -11,9 +11,9 @@ class CarModelTest {
         repeat((seconds / dt).toInt()) { each(step(input, dt)) }
     }
 
-    // The default car, 300 hp and 1500 kg, geared and gripping for the launch: under 4.5 s to 100 km/h, its long top
-    // gear running out at the red line near 268 km/h, the engine always between idle and the red line, the six gears
-    // going up one by one, each shift close to the red line.
+    // The default car, 300 hp and 1500 kg, geared and gripping for the launch: under 4.5 s to 100 km/h, on to where its
+    // power meets the drag (near 283 km/h, short of the top gear's red line), the engine always between idle and the
+    // red line, the seven gears going up one by one, each shift close to the red line.
     @Test
     fun `full throttle takes the car to 100 and on to its top speed, shifting close to the red line`() {
         val car = CarModel(CarSpec())
@@ -34,9 +34,18 @@ class CarModelTest {
         }
 
         assertTrue("0-100 in $to100 s", to100 in 3.0..4.5)
-        assertTrue("top ${car.state.speedKmh} km/h", car.state.speedKmh in 255.0..272.0)
-        assertEquals(listOf(1, 2, 3, 4, 5, 6), gears)
+        assertEquals(CarModel.topSpeed(car.spec) * 3.6, car.state.speedKmh, 3.0)
+        assertTrue("top ${car.state.speedKmh} km/h", car.state.speedKmh > 275.0)
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7), gears)
         assertTrue("shifts at $shiftRpms", shiftRpms.all { it >= 6400 })
+    }
+
+    // Only the speedometer limits the speed: a car powerful enough runs to its end and no further.
+    @Test
+    fun `a powerful car runs to the end of the speedometer and no further`() {
+        val car = CarModel(CarSpec(powerHp = 2000.0))
+        car.run(120.0, CarInput(throttle = 1.0)) { assertTrue("${it.speedKmh} km/h", it.speedKmh <= 300.5) }
+        assertEquals(300.0, car.state.speedKmh, 1.0)
     }
 
     // Twice the power, a quicker car; twice the mass, a slower one.

@@ -47,7 +47,7 @@ class Driving(
 
     init {
         placed = settings.start != null
-        drive = Drive(settings.car, settings.start ?: GeoPoint(0.0, 0.0), settings.headingDegrees, nanoTime)
+        drive = Drive(settings.driven, settings.start ?: GeoPoint(0.0, 0.0), settings.headingDegrees, nanoTime)
     }
 
     val control = DriveControl(drive, gamepad, onStopped = ::remember, nanoTime = nanoTime)
@@ -104,7 +104,7 @@ class Driving(
             log("GPS car turned to ${now.headingDegrees}°")
         }
         if (keys.any { it in CAR_KEYS }) {
-            drive.respec(now.car)
+            drive.respec(now.driven)
             log("GPS car ${now.car.powerHp.roundToInt()} hp, ${now.car.massKg.roundToInt()} kg, ${now.car.handling.key} handling")
         }
         if ("gps.enabled" in keys) findStart()
@@ -192,7 +192,8 @@ class Driving(
     private companion object {
         /** 0xFFFA's selectors, identification fields 17 to 20 less 16. */
         val SENTENCES = mapOf(1 to "GGA", 2 to "RMC", 3 to "GSV", 4 to "PASCD")
-        val CAR_KEYS = setOf("gps.car.power.hp", "gps.car.mass.kg", "gps.car.handling")
+        /** What remakes the car: its own settings, and the units, whose speedometer's end it runs to. */
+        val CAR_KEYS = setOf("gps.car.power.hp", "gps.car.mass.kg", "gps.car.handling", "gps.units")
         /** Degrees apart within the five decimals the place is saved with. */
         const val SAME = 1e-5
     }

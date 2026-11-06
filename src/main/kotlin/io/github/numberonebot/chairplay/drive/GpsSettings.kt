@@ -26,6 +26,9 @@ data class GpsSettings(
     /** gps.units: the speedometer scale and speed readouts; applied immediately. */
     val units: SpeedUnits = SpeedUnits.METRIC,
 ) {
+    /** The car as it drives: [car], running to the end of the speedometer in its [units] and no further. */
+    val driven: CarSpec get() = car.copy(limiterKmh = units.toKmh(GaugeScale.speedometer(units).max))
+
     companion object {
         val RATES = listOf(1, 4, 10)
         val POWER_HP = 20.0..2000.0

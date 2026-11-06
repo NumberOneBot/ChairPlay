@@ -7,23 +7,24 @@ import kotlin.math.sign
 
 /**
  * A car as plain numbers: its power and mass decide how it pulls, its gearing how the engine turns. The defaults are a
- * quick 300 hp car of 1500 kg with a six-speed automatic and a red line at 7000 rpm, the owner's choice, geared short
- * and gripping all round for the launch over the top speed: about 4 s to 100 km/h, near 53 km/h in first, and running
- * out at the red line in a long top gear near 268 km/h, under its 280 km/h limiter.
+ * quick 300 hp car of 1500 kg with a seven-speed automatic and a red line at 7000 rpm, the owner's choice, geared short
+ * and gripping all round for the launch: about 4 s to 100 km/h, near 53 km/h in first. Only the speedometer limits the
+ * speed ([limiterKmh]): the top gear reaches the red line near 307 km/h, past its end, and the drag stops a 300 hp car
+ * near 283 km/h. After each shift at full throttle the engine stays well above where it shifts down.
  */
 data class CarSpec(
     val massKg: Double = 1500.0,
     val powerHp: Double = 300.0,
     val idleRpm: Double = 700.0,
     val redlineRpm: Double = 7000.0,
-    val gearRatios: List<Double> = listOf(3.6, 2.2, 1.55, 1.2, 0.95, 0.71),
+    val gearRatios: List<Double> = listOf(3.6, 2.45, 1.8, 1.4, 1.12, 0.88, 0.62),
     val finalDrive: Double = 4.3,
     val wheelRadiusMeters: Double = 0.31,
     /** Drag coefficient times frontal area. */
     val dragAreaSquareMeters: Double = 0.65,
     val rollingResistance: Double = 0.012,
-    /** Where the engine stops pulling, in km/h. */
-    val limiterKmh: Double = 280.0,
+    /** Where the engine stops pulling, in km/h: the end of the speedometer ([GpsSettings.driven] sets it in its units). */
+    val limiterKmh: Double = GaugeScale.speedometer().max,
     val handling: Handling = Handling.NORMAL,
     /**
      * Whether the brake held at a standstill backs the car up. Off for now, at the owner's wish (2026-10-24): the brake
