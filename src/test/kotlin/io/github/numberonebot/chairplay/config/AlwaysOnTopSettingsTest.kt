@@ -22,8 +22,18 @@ class AlwaysOnTopSettingsTest {
         assertTrue(restarted.now().windowOnTop.altscreen)
     }
 
+    // Bringing the CarPlay window forward on a call is off by default, and read again at each call.
+    @Test fun `the window comes forward on a call only when switched on`() {
+        val dir = Files.createTempDirectory("front-on-call")
+        writeTestSettings(dir)
+        val config = DesktopConfig(dir)
+        assertFalse(config.windowOnTop.frontOnCall)
+        SettingsFile(dir.resolve("settings.properties")).write(mapOf("window.front.on.call" to "true"))
+        assertTrue(config.now().windowOnTop.frontOnCall)
+    }
+
     @Test fun `each window accepts only a boolean and applies it immediately`() {
-        for (key in listOf("window.always.on.top", "altscreen.always.on.top")) {
+        for (key in listOf("window.always.on.top", "altscreen.always.on.top", "window.front.on.call")) {
             for (value in listOf("true", "false")) {
                 assertTrue(EditableSettings.validate(mapOf(key to value), emptyMap()).isEmpty())
             }

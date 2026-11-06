@@ -108,6 +108,11 @@ internal val SETTINGS_TEMPLATE = listOf(
         "window.always.on.top" to "false", "altscreen.always.on.top" to "false",
     ),
     SettingBlock(
+        "'true' shows the CarPlay window and brings it to the front when a call comes in. Its taskbar button\n" +
+            "flashes on a call either way. Changes apply immediately.",
+        "window.front.on.call" to "false",
+    ),
+    SettingBlock(
         "'true' resizes the windows only with the picture's shape (a maximized one still fills the screen),\n" +
             "'false' lets them take any shape.",
         "window.keep.aspect" to "true",

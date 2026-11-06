@@ -23,4 +23,16 @@ describe('Always on top', () => {
       expect(backend.reconnects).toBe(0)
     },
   )
+
+  it('saves bringing the CarPlay window forward on a call without reconnecting', async () => {
+    const backend = new FakeBackend()
+    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={backend} />)
+    await screen.findByRole('textbox', { name: 'Network' })
+    fireEvent.click(screen.getByRole('tab', { name: 'CarPlay' }))
+    const toggle = screen.getByRole('switch', { name: 'Bring to front on a call' }) as HTMLInputElement
+    expect(toggle.checked).toBe(false)
+    fireEvent.click(toggle)
+    await waitFor(() => expect(backend.saved).toEqual([{ 'window.front.on.call': 'true' }]))
+    expect(backend.reconnects).toBe(0)
+  })
 })

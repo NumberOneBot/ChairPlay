@@ -53,7 +53,7 @@ private interface MessageBoxes : Library {
 private const val MB_ICONERROR = 0x10
 private const val MB_SETFOREGROUND = 0x10000
 
-/** Windows' own message box, as no window of the app is open to show the failure in. */
-private fun showStartFailure(text: String) {
+/** Windows' own message box, as no window of the app is open to show the failure in (or none to go on with). */
+internal fun showStartFailure(text: String) {
     Native.load("user32", MessageBoxes::class.java).MessageBoxW(null, WString(text), WString("ChairPlay"), MB_ICONERROR or MB_SETFOREGROUND)
 }

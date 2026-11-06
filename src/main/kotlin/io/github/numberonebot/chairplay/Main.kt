@@ -32,7 +32,6 @@ import java.nio.file.Path
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 
@@ -226,13 +225,10 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
     // The iPhone's route, song, call and battery messages, for later screens and, with log.carplay.data, a file.
     val carPlayData = CarPlayData(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
-    // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it.
+    // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it. An incoming
+    // call flashes the CarPlay window's taskbar button, and brings the window forward with window.front.on.call.
     appControls.playing = { active.get() != null && carPlayData.bus.snapshot().nowPlaying?.playing == true }
-    val wasPlaying = AtomicBoolean()
-    carPlayData.bus.addListener {
-        val now = appControls.playing()
-        if (wasPlaying.getAndSet(now) != now) controlsChanged.get()()
-    }
+    watchCarPlayData(carPlayData.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
     altView.paint(carPlayData, driving, config.accent)
     val bootstrap = WirelessBootstrap(config, sink, appControls.textInput.listener(sessionListener(active, ui, window, title, theme, ::sessionChanged)), carPlayData)
     bootstrap.newLocation = driving::location
@@ -284,6 +280,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
             log("the previous run is still closing; waiting for it")
             title.closingPrevious()
         })
+        // Then a copy in another folder, the installed one or a portable one: only one of them runs.
+        claimOneCopy(OneCopy.GOING_WAIT_MILLIS)
         lockReady.countDown()
         if (ui.connectsAtStart) {
             title.connecting()
