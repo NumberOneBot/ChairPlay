@@ -107,6 +107,7 @@ val jpackageImage by tasks.registering(Exec::class) {
             from(installDir.get().file("bin/chairplay_webview.dll"), installDir.get().file("bin/WebView2Loader.dll"))
             from(installDir.get().file("bin/chairplay_maneuver.dll"))
             from(installDir.get().file("bin/chairplay_audio.dll"))
+            from(installDir.get().file("bin/chairplay_bridge.dll"))
             into(outDir.get().dir("ChairPlay"))
         }
         ops.fs.copy {

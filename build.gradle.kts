@@ -128,6 +128,7 @@ tasks.processResources {
 
 apply(from = "gradle/native.gradle.kts")
 apply(from = "gradle/spatial.gradle.kts")
+apply(from = "gradle/bridge.gradle.kts")
 apply(from = "gradle/apac.gradle.kts")
 apply(from = "gradle/web.gradle.kts")
 apply(from = "gradle/package.gradle.kts")
