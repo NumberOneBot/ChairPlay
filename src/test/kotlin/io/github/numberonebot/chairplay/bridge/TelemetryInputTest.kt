@@ -14,10 +14,11 @@ class TelemetryInputTest {
     private class FakeSource : TelemetrySource {
         var record: TelemetryRecord? = null
         var readable = true
+        var openError: String? = null
         var opens = 0
         var closes = 0
 
-        override fun open(): Boolean { opens++; return true }
+        override fun open(): String? { opens++; return openError }
 
         override fun read(into: ByteBuffer): Boolean {
             if (!readable) return false
@@ -35,18 +36,37 @@ class TelemetryInputTest {
 
     private fun at(seconds: Double) { now = (seconds * 1e9).toLong() }
 
+    /** The record the input first finds, a game's last before it opened: the next counter is news. */
+    private fun found() {
+        source.record = record(0)
+        input.poll()
+    }
+
     @Test fun `nothing written is absent`() {
         assertEquals(External.Absent, input.poll())
         at(10.0)
         assertEquals(External.Absent, input.poll())
     }
 
+    // An idle writer's old record would put the car at its place and drive it there at its speed.
+    @Test fun `the record an input first finds does not drive`() {
+        source.record = record(5)
+        assertEquals(External.Absent, input.poll())
+        at(0.1)
+        assertEquals(External.Absent, input.poll())
+        assertEquals(emptyList<String>(), logs)
+        source.record = record(6)
+        assertEquals(External.Drives(record(6)), input.poll())
+    }
+
     @Test fun `a fresh update drives`() {
+        found()
         source.record = record(1)
         assertEquals(External.Drives(record(1)), input.poll())
     }
 
     @Test fun `the same counter half a second later halts`() {
+        found()
         source.record = record(1)
         input.poll()
         at(0.4)
@@ -56,6 +76,7 @@ class TelemetryInputTest {
     }
 
     @Test fun `five seconds without change is absent`() {
+        found()
         source.record = record(1)
         input.poll()
         at(4.9)
@@ -67,11 +88,13 @@ class TelemetryInputTest {
     }
 
     @Test fun `paused halts at once`() {
+        found()
         source.record = record(1, paused = true)
         assertEquals(External.Halted, input.poll())
     }
 
     @Test fun `a torn record counts as no update`() {
+        found()
         source.record = record(1)
         input.poll()
         source.readable = false
@@ -84,11 +107,13 @@ class TelemetryInputTest {
     }
 
     @Test fun `a record that does not parse counts as no update`() {
+        found()
         source.record = record(1).copy(latitude = 200.0)
         assertEquals(External.Absent, input.poll())
     }
 
     @Test fun `a new source is logged once`() {
+        found()
         source.record = record(1, name = "AC")
         input.poll()
         at(0.1)
@@ -107,5 +132,18 @@ class TelemetryInputTest {
         assertEquals(1, source.opens)
         input.close()
         assertEquals(1, source.closes)
+    }
+
+    @Test fun `a file that cannot open is logged once until it opens`() {
+        source.openError = "CreateFileMappingW (telemetry) failed (0x80070005)"
+        repeat(3) { assertEquals(External.Absent, input.poll()) }
+        assertEquals(3, source.opens)
+        assertEquals(1, logs.count { "0x80070005" in it })
+        source.openError = null
+        input.poll()
+        input.close()
+        source.openError = "CreateFileMappingW (telemetry) failed (0x80070005)"
+        input.poll()
+        assertEquals(2, logs.count { "0x80070005" in it })
     }
 }

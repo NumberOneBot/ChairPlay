@@ -26,7 +26,7 @@ class DrivingExternalTest {
         var reads = 0
         var closes = 0
 
-        override fun open(): Boolean { opens++; return true }
+        override fun open(): String? { opens++; return null }
 
         override fun read(into: ByteBuffer): Boolean {
             reads++
@@ -54,9 +54,15 @@ class DrivingExternalTest {
 
     private fun at(seconds: Double) { now = (seconds * 1e9).toLong() }
 
+    /** A fresh input takes the record it first finds as the game's last before it, not as news: the next one drives. */
+    private fun Driving.found(): Driving = also {
+        source.record = record(0)
+        it.pass()
+    }
+
     @Test
     fun `telemetry drives instead of the gamepad`() {
-        val driving = driving()
+        val driving = driving().found()
         throttle = 1f
         source.record = record(1)
 
@@ -76,7 +82,7 @@ class DrivingExternalTest {
 
     @Test
     fun `a halted game stops the car where it is`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1)
         driving.pass()
         at(0.6)
@@ -91,7 +97,7 @@ class DrivingExternalTest {
 
     @Test
     fun `a paused game stops the car`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1)
         driving.pass()
         at(0.1)
@@ -103,7 +109,7 @@ class DrivingExternalTest {
 
     @Test
     fun `when the game goes the place is saved`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1)
         driving.pass()
         at(0.6)
@@ -119,7 +125,7 @@ class DrivingExternalTest {
 
     @Test
     fun `the gamepad drives again once the game is gone`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1, speed = 0.0)
         driving.pass()
         at(5.0)
@@ -134,7 +140,7 @@ class DrivingExternalTest {
     // A game standing in neutral, then gone: the gamepad drives the car on from there.
     @Test
     fun `a game gone in neutral hands the car back to the gamepad`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1, speed = 0.0, gear = 0)
         driving.pass()
         at(0.6)
@@ -150,7 +156,7 @@ class DrivingExternalTest {
     // A truck in its twelfth gear, gone with no halted pass between (the loop stalled): the gamepad drives on.
     @Test
     fun `a game gone in a gear the car does not have hands the car back`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1, gear = 12)
         driving.pass()
         at(6.0)
@@ -164,7 +170,7 @@ class DrivingExternalTest {
 
     @Test
     fun `a game's gear shows while it drives`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1, gear = 12)
         driving.pass()
         at(0.1)
@@ -206,10 +212,11 @@ class DrivingExternalTest {
         assertEquals(0, source.opens)
     }
 
-    // The switch turned off closes the file; turned on again, a fresh input reads it, knowing nothing of the last one.
+    // The switch turned off closes the file; turned on again, a fresh input reads it, knowing nothing of the last one:
+    // the record a game left there is no news, and only its next one moves the car.
     @Test
     fun `the switch off closes the telemetry and on again starts afresh`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1)
         driving.pass()
 
@@ -219,15 +226,23 @@ class DrivingExternalTest {
         assertFalse(driving.drive.moving)
         assertEquals("48.85000, 2.29000", placeSaved.single()["gps.start"])
 
+        driving.saved(on.copy(external = false, start = kyiv), setOf("gps.start"))
         at(10.0)
-        driving.saved(on, setOf("gps.external"))
-        assertEquals(DriveControl.FRAME_SECONDS, driving.pass()!!, 0.0)
+        driving.saved(on.copy(start = kyiv), setOf("gps.external"))
+        driving.pass()
         assertEquals(2, inputs)
+        assertEquals(kyiv.latitude, driving.drive.snapshot().position.latitude, 1e-9)
+        assertFalse(driving.drive.moving)
+        assertEquals(1, placeSaved.size)
+
+        source.record = record(2)
+        assertEquals(DriveControl.FRAME_SECONDS, driving.pass()!!, 0.0)
+        assertEquals(paris, driving.drive.snapshot().position)
     }
 
     @Test
     fun `the GPS off closes the telemetry`() {
-        val driving = driving()
+        val driving = driving().found()
         source.record = record(1)
         driving.pass()
 
