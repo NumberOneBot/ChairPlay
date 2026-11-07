@@ -100,6 +100,26 @@ class BridgeNativeTest {
         assertEquals(0, lib.cpb_test_read_status(ByteBuffer.allocateDirect(BridgeLayout.SIZE)))
     }
 
+    @Test fun `a telemetry record written by a game is read back whole`() {
+        val sent = TelemetryRecord(7, false, 3, 12.5, 270.0, 48.85, 2.29, 3000.0, "Test")
+        val bytes = ByteBuffer.allocateDirect(BridgeLayout.SIZE)
+        TelemetryRecord.write(sent, bytes)
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_telemetry_open())
+        try {
+            assertEquals(lib.cpb_last_error(), 0, lib.cpb_test_write_telemetry(bytes))
+            val out = ByteBuffer.allocateDirect(BridgeLayout.SIZE)
+            assertEquals(1, lib.cpb_telemetry_read(out))
+            assertEquals(sent, TelemetryRecord.parse(out))
+            // Opening again must not clear what a game wrote.
+            assertEquals(0, lib.cpb_telemetry_open())
+            assertEquals(1, lib.cpb_telemetry_read(out))
+            assertEquals(sent, TelemetryRecord.parse(out))
+        } finally {
+            lib.cpb_telemetry_close()
+        }
+        assertEquals(0, lib.cpb_telemetry_read(ByteBuffer.allocateDirect(BridgeLayout.SIZE)))
+    }
+
     private class Texture(val width: Int, val height: Int, val firstPixel: Int)
 
     private fun publish(width: Int, height: Int, safe: AreaRect = AreaRect(0, 0, width, height)): Int {

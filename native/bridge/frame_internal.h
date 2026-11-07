@@ -8,6 +8,8 @@
 
 #define CPB_STATUS_MAPPING L"Local\\ChairPlay.Bridge.v1"
 
+#define CPB_TELEMETRY_MAPPING L"Local\\ChairPlay.Telemetry.v1"
+
 // Holds the one SRWLOCK that serialises every exported call.
 struct CpbLock {
     CpbLock();

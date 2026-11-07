@@ -34,9 +34,14 @@ CPB_API const char* cpb_last_error(void);
 CPB_API int cpb_test_read_status(void* out256);
 CPB_API int cpb_test_open_texture(const char* name, int* width, int* height, unsigned* first_pixel);
 
-/* Telemetry, Local\ChairPlay.Telemetry.v1: stubs returning -1 for now. */
+/* Telemetry, Local\ChairPlay.Telemetry.v1 (256 bytes, written by a game's source). open creates the file zeroed when
+   missing or opens the existing one, never clearing it; 0 or negative (cpb_last_error). Independent of the frame
+   bridge. read: 1 when a consistent copy was taken into out256, 0 when closed or torn. close releases the mapping. */
 CPB_API int cpb_telemetry_open(void);
 CPB_API int cpb_telemetry_read(void* out256);
 CPB_API void cpb_telemetry_close(void);
+
+/* Test hook: writes in256 into the telemetry file under its seqlock, as a game's source does. 0 or negative. */
+CPB_API int cpb_test_write_telemetry(const void* in256);
 
 #endif

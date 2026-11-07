@@ -26,6 +26,17 @@ internal interface BridgeLibrary : Library {
     /** Writes state 0 for a game still holding the status file, then releases the device and textures. */
     fun cpb_frame_close()
 
+    /** Creates the 256-byte telemetry file when no game has, else opens it without clearing it; 0, else negative. */
+    fun cpb_telemetry_open(): Int
+
+    /** Copies the telemetry file into [out256]; 1 when consistent, 0 when closed or torn. */
+    fun cpb_telemetry_read(out256: ByteBuffer): Int
+
+    fun cpb_telemetry_close()
+
+    /** For tests: writes [in256] into the telemetry file under its seqlock, as a game does; 0 or negative. */
+    fun cpb_test_write_telemetry(in256: ByteBuffer): Int
+
     /** The last failure with its HRESULT in hex. */
     fun cpb_last_error(): String
 
