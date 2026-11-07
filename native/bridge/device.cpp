@@ -1,4 +1,5 @@
-// chairplay_bridge.dll: the call lock, the last error, and the D3D11 device helpers frame.cpp and the test hooks use.
+// chairplay_bridge.dll: the frame calls' lock, the last error, and the D3D11 device helpers frame.cpp and the test
+// hooks use.
 #include <windows.h>
 #include <d3d11.h>
 #include <stdio.h>
@@ -8,7 +9,8 @@
 
 namespace {
 SRWLOCK lock = SRWLOCK_INIT;
-char error_text[256];
+// Per thread: the frame and telemetry calls run at once on their own locks, and each caller reads its own failure.
+thread_local char error_text[256];
 }
 
 CpbLock::CpbLock() { AcquireSRWLockExclusive(&lock); }

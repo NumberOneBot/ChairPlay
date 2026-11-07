@@ -41,6 +41,11 @@ CPB_API int cpb_test_read_status(void* out256) {
     return consistent;
 }
 
+CPB_API void cpb_test_hold_frame_lock(void (*during)(void)) {
+    CpbLock lock;
+    if (during) during();
+}
+
 CPB_API int cpb_test_open_texture(const char* name, int* width, int* height, unsigned* first_pixel) {
     if (!name || !width || !height || !first_pixel) return cpb_fail("cpb_test_open_texture without outputs", E_POINTER);
     CpbLock lock;

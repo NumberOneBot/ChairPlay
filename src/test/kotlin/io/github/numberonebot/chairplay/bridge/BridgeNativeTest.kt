@@ -14,6 +14,7 @@ import org.junit.Before
 import org.junit.Test
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.concurrent.thread
 
 class BridgeNativeTest {
     private val lib get() = BridgeNative.lib
@@ -132,6 +133,25 @@ class BridgeNativeTest {
             lib.cpb_telemetry_close()
         }
         assertEquals(0, lib.cpb_telemetry_read(ByteBuffer.allocateDirect(BridgeLayout.SIZE)))
+    }
+
+    // The window loop reads telemetry each pass, while the frame side may wait long on the GPU's driver.
+    @Test fun `telemetry is read while the frame side holds its lock`() {
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_telemetry_open())
+        try {
+            var readInTime = false
+            var reader: Thread? = null
+            val during = BridgeLibrary.Held {
+                reader = thread { lib.cpb_telemetry_read(ByteBuffer.allocateDirect(BridgeLayout.SIZE)) }
+                reader!!.join(5_000)
+                readInTime = !reader!!.isAlive
+            }
+            lib.cpb_test_hold_frame_lock(during)
+            reader?.join()
+            assertTrue("the read waited for the frame side's lock", readInTime)
+        } finally {
+            lib.cpb_telemetry_close()
+        }
     }
 
     private class Texture(val width: Int, val height: Int, val firstPixel: Int)

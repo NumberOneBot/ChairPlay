@@ -1,5 +1,6 @@
 /* chairplay_bridge.dll: the game bridge's exported C API (BridgeNative.kt mirrors it).
-   Every call is serialised by one lock; none waits on a reader. Results: 0 ok, negative failure (cpb_last_error). */
+   The frame calls are serialised by one lock and the telemetry calls by another; none waits on a reader.
+   Results: 0 ok, negative failure (cpb_last_error, read on the same thread). */
 #ifndef CHAIRPLAY_BRIDGE_H
 #define CHAIRPLAY_BRIDGE_H
 
@@ -26,13 +27,15 @@ CPB_API void cpb_frame_state(int state);
    its last handle. */
 CPB_API void cpb_frame_close(void);
 
-/* The last failure, with its HRESULT in hex; empty when none. */
+/* The calling thread's last failure, with its HRESULT in hex; empty when none. */
 CPB_API const char* cpb_last_error(void);
 
 /* Test hooks. read_status: 1 when a consistent copy of the status file was taken, 0 when it is missing or torn.
-   open_texture: opens name on a second device on the producer's adapter and reads its size and pixel 0,0. */
+   open_texture: opens name on a second device on the producer's adapter and reads its size and pixel 0,0.
+   hold_frame_lock: calls during while holding the frame calls' lock. */
 CPB_API int cpb_test_read_status(void* out256);
 CPB_API int cpb_test_open_texture(const char* name, int* width, int* height, unsigned* first_pixel);
+CPB_API void cpb_test_hold_frame_lock(void (*during)(void));
 
 /* Telemetry, Local\ChairPlay.Telemetry.v1 (256 bytes, written by a game's source). open creates the file zeroed when
    missing or opens the existing one, never clearing it; 0 or negative (cpb_last_error). Independent of the frame

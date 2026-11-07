@@ -1,4 +1,4 @@
-// What the bridge DLL's files share: the lock every call takes, the last error, and D3D11 device helpers.
+// What the bridge DLL's files share: the frame calls' lock, the last error, and D3D11 device helpers.
 #ifndef CHAIRPLAY_FRAME_INTERNAL_H
 #define CHAIRPLAY_FRAME_INTERNAL_H
 
@@ -10,7 +10,8 @@
 
 #define CPB_TELEMETRY_MAPPING L"Local\\ChairPlay.Telemetry.v1"
 
-// Holds the one SRWLOCK that serialises every exported call.
+// Holds the SRWLOCK that serialises the frame calls; telemetry has its own (telemetry.cpp), so a read on the window
+// loop never waits on the GPU's driver.
 struct CpbLock {
     CpbLock();
     ~CpbLock();
@@ -23,7 +24,7 @@ template <class T> void cpb_release(T*& object) {
     object = nullptr;
 }
 
-// Records "<what> failed (0x<hr>)" for cpb_last_error; returns hr when it is a failure, else -1.
+// Records "<what> failed (0x<hr>)" for the calling thread's cpb_last_error; returns hr when it is a failure, else -1.
 int cpb_fail(const char* what, HRESULT hr);
 
 // UTF-8 to UTF-16 into size characters, always terminated (empty when it does not fit).

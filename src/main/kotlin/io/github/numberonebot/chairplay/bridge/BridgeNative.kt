@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.bridge
 
+import com.sun.jna.Callback
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.NativeLibrary
@@ -9,7 +10,8 @@ import java.nio.ByteBuffer
 
 /**
  * chairplay_bridge.dll (native/bridge, bridge.h): publishes the picture as a named D3D11 shared texture and keeps
- * the status file. Pointers are direct buffers. Every call is serialised inside the DLL.
+ * the status file. Pointers are direct buffers. The frame calls are serialised inside the DLL, and the telemetry calls
+ * apart from them.
  */
 @Suppress("FunctionName")
 internal interface BridgeLibrary : Library {
@@ -37,7 +39,7 @@ internal interface BridgeLibrary : Library {
     /** For tests: writes [in256] into the telemetry file under its seqlock, as a game does; 0 or negative. */
     fun cpb_test_write_telemetry(in256: ByteBuffer): Int
 
-    /** The last failure with its HRESULT in hex. */
+    /** The calling thread's last failure with its HRESULT in hex. */
     fun cpb_last_error(): String
 
     /** For tests: copies the status file as a reader does; 1 when consistent, 0 when missing or torn. */
@@ -45,6 +47,13 @@ internal interface BridgeLibrary : Library {
 
     /** For tests: opens [name] on a second device and reads its size and the pixel at 0,0; 0 or negative. */
     fun cpb_test_open_texture(name: String, width: IntByReference, height: IntByReference, firstPixel: IntByReference): Int
+
+    /** For tests: runs [during] while holding the lock the frame calls take. */
+    fun cpb_test_hold_frame_lock(during: Held)
+
+    fun interface Held : Callback {
+        fun invoke()
+    }
 }
 
 internal object BridgeNative {

@@ -1,5 +1,6 @@
 // chairplay_bridge.dll, telemetry: reads the file Local\ChairPlay.Telemetry.v1 (bridge_layout.h) a game's source writes.
-// Kept apart from the frame bridge's state: both can be open at once.
+// Kept apart from the frame bridge's state and lock: both can be open at once, and a read on the window loop never
+// waits for a publish or the GPU's driver.
 #include <windows.h>
 
 #include "bridge.h"
@@ -8,6 +9,15 @@
 #include "seqlock.h"
 
 namespace {
+
+SRWLOCK telemetry_lock = SRWLOCK_INIT;
+
+struct TelemetryLock {
+    TelemetryLock() { AcquireSRWLockExclusive(&telemetry_lock); }
+    ~TelemetryLock() { ReleaseSRWLockExclusive(&telemetry_lock); }
+    TelemetryLock(const TelemetryLock&) = delete;
+    TelemetryLock& operator=(const TelemetryLock&) = delete;
+};
 
 HANDLE mapping = nullptr;
 const void* view = nullptr;
@@ -23,7 +33,7 @@ void close_locked() {
 
 // Creates the file (zeroed) when no game has, else opens the one that exists: it is never cleared here.
 CPB_API int cpb_telemetry_open(void) {
-    CpbLock lock;
+    TelemetryLock lock;
     if (view) return 0;
     mapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, CPB_FILE_SIZE,
                                  CPB_TELEMETRY_MAPPING);
@@ -38,13 +48,13 @@ CPB_API int cpb_telemetry_open(void) {
 }
 
 CPB_API int cpb_telemetry_read(void* out256) {
-    CpbLock lock;
+    TelemetryLock lock;
     if (!view || !out256) return 0;
     return cpb_seq_read(view, out256, CPB_FILE_SIZE);
 }
 
 CPB_API void cpb_telemetry_close(void) {
-    CpbLock lock;
+    TelemetryLock lock;
     close_locked();
 }
 
