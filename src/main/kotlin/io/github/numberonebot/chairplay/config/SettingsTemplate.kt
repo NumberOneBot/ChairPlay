@@ -165,6 +165,10 @@ internal val SETTINGS_TEMPLATE = listOf(
         "display.safe.top" to "0", "display.safe.bottom" to "0", "display.safe.left" to "0", "display.safe.right" to "0",
         "display.safe.draw.outside" to "true",
     ),
+    SettingBlock(
+        "Whether the CarPlay picture is published for games to show on a car's screen, 'true' or 'false' (see the game bridge notes).",
+        "display.share" to "false",
+    ),
     SettingBlock("'square' (the picture fills the window to its corners) or 'rounded' (CarPlay rounds them).",
         "display.corners" to "square"),
     SettingBlock(

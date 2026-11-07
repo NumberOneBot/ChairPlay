@@ -128,6 +128,17 @@ export function ExperimentsPage({
           {sizes.screenshots ? <span className="folder-size">{byteSize(sizes.screenshots)}</span> : null}
         </span>
       </Row>
+      <Group title="Integrations" note="With games and other apps on this PC" />
+      <Row
+        label="CarPlay picture"
+        title="Publish the CarPlay picture as a shared texture, so a game or another app can show it on its own screen"
+      >
+        <Switch
+          label="Share the CarPlay picture"
+          checked={settings.value('display.share') === 'true'}
+          onChange={(checked) => settings.save({ 'display.share': String(checked) })}
+        />
+      </Row>
     </>
   )
 }

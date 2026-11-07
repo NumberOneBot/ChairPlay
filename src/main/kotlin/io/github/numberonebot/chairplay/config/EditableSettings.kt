@@ -63,6 +63,7 @@ object EditableSettings {
         "display.dock" to choice("auto", "driver", "bottom", applies = Applies.RECONNECT),
         "display.right.hand.drive" to switch(Applies.RECONNECT),
         "display.safe.draw.outside" to switch(Applies.RECONNECT),
+        "display.share" to switch(Applies.NOW),
         "display.corners" to choice("rounded", "square", applies = Applies.RECONNECT),
         "display.touch" to choice("swipe", "tap", "none", applies = Applies.RECONNECT),
         "display.safe.top" to Setting(Applies.RECONNECT, check = ::checkNonNegative),

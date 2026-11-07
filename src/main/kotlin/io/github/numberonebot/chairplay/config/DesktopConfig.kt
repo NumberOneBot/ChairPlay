@@ -79,7 +79,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     }
 
     /** The CarPlay screen (display.*) and its window (window.*). */
-    private val display = DisplaySettings(settings)
+    internal val display = DisplaySettings(settings)
     val displayWidth = display.width
     val displayHeight = display.height
 

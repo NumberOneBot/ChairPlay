@@ -24,6 +24,19 @@ class DisplayConfigTest {
         assertEquals(WindowSize(1280, 720), config.window)
     }
 
+    @Test
+    fun `display share is off unless set`() {
+        assertFalse(configWith().display.share)
+        assertTrue(configWith("display.share=true").display.share)
+    }
+
+    @Test
+    fun `safe rect is the screen less its insets`() {
+        assertEquals(AreaRect(0, 0, 1280, 720), configWith("display.width=1280", "display.height=720").display.safeRect)
+        val inset = configWith("display.width=1280", "display.height=720", "display.safe.top=20", "display.safe.left=100")
+        assertEquals(AreaRect(100, 20, 1180, 700), inset.display.safeRect)
+    }
+
     // iOS picks its 2x or 3x rendering from pixels against millimetres, so ppi is the convenient knob.
     @Test
     fun `a ppi sets the physical size the iPhone sees`() {

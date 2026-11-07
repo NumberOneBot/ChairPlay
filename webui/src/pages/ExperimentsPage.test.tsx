@@ -98,6 +98,14 @@ describe('Experiments page', () => {
     expect(await screen.findByText('2.00 KB', {}, { timeout: 8000 })).toBeTruthy()
   }, 10000)
 
+  it('saves sharing the CarPlay picture', async () => {
+    const backend = await experiments()
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Share the CarPlay picture' }))
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'display.share': 'true' }]))
+  })
+
   it('waits for the AltScreen', async () => {
     await experiments(appState({ ...live, demo: { playing: null, available: false } }))
 
