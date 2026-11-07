@@ -71,6 +71,8 @@ class DesktopMediaSink(
         private var configured: ByteArray? = null
         private var lastRecoveryNanos = 0L
         private val firstFramePending = AtomicBoolean()
+        // Whether the tap has failed already: logged once per screen.
+        private var tapFailed = false
 
         init {
             window.onFrameShown = {
@@ -107,9 +109,19 @@ class DesktopMediaSink(
             configured = codecData
             decoder?.close()
             // The window releases the picture once drawn, so the tap reads it first.
-            decoder = VideoDecoder({ frame -> frameTap.frame(type, frame); window.show(frame) }, ::recover, codec, { log("video screen $type: $it") }, hardwareDecoding())
+            decoder = VideoDecoder({ frame -> tap(frame); window.show(frame) }, ::recover, codec, { log("video screen $type: $it") }, hardwareDecoding())
                 .also { it.configure(codecData) }
             firstFramePending.set(true)
+        }
+
+        /** Hands [frame] to the tap; whatever it throws, an Error too, the window still gets the picture. */
+        private fun tap(frame: DecodedFrame) {
+            try {
+                frameTap.frame(type, frame)
+            } catch (e: Throwable) {
+                if (!tapFailed) log("video screen $type: the frame tap failed: $e")
+                tapFailed = true
+            }
         }
 
         fun decode(nalus: ByteArray) = synchronized(lock) { decoder?.decode(nalus) }

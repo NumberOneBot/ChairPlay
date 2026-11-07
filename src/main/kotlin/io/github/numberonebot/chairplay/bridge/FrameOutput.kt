@@ -42,6 +42,8 @@ internal class FrameOutput(
     private val nanoTime: () -> Long = System::nanoTime,
     /** Starts the loop on its thread and returns it; the tests return one never started and drive [pass] themselves. */
     private val worker: (Runnable) -> Thread = ::daemon,
+    /** A fresh converter for each time sharing turns on. */
+    private val converters: () -> PictureConverter = ::BgraConverter,
 ) : FrameTap, Closeable {
     /** One converted picture: written by the decoder's thread, then read by the worker, never both at once. */
     private class Slot {
@@ -49,7 +51,7 @@ internal class FrameOutput(
         var width = 0
         var height = 0
 
-        fun fill(frame: DecodedFrame, converter: BgraConverter): Slot {
+        fun fill(frame: DecodedFrame, converter: PictureConverter): Slot {
             val size = frame.width * frame.height * 4
             val out = buffer?.takeIf { it.capacity() == size } ?: ByteBuffer.allocateDirect(size).also { buffer = it }
             converter.convert(frame, out)
@@ -71,7 +73,7 @@ internal class FrameOutput(
     // Keeps a conversion off the converter and buffers while sharing turns on or off.
     private val convertLock = Any()
     // A fresh one per start: a closed converter could miss its colour-space setup if swscale reused the address.
-    private var converter: BgraConverter? = null
+    private var converter: PictureConverter? = null
 
     @Volatile private var publishing = false
     @Volatile private var streamActive = false
@@ -112,9 +114,10 @@ internal class FrameOutput(
             if (!publishing || converter == null) return
             // Two buffers suffice: the worker holds at most one, so the other is free or the one still waiting.
             val slot = lock.withLock { pending.also { pending = null } ?: free.removeLastOrNull() } ?: return
+            // An Error too (out of direct or native memory): the decoder's thread must go on to show the picture.
             val filled = try {
                 slot.fill(frame, converter)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 lock.withLock { free += slot; if (failure == null) failure = "cannot convert the picture: $e"; wake.signal() }
                 return
             }
@@ -165,7 +168,8 @@ internal class FrameOutput(
                 freezeIfOld()
             }
             return true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            // An Error too: an ended worker would leave the status saying a picture flows.
             return fail(e.toString())
         } finally {
             if (job != null) lock.withLock { free += job }
@@ -218,7 +222,7 @@ internal class FrameOutput(
         lastPicture = null
         frozen = false
         synchronized(convertLock) {
-            converter = BgraConverter()
+            converter = converters()
             lock.withLock {
                 free.clear()
                 free += Slot()

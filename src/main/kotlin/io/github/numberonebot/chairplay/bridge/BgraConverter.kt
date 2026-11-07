@@ -12,11 +12,17 @@ import org.bytedeco.javacpp.PointerPointer
 import java.io.Closeable
 import java.nio.ByteBuffer
 
+/** Turns a decoded picture into packed BGRA, stride `width * 4`, in a direct buffer of at least that size. */
+internal interface PictureConverter : Closeable {
+    /** Fills [out] with the picture and returns it. */
+    fun convert(frame: DecodedFrame, out: ByteBuffer): ByteBuffer
+}
+
 /**
  * Turns a decoded YUV420P picture into packed BGRA the way the window draws it: BT.709 limited range in,
  * full range out (see `PictureGl`). Not thread safe; the video decoder thread owns it.
  */
-internal class BgraConverter : Closeable {
+internal class BgraConverter : PictureConverter {
     private var scaler: SwsContext? = null
     private var out: ByteBuffer? = null
     private var address = 0L
@@ -35,7 +41,7 @@ internal class BgraConverter : Closeable {
     }
 
     /** Fills [out] (from [buffer]) with the picture and returns it; stride is `width * 4`. */
-    fun convert(frame: DecodedFrame, out: ByteBuffer): ByteBuffer {
+    override fun convert(frame: DecodedFrame, out: ByteBuffer): ByteBuffer {
         require(out.isDirect && out.capacity() >= frame.width * frame.height * 4) { "output buffer too small" }
         val context = sws_getCachedContext(scaler, frame.width, frame.height, AV_PIX_FMT_YUV420P,
             frame.width, frame.height, AV_PIX_FMT_BGRA, FLAGS, null, null, null as DoublePointer?)

@@ -110,6 +110,35 @@ class DesktopMediaSinkTest {
         assertEquals(1, tap.events.count { it.startsWith("active 110 false") })
     }
 
+    private class ThrowingTap : FrameTap {
+        val seen = mutableListOf<DecodedFrame>()
+        override fun frame(type: Int, frame: DecodedFrame) {
+            seen += frame
+            throw OutOfMemoryError("Direct buffer memory")
+        }
+        override fun active(type: Int, active: Boolean) {}
+    }
+
+    // The window releases each picture it took once the next one comes, and the decoder fills it again: a picture
+    // seen twice by the tap went through the window.
+    @Test
+    fun `a tap that throws leaves the picture to the window and the stream going`() {
+        val tap = ThrowingTap()
+        val logs = mutableListOf<String>()
+        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer(), log = { logs += it }, hardwareDecoding = { false },
+            frameTap = tap)
+        sink.onVideoCodec(110, VideoCodec.H264)
+        sink.onVideoConfig(110, resource("avcC.bin"))
+        sink.onVideoFrame(110, resource("frame0.h264"), 0, 0)
+        sink.onVideoFrame(110, resource("frame1.h264"), 0, 0)
+        sink.onVideoFrame(110, resource("frame1.h264"), 0, 0)
+        sink.close()
+
+        assertTrue("${tap.seen.size} pictures", tap.seen.size >= 3)
+        assertTrue("no picture came back from the window", tap.seen[2] === tap.seen[0])
+        assertEquals(logs.toString(), 1, logs.count { "Direct buffer memory" in it })
+    }
+
     private class AttachingTap : FrameTap {
         var request: () -> Unit = {}
         override fun frame(type: Int, frame: DecodedFrame) {}

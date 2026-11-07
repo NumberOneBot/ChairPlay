@@ -2,53 +2,14 @@ package io.github.numberonebot.chairplay.bridge
 
 import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.config.WindowSize
-import io.github.numberonebot.chairplay.media.DecodedFrame
-import io.github.numberonebot.chairplay.media.FramePool
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 class FrameOutputTest {
-    private class Published(val width: Int, val height: Int, val safe: AreaRect, val firstPixel: Int)
-
-    /** Records what the output asks of the native side; a publish leaves state 2, as cpb_frame_publish does. */
-    private class FakeSink(val openError: String? = null, val publishError: String? = null) : FrameSink {
-        val events = mutableListOf<String>()
-        val published = mutableListOf<Published>()
-        var state = 0
-        var onPublish: (ByteBuffer) -> Unit = {}
-
-        override fun open(): String? {
-            events += "open"
-            if (openError == null) state = 1
-            return openError
-        }
-
-        override fun publish(bgra: ByteBuffer, width: Int, height: Int, safe: AreaRect): String? {
-            events += "publish"
-            published += Published(width, height, safe, bgra.getInt(0))
-            onPublish(bgra)
-            if (publishError == null) state = 2
-            return publishError
-        }
-
-        override fun state(state: Int) {
-            events += "state $state"
-            this.state = state
-        }
-
-        override fun close() {
-            events += "close"
-            state = 0
-        }
-
-        fun count(event: String) = events.count { it == event }
-    }
-
     private var now = 0L
     private val logs = mutableListOf<String>()
     private var workers = 0
@@ -60,22 +21,14 @@ class FrameOutputTest {
         safe: AreaRect = AreaRect(0, 0, 64, 64),
     ) = FrameOutput(sink, { screen }, { safe }, logs::add, { now }, worker = { workers++; Thread {} })
 
-    private fun frame(width: Int = 64, height: Int = 64, luma: Int = 16): DecodedFrame {
-        val frame = FramePool().take(width, height)
-        for (i in 0 until frame.y.capacity()) frame.y.put(i, luma.toByte())
-        for (i in 0 until frame.u.capacity()) frame.u.put(i, 128.toByte())
-        for (i in 0 until frame.v.capacity()) frame.v.put(i, 128.toByte())
-        return frame
-    }
-
     @Test fun `publishes main screen frames only`() {
-        val sink = FakeSink()
+        val sink = FakeFrameSink()
         val output = output(sink)
         output.enabled = true
-        output.frame(ALT_SCREEN, frame())
+        output.frame(ALT_SCREEN, testFrame())
         output.pass(0)
         assertEquals(0, sink.count("publish"))
-        output.frame(MAIN_SCREEN, frame())
+        output.frame(MAIN_SCREEN, testFrame())
         output.pass(0)
         assertEquals(1, sink.count("publish"))
         assertEquals(2, sink.state)
@@ -83,7 +36,7 @@ class FrameOutputTest {
 
     @Test fun `sharing on over an active stream asks for a picture once`() {
         var asked = 0
-        val output = output(FakeSink())
+        val output = output(FakeFrameSink())
         output.attach { asked++ }
         output.active(MAIN_SCREEN, true)
         output.enabled = true
@@ -93,7 +46,7 @@ class FrameOutputTest {
 
     @Test fun `sharing on with no stream asks for nothing`() {
         var asked = 0
-        val output = output(FakeSink())
+        val output = output(FakeFrameSink())
         output.attach { asked++ }
         output.enabled = true
         output.active(MAIN_SCREEN, true)
@@ -102,7 +55,7 @@ class FrameOutputTest {
 
     @Test fun `a stopped stream asks for nothing`() {
         var asked = 0
-        val output = output(FakeSink())
+        val output = output(FakeFrameSink())
         output.attach { asked++ }
         output.active(MAIN_SCREEN, true)
         output.active(MAIN_SCREEN, false)
@@ -112,7 +65,7 @@ class FrameOutputTest {
 
     @Test fun `sharing that cannot open asks for nothing`() {
         var asked = 0
-        val output = output(FakeSink(openError = "no"))
+        val output = output(FakeFrameSink(openError = "no"))
         output.attach { asked++ }
         output.active(MAIN_SCREEN, true)
         output.enabled = true
@@ -120,11 +73,11 @@ class FrameOutputTest {
     }
 
     @Test fun `stream stop sets waiting`() {
-        val sink = FakeSink()
+        val sink = FakeFrameSink()
         val output = output(sink)
         output.enabled = true
         output.active(MAIN_SCREEN, true)
-        output.frame(MAIN_SCREEN, frame())
+        output.frame(MAIN_SCREEN, testFrame())
         output.pass(0)
         output.active(ALT_SCREEN, false)
         output.pass(0)
@@ -139,11 +92,11 @@ class FrameOutputTest {
     }
 
     @Test fun `a picture older than a second is frozen`() {
-        val sink = FakeSink()
+        val sink = FakeFrameSink()
         val output = output(sink)
         output.enabled = true
         output.active(MAIN_SCREEN, true)
-        output.frame(MAIN_SCREEN, frame())
+        output.frame(MAIN_SCREEN, testFrame())
         output.pass(0)
         now += 900_000_000L
         output.pass(0)
@@ -153,77 +106,44 @@ class FrameOutputTest {
         assertEquals(3, sink.state)
         output.pass(0)
         assertEquals(1, sink.count("state 3"))
-        output.frame(MAIN_SCREEN, frame())
+        output.frame(MAIN_SCREEN, testFrame())
         output.pass(0)
         assertEquals(2, sink.count("publish"))
         assertEquals(2, sink.state)
     }
 
     @Test fun `turning off closes the native side`() {
-        val sink = FakeSink()
+        val sink = FakeFrameSink()
         val output = output(sink)
         output.enabled = true
-        output.frame(MAIN_SCREEN, frame())
+        output.frame(MAIN_SCREEN, testFrame())
         output.pass(0)
         output.enabled = false
         output.enabled = false
         assertEquals(1, sink.count("close"))
-        output.frame(MAIN_SCREEN, frame())
+        output.frame(MAIN_SCREEN, testFrame())
         assertFalse(output.pass(0))
         assertEquals(1, sink.count("publish"))
     }
 
     @Test fun `nothing opens while off`() {
-        val sink = FakeSink()
+        val sink = FakeFrameSink()
         val output = output(sink)
         output.active(MAIN_SCREEN, true)
-        repeat(3) { output.frame(MAIN_SCREEN, frame()) }
+        repeat(3) { output.frame(MAIN_SCREEN, testFrame()) }
         output.active(MAIN_SCREEN, false)
         output.close()
         assertEquals(emptyList<String>(), sink.events)
         assertEquals(0, workers)
     }
 
-    @Test fun `a failing native side is logged once and stops publishing`() {
-        val sink = FakeSink(publishError = "E_FAIL")
-        val output = output(sink)
-        output.enabled = true
-        repeat(3) {
-            output.frame(MAIN_SCREEN, frame())
-            output.pass(0)
-        }
-        assertEquals(1, sink.count("publish"))
-        assertEquals(1, logs.count { "E_FAIL" in it })
-        // The failure let the native side go at once (state 0 for a game); turning off does not close it twice.
-        assertEquals(1, sink.count("close"))
-        output.enabled = false
-        assertEquals(1, sink.count("close"))
-        // Off and on tries again.
-        output.enabled = true
-        output.frame(MAIN_SCREEN, frame())
-        output.pass(0)
-        assertEquals(2, sink.count("open"))
-        assertEquals(2, sink.count("publish"))
-    }
-
-    @Test fun `a native side that cannot open is logged and starts nothing`() {
-        val sink = FakeSink(openError = "no D3D11 device")
-        val output = output(sink)
-        output.enabled = true
-        output.frame(MAIN_SCREEN, frame())
-        assertFalse(output.pass(0))
-        assertEquals(listOf("open"), sink.events)
-        assertEquals(1, logs.count { "no D3D11 device" in it })
-        assertEquals(0, workers)
-    }
-
     @Test fun `the safe rect follows the frame size`() {
-        val sink = FakeSink()
+        val sink = FakeFrameSink()
         val output = output(sink, WindowSize(1280, 720), AreaRect(100, 20, 1180, 700))
         output.enabled = true
-        output.frame(MAIN_SCREEN, frame(640, 360))
+        output.frame(MAIN_SCREEN, testFrame(640, 360))
         output.pass(0)
-        output.frame(MAIN_SCREEN, frame(1280, 720))
+        output.frame(MAIN_SCREEN, testFrame(1280, 720))
         output.pass(0)
         assertEquals(AreaRect(50, 10, 590, 350), sink.published[0].safe)
         assertEquals(AreaRect(100, 20, 1180, 700), sink.published[1].safe)
@@ -232,21 +152,21 @@ class FrameOutputTest {
     }
 
     @Test fun `the latest frame wins and never overwrites the one being published`() {
-        val sink = FakeSink()
+        val sink = FakeFrameSink()
         val output = output(sink)
         output.enabled = true
         // Two frames before the worker gets to them: only the second is published.
-        output.frame(MAIN_SCREEN, frame(luma = 16))
-        output.frame(MAIN_SCREEN, frame(luma = 235))
+        output.frame(MAIN_SCREEN, testFrame(luma = 16))
+        output.frame(MAIN_SCREEN, testFrame(luma = 235))
         output.pass(0)
         assertEquals(1, sink.count("publish"))
         val white = sink.published[0].firstPixel
         // The decoder delivers twice while the worker publishes: neither waits, nor touches the buffer in use.
-        output.frame(MAIN_SCREEN, frame(luma = 16))
+        output.frame(MAIN_SCREEN, testFrame(luma = 16))
         sink.onPublish = { bgra ->
             sink.onPublish = {}
-            output.frame(MAIN_SCREEN, frame(luma = 235))
-            output.frame(MAIN_SCREEN, frame(luma = 126))
+            output.frame(MAIN_SCREEN, testFrame(luma = 235))
+            output.frame(MAIN_SCREEN, testFrame(luma = 126))
             assertEquals(BLACK, bgra.getInt(0))
         }
         output.pass(0)
@@ -261,12 +181,12 @@ class FrameOutputTest {
 
     @Test fun `the worker thread publishes and stops`() {
         val published = CountDownLatch(1)
-        val sink = FakeSink().apply { onPublish = { published.countDown() } }
+        val sink = FakeFrameSink().apply { onPublish = { published.countDown() } }
         var thread: Thread? = null
         val output = FrameOutput(sink, { WindowSize(64, 64) }, { AreaRect(0, 0, 64, 64) }, logs::add, System::nanoTime,
             worker = { FrameOutput.daemon(it).also { started -> thread = started } })
         output.enabled = true
-        output.frame(MAIN_SCREEN, frame())
+        output.frame(MAIN_SCREEN, testFrame())
         assertTrue(published.await(10, TimeUnit.SECONDS))
         output.enabled = false
         assertFalse(thread!!.isAlive)
