@@ -1,7 +1,9 @@
 package io.github.numberonebot.chairplay
 
+import io.github.numberonebot.chairplay.bridge.FrameOutput
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.VolumeStore
+import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.log.LogLevel
 import io.github.numberonebot.chairplay.media.AudioDevices
 import io.github.numberonebot.chairplay.media.AudioRenderer
@@ -25,6 +27,11 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
     // the Audio page changes both at once.
     private val musicStart = AtomicReference(StartFade(config.musicStartSilenceMillis, config.musicStartFadeMillis))
     private val duckSetting = AtomicReference(config.duckSetting)
+    // The picture shared with games (display.share), its safe area in the display's pixels; the sink closes it.
+    private val display = AtomicReference(config.display)
+    private val frameOutput = FrameOutput(
+        screen = { display.get().let { WindowSize(it.width, it.height) } }, safe = { display.get().safeRect }, log = ::log,
+    )
     val sink: DesktopMediaSink
     private val renderer: AudioRenderer
     fun bufferedAudio(): Map<String, Any>? = sink.bufferedAudio.state()
@@ -48,7 +55,8 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
             io.github.numberonebot.chairplay.media.apac.SpatialRuntime.requirePlan(dir, config.audioOutput)
         }
         sink = DesktopMediaSink(window, renderer, ::log, input, config.echoCancellation, altscreen, duckSetting::get,
-            hardwareDecoding = { config.now().hardwareVideo })
+            hardwareDecoding = { config.now().hardwareVideo }, frameTap = frameOutput)
+        frameOutput.enabled = config.display.share
     }
 
     /** The Audio page saved [saved]: the music's start and the prompts' ducking take what the file reads now. */
@@ -63,6 +71,12 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
             runCatching { config.now() }.onSuccess { now ->
                 duckSetting.set(now.duckSetting)
                 log("prompts duck the music to ${now.duckSetting.level}" + if (now.duckSetting.iPhoneFirst) ", or the iPhone's level" else "")
+            }
+        }
+        if (saved.keys.any { it.startsWith("display.") }) {
+            runCatching { config.now() }.onSuccess { now ->
+                display.set(now.display)
+                frameOutput.enabled = now.display.share
             }
         }
     }

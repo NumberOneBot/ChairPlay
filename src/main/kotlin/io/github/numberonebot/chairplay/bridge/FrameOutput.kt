@@ -1,0 +1,250 @@
+package io.github.numberonebot.chairplay.bridge
+
+import io.github.numberonebot.chairplay.config.AreaRect
+import io.github.numberonebot.chairplay.config.WindowSize
+import io.github.numberonebot.chairplay.media.DecodedFrame
+import io.github.numberonebot.chairplay.media.DesktopMediaSink
+import java.io.Closeable
+import java.nio.ByteBuffer
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+
+/** Sees each decoded picture of a screen stream before its window takes it, and when the stream starts and stops. */
+interface FrameTap {
+    /** On the decoder's thread; [frame]'s planes are valid only during the call, and the tap never releases it. */
+    fun frame(type: Int, frame: DecodedFrame)
+    fun active(type: Int, active: Boolean)
+
+    companion object {
+        val NONE: FrameTap = object : FrameTap {
+            override fun frame(type: Int, frame: DecodedFrame) {}
+            override fun active(type: Int, active: Boolean) {}
+        }
+    }
+}
+
+/**
+ * Publishes the main CarPlay screen for games while [enabled] (display.share). The decoder's thread converts each
+ * picture into one of two BGRA buffers and leaves it for the worker, taking back the one still waiting if there is one:
+ * the latest picture wins, and the decoder never waits on the worker or a game. The worker alone talks to [sink]: it
+ * publishes, and between pictures wakes every 0.5 s to mark a picture over 1 s old frozen while the stream lasts.
+ * The first failure is logged and ends publishing until [enabled] is turned off and on. Off holds no thread, buffer or
+ * native side. The safe rect ([safe], in the pixels of [screen]) is scaled to a picture of another size.
+ */
+internal class FrameOutput(
+    private val sink: FrameSink = NativeFrameSink,
+    private val screen: () -> WindowSize,
+    private val safe: () -> AreaRect,
+    private val log: (String) -> Unit,
+    private val nanoTime: () -> Long = System::nanoTime,
+    /** Starts the loop on its thread and returns it; the tests return one never started and drive [pass] themselves. */
+    private val worker: (Runnable) -> Thread = ::daemon,
+) : FrameTap, Closeable {
+    /** One converted picture: written by the decoder's thread, then read by the worker, never both at once. */
+    private class Slot {
+        var buffer: ByteBuffer? = null
+        var width = 0
+        var height = 0
+
+        fun fill(frame: DecodedFrame, converter: BgraConverter): Slot {
+            val size = frame.width * frame.height * 4
+            val out = buffer?.takeIf { it.capacity() == size } ?: ByteBuffer.allocateDirect(size).also { buffer = it }
+            converter.convert(frame, out)
+            width = frame.width
+            height = frame.height
+            return this
+        }
+    }
+
+    // Guards the hand-off between the decoder's thread and the worker; nobody holds it during a conversion or a call.
+    private val lock = ReentrantLock()
+    private val wake = lock.newCondition()
+    private val free = ArrayList<Slot>(2)
+    private var pending: Slot? = null
+    private var running = false
+    private var streamStopped = false
+    private var failure: String? = null
+
+    // Keeps a conversion off the converter and buffers while sharing turns on or off.
+    private val convertLock = Any()
+    // A fresh one per start: a closed converter could miss its colour-space setup if swscale reused the address.
+    private var converter: BgraConverter? = null
+
+    @Volatile private var publishing = false
+    @Volatile private var streamActive = false
+
+    // The worker's own state; start and stop touch it only while no worker runs.
+    private var sinkOpen = false
+    private var lastPicture: Long? = null
+    private var frozen = false
+
+    private val toggleLock = Any()
+    private var thread: Thread? = null
+    @Volatile private var on = false
+
+    var enabled: Boolean
+        get() = on
+        set(value) = synchronized(toggleLock) {
+            if (value == on) return
+            on = value
+            if (value) start() else stop()
+        }
+
+    override fun frame(type: Int, frame: DecodedFrame) {
+        if (type != MAIN_SCREEN || !publishing) return
+        synchronized(convertLock) {
+            val converter = converter
+            if (!publishing || converter == null) return
+            // Two buffers suffice: the worker holds at most one, so the other is free or the one still waiting.
+            val slot = lock.withLock { pending.also { pending = null } ?: free.removeLastOrNull() } ?: return
+            val filled = try {
+                slot.fill(frame, converter)
+            } catch (e: Exception) {
+                lock.withLock { free += slot; if (failure == null) failure = "cannot convert the picture: $e"; wake.signal() }
+                return
+            }
+            lock.withLock { pending = filled; wake.signal() }
+        }
+    }
+
+    override fun active(type: Int, active: Boolean) {
+        if (type != MAIN_SCREEN) return
+        streamActive = active
+        if (active || !publishing) return
+        lock.withLock {
+            pending?.let { free += it }
+            pending = null
+            streamStopped = true
+            wake.signal()
+        }
+    }
+
+    /**
+     * One turn of the worker: waits up to [waitNanos] for something to do, then does it: tells a stopped stream, publishes
+     * the waiting picture, or marks an old one frozen. False once the loop is to end.
+     */
+    internal fun pass(waitNanos: Long = WAKE_NANOS): Boolean {
+        val job: Slot?
+        val stopped: Boolean
+        val failed: String?
+        lock.withLock {
+            var left = waitNanos
+            while (running && pending == null && !streamStopped && failure == null && left > 0) left = wake.awaitNanos(left)
+            if (!running) return false
+            failed = failure.also { failure = null }
+            stopped = streamStopped.also { streamStopped = false }
+            job = pending.also { pending = null }
+        }
+        try {
+            if (failed != null) return fail(failed)
+            if (stopped) {
+                sink.state(WAITING)
+                lastPicture = null
+            }
+            if (job != null) {
+                val error = sink.publish(checkNotNull(job.buffer), job.width, job.height, scaled(job.width, job.height))
+                if (error != null) return fail(error)
+                lastPicture = nanoTime()
+                frozen = false
+            } else if (!stopped) {
+                freezeIfOld()
+            }
+            return true
+        } catch (e: Exception) {
+            return fail(e.toString())
+        } finally {
+            if (job != null) lock.withLock { free += job }
+        }
+    }
+
+    private fun freezeIfOld() {
+        val last = lastPicture ?: return
+        if (streamActive && !frozen && nanoTime() - last > FROZEN_NANOS) {
+            sink.state(FROZEN)
+            frozen = true
+        }
+    }
+
+    /** [safe] from the display's pixels into a [width]x[height] picture's, edge by edge. */
+    private fun scaled(width: Int, height: Int): AreaRect {
+        val rect = safe()
+        val display = screen()
+        if (display.width == width && display.height == height) return rect
+        fun along(value: Int, picture: Int, of: Int) = Math.round(value.toDouble() * picture / of).toInt()
+        val left = along(rect.x, width, display.width)
+        val top = along(rect.y, height, display.height)
+        val right = along(rect.x + rect.width, width, display.width)
+        val bottom = along(rect.y + rect.height, height, display.height)
+        return AreaRect(left, top, right - left, bottom - top)
+    }
+
+    /** Logs [reason] and lets the native side go (state 0 for a game) until sharing is turned off and on; false. */
+    private fun fail(reason: String): Boolean {
+        log("game bridge: $reason; the picture is no longer shared until sharing is turned off and on")
+        publishing = false
+        lock.withLock { running = false }
+        closeSink()
+        return false
+    }
+
+    private fun closeSink() {
+        if (!sinkOpen) return
+        sinkOpen = false
+        runCatching { sink.close() }.onFailure { log("game bridge: cannot close: $it") }
+    }
+
+    private fun start() {
+        val error = runCatching { sink.open() }.getOrElse { it.toString() }
+        if (error != null) {
+            log("game bridge: cannot share the picture: $error; turn sharing off and on to try again")
+            return
+        }
+        sinkOpen = true
+        lastPicture = null
+        frozen = false
+        synchronized(convertLock) {
+            converter = BgraConverter()
+            lock.withLock {
+                free.clear()
+                free += Slot()
+                free += Slot()
+                pending = null
+                streamStopped = false
+                failure = null
+                running = true
+            }
+            publishing = true
+        }
+        thread = worker(Runnable { while (pass()) Unit })
+        log("game bridge: sharing the picture")
+    }
+
+    private fun stop() {
+        publishing = false
+        lock.withLock { running = false; wake.signal() }
+        thread?.join()
+        thread = null
+        synchronized(convertLock) {
+            converter?.close()
+            converter = null
+            lock.withLock { free.clear(); pending = null }
+        }
+        if (sinkOpen) log("game bridge: picture no longer shared")
+        closeSink()
+    }
+
+    override fun close() {
+        enabled = false
+    }
+
+    companion object {
+        /** The default worker: the loop on a daemon thread of its own. */
+        fun daemon(loop: Runnable): Thread = Thread(loop, "game-bridge").apply { isDaemon = true; start() }
+
+        private const val MAIN_SCREEN = DesktopMediaSink.MAIN_SCREEN
+        private const val WAITING = 1
+        private const val FROZEN = 3
+        private const val WAKE_NANOS = 500_000_000L
+        private const val FROZEN_NANOS = 1_000_000_000L
+    }
+}

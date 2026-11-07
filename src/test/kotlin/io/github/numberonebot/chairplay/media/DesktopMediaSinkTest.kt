@@ -4,10 +4,12 @@ import com.shilapi.xcertplay.airplay.AudioCodecKind
 import com.shilapi.xcertplay.airplay.AudioFormat
 import com.shilapi.xcertplay.airplay.AudioStreamId
 import com.shilapi.xcertplay.airplay.VideoCodec
+import io.github.numberonebot.chairplay.bridge.FrameTap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayOutputStream
+import java.io.Closeable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
@@ -78,6 +80,34 @@ class DesktopMediaSinkTest {
         altscreen.onFrameShown()
         assertEquals(2, reported)
         sink.close()
+    }
+
+    private class RecordingTap : FrameTap, Closeable {
+        val events = mutableListOf<String>()
+        override fun frame(type: Int, frame: DecodedFrame) { events += "frame $type ${frame.width}x${frame.height}" }
+        override fun active(type: Int, active: Boolean) { events += "active $type $active" }
+        override fun close() { events += "close" }
+    }
+
+    // display.share: the tap reads each picture before the window releases it, and hears of a stop only once the
+    // decoder is closed, so no picture follows it.
+    @Test
+    fun `the frame tap sees the stream and its pictures and closes with the sink`() {
+        val tap = RecordingTap()
+        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer(), hardwareDecoding = { false }, frameTap = tap)
+        sink.onScreenStreamActive(110, true)
+        sink.onVideoCodec(110, VideoCodec.H264)
+        sink.onVideoConfig(110, resource("avcC.bin"))
+        sink.onVideoFrame(110, resource("frame0.h264"), 0, 0)
+        sink.onVideoFrame(110, resource("frame1.h264"), 0, 0)
+        sink.onScreenStreamActive(110, false)
+        sink.onVideoFrame(110, resource("frame1.h264"), 0, 0)
+        sink.close()
+
+        assertEquals("active 110 true", tap.events.first())
+        assertTrue(tap.events.toString(), tap.events.any { it.startsWith("frame 110 ") })
+        assertEquals(listOf("active 110 false", "close"), tap.events.takeLast(2))
+        assertEquals(1, tap.events.count { it.startsWith("active 110 false") })
     }
 
     private class RecordingLine : PcmLine {

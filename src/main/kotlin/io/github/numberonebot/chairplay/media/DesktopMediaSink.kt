@@ -6,6 +6,7 @@ import com.shilapi.xcertplay.airplay.MediaSink
 import com.shilapi.xcertplay.airplay.MicrophoneConfig
 import com.shilapi.xcertplay.airplay.VideoCodec
 import com.shilapi.xcertplay.media.EchoReference
+import io.github.numberonebot.chairplay.bridge.FrameTap
 import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -35,6 +36,8 @@ class DesktopMediaSink(
     /** audio.duck.*: how low a navigation prompt puts the music, read at each prompt. */
     private val duckSetting: () -> DuckSetting = { DuckSetting() },
     private val hardwareDecoding: () -> Boolean = { true },
+    /** display.share: sees each picture before its window takes it, to publish the main screen for games. */
+    private val frameTap: FrameTap = FrameTap.NONE,
 ) : MediaSink, AudioDuckSink, BufferedAudioStatusSink, io.github.numberonebot.chairplay.media.apac.SpatialAudioSink, Closeable {
     override val spatialAudio get() = audio.spatialAudio
     val bufferedAudio = BufferedAudioMonitor()
@@ -103,7 +106,8 @@ class DesktopMediaSink(
             }
             configured = codecData
             decoder?.close()
-            decoder = VideoDecoder(window::show, ::recover, codec, { log("video screen $type: $it") }, hardwareDecoding())
+            // The window releases the picture once drawn, so the tap reads it first.
+            decoder = VideoDecoder({ frame -> frameTap.frame(type, frame); window.show(frame) }, ::recover, codec, { log("video screen $type: $it") }, hardwareDecoding())
                 .also { it.configure(codecData) }
             firstFramePending.set(true)
         }
@@ -153,11 +157,13 @@ class DesktopMediaSink(
 
     override fun onScreenStreamActive(type: Int, active: Boolean) {
         if (active && type == ALT_SCREEN) altscreenSetUp.set(true)
-        if (active) return
+        if (active) return frameTap.active(type, true)
         val screen = screens[type] ?: return
         diagnosticHandlers.remove(type)
         recoveryHandlers.remove(type)
         screen.stop()
+        // After the decoder closed, so no picture of this stream follows the stop.
+        frameTap.active(type, false)
     }
 
     override fun onAudioStarted(id: AudioStreamId, format: AudioFormat, firstSample: Int) {
@@ -206,6 +212,7 @@ class DesktopMediaSink(
 
     override fun close() {
         screens.values.forEach { it.stop() }
+        (frameTap as? Closeable)?.close()
         recoveryExecutor.shutdownNow()
         microphones.keys.toList().forEach(::onMicrophoneStopped)
         callEchoReferences.clear()
@@ -214,12 +221,12 @@ class DesktopMediaSink(
         altscreen?.close()
     }
 
-    private companion object {
+    internal companion object {
         // The screen stream types CarPlayMediaEngine uses for the main display and the altscreen (cluster).
         const val MAIN_SCREEN = 110
         const val ALT_SCREEN = 111
-        const val FIRST_FRAME = "first frame rendered"
-        const val RECOVERY_INTERVAL_NANOS = 1_000_000_000L
-        const val TELEPHONY_AUDIO_TYPE = "telephony"
+        private const val FIRST_FRAME = "first frame rendered"
+        private const val RECOVERY_INTERVAL_NANOS = 1_000_000_000L
+        private const val TELEPHONY_AUDIO_TYPE = "telephony"
     }
 }
