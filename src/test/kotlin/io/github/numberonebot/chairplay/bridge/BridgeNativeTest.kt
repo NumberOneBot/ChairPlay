@@ -103,6 +103,34 @@ class BridgeNativeTest {
         assertEquals(800 to 480, openTexture(BridgeLayout.textureName(first)).let { it.width to it.height })
     }
 
+    // A GPU driver reset (TDR) while a game loads the GPU: a new device, and the picture goes on under a new name.
+    @Test fun `a lost device is made again and the picture goes on under a new generation`() {
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val before = status()
+        lib.cpb_test_lose_device(0)
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val after = status()
+        assertEquals(2, after.state)
+        assertTrue("generation ${after.generation} after ${before.generation}", after.generation > before.generation)
+        assertEquals(BridgeLayout.textureName(after.generation), after.textureName)
+        assertEquals(before.adapterLuid, after.adapterLuid)
+        assertEquals(before.frameCounter + 1, after.frameCounter)
+        val texture = openTexture(after.textureName)
+        assertEquals(800 to 480, texture.width to texture.height)
+        assertEquals(PIXEL, texture.firstPixel)
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        assertEquals(after.generation, status().generation)
+    }
+
+    @Test fun `a lost device that cannot be made again fails the publish`() {
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        hold()
+        lib.cpb_test_lose_device(1)
+        assertNotEquals(0, publish(800, 480))
+        assertEquals(0, status().state)
+        assertNotEquals(0, publish(800, 480))
+    }
+
     @Test fun `the state call is written to the status`() {
         assertEquals(1, status().state)
         lib.cpb_frame_state(3)

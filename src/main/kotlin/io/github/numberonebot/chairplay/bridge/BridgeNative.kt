@@ -48,6 +48,9 @@ internal interface BridgeLibrary : Library {
     /** For tests: opens [name] on a second device and reads its size and the pixel at 0,0; 0 or negative. */
     fun cpb_test_open_texture(name: String, width: IntByReference, height: IntByReference, firstPixel: IntByReference): Int
 
+    /** For tests: the next publish finds the device lost; with [failNewDevice] 1 no new one can be made either. */
+    fun cpb_test_lose_device(failNewDevice: Int)
+
     /** For tests: runs [during] while holding the lock the frame calls take. */
     fun cpb_test_hold_frame_lock(during: Held)
 

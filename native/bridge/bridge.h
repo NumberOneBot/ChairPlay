@@ -16,7 +16,9 @@
 CPB_API int cpb_frame_open(int warp);
 
 /* Copies one BGRA picture into the shared texture ChairPlay.Main.v1.<generation>. A new size makes a new texture and
-   generation; the previous one is released on the first publish at least 1 s later. Then the status: state 2. */
+   generation; the previous one is released on the first publish at least 1 s later. Then the status: state 2.
+   A lost device (a driver reset) is made again once, on the same kind of adapter, and the picture goes on under a
+   new generation; when no device can be made, the failure is returned and the bridge closes as cpb_frame_close does. */
 CPB_API int cpb_frame_publish(const void* bgra, int width, int height, int stride,
                               int safe_x, int safe_y, int safe_w, int safe_h);
 
@@ -32,9 +34,11 @@ CPB_API const char* cpb_last_error(void);
 
 /* Test hooks. read_status: 1 when a consistent copy of the status file was taken, 0 when it is missing or torn.
    open_texture: opens name on a second device on the producer's adapter and reads its size and pixel 0,0.
+   lose_device: the next publish finds the device lost (removed), and with fail_new_device != 0 cannot make another.
    hold_frame_lock: calls during while holding the frame calls' lock. */
 CPB_API int cpb_test_read_status(void* out256);
 CPB_API int cpb_test_open_texture(const char* name, int* width, int* height, unsigned* first_pixel);
+CPB_API void cpb_test_lose_device(int fail_new_device);
 CPB_API void cpb_test_hold_frame_lock(void (*during)(void));
 
 /* Telemetry, Local\ChairPlay.Telemetry.v1 (256 bytes, written by a game's source). open creates the file zeroed when

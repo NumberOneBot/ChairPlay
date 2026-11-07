@@ -53,4 +53,7 @@ void cpb_release_gpu();
 // A texture pair for a new size, shared under the next generation's name. On failure nothing changes.
 int cpb_new_generation(int width, int height);
 
+// Test hook (frame.cpp): the next publish finds the device lost, and with fail_new_device the new one fails too.
+void cpb_frame_lose_device(int fail_new_device);
+
 #endif

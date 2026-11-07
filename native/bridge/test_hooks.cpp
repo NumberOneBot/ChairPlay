@@ -6,6 +6,7 @@
 #include "bridge.h"
 #include "bridge_layout.h"
 #include "frame_internal.h"
+#include "frame_state.h"
 #include "seqlock.h"
 
 namespace {
@@ -39,6 +40,11 @@ CPB_API int cpb_test_read_status(void* out256) {
     if (view) UnmapViewOfFile(view);
     CloseHandle(mapping);
     return consistent;
+}
+
+CPB_API void cpb_test_lose_device(int fail_new_device) {
+    CpbLock lock;
+    cpb_frame_lose_device(fail_new_device);
 }
 
 CPB_API void cpb_test_hold_frame_lock(void (*during)(void)) {
