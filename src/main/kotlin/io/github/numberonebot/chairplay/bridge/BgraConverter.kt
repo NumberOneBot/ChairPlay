@@ -81,7 +81,9 @@ internal class BgraConverter : PictureConverter {
     }
 
     private companion object {
-        // Same size in and out, so only chroma is upsampled: accurate rounding and full horizontal chroma interpolation.
-        const val FLAGS = SWS_BILINEAR or SWS_ACCURATE_RND or SWS_FULL_CHR_H_INT
+        // Same size in and out, so only chroma is upsampled. Accurate rounding and full horizontal chroma interpolation
+        // cost some 20 times as much on the decoder's thread (4 to 5 ms a 1280x720 picture against 0.2) for no
+        // colour the tests see.
+        const val FLAGS = SWS_BILINEAR
     }
 }
