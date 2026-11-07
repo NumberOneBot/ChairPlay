@@ -63,25 +63,6 @@ export function ExperimentsPage({
   const sizes = useFolderSizes(backend)
   return (
     <>
-      <Group title="HUD demo" note="On the AltScreen's HUD" />
-      {DEMOS.map(([kind, label, title]) => {
-        const playing = demo?.playing === kind
-        // No AltScreen in this connection, or one turned off on its page since: no demo starts; one playing can stop.
-        const off = !demo?.available || settings.value('altscreen.enabled') !== 'true'
-        return (
-          <Row key={kind} label={label}>
-            <button
-              type="button"
-              className="btn small"
-              disabled={off && !playing}
-              title={playing ? 'Stop the demo' : off ? 'Turn on the AltScreen on its page first' : title}
-              onClick={() => backend.demo(playing ? null : kind)}
-            >
-              {playing ? 'Stop' : 'Play'}
-            </button>
-          </Row>
-        )
-      })}
       <Group title="Logs" note={note(['log.carplay.data'])} />
       <Row label="Log level" title="How much the app's log in the logs folder tells; Trace adds every packet">
         <Segmented
@@ -128,6 +109,25 @@ export function ExperimentsPage({
           {sizes.screenshots ? <span className="folder-size">{byteSize(sizes.screenshots)}</span> : null}
         </span>
       </Row>
+      <Group title="HUD demo" note="On the AltScreen's HUD" />
+      {DEMOS.map(([kind, label, title]) => {
+        const playing = demo?.playing === kind
+        // No AltScreen in this connection, or one turned off on its page since: no demo starts; one playing can stop.
+        const off = !demo?.available || settings.value('altscreen.enabled') !== 'true'
+        return (
+          <Row key={kind} label={label}>
+            <button
+              type="button"
+              className="btn small"
+              disabled={off && !playing}
+              title={playing ? 'Stop the demo' : off ? 'Turn on the AltScreen on its page first' : title}
+              onClick={() => backend.demo(playing ? null : kind)}
+            >
+              {playing ? 'Stop' : 'Play'}
+            </button>
+          </Row>
+        )
+      })}
       <Group title="Integrations" note="With games and other apps on this PC" />
       <Row
         label="CarPlay picture"
