@@ -19,6 +19,13 @@ import java.nio.ByteBuffer
 internal class BgraConverter : Closeable {
     private var scaler: SwsContext? = null
     private var out: ByteBuffer? = null
+    private var address = 0L
+    private var width = 0
+    private var height = 0
+
+    /** How often the colour space was configured; once per size, not per frame. */
+    internal var setups = 0
+        private set
 
     /** A direct buffer of `width * height * 4`, the same one while the size holds. */
     fun buffer(width: Int, height: Int): ByteBuffer {
@@ -32,11 +39,20 @@ internal class BgraConverter : Closeable {
         require(out.isDirect && out.capacity() >= frame.width * frame.height * 4) { "output buffer too small" }
         val context = sws_getCachedContext(scaler, frame.width, frame.height, AV_PIX_FMT_YUV420P,
             frame.width, frame.height, AV_PIX_FMT_BGRA, FLAGS, null, null, null as DoublePointer?)
-        check(context != null && !context.isNull) { "cannot convert video to BGRA" }
-        if (context !== scaler) {
-            scaler = context
+        // A changed size frees the previous native context inside the call, so never keep a pointer to it.
+        if (context == null || context.isNull) {
+            scaler = null
+            error("cannot convert video to BGRA")
+        }
+        // JavaCPP wraps the result anew each call: compare the native address (and size, as addresses can be reused).
+        if (context.address() != address || frame.width != width || frame.height != height) {
             val table = sws_getCoefficients(SWS_CS_ITU709)
-            sws_setColorspaceDetails(context, table, 0, table, 1, 0, 1 shl 16, 1 shl 16)
+            scaler = context
+            check(sws_setColorspaceDetails(context, table, 0, table, 1, 0, 1 shl 16, 1 shl 16) >= 0) {
+                "cannot set the BT.709 colour space"
+            }
+            address = context.address(); width = frame.width; height = frame.height
+            setups++
         }
         val planes = PointerPointer<BytePointer>(3L)
             .put(0, BytePointer(frame.y)).put(1, BytePointer(frame.u)).put(2, BytePointer(frame.v))

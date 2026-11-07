@@ -51,6 +51,19 @@ class BgraConverterTest {
     }
 
     @Test
+    fun `colour space is set up once per size and survives a size change`() {
+        BgraConverter().use { converter ->
+            repeat(5) { first(converter, solid(64, 64, 16, 128, 128)) }
+            assertEquals(1, converter.setups)
+            val white = first(converter, solid(32, 48, 235, 128, 128))
+            assertEquals(2, converter.setups)
+            for (c in 0..2) assertTrue("channel $c was ${white[c]}", white[c] in 253..255)
+            assertEquals(listOf(0, 0, 0, 255), first(converter, solid(32, 48, 16, 128, 128)).toList())
+            assertEquals(2, converter.setups)
+        }
+    }
+
+    @Test
     fun `buffer is reused while the size holds`() {
         BgraConverter().use { converter ->
             val a = converter.buffer(64, 32)
