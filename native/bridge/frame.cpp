@@ -46,6 +46,9 @@ struct Bridge {
 };
 
 Bridge bridge;
+// The last generation this process shared, kept across close and open: a game holding the status file keeps it
+// alive, so a reopened bridge must never give it a name it already holds.
+unsigned last_generation = 0;
 
 LONGLONG now() {
     LARGE_INTEGER t;
@@ -63,7 +66,14 @@ void close_locked() {
     }
     cpb_release(bridge.context);
     cpb_release(bridge.device);
-    if (bridge.status) UnmapViewOfFile(bridge.status);
+    if (cpb_status* s = bridge.status) {
+        // A game may hold the file past this close: tell it the picture is gone.
+        cpb_seq_begin(s);
+        s->state = 0;
+        memset(s->texture_name, 0, sizeof s->texture_name);
+        cpb_seq_end(s);
+        UnmapViewOfFile(s);
+    }
     if (bridge.mapping) CloseHandle(bridge.mapping);
     bridge = Bridge();
 }
@@ -99,6 +109,7 @@ int open_locked(int warp) {
     bridge.mapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, CPB_FILE_SIZE,
                                         CPB_STATUS_MAPPING);
     if (!bridge.mapping) return abandon(cpb_fail("CreateFileMappingW", HRESULT_FROM_WIN32(GetLastError())));
+    bool existed = GetLastError() == ERROR_ALREADY_EXISTS;
     bridge.status = (cpb_status*)MapViewOfFile(bridge.mapping, FILE_MAP_WRITE, 0, 0, CPB_FILE_SIZE);
     if (!bridge.status) return abandon(cpb_fail("MapViewOfFile", HRESULT_FROM_WIN32(GetLastError())));
     LARGE_INTEGER frequency;
@@ -106,9 +117,20 @@ int open_locked(int warp) {
     bridge.frequency = frequency.QuadPart;
 
     cpb_status* s = bridge.status;
-    memset(s, 0, CPB_FILE_SIZE);
-    cpb_seq_begin(s);
+    // A file still held by a game goes on from the newest generation it or this process has seen; a new file
+    // (no reader) starts again at 1.
+    if (existed) {
+        unsigned held = s->magic == CPB_STATUS_MAGIC ? s->generation : 0;
+        bridge.generation = held > last_generation ? held : last_generation;
+    }
+    // Readers may be on a held file: clear it inside the seqlock, all but seq. A writer that died mid-write left
+    // seq odd, so readers already retry and the write goes on from there.
+    if ((*cpb_seq(s) & 1) == 0) cpb_seq_begin(s);
+    else MemoryBarrier();
+    memset(s, 0, offsetof(cpb_status, seq));
+    memset((char*)s + offsetof(cpb_status, state), 0, CPB_FILE_SIZE - offsetof(cpb_status, state));
     s->magic = CPB_STATUS_MAGIC;
+    s->generation = bridge.generation;
     s->version = CPB_VERSION;
     s->size = offsetof(cpb_status, reserved);
     s->state = 1;
@@ -167,6 +189,7 @@ int new_generation(int width, int height) {
     bridge.width = (unsigned)width;
     bridge.height = (unsigned)height;
     bridge.generation = generation;
+    if (generation > last_generation) last_generation = generation;
     memcpy(bridge.name, name, sizeof name);
     return 0;
 }

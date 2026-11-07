@@ -23,7 +23,7 @@ internal interface BridgeLibrary : Library {
 
     fun cpb_frame_state(state: Int)
 
-    /** Releases the device and textures; the status file goes with them. */
+    /** Writes state 0 for a game still holding the status file, then releases the device and textures. */
     fun cpb_frame_close()
 
     /** The last failure with its HRESULT in hex. */

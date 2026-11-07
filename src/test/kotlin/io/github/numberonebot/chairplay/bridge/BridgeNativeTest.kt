@@ -1,9 +1,13 @@
 package io.github.numberonebot.chairplay.bridge
 
+import com.sun.jna.platform.win32.Kernel32
+import com.sun.jna.platform.win32.WinBase
+import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.ptr.IntByReference
 import io.github.numberonebot.chairplay.config.AreaRect
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -13,15 +17,42 @@ import java.nio.ByteOrder
 
 class BridgeNativeTest {
     private val lib get() = BridgeNative.lib
+    private var warp = 0
+    /** A game's handle on the status file, which keeps it alive across a close. */
+    private var held: WinNT.HANDLE? = null
 
     @Before fun open() {
         assumeTrue(BridgeNative.loadError ?: "", BridgeNative.loadError == null)
         // Hardware first; WARP keeps the tests running on a machine without a D3D11 GPU.
-        assumeTrue(lib.cpb_last_error(), lib.cpb_frame_open(0) == 0 || lib.cpb_frame_open(1) == 0)
+        warp = if (lib.cpb_frame_open(0) == 0) 0 else 1
+        assumeTrue(lib.cpb_last_error(), warp == 0 || lib.cpb_frame_open(1) == 0)
     }
 
     @After fun close() {
         if (BridgeNative.loadError == null) lib.cpb_frame_close()
+        held?.let { Kernel32.INSTANCE.CloseHandle(it) }
+    }
+
+    @Test fun `a reader holding the status never sees a generation again after a reopen`() {
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val before = status()
+        hold()
+        lib.cpb_frame_close()
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_frame_open(warp))
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val after = status()
+        assertTrue("generation ${after.generation} after ${before.generation}", after.generation > before.generation)
+        assertNotEquals(before.textureName, after.textureName)
+        assertEquals(800, openTexture(after.textureName).width)
+    }
+
+    @Test fun `closing tells a reader holding the status that the picture is gone`() {
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        hold()
+        lib.cpb_frame_close()
+        val status = status()
+        assertEquals(0, status.state)
+        assertEquals("", status.textureName)
     }
 
     @Test fun `a published frame is readable by name from another device`() {
@@ -83,6 +114,11 @@ class BridgeNativeTest {
         val out = ByteBuffer.allocateDirect(BridgeLayout.SIZE)
         assertEquals("consistent status read", 1, lib.cpb_test_read_status(out))
         return BridgeStatus.parse(out) ?: throw AssertionError("status has no magic or another version")
+    }
+
+    private fun hold() {
+        held = Kernel32.INSTANCE.OpenFileMapping(WinBase.FILE_MAP_READ, false, "Local\\${BridgeLayout.STATUS_FILE}")
+            ?: throw AssertionError("no status file to hold")
     }
 
     private fun openTexture(name: String): Texture {
