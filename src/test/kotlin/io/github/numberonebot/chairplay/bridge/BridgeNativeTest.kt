@@ -46,6 +46,18 @@ class BridgeNativeTest {
         assertEquals(800, openTexture(after.textureName).width)
     }
 
+    // A game may still hold the last texture by name after the status file went: a new file never reuses it.
+    @Test fun `a reopen with no reader goes on past the last generation`() {
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val before = status()
+        lib.cpb_frame_close()
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_frame_open(warp))
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val after = status()
+        assertTrue("generation ${after.generation} after ${before.generation}", after.generation > before.generation)
+        assertEquals(800, openTexture(after.textureName).width)
+    }
+
     @Test fun `closing tells a reader holding the status that the picture is gone`() {
         assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
         hold()
@@ -59,14 +71,15 @@ class BridgeNativeTest {
         assertEquals(lib.cpb_last_error(), 0, publish(800, 480, AreaRect(10, 20, 700, 400)))
         val status = status()
         assertEquals(2, status.state)
-        assertEquals(1, status.generation)
+        // 1 for the process' first picture; tests before this one in the process went on from there.
+        assertTrue("generation ${status.generation}", status.generation >= 1)
         assertEquals(800, status.width)
         assertEquals(480, status.height)
         assertEquals(1L, status.frameCounter)
         assertEquals(AreaRect(10, 20, 700, 400), status.safe)
         assertEquals(87, status.dxgiFormat)
         assertEquals(ProcessHandle.current().pid().toInt(), status.producerPid)
-        assertEquals(BridgeLayout.textureName(1), status.textureName)
+        assertEquals(BridgeLayout.textureName(status.generation), status.textureName)
 
         val texture = openTexture(status.textureName)
         assertEquals(800, texture.width)
@@ -76,16 +89,17 @@ class BridgeNativeTest {
 
     @Test fun `a new size starts a new generation`() {
         assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val first = status().generation
         assertEquals(lib.cpb_last_error(), 0, publish(640, 360))
         val status = status()
-        assertEquals(2, status.generation)
-        assertTrue(status.textureName, status.textureName.endsWith(".2"))
+        assertEquals(first + 1, status.generation)
+        assertEquals(BridgeLayout.textureName(first + 1), status.textureName)
         assertEquals(640 to 360, status.width to status.height)
         assertEquals(2L, status.frameCounter)
         val texture = openTexture(status.textureName)
         assertEquals(640 to 360, texture.width to texture.height)
         // The previous texture lives on for a second, so a reader can switch over.
-        assertEquals(800 to 480, openTexture(BridgeLayout.textureName(1)).let { it.width to it.height })
+        assertEquals(800 to 480, openTexture(BridgeLayout.textureName(first)).let { it.width to it.height })
     }
 
     @Test fun `the state call is written to the status`() {

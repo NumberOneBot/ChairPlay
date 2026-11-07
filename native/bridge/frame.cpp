@@ -117,12 +117,10 @@ int open_locked(int warp) {
     bridge.frequency = frequency.QuadPart;
 
     cpb_status* s = bridge.status;
-    // A file still held by a game goes on from the newest generation it or this process has seen; a new file
-    // (no reader) starts again at 1.
-    if (existed) {
-        unsigned held = s->magic == CPB_STATUS_MAGIC ? s->generation : 0;
-        bridge.generation = held > last_generation ? held : last_generation;
-    }
+    // Goes on from the newest generation the file (when a game still holds it) or this process has seen: a game
+    // may still hold the last texture by name after the file went.
+    unsigned held = existed && s->magic == CPB_STATUS_MAGIC ? s->generation : 0;
+    bridge.generation = held > last_generation ? held : last_generation;
     // Readers may be on a held file: clear it inside the seqlock, all but seq. A writer that died mid-write left
     // seq odd, so readers already retry and the write goes on from there.
     if ((*cpb_seq(s) & 1) == 0) cpb_seq_begin(s);
