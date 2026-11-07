@@ -64,6 +64,12 @@ class GpsConfigTest {
     }
 
     @Test
+    fun `a game drives the car only when asked`() {
+        assertFalse(configWith().gps.external)
+        assertTrue(configWith("gps.external=true").gps.external)
+    }
+
+    @Test
     fun `rejects GPS values the car cannot have`() {
         for (bad in listOf(
             "gps.start=Kyiv", "gps.heading=north", "gps.heading=360", "gps.car.power.hp=5", "gps.car.mass.kg=50", "gps.rate=3",

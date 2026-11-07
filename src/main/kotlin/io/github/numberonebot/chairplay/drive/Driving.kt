@@ -1,6 +1,8 @@
 package io.github.numberonebot.chairplay.drive
 
 import com.shilapi.xcertplay.transport.Iap2LocationProvider
+import io.github.numberonebot.chairplay.bridge.External
+import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
@@ -21,7 +23,12 @@ class Driving(
     private val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
     private val locate: () -> WindowsLocation.Result = WindowsLocation::read,
     private val lookup: (Runnable) -> Unit = { Thread(it, "gps-start").apply { isDaemon = true }.start() },
+    /** A fresh reader of a game's telemetry, made each time gps.external comes into force. */
+    private val telemetry: () -> TelemetryInput = { TelemetryInput(log = log) },
 ) {
+    /** Wakes the window loop, which may wait for an event, to put a switch saved on another thread in force. */
+    @Volatile var wake: () -> Unit = {}
+
     /** Saves the car's place as gps.start and gps.heading, as the GPS page saves them; the app sets it ([saveTo]). */
     @Volatile var savePlace: (Map<String, String>) -> Unit = {}
 
@@ -54,16 +61,64 @@ class Driving(
 
     @Volatile private var link: DriveLocation? = null
 
+    // The game's telemetry, read and closed on the window loop's thread only, while the GPS and gps.external are on.
+    private var reader: TelemetryInput? = null
+    // Whether the last poll had a game there, driving or halted.
+    private var following = false
+
     /**
-     * [DriveControl.pass] while the GPS is on. Off, the car stays put: one driven or moving as the GPS went off stops
+     * [DriveControl.pass] while the GPS is on, after a game's telemetry with gps.external on ([external]); off, the
+     * telemetry closes ([unfollow]). Off, the car stays put: one driven or moving as the GPS went off stops
      * where it is, drive mode ends, and one more pass draws the gauges away.
      */
     fun pass(): Double? {
+        val settings = settings
+        if (settings.enabled && settings.external) return external()
+        unfollow()
         if (settings.enabled) return control.pass()
         if (!control.keyboard && !drive.moving) return null
         if (control.keyboard) control.toggleKeyboard()
         drive.stop()
         return DriveControl.FRAME_SECONDS
+    }
+
+    /**
+     * A pass with gps.external on: a game sending puts the car where it says, one paused or quiet stops it there, and
+     * with none the gamepad and keys drive, the place the game left saved first. It polls at least 20 times a second.
+     */
+    private fun external(): Double {
+        val current = reader ?: telemetry().also { reader = it }
+        when (val said = current.poll()) {
+            is External.Drives -> {
+                val record = said.record
+                drive.follow(GeoPoint(record.latitude, record.longitude), record.headingDegrees, record.speed, record.rpm, record.gear)
+                placed = true
+                following = true
+                return DriveControl.FRAME_SECONDS
+            }
+            External.Halted -> {
+                if (drive.moving) drive.stop()
+                following = true
+                return DriveControl.GAMEPAD_POLL_SECONDS
+            }
+            External.Absent -> {
+                if (following) {
+                    following = false
+                    remember(drive.snapshot())
+                }
+                return minOf(control.pass() ?: DriveControl.GAMEPAD_POLL_SECONDS, DriveControl.GAMEPAD_POLL_SECONDS)
+            }
+        }
+    }
+
+    // gps.external or the GPS gone off: the file closes, and a car the game had stops and keeps its place.
+    private fun unfollow() {
+        reader?.close()
+        reader = null
+        if (!following) return
+        following = false
+        drive.stop()
+        remember(drive.snapshot())
     }
 
     /** Turns drive mode on or off and says which; it stays off while the GPS is off. */
@@ -90,7 +145,10 @@ class Driving(
      * is: it drives on.
      */
     fun saved(now: GpsSettings, keys: Set<String>) {
+        val was = settings
         settings = now
+        // The window loop reads the telemetry from its next pass, or closes it there.
+        if (now.enabled && now.external && !(was.enabled && was.external)) wake()
         val here = drive.snapshot()
         val own = now.start?.let { abs(it.latitude - here.position.latitude) < SAME && abs(it.longitude - here.position.longitude) < SAME }
         if ("gps.start" in keys && own != true) {

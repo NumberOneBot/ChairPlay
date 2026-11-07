@@ -98,4 +98,23 @@ class DriveTest {
         assertEquals(before.car.speed, drive.snapshot().car.speed, 0.0)
         assertEquals(400.0, drive.spec.powerHp, 0.0)
     }
+
+    // A game's telemetry: the car is where the game says, as fast, facing, revving, and in the gear it says.
+    @Test
+    fun `Drive follow puts the car where the game is`() {
+        val drive = Drive(CarSpec(), kyiv, headingDegrees = 0.0) { now }
+        val paris = GeoPoint(48.85, 2.29)
+        drive.follow(paris, 135.0, -3.0, 2500.0, -1)
+
+        val snapshot = drive.snapshot()
+        assertEquals(paris, snapshot.position)
+        assertEquals(CarState(-3.0, 135.0, 2500.0, -1, parked = false), snapshot.car)
+        assertEquals(3.0, drive.drainSpeed().single().metersPerSecond, 0.0)
+
+        now += 200_000_000L
+        // No rpm from the game: the engine idles, as the car's model keeps a running engine.
+        drive.follow(paris, 90.0, 10.0, null, null)
+        assertEquals(CarState(10.0, 90.0, CarSpec().idleRpm, 1, parked = false), drive.snapshot().car)
+        assertEquals(10.0, drive.drainSpeed().single().metersPerSecond, 0.0)
+    }
 }

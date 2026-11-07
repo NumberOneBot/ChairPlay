@@ -106,6 +106,25 @@ describe('Experiments page', () => {
     await waitFor(() => expect(backend.saved).toEqual([{ 'display.share': 'true' }]))
   })
 
+  it('saves driving the GPS car from other apps', async () => {
+    const backend = new FakeBackend()
+    backend.data = { ...backend.data, values: { ...backend.data.values, 'gps.enabled': 'true' } }
+    await experiments(appState(live), backend)
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Drive the GPS car from other apps' }))
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'gps.external': 'true' }]))
+  })
+
+  it('the GPS off disables driving from other apps', async () => {
+    const backend = new FakeBackend()
+    backend.data = { ...backend.data, values: { ...backend.data.values, 'gps.enabled': 'false' } }
+    await experiments(appState(live), backend)
+
+    const drive = screen.getByRole('switch', { name: 'Drive the GPS car from other apps' }) as HTMLInputElement
+    expect(drive.disabled).toBe(true)
+  })
+
   it('waits for the AltScreen', async () => {
     await experiments(appState({ ...live, demo: { playing: null, available: false } }))
 

@@ -25,6 +25,8 @@ data class GpsSettings(
     val wheel: WheelMode = WheelMode.STEERING,
     /** gps.units: the speedometer scale and speed readouts; applied immediately. */
     val units: SpeedUnits = SpeedUnits.METRIC,
+    /** gps.external: whether a game's telemetry drives the car while it sends, instead of the gamepad and keys. */
+    val external: Boolean = false,
 ) {
     /** The car as it drives: [car], running to the end of the speedometer in its [units] and no further. */
     val driven: CarSpec get() = car.copy(limiterKmh = units.toKmh(GaugeScale.speedometer(units).max))

@@ -34,4 +34,5 @@ internal fun Properties.gpsSettings() = GpsSettings(
     gauges = choiceSetting("gps.gauges", GaugeSize.LARGE, GaugeSize.entries.associateBy { it.key }),
     wheel = choiceSetting("gps.wheel", WheelMode.STEERING, WheelMode.entries.associateBy { it.key }),
     units = choiceSetting("gps.units", SpeedUnits.METRIC, SpeedUnits.entries.associateBy { it.key }),
+    external = booleanSetting("gps.external", false),
 )

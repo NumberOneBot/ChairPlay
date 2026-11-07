@@ -61,6 +61,8 @@ export function ExperimentsPage({
   const { note } = parts(settings)
   const screenshotKey = state.controls?.keys.screenshot
   const sizes = useFolderSizes(backend)
+  // A game drives the GPS car only while the GPS is on.
+  const gpsOn = settings.value('gps.enabled') === 'true'
   return (
     <>
       <Group title="Logs" note={note(['log.carplay.data'])} />
@@ -137,6 +139,21 @@ export function ExperimentsPage({
           label="Share the CarPlay picture"
           checked={settings.value('display.share') === 'true'}
           onChange={(checked) => settings.save({ 'display.share': String(checked) })}
+        />
+      </Row>
+      <Row
+        label="GPS car"
+        title={
+          gpsOn
+            ? 'Move the GPS car by the position, heading, and speed a game or another app sends; the gamepad and keys drive it again when it stops sending'
+            : 'Turn on the GPS on its page first'
+        }
+      >
+        <Switch
+          label="Drive the GPS car from other apps"
+          checked={settings.value('gps.external') === 'true'}
+          disabled={!gpsOn}
+          onChange={(checked) => settings.save({ 'gps.external': String(checked) })}
         />
       </Row>
     </>

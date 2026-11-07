@@ -13,6 +13,11 @@ import io.github.numberonebot.chairplay.ui.UiDriving
  * screens saved. Each change goes in on the next pass of the window loop, which [window]'s repaint wakes.
  */
 internal fun uiDriving(driving: Driving, window: VideoWindow, screenshots: () -> Unit, log: (String) -> Unit) = object : UiDriving {
+    init {
+        // gps.external saved on: the repaint wakes a loop waiting for an event, whose next pass reads the telemetry.
+        driving.wake = window::repaint
+    }
+
     override fun driveMode(on: Boolean): Boolean {
         val done = driving.driveMode(on)
         if (done) log("drive mode ${if (on) "on" else "off"} from the GPS page")

@@ -116,6 +116,7 @@ object EditableSettings {
             if (it.isBlank() || GpsSettings.heading(it) != null) null else "Enter a heading from 0 to 359 degrees"
         },
         "gps.heading.send" to switch(Applies.NOW),
+        "gps.external" to switch(Applies.NOW),
         "gps.car.power.hp" to Setting(Applies.NOW) { checkNumber(it, GpsSettings.POWER_HP, "a power", "hp") },
         "gps.car.mass.kg" to Setting(Applies.NOW) { checkNumber(it, GpsSettings.MASS_KG, "a mass", "kg") },
         "gps.car.handling" to choice("gentle", "normal", "sharp", applies = Applies.NOW),

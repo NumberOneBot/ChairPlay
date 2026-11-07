@@ -38,7 +38,7 @@ data class CarInput(val throttle: Double = 0.0, val brake: Double = 0.0, val ste
 
 /**
  * Where the car is in its motion: [speed] in m/s, negative backing up; [headingDegrees] 0 north, 90 east; [gear] -1 for
- * reverse, else 1 up to the top gear; [parked] in park with the engine off.
+ * reverse, 0 neutral (only a game's), else 1 up to the top gear; [parked] in park with the engine off.
  */
 data class CarState(
     val speed: Double = 0.0,
@@ -49,8 +49,8 @@ data class CarState(
 ) {
     val speedKmh: Double get() = abs(speed) * 3.6
 
-    /** The selector as the gauges show it: P, R, or D with the gear. */
-    val gearName: String get() = if (parked) "P" else if (gear < 0) "R" else "D$gear"
+    /** The selector as the gauges show it: P, R, N (a game's neutral), or D with the gear. */
+    val gearName: String get() = if (parked) "P" else if (gear < 0) "R" else if (gear == 0) "N" else "D$gear"
 }
 
 /**

@@ -184,6 +184,10 @@ internal val SETTINGS_TEMPLATE = listOf(
         "gps.enabled" to "false", "gps.wheel.speed" to "true", "gps.satellites" to "false",
     ),
     SettingBlock(
+        "Whether a game's telemetry (see the game bridge notes) drives the GPS car instead of the gamepad and keys while it sends, 'true' or 'false'.",
+        "gps.external" to "false",
+    ),
+    SettingBlock(
         "Where the car is: 'latitude, longitude' or a Google or Apple Maps link, and its heading in degrees\n" +
             "(0 north, 90 east); the app writes them as the car stops, and the next start begins there. Whether\n" +
             "the heading goes to the iPhone as the course in the sentences, 'true' or 'false'.",
