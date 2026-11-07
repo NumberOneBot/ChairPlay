@@ -166,7 +166,8 @@ internal val SETTINGS_TEMPLATE = listOf(
         "display.safe.draw.outside" to "true",
     ),
     SettingBlock(
-        "Whether the CarPlay picture is published for games to show on a car's screen, 'true' or 'false' (see the game bridge notes).",
+        "Whether the CarPlay picture is published as a shared texture for games and other apps on this PC to show,\n" +
+            "'true' or 'false'.",
         "display.share" to "false",
     ),
     SettingBlock("'square' (the picture fills the window to its corners) or 'rounded' (CarPlay rounds them).",
@@ -184,7 +185,8 @@ internal val SETTINGS_TEMPLATE = listOf(
         "gps.enabled" to "false", "gps.wheel.speed" to "true", "gps.satellites" to "false",
     ),
     SettingBlock(
-        "Whether a game's telemetry (see the game bridge notes) drives the GPS car instead of the gamepad and keys while it sends, 'true' or 'false'.",
+        "Whether the position, heading, and speed a game or another app on this PC sends drive the GPS car instead\n" +
+            "of the gamepad and keys while they come, 'true' or 'false'.",
         "gps.external" to "false",
     ),
     SettingBlock(
