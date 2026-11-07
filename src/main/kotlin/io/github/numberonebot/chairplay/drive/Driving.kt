@@ -102,19 +102,22 @@ class Driving(
                 return DriveControl.GAMEPAD_POLL_SECONDS
             }
             External.Absent -> {
-                if (following) {
-                    following = false
-                    remember(drive.snapshot())
-                }
+                handBack()
                 return minOf(control.pass() ?: DriveControl.GAMEPAD_POLL_SECONDS, DriveControl.GAMEPAD_POLL_SECONDS)
             }
         }
     }
 
-    // gps.external or the GPS gone off: the file closes, and a car the game had stops and keeps its place.
+    // gps.external or the GPS gone off: the file closes, and a car the game had is handed back.
     private fun unfollow() {
         reader?.close()
         reader = null
+        handBack()
+    }
+
+    // A car the game had stops where it is, parked and facing as it did, and keeps its place: the model never steps
+    // on from a game's state.
+    private fun handBack() {
         if (!following) return
         following = false
         drive.stop()

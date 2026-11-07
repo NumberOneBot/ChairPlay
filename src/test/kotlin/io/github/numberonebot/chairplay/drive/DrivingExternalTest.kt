@@ -37,8 +37,8 @@ class DrivingExternalTest {
         override fun close() { closes++ }
     }
 
-    private fun record(counter: Int, speed: Double = 20.0, paused: Boolean = false) = TelemetryRecord(
-        counter = counter, paused = paused, gear = 3, speed = speed, headingDegrees = 135.0,
+    private fun record(counter: Int, speed: Double = 20.0, paused: Boolean = false, gear: Int? = 3) = TelemetryRecord(
+        counter = counter, paused = paused, gear = gear, speed = speed, headingDegrees = 135.0,
         latitude = paris.latitude, longitude = paris.longitude, rpm = 4200.0, source = "AC",
     )
 
@@ -129,6 +129,49 @@ class DrivingExternalTest {
 
         assertTrue(driving.drive.moving)
         assertTrue(driving.drive.snapshot().position.latitude < paris.latitude)
+    }
+
+    // A game standing in neutral, then gone: the gamepad drives the car on from there.
+    @Test
+    fun `a game gone in neutral hands the car back to the gamepad`() {
+        val driving = driving()
+        source.record = record(1, speed = 0.0, gear = 0)
+        driving.pass()
+        at(0.6)
+        driving.pass()
+        at(5.0)
+        driving.pass()
+        throttle = 1f
+        repeat(60) { now += 16_666_667L; driving.pass() }
+
+        assertTrue(driving.drive.moving)
+    }
+
+    // A truck in its twelfth gear, gone with no halted pass between (the loop stalled): the gamepad drives on.
+    @Test
+    fun `a game gone in a gear the car does not have hands the car back`() {
+        val driving = driving()
+        source.record = record(1, gear = 12)
+        driving.pass()
+        at(6.0)
+        driving.pass()
+        throttle = 1f
+        repeat(60) { now += 16_666_667L; driving.pass() }
+
+        assertTrue(driving.drive.moving)
+        assertTrue(driving.drive.snapshot().car.gear in 1..CarSpec().gearRatios.size)
+    }
+
+    @Test
+    fun `a game's gear shows while it drives`() {
+        val driving = driving()
+        source.record = record(1, gear = 12)
+        driving.pass()
+        at(0.1)
+        source.record = record(2, gear = 12)
+        driving.pass()
+
+        assertEquals(12, driving.drive.snapshot().car.gear)
     }
 
     @Test

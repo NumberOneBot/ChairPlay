@@ -81,7 +81,8 @@ class CarModel(val spec: CarSpec, initial: CarState = CarState()) {
         val brake = input.brake.coerceIn(0.0, 1.0)
         val steer = input.steer.coerceIn(-1.0, 1.0)
         val before = state.speed
-        var gear = state.gear
+        // A game's gear (its neutral, a truck's twelfth) is only shown: the model drives on in a gear it has.
+        var gear = if (state.gear < 0) -1 else state.gear.coerceIn(1, spec.gearRatios.size)
         val stopped = abs(before) < STOPPED_SPEED
 
         // Standing a while, the car parks and stops its engine; the throttle starts it in drive.

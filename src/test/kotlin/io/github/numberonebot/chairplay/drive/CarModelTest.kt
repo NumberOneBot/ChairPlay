@@ -237,4 +237,15 @@ class CarModelTest {
         repeat(60) { car.step(CarInput(throttle = 0.4), dt); meters += car.lastMeters }
         assertEquals(20.0, meters, 2.0)
     }
+
+    // A game's gear (its neutral, a truck's twelfth) is only shown: the model drives on in a gear it has.
+    @Test
+    fun `a gear the car does not have drives on in one it has`() {
+        for (gear in listOf(0, 12)) {
+            val car = CarModel(CarSpec(), CarState(speed = 10.0, gear = gear))
+            car.run(1.0, CarInput(throttle = 0.5))
+            assertTrue("gear ${car.state.gear}", car.state.gear in 1..CarSpec().gearRatios.size)
+            assertTrue("speed ${car.state.speed}", car.state.speed > 10.0)
+        }
+    }
 }
