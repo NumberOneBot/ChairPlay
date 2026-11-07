@@ -81,6 +81,44 @@ class FrameOutputTest {
         assertEquals(2, sink.state)
     }
 
+    @Test fun `sharing on over an active stream asks for a picture once`() {
+        var asked = 0
+        val output = output(FakeSink())
+        output.attach { asked++ }
+        output.active(MAIN_SCREEN, true)
+        output.enabled = true
+        output.enabled = true
+        assertEquals(1, asked)
+    }
+
+    @Test fun `sharing on with no stream asks for nothing`() {
+        var asked = 0
+        val output = output(FakeSink())
+        output.attach { asked++ }
+        output.enabled = true
+        output.active(MAIN_SCREEN, true)
+        assertEquals(0, asked)
+    }
+
+    @Test fun `a stopped stream asks for nothing`() {
+        var asked = 0
+        val output = output(FakeSink())
+        output.attach { asked++ }
+        output.active(MAIN_SCREEN, true)
+        output.active(MAIN_SCREEN, false)
+        output.enabled = true
+        assertEquals(0, asked)
+    }
+
+    @Test fun `sharing that cannot open asks for nothing`() {
+        var asked = 0
+        val output = output(FakeSink(openError = "no"))
+        output.attach { asked++ }
+        output.active(MAIN_SCREEN, true)
+        output.enabled = true
+        assertEquals(0, asked)
+    }
+
     @Test fun `stream stop sets waiting`() {
         val sink = FakeSink()
         val output = output(sink)

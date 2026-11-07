@@ -110,7 +110,31 @@ class DesktopMediaSinkTest {
         assertEquals(1, tap.events.count { it.startsWith("active 110 false") })
     }
 
-    private class RecordingLine : PcmLine {
+    private class AttachingTap : FrameTap {
+        var request: () -> Unit = {}
+        override fun frame(type: Int, frame: DecodedFrame) {}
+        override fun active(type: Int, active: Boolean) {}
+        override fun attach(requestPicture: () -> Unit) { request = requestPicture }
+    }
+
+    // Sharing turned on over a still screen: the tap's request is the main screen's keyframe request, with its limit.
+    @Test
+    fun `the tap's request for a picture reaches the main screen's recovery handler once a second`() {
+        val tap = AttachingTap()
+        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer(), frameTap = tap)
+        val asked = java.util.concurrent.atomic.AtomicInteger()
+        val first = CountDownLatch(1)
+        sink.setVideoRecoveryHandler(110) { asked.incrementAndGet(); first.countDown() }
+        tap.request()
+        assertTrue("never requested", first.await(5, TimeUnit.SECONDS))
+        tap.request()
+        tap.request()
+        Thread.sleep(200)
+        assertEquals(1, asked.get())
+        sink.close()
+    }
+
+    private class RecordingLine: PcmLine {
         val written = ByteArrayOutputStream()
         override fun start() {}
         @Synchronized override fun write(data: ByteArray, length: Int) { written.write(data, 0, length) }

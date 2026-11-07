@@ -15,6 +15,9 @@ interface FrameTap {
     fun frame(type: Int, frame: DecodedFrame)
     fun active(type: Int, active: Boolean)
 
+    /** Gives the tap a way to ask the iPhone for a new picture of the main screen; it may be called from any thread. */
+    fun attach(requestPicture: () -> Unit) {}
+
     companion object {
         val NONE: FrameTap = object : FrameTap {
             override fun frame(type: Int, frame: DecodedFrame) {}
@@ -84,11 +87,23 @@ internal class FrameOutput(
 
     var enabled: Boolean
         get() = on
-        set(value) = synchronized(toggleLock) {
-            if (value == on) return
-            on = value
-            if (value) start() else stop()
+        set(value) {
+            var turnedOn = false
+            synchronized(toggleLock) {
+                if (value == on) return
+                on = value
+                if (value) start() else stop()
+                turnedOn = value && publishing
+            }
+            // CarPlay sends nothing while its screen is still, so ask for a picture; with no lock of ours held.
+            if (turnedOn && streamActive) requestPicture()
         }
+
+    @Volatile private var requestPicture: () -> Unit = {}
+
+    override fun attach(requestPicture: () -> Unit) {
+        this.requestPicture = requestPicture
+    }
 
     override fun frame(type: Int, frame: DecodedFrame) {
         if (type != MAIN_SCREEN || !publishing) return

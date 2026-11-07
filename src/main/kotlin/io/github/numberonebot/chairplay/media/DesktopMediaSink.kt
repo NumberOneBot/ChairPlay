@@ -123,12 +123,21 @@ class DesktopMediaSink(
         /** The decoder rejected a packet: ask the iPhone for a keyframe of this screen, at most once a second. */
         private fun recover(reason: String) {
             log("video decoder ($type): $reason")
+            requestKeyframe()
+        }
+
+        /** Asks the iPhone for a keyframe of this screen through the recovery handler, at most once a second. */
+        fun requestKeyframe() {
             if (recoveryExecutor.isShutdown) return
             val now = System.nanoTime()
             if (now - lastRecoveryNanos < RECOVERY_INTERVAL_NANOS && lastRecoveryNanos != 0L) return
             lastRecoveryNanos = now
             recoveryExecutor.execute { recoveryHandlers[type]?.invoke() }
         }
+    }
+
+    init {
+        frameTap.attach { screens[MAIN_SCREEN]?.requestKeyframe() }
     }
 
     override fun onVideoCodec(type: Int, codec: VideoCodec) {
