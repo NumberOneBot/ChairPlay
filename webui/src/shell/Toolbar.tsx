@@ -46,8 +46,14 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
       <span className="grow" />
       {restart.length > 0 && (
         <>
-          <span className="pending" title={`Restart ChairPlay to apply: ${restart.join(', ')}`}>
-            Restart needed
+          {/* The sign alone: at 640 px "Restart needed" and the connection's status never shared the bar whole */}
+          <span
+            className="pending"
+            role="img"
+            aria-label="Restart needed"
+            title={`Restart ChairPlay to apply: ${restart.join(', ')}`}
+          >
+            ⟳
           </span>
           <span className="sep" />
         </>

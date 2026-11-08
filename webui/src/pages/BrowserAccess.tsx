@@ -49,7 +49,6 @@ export function BrowserAccess({ state, backend, settings }: { state: AppState; b
           error={settings.error('ui.port')}
           onCommit={(text) => settings.save({ 'ui.port': text })}
         />
-        <code>/</code>
         <Changed keys={['ui.port']} pending={pendingOf(state)} />
       </Row>
       <Row title="Let phones and other PCs on this network open the settings at this PC's address">

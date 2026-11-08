@@ -63,16 +63,11 @@
 }
 
 .shell .pending {
-  min-width: 0;
-  overflow: hidden;
+  flex: none;
   color: var(--orange);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  font-size: 16px;
+  line-height: 1;
   cursor: help;
-}
-
-.shell .pending::before {
-  content: '⟳ ';
 }
 
 /*

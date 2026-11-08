@@ -115,7 +115,7 @@ describe('Shell toolbar', () => {
     const state = appState({ ...live, restartPending: ['altscreen.enabled', 'display.width', 'display.height'] })
     render(<Shell state={state} backend={new FakeBackend()} />)
 
-    expect(screen.getByText('Restart needed')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Restart needed' })).toBeTruthy()
   })
 
   it('puts the settings shown on Experiments on Experiments, whatever their key starts with', () => {
@@ -126,7 +126,7 @@ describe('Shell toolbar', () => {
   it('has no Restart needed while nothing waits for one', () => {
     render(<Shell state={appState(live)} backend={new FakeBackend()} />)
 
-    expect(screen.queryByText('Restart needed')).toBeNull()
+    expect(screen.queryByRole('img', { name: 'Restart needed' })).toBeNull()
   })
 })
 
