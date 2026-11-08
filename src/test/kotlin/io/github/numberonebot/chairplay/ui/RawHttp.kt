@@ -3,9 +3,9 @@ package io.github.numberonebot.chairplay.ui
 import java.net.Socket
 
 /**
- * One HTTP/1.1 request over a plain socket to 127.0.0.1:[port], so a test sets `Host` and `Origin` itself (Java's
- * HttpClient sets the first and refuses to send the second). Answers the status and the body; the API answers with
- * a length, never in chunks, so the body is everything after the headers.
+ * One HTTP/1.1 request over a plain socket to 127.0.0.1:[port], so a test sets `Host` itself (Java's HttpClient sets
+ * it from the address). Answers the status and the body; the API answers with a length, never in chunks, so the body
+ * is everything after the headers.
  */
 internal fun rawRequest(
     port: Int,

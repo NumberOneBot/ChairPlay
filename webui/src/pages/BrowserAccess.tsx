@@ -8,7 +8,8 @@ export function BrowserAccess({ state }: { state: AppState }) {
   return (
     <>
       <Group title="Browser access" />
-      {port !== configuredPort && (
+      {/* configuredPort 0 (CHAIRPLAY_UI_PORT=0) asks for any free port, so none was taken from it. */}
+      {configuredPort > 0 && port !== configuredPort && (
         <Message
           tone="warn"
           head={`Port ${configuredPort} is in use.`}

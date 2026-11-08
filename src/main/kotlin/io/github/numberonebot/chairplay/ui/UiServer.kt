@@ -11,10 +11,9 @@ import java.util.concurrent.Executors
 /**
  * The UI's bridge to the app: an HTTP server on 127.0.0.1 that serves the built page from [assets] and the JSON API
  * of [api], on the port asked for or, when it is taken or 0, a free one ([port]), at a plain address ([url]) with no
- * secret in it. [RequestChecks] stands in for one: a request naming another host than this PC's loopback names with this port is refused, so a web page
- * cannot reach the API through a name of its own that resolves to 127.0.0.1; a POST from another site's page (its
- * `Origin`) is refused, so the sites the user visits cannot change anything; and the saved Wi-Fi password is given
- * only to a client on this PC.
+ * secret in it. [HostCheck] stands in for one: a request naming another host than this PC's loopback names with this
+ * port is refused, so a web page cannot reach the API through a name of its own that resolves to 127.0.0.1. A POST
+ * must be JSON, which another site's page cannot send without a CORS preflight, and this server answers none.
  *
  * API: GET state and settings, POST settings ({"changes": {key: value}}), connect, reconnect, screen
  * ({"screen": "start" | "settings" | "carplay"}), window ({"name": "altscreen" | "controls", "visible": bool}), control
@@ -30,7 +29,7 @@ class UiServer(
 ) : Closeable {
     private val executor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "ui-http").apply { isDaemon = true } }
     private val server: HttpServer = openHttpServer(requestedPort, InetAddress.getLoopbackAddress(), log)
-    private val checks = RequestChecks(server.address.port)
+    private val hostCheck = HostCheck(server.address.port)
     @Volatile private var closing = false
 
     /** The port in use: [configuredPort], or a free one when that was taken. */
@@ -70,8 +69,7 @@ class UiServer(
             add("X-Content-Type-Options", "nosniff")
             add("Referrer-Policy", "no-referrer")
         }
-        val host = exchange.requestHeaders.getFirst("Host")
-        if (!checks.hostAllowed(host)) {
+        if (!hostCheck.allowed(exchange.requestHeaders.getFirst("Host"))) {
             json(exchange, 403, mapOf("error" to "wrong host"))
             return
         }
@@ -87,11 +85,7 @@ class UiServer(
             method == "GET" && route in gets -> when (route) {
                 "state" -> json(exchange, 200, state())
                 "settings" -> json(exchange, 200, api.settings())
-                "passphrase" -> if (checks.fromThisPc(exchange.remoteAddress.address)) {
-                    json(exchange, 200, mapOf("passphrase" to api.savedPassphrase()))
-                } else {
-                    json(exchange, 403, mapOf("error" to "The saved password is shown only on this PC"))
-                }
+                "passphrase" -> json(exchange, 200, mapOf("passphrase" to api.savedPassphrase()))
                 "folder-sizes" -> json(exchange, 200, api.folderSizes())
                 "controls" -> api.controls()?.let { json(exchange, 200, it) } ?: json(exchange, 404, mapOf("error" to "no key bindings"))
                 else -> events(exchange)
@@ -103,11 +97,6 @@ class UiServer(
     }
 
     private fun post(exchange: HttpExchange, route: String) {
-        // handle() has let only an allowed Host through, so it is there.
-        if (!checks.originAllowed(exchange.requestHeaders.getFirst("Origin"), exchange.requestHeaders.getFirst("Host"))) {
-            json(exchange, 403, mapOf("error" to "cross-site request refused"))
-            return
-        }
         val type = exchange.requestHeaders.getFirst("Content-Type").orEmpty()
         if (!type.startsWith("application/json")) {
             json(exchange, 415, mapOf("error" to "send application/json"))

@@ -4,7 +4,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.net.Socket
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -37,16 +36,6 @@ class UiServerTest {
     @Test
     fun `the page's address is plain`() {
         assertEquals("http://127.0.0.1:${server.port}/", server.url)
-    }
-
-    // Another site's page reaching 127.0.0.1 through a name of its own (DNS rebinding) sends its own Host.
-    @Test
-    fun `requests for another host are refused`() {
-        Socket("127.0.0.1", server.port).use { socket ->
-            socket.getOutputStream().write("GET /api/state HTTP/1.1\r\nHost: evil.example:${server.port}\r\nConnection: close\r\n\r\n".toByteArray())
-            val status = socket.getInputStream().bufferedReader().readLine()
-            assertTrue(status, status.startsWith("HTTP/1.1 403"))
-        }
     }
 
     @Test

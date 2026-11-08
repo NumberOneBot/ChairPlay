@@ -168,7 +168,7 @@ While the page covers the window, the keyboard and the mouse are the page's; whi
 
 The page runs in Microsoft Edge WebView2, which Windows 11 and an updated Windows 10 carry. Without it (or without `chairplay_webview.dll`) the app opens the page in the default browser, says so in the log, and the car button minimizes the window as before. WebView2 keeps its profile (cache) in the `webview2` folder next to `ChairPlay.exe`, with the app's other data.
 
-The page talks to the app over HTTP on `127.0.0.1` only, on port 7529 (`ui.port`, or a free one when that is taken), with no key; the log has the address from the start (`UI at http://127.0.0.1:<port>/`), and any browser on the PC can open it, for example to look at the screens from a second monitor. A request naming another host than `127.0.0.1`, `localhost` or `[::1]` with that port is refused, and so is a POST from another site's page, so the web sites you visit cannot change the settings. The saved Wi-Fi password goes only to this PC.
+The page talks to the app over HTTP on `127.0.0.1` only, on port 7529 (`ui.port`, or a free one when that is taken), with no key; the log has the address from the start (`UI at http://127.0.0.1:<port>/`), and any browser on the PC can open it, for example to look at the screens from a second monitor. A request naming another host than `127.0.0.1`, `localhost` or `[::1]` with that port is refused, so a web site cannot reach the app through a name of its own that leads to this PC.
 
 ### Changing the screens
 
