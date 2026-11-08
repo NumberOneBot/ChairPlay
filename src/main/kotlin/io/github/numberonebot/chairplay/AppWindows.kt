@@ -1,8 +1,8 @@
 package io.github.numberonebot.chairplay
 
 import io.github.numberonebot.chairplay.config.ALTSCREEN_MIN_WIDTH
-import io.github.numberonebot.chairplay.config.AltscreenCards
-import io.github.numberonebot.chairplay.config.AltscreenContent
+import io.github.numberonebot.chairplay.phone.AltscreenCards
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.config.ControlsWindowStore
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.MAIN_WINDOW_MIN_SIZE

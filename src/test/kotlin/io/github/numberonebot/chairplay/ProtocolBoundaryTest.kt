@@ -27,6 +27,17 @@ class ProtocolBoundaryTest {
         assertTrue("Files under ${NEUTRAL.joinToString()} import com.shilapi.: $offenders", offenders.isEmpty())
     }
 
+    // The phone's contracts depend on nothing else of the app, so a protocol module needs only them.
+    @Test
+    fun `phone package imports no other ChairPlay package`() {
+        val offenders = kotlinFiles().map { relative(it) }.filter { it.startsWith("phone/") }.flatMap { path ->
+            Files.readAllLines(sourceRoot.resolve(path))
+                .filter { it.startsWith("import $APP_PACKAGE.") && !it.startsWith("import $APP_PACKAGE.phone.") }
+                .map { "$path: $it" }
+        }
+        assertTrue("phone/ imports other ChairPlay packages: $offenders", offenders.isEmpty())
+    }
+
     private fun kotlinFiles(): List<Path> = Files.walk(sourceRoot).use { stream ->
         stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }.toList()
     }
@@ -48,18 +59,14 @@ class ProtocolBoundaryTest {
 
     companion object {
         private const val SOURCE_PATH = "src/main/kotlin/io/github/numberonebot/chairplay"
+        private const val APP_PACKAGE = "io.github.numberonebot.chairplay"
 
         /** The protocol-neutral folders, which never import DiPlay's types. */
         private val NEUTRAL = listOf("phone/", "data/", "drive/")
 
         /** Paths relative to the chairplay source folder. */
         val ALLOWED: Set<String> = sortedSetOf(
-            "AltscreenView.kt",
-            "AppControls.kt",
-            "CarPlayTheme.kt",
             "Commands.kt",
-            "Main.kt",
-            "SessionListener.kt",
             "bluetooth/WindowsBluetooth.kt",
             "carplay/AltscreenAreaMove.kt",
             "carplay/CarPlayConfig.kt",
@@ -68,8 +75,10 @@ class ProtocolBoundaryTest {
             "carplay/CarPlayDataLog.kt",
             "carplay/CarPlayDataMessages.kt",
             "carplay/CarPlayDisplay.kt",
+            "carplay/CarPlayLink.kt",
             "carplay/CarPlayLocation.kt",
             "carplay/CarPlayMediaSink.kt",
+            "carplay/CarPlaySessions.kt",
             "carplay/DataSubscriptions.kt",
             "carplay/Iap2DataDecoder.kt",
             "config/ConfigFiles.kt",
@@ -93,7 +102,6 @@ class ProtocolBoundaryTest {
             "network/DesktopNetwork.kt",
             "network/SameLanNetwork.kt",
             "session/AirPlayListener.kt",
-            "session/AltscreenUi.kt",
             "session/BringUpStack.kt",
             "session/TraceRedaction.kt",
             "session/WirelessBootstrap.kt",

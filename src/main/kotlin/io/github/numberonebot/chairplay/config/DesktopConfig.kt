@@ -7,6 +7,8 @@ import io.github.numberonebot.chairplay.media.DuckSetting
 import io.github.numberonebot.chairplay.media.MediaDucking
 import io.github.numberonebot.chairplay.media.decibelGain
 import io.github.numberonebot.chairplay.network.SavedWifi
+import io.github.numberonebot.chairplay.phone.AltscreenCards
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.phone.ClusterSpec
 import io.github.numberonebot.chairplay.phone.ScreenSpec
 import com.shilapi.xcertplay.transport.Iap2WirelessSecurity

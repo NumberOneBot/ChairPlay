@@ -4,12 +4,17 @@ import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.MediaSink
 import io.github.numberonebot.chairplay.carplay.CarPlayConfig
+import io.github.numberonebot.chairplay.carplay.CarPlayLinks
+import io.github.numberonebot.chairplay.carplay.CarPlayMediaSink
 import io.github.numberonebot.chairplay.carplay.DataLink
 import io.github.numberonebot.chairplay.carplay.PhoneDataTap
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.drive.PacedLocation
 import io.github.numberonebot.chairplay.media.AudioDuckSink
+import io.github.numberonebot.chairplay.phone.LinkStatus
+import io.github.numberonebot.chairplay.phone.PhoneConnection
+import io.github.numberonebot.chairplay.phone.PhoneLink
 import com.shilapi.xcertplay.iap2.message.Iap2Messages
 import com.shilapi.xcertplay.iap2.session.Iap2Session
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
@@ -23,23 +28,7 @@ import com.shilapi.xcertplay.transport.Iap2WirelessControlClient
 import com.shilapi.xcertplay.transport.Iap2WirelessIdentification
 import com.shilapi.xcertplay.transport.Iap2WirelessLinkRole
 import com.shilapi.xcertplay.transport.forWirelessLink
-import java.io.Closeable
 import java.io.IOException
-
-/** How far a bring-up got, for the start screen. A session that goes active is reported by the session listener. */
-sealed interface BringUpStatus {
-    /** Opening the Wi-Fi side: the network, the AirPlay listener and Bonjour. */
-    data object Starting : BringUpStatus
-
-    /** Calling the paired iPhone over Bluetooth. */
-    data object CallingIphone : BringUpStatus
-
-    /** The iPhone answered over Bluetooth and is to join the Wi-Fi; a new one asks the driver to accept CarPlay first. */
-    data class Joining(val knownIphone: Boolean) : BringUpStatus
-
-    /** The bring-up failed for [message]; the next one starts after [retryMillis]. */
-    data class Failed(val message: String, val retryMillis: Long) : BringUpStatus
-}
 
 /**
  * Wireless CarPlay bring-up in the order of upstream CarPlayController.runWireless: network,
@@ -55,13 +44,16 @@ class WirelessBootstrap internal constructor(
     private val listener: AirPlaySessionListener,
     private val data: PhoneDataTap = PhoneDataTap.NONE,
     private val newParts: () -> WirelessParts,
-) : Closeable {
+) : PhoneConnection {
     constructor(config: DesktopConfig, sink: MediaSink, listener: AirPlaySessionListener, data: PhoneDataTap = PhoneDataTap.NONE) :
         this(config, sink, listener, data, { DesktopParts(config, listener::onDebugLog) })
 
-    /** Receives each bring-up's progress, on the bring-up's threads. */
     @Volatile
-    var onStatus: (BringUpStatus) -> Unit = {}
+    override var onStatus: (LinkStatus) -> Unit = {}
+
+    /** Each session that goes active as its link, and null once that one ends; a retired stack's end unheard. */
+    @Volatile
+    override var onLink: (PhoneLink?) -> Unit = {}
 
     /** Hears the settings each bring-up offers the iPhone its screens by, read from the file then, on its thread. */
     @Volatile
@@ -74,18 +66,19 @@ class WirelessBootstrap internal constructor(
     private val lock = Any()
     // The music ducks under navigation prompts when the sink can.
     private val ducks = AudioDuckCommands(sink as? AudioDuckSink, ::log)
+    private val links = CarPlayLinks({ (sink as? CarPlayMediaSink)?.keyframe(it) }) { onLink(it) }
     @Volatile private var current: BringUpStack? = null
     private var closed = false
     // Counts [stop]s: a failed bring-up's retry runs only if none came while it waited.
     private var stops = 0
 
-    fun start() {
+    override fun start() {
         synchronized(lock) {
             if (closed || current != null) return
             // The parts are made on the bring-up's thread: one that fails (no MFi files) fails the bring-up.
             val stack = BringUpStack(newParts)
             current = stack
-            onStatus(BringUpStatus.Starting)
+            onStatus(LinkStatus.Starting)
             Thread({ bringUp(stack) }, "chairplay-wireless").apply {
                 isDaemon = true
                 start()
@@ -93,7 +86,7 @@ class WirelessBootstrap internal constructor(
         }
     }
 
-    fun restart() {
+    override fun restart() {
         synchronized(lock) {
             current?.let(::retire)
             start()
@@ -101,7 +94,7 @@ class WirelessBootstrap internal constructor(
     }
 
     /** Disconnect: ends the session or bring-up, and a failed one's retry with it, until the next [start]. */
-    fun stop() {
+    override fun stop() {
         synchronized(lock) {
             stops++
             current?.let(::retire)
@@ -129,7 +122,7 @@ class WirelessBootstrap internal constructor(
             if (current !== stack) return
             log("wireless bring-up failed: ${error.javaClass.simpleName}: ${error.message}")
             retire(stack)
-            onStatus(BringUpStatus.Failed(error.message ?: error.javaClass.simpleName, RETRY_DELAY_MILLIS))
+            onStatus(LinkStatus.Failed(error.message ?: error.javaClass.simpleName, RETRY_DELAY_MILLIS))
             stops
         }
         Thread.sleep(RETRY_DELAY_MILLIS)
@@ -161,7 +154,7 @@ class WirelessBootstrap internal constructor(
             val now = config.now()
             val sessionConfig = CarPlayConfig.airPlayNow(config, now).copy(btMac = radio)
             if (!stack.closed) onConnection(now)
-            val sessions = BringUpSessions(stack, listener, ducks, { current === stack }, { restart(stack) }, ::log)
+            val sessions = BringUpSessions(stack, listener, ducks, links, { current === stack }, { restart(stack) }, ::log)
             network.validateReady()
             val airPlay = stack.own(AirPlayListener(
                 listOf(host) + info.hostAddresses.filter { it != host },
@@ -176,10 +169,10 @@ class WirelessBootstrap internal constructor(
             stack.own(parts.advertise(advertised, config.identity, info.hostAddresses))
 
             // A stack stopped meanwhile says nothing more: the app shows it idle.
-            if (!stack.closed) onStatus(BringUpStatus.CallingIphone)
+            if (!stack.closed) onStatus(LinkStatus.CallingPhone)
             val rfcomm = stack.own(parts.connectIphone())
             val known = config.iphoneKnown()
-            if (!stack.closed) onStatus(BringUpStatus.Joining(known))
+            if (!stack.closed) onStatus(LinkStatus.Joining(known))
             val bootstrap = stack.handOver(rfcomm,
                 Iap2Session.openWireless(rfcomm, traceContext = "wireless-rfcomm", onTrace = ::trace,
                     onArtwork = { if (!stack.closed) data.onArtwork(DataLink.BLUETOOTH, it) }))

@@ -5,7 +5,7 @@ import io.github.numberonebot.chairplay.input.ControlAction
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.KeyBinding
 import org.lwjgl.glfw.GLFW.GLFW_KEY_F6
-import io.github.numberonebot.chairplay.session.BringUpStatus
+import io.github.numberonebot.chairplay.phone.LinkStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -204,7 +204,7 @@ class UiControllerTest : UiControllerFixture() {
     @Test
     fun `the state tells the page what to show`() {
         val ui = controller()
-        ui.model.bringUp(BringUpStatus.Failed("RFCOMM connect failed", 5_000))
+        ui.model.bringUp(LinkStatus.Failed("RFCOMM connect failed", 5_000))
 
         val state = ui.state()
 

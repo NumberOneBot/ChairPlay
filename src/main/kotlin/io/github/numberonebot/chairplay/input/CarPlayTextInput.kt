@@ -2,6 +2,8 @@ package io.github.numberonebot.chairplay.input
 
 import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
+import io.github.numberonebot.chairplay.carplay.CarPlayLink
+import io.github.numberonebot.chairplay.phone.PhoneLink
 import java.util.concurrent.Executor
 
 /** Bridges the opt-in experiment to the existing session event stream and ordered input sender. */
@@ -115,5 +117,11 @@ internal class CarPlayTextInput(
             input.ended(session)
             delegate.onSessionEnded(session)
         }
+    }
+
+    companion object {
+        /** Text input for the [active] link's session, while it is CarPlay's. */
+        fun of(active: () -> PhoneLink?, sender: Executor, log: (String) -> Unit) =
+            CarPlayTextInput({ (active() as? CarPlayLink)?.session }, sender, log)
     }
 }

@@ -1,7 +1,7 @@
 package io.github.numberonebot.chairplay.phone
 
-import io.github.numberonebot.chairplay.config.AltscreenCards
-import io.github.numberonebot.chairplay.config.AltscreenContent
+import io.github.numberonebot.chairplay.phone.AltscreenCards
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 
 /**
  * A part of a screen's frame a view can show in: [width]x[height] pixels at [x], [y]; with [safe], the insets from the

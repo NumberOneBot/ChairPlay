@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.config
 
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.phone.Insets
 import io.github.numberonebot.chairplay.phone.ScreenArea
 

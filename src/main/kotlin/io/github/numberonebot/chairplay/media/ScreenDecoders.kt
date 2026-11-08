@@ -122,7 +122,12 @@ class ScreenDecoders(
     }
 
     init {
-        frameTap.attach { screens[ScreenKind.MAIN]?.requestKeyframe() }
+        frameTap.attach { requestKeyframe(ScreenKind.MAIN) }
+    }
+
+    /** Asks the phone for a keyframe of [screen] through its recovery handler, at most once a second. */
+    fun requestKeyframe(screen: ScreenKind) {
+        screens[screen]?.requestKeyframe()
     }
 
     /** The codec of [screen]'s stream; a new one closes the decoder until the next configuration. */

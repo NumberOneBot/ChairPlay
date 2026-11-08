@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.session
 
-import com.shilapi.xcertplay.airplay.AirPlaySession
+import io.github.numberonebot.chairplay.phone.ClusterControl
 
 /**
  * What the iPhone is told its AltScreen view is for, as DiPlay tells it whether a car's cluster shows CarPlay's map
@@ -10,18 +10,12 @@ import com.shilapi.xcertplay.airplay.AirPlaySession
  * stream starts with the iPhone drawing its initial view ([newStream]).
  */
 class AltscreenUi {
-    /** The iPhone's side of it: AirPlaySession's cluster commands. */
-    interface Cluster {
-        fun setClusterUrl(url: String, send: Boolean): Boolean
-        fun setClusterUiShown(shown: Boolean): Boolean
-    }
-
     // The phone told to stop, until it is asked for the view again or a new stream starts.
     private var stopped: Any? = null
 
     /** Tells [phone] about [url], [seen] while the window shows it; true when the command went out. */
     @Synchronized
-    fun tell(phone: Cluster, url: String, seen: Boolean, key: Any = phone): Boolean {
+    fun tell(phone: ClusterControl, url: String, seen: Boolean, key: Any = phone): Boolean {
         if (seen) {
             if (stopped === key) stopped = null
             return phone.setClusterUrl(url, send = true)
@@ -37,13 +31,5 @@ class AltscreenUi {
     @Synchronized
     fun newStream() {
         stopped = null
-    }
-
-    companion object {
-        /** [session]'s cluster commands; [tell] keys the stop by the session itself. */
-        fun of(session: AirPlaySession) = object : Cluster {
-            override fun setClusterUrl(url: String, send: Boolean) = session.setClusterUrl(url, send)
-            override fun setClusterUiShown(shown: Boolean) = session.setClusterUiShown(shown)
-        }
     }
 }

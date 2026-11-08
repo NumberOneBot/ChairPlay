@@ -1,6 +1,5 @@
 package io.github.numberonebot.chairplay
 
-import com.shilapi.xcertplay.airplay.AirPlaySession
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.AreaGroup
 import io.github.numberonebot.chairplay.config.areaKey
@@ -11,7 +10,7 @@ import io.github.numberonebot.chairplay.carplay.CarPlayDataLog
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.Size
-import io.github.numberonebot.chairplay.carplay.CarPlayControl
+import io.github.numberonebot.chairplay.carplay.carPlaySessions
 import io.github.numberonebot.chairplay.input.TouchQueue
 import io.github.numberonebot.chairplay.input.TouchTracker
 import io.github.numberonebot.chairplay.log.AppLog
@@ -22,6 +21,7 @@ import io.github.numberonebot.chairplay.media.runWindows
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.AlmanacCache
 import io.github.numberonebot.chairplay.media.saveScreenshot
+import io.github.numberonebot.chairplay.phone.PhoneLink
 import io.github.numberonebot.chairplay.session.WirelessBootstrap
 import io.github.numberonebot.chairplay.ui.BuildInfo
 import io.github.numberonebot.chairplay.ui.ChairPlayUi
@@ -78,15 +78,13 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     val windows = AppWindows(dir, config, MainTitle.opening(config))
     val window = windows.main
     val title = MainTitle(window, config)
-    val controlsShown = windows.controlsShown
     val controlsWindow = windows.controls
     val altscreen = windows.altscreen
     // Set once the UI exists: the controls window's page hears of what it shows changing.
     val controlsChanged = AtomicReference<() -> Unit> {}
     val audio = AppAudio(dir, config, window, altscreen) { controlsChanged.get()() }
-    val volume = audio.volume
     val sink = audio.sink
-    val active = AtomicReference<AirPlaySession?>()
+    val active = AtomicReference<PhoneLink?>()
     // sendTouch writes to the iPhone's socket and can block; the GL thread only maps and enqueues.
     // One thread keeps the press, moves and release in order.
     val touchSender = Executors.newSingleThreadExecutor { Thread(it, "touch-sender").apply { isDaemon = true } }
@@ -102,7 +100,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     window.setInputHandler { event ->
         val contact = tracker.handle(event, window.framebufferSize, window.pictureSize)?.takeIf { active.get() != null } ?: return@setInputHandler
         pending.offer(contact)
-        touchSender.execute { pending.poll()?.let { point -> active.get()?.let { CarPlayControl(it).touch(listOf(point)) } } }
+        touchSender.execute { pending.poll()?.let { point -> active.get()?.control?.touch(listOf(point)) } }
     }
     // The key bindings in force, which the Keyboard page's saves replace.
     val bindings = AtomicReference(controlsConfig)
@@ -116,7 +114,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // way to the waiting screen instead of its last picture standing still.
     val sessionDropped = AtomicReference<() -> Unit> {}
     fun reconnect() = Thread({ restartBootstrap.get()() }, "reconnect").apply { isDaemon = true }.start()
-    val appControls = AppControls(bindings, volume, driving, altView, touchSender, active::get, ::screenshots, reconnect = {
+    val appControls = AppControls(bindings, audio.volume, driving, altView, touchSender, active::get, ::screenshots, reconnect = {
         log("reconnecting at the user's request")
         title.reconnect()
         sink.fadeOut()
@@ -187,7 +185,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     altscreen.onOutsideClose = { window.close() }
     controlsWindow.onOutsideClose = { window.close() }
     controlsWindow.onVisibility = { shown ->
-        runCatching { controlsShown.save(shown) }.onFailure { log("controls window state not saved: $it") }
+        runCatching { windows.controlsShown.save(shown) }.onFailure { log("controls window state not saved: $it") }
         ui.windowsChanged()
     }
     window.child = ui.view
@@ -229,7 +227,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     appControls.playing = { active.get() != null && carPlayData.bus.snapshot().nowPlaying?.playing == true }
     watchPhoneData(carPlayData.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
     altView.paint(carPlayData.bus, driving, config.accent)
-    val bootstrap = WirelessBootstrap(config, sink, appControls.textInput.listener(sessionListener(active, ui, window, title, theme, ::sessionChanged)), carPlayData)
+    val sessions = SessionListener(active, ui, window, title, theme, ::sessionChanged)
+    val bootstrap = WirelessBootstrap(config, sink, appControls.textInput.listener(carPlaySessions(sessions::carButton)), carPlayData)
     bootstrap.newLocation = carPlayLocation(driving, ::log)
     restartBootstrap.set(bootstrap::restart)
     sessionDropped.set {
@@ -248,6 +247,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         title.notConnected()
     }
     bootstrap.onStatus = ui::bringUp
+    bootstrap.onLink = sessions::linked
     // The screens saved since come with the next connection: the main window takes the new picture's shape and size,
     // and the AltScreen turns on or off, or takes its new size and the view it starts with.
     bootstrap.onConnection = { now ->

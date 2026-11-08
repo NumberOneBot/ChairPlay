@@ -1,12 +1,13 @@
 package io.github.numberonebot.chairplay.session
 
+import io.github.numberonebot.chairplay.phone.ClusterControl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AltscreenUiTest {
     /** The commands an iPhone got for its AltScreen, in order. */
-    private class Phone : AltscreenUi.Cluster {
+    private class Phone : ClusterControl {
         val commands = mutableListOf<String>()
         override fun setClusterUrl(url: String, send: Boolean): Boolean {
             commands += if (send) "showUI $url" else "keep $url"

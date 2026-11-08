@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.session
 import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.iap2.session.Iap2Session
+import io.github.numberonebot.chairplay.carplay.CarPlayLinks
 import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -85,13 +86,14 @@ internal class BringUpStack(private val newParts: () -> WirelessParts) : Closeab
 internal class StackClosed : Exception()
 
 /**
- * What one bring-up's AirPlay sessions report, passed on to [listener] while its [stack] [isCurrent]; [ended] is
- * told when a session that went active ends.
+ * What one bring-up's AirPlay sessions report, passed on to [listener] and [links] while its [stack] [isCurrent];
+ * [ended] is told when a session that went active ends.
  */
 internal class BringUpSessions(
     private val stack: BringUpStack,
     private val listener: AirPlaySessionListener,
     private val ducks: AudioDuckCommands,
+    private val links: CarPlayLinks,
     private val isCurrent: () -> Boolean,
     private val ended: () -> Unit,
     private val log: (String) -> Unit,
@@ -101,6 +103,7 @@ internal class BringUpSessions(
         stack.active += session
         stack.joined = true
         listener.onSessionActive(session)
+        links.active(session)
     }
 
     /** Only a session that went active ends CarPlay: /info probes and pairing retries also connect. */
@@ -109,6 +112,7 @@ internal class BringUpSessions(
         ducks.onSessionEnded(session)
         if (!isCurrent()) return
         listener.onSessionEnded(session)
+        links.ended(session)
         if (stack.active.remove(session)) ended()
     }
 

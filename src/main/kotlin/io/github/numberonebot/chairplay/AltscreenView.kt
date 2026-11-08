@@ -1,12 +1,10 @@
 package io.github.numberonebot.chairplay
 
-import com.shilapi.xcertplay.airplay.AirPlaySession
 import io.github.numberonebot.chairplay.carplay.AREA_MOVE_SETTLE_MILLIS
 import io.github.numberonebot.chairplay.carplay.AltscreenAreaMove
+import io.github.numberonebot.chairplay.carplay.altscreenCommand
 import io.github.numberonebot.chairplay.carplay.altscreenUrl
 import io.github.numberonebot.chairplay.config.ALTSCREEN_MIN_WIDTH
-import io.github.numberonebot.chairplay.config.AltscreenCards
-import io.github.numberonebot.chairplay.config.AltscreenContent
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.config.altscreenTitle
@@ -26,6 +24,9 @@ import io.github.numberonebot.chairplay.hud.smallWellScale
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.media.VideoWindow
 import io.github.numberonebot.chairplay.media.saveScreenshot
+import io.github.numberonebot.chairplay.phone.AltscreenCards
+import io.github.numberonebot.chairplay.phone.AltscreenContent
+import io.github.numberonebot.chairplay.phone.PhoneLink
 import io.github.numberonebot.chairplay.session.AltscreenUi
 import io.github.numberonebot.chairplay.ui.UiDemo
 import java.nio.file.Path
@@ -46,7 +47,7 @@ internal class AltscreenView(
     config: DesktopConfig,
     private val window: VideoWindow,
     private val touchSender: ExecutorService,
-    private val active: () -> AirPlaySession?,
+    private val active: () -> PhoneLink?,
     private val changed: () -> Unit,
 ) {
     /**
@@ -63,14 +64,12 @@ internal class AltscreenView(
     var content: AltscreenContent? = config.altscreen?.content
         private set
 
-    @Volatile
-    private var cards = config.altscreen?.cards ?: AltscreenCards.TOP
+    @Volatile private var cards = config.altscreen?.cards ?: AltscreenCards.TOP
 
     // The view the iPhone draws, settled (kept under the HUD: no wait on black); null for none, a new stream, or a move.
     @Volatile private var drawing: String? = null
     // The view of the iPhone's picked last, F11's other one from the HUD.
-    @Volatile
-    private var mapView = config.altscreen?.content?.takeIf { it != AltscreenContent.HUD } ?: AltscreenContent.MAP_CARD
+    @Volatile private var mapView = config.altscreen?.content?.takeIf { it != AltscreenContent.HUD } ?: AltscreenContent.MAP_CARD
 
     /**
      * The HUD demo playing (HudDemo), by its kind ("maneuvers" or "lanes"): CHAIRPLAY_HUD_DEMO starts one, the
@@ -107,7 +106,7 @@ internal class AltscreenView(
      * in another area than CarPlay's goes there first, and is asked for once the move is over, without which it stays
      * blurred mid-way.
      */
-    fun show(session: AirPlaySession?) {
+    fun show(session: PhoneLink?) {
         val alt = settings.get() ?: return
         val content = content ?: return
         val cards = cards
@@ -121,7 +120,7 @@ internal class AltscreenView(
         if (session != null && seen && area != currentArea.get()) {
             val moved = AltscreenAreaMove(
                 count = areaCount::get,
-                send = { command -> session.sendCommand(command).also { log("altscreen view area $area of ${areaCount.get()} for ${content.key} sent=$it") } },
+                send = { command -> altscreenCommand(session, command).also { log("altscreen view area $area of ${areaCount.get()} for ${content.key} sent=$it") } },
                 showView = {
                     areaTimer.schedule({ runCatching { touchSender.execute { show(session) } } }, AREA_MOVE_SETTLE_MILLIS, TimeUnit.MILLISECONDS)
                 },
@@ -138,7 +137,7 @@ internal class AltscreenView(
         // until the view is in. Between its own views the iPhone blurs from one to the next itself: the key leaves the
         // URL out, so the window asks at once and shows the stream on.
         window.showView(hud, seen) {
-            val sent = session?.let { ui.tell(AltscreenUi.of(it), url, seen, key = it) }
+            val sent = session?.cluster?.let { ui.tell(it, url, seen, key = session) }
             // A view stopped leaves no picture to come back to: the next one waits on black for the iPhone's.
             if (!seen) window.clearPicture()
             if (session != null) log("altscreen ${content.key}, cards ${cards.key}: $url ${if (seen) "showUI" else "stopUI"} sent=$sent")
@@ -157,7 +156,7 @@ internal class AltscreenView(
     }
 
     /** F11 switches the HUD and the view picked last, a view chosen shows, Shift+F11 moves the turn card: with [session]. */
-    fun step(control: Control, session: AirPlaySession) {
+    fun step(control: Control, session: PhoneLink) {
         val content = content ?: return
         // Shift+F11 has a turn card to move on Map + card alone.
         if (control == Control.NextAltscreenCards && !content.placesCards) return

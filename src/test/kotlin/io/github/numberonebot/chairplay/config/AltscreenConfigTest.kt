@@ -4,6 +4,8 @@ import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
 import com.shilapi.xcertplay.airplay.AirPlayViewArea
 import com.shilapi.xcertplay.airplay.AirPlayInsets
 import io.github.numberonebot.chairplay.carplay.toAirPlay
+import io.github.numberonebot.chairplay.phone.AltscreenCards
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.phone.ScreenArea
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

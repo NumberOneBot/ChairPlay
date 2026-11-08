@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
+import io.github.numberonebot.chairplay.phone.PhoneLink
 
 /**
  * updateViewArea for the AltScreen: DiPlay's AirPlayInfoPlist.viewAreaCommand, which it sends for the main screen
@@ -16,6 +17,9 @@ fun altscreenViewAreaCommand(index: Int, count: Int): Map<String, Any?> = linked
         "adjacentViewAreas" to (0 until count).filter { it != index },
     ),
 )
+
+/** Sends [command] to [link]'s iPhone; false when it did not go out, or for a phone that is not CarPlay's. */
+fun altscreenCommand(link: PhoneLink, command: Map<String, Any?>): Boolean = (link as? CarPlayLink)?.session?.sendCommand(command) == true
 
 /**
  * Moves CarPlay on the AltScreen to a view area: [send] the session's updateViewArea, then [showView], which asks for

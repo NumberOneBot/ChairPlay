@@ -82,6 +82,9 @@ class CarPlayMediaSink(
         screens.active(screen(type) ?: return, active)
     }
 
+    /** Asks the iPhone for a keyframe of [screen], as a decoder that rejected a packet does: at most once a second. */
+    fun keyframe(screen: ScreenKind) = screens.requestKeyframe(screen)
+
     override fun onAudioStarted(id: AudioStreamId, format: AudioFormat, firstSample: Int) {
         // A restarted stream gets a fresh reference, as AndroidMediaSink gives each renderer its own ring.
         val echoReference = if (echoCancellation && format.audioType == TELEPHONY_AUDIO_TYPE && format.sampleRate > 0) {

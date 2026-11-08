@@ -9,7 +9,7 @@ import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
-import io.github.numberonebot.chairplay.session.BringUpStatus
+import io.github.numberonebot.chairplay.phone.LinkStatus
 import io.github.numberonebot.chairplay.session.addFirewallRules
 import io.github.numberonebot.chairplay.appLog
 import io.github.numberonebot.chairplay.log.LogLevel
@@ -201,7 +201,7 @@ class ChairPlayUi(
     /** Whether the app connects as it starts: ui.autoconnect, once there is a Wi-Fi network. */
     val connectsAtStart: Boolean get() = model.state.phase == Phase.STARTING
 
-    fun bringUp(status: BringUpStatus) = model.bringUp(status)
+    fun bringUp(status: LinkStatus) = model.bringUp(status)
 
     override fun sessionActive() = model.sessionActive()
 

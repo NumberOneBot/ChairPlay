@@ -1,8 +1,5 @@
 package io.github.numberonebot.chairplay
 
-import com.shilapi.xcertplay.airplay.AirPlaySession
-import io.github.numberonebot.chairplay.carplay.CarPlayControl
-import io.github.numberonebot.chairplay.config.AltscreenContent
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.input.ControlAction
@@ -14,7 +11,9 @@ import io.github.numberonebot.chairplay.input.PageKeys
 import io.github.numberonebot.chairplay.input.CarPlayTextInput
 import io.github.numberonebot.chairplay.media.Volume
 import io.github.numberonebot.chairplay.media.VideoWindow
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.phone.PhoneControl
+import io.github.numberonebot.chairplay.phone.PhoneLink
 import io.github.numberonebot.chairplay.ui.UiControls
 import org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_ALT
 import org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_ALT
@@ -36,19 +35,19 @@ internal class AppControls(
     private val driving: Driving,
     private val altView: AltscreenView,
     private val touchSender: ExecutorService,
-    private val active: () -> AirPlaySession?,
+    private val active: () -> PhoneLink?,
     private val screenshots: () -> Unit,
     private val reconnect: () -> Unit,
     private val changed: () -> Unit,
 ) {
     /** The windows' keys and wheel as the bindings map them. */
     val keys = KeyControls { bindings.get() }
-    val textInput = CarPlayTextInput(active, touchSender, ::log)
+    val textInput = CarPlayTextInput.of(active, touchSender, ::log)
     private val knobOwners = KnobOwners()
-    private var knobSession: AirPlaySession? = null
+    private var knobSession: PhoneLink? = null
     private var phone: PhoneControl? = null
     val global = AppGlobalKeys(bindings::get, active, { key, control, session ->
-        send(control, owner = "global:$key", expectedSession = session as AirPlaySession?)
+        send(control, owner = "global:$key", expectedSession = session as PhoneLink?)
     }, driving.control::key, changed)
 
     // The controls window's page: a button pressed and released there makes the Controls a key does, through ControlPad.
@@ -81,7 +80,7 @@ internal class AppControls(
         runCatching { touchSender.submit {}.get(1, java.util.concurrent.TimeUnit.SECONDS) }
     }
 
-    fun send(control: Control?, fullscreen: () -> Unit = this.fullscreen, owner: String = "local", expectedSession: AirPlaySession? = active()) {
+    fun send(control: Control?, fullscreen: () -> Unit = this.fullscreen, owner: String = "local", expectedSession: PhoneLink? = active()) {
         control ?: return
         if (active() !== expectedSession) return
         if (control == Control.Fullscreen) {
@@ -121,7 +120,7 @@ internal class AppControls(
         val session = expectedSession ?: return
         touchSender.execute {
             if (active() !== session) return@execute
-            if (knobSession !== session) { knobOwners.clear(); knobSession = session; phone = CarPlayControl(session) }
+            if (knobSession !== session) { knobOwners.clear(); knobSession = session; phone = session.control }
             val target: PhoneControl = phone ?: return@execute
             when (control) {
                 is Control.Knob -> knobOwners.apply(owner, control).forEach { target.knob(it.input, it.momentary) }

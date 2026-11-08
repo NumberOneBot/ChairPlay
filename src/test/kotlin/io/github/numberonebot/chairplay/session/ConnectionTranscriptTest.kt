@@ -6,12 +6,17 @@ import com.shilapi.xcertplay.airplay.BplistCodec
 import com.shilapi.xcertplay.airplay.MediaSink
 import io.github.numberonebot.chairplay.CarPlayTheme
 import io.github.numberonebot.chairplay.MainTitle
+import io.github.numberonebot.chairplay.SessionListener
+import io.github.numberonebot.chairplay.carplay.CarPlayLink
 import io.github.numberonebot.chairplay.carplay.PhoneDataTap
+import io.github.numberonebot.chairplay.carplay.carPlaySessions
+import io.github.numberonebot.chairplay.carplay.pendingNight
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.Theme
 import io.github.numberonebot.chairplay.config.writeTestSettings
 import io.github.numberonebot.chairplay.media.VideoWindow
-import io.github.numberonebot.chairplay.sessionListener
+import io.github.numberonebot.chairplay.phone.LinkStatus
+import io.github.numberonebot.chairplay.phone.PhoneLink
 import io.github.numberonebot.chairplay.ui.UiModel
 import io.github.numberonebot.chairplay.ui.UiSessions
 import io.github.numberonebot.chairplay.ui.UiState
@@ -59,18 +64,18 @@ class ConnectionTranscriptTest : WirelessBootstrapFixture() {
 
     @Test(timeout = 60_000)
     fun `a new iPhone connects, asks for the car's screen, and leaves`() {
-        val active = AtomicReference<AirPlaySession?>()
+        val active = AtomicReference<PhoneLink?>()
         val theme = CarPlayTheme(Theme.DARK, watch, touchSender, active::get)
-        val base = sessionListener(active, ui, window, MainTitle(window, config), theme) {
-            events += "changed, active ${active.get()?.let(::number) ?: "none"}"
+        val links = SessionListener(active, ui, window, MainTitle(window, config), theme) {
+            events += "changed, active ${(active.get() as CarPlayLink?)?.session?.let(::number) ?: "none"}"
         }
+        val base = carPlaySessions(links::carButton)
         val sessionOne = AtomicReference<AirPlaySession>()
         val sessions = object : AirPlaySessionListener by base {
             override fun onSessionActive(session: AirPlaySession) {
                 sessionOne.compareAndSet(null, session)
                 events += "session ${number(session)} active"
                 base.onSessionActive(session)
-                night(session)
             }
 
             override fun onSessionEnded(session: AirPlaySession) {
@@ -83,7 +88,11 @@ class ConnectionTranscriptTest : WirelessBootstrapFixture() {
                 base.onHostUiRequested(session)
             }
         }
-        Harness(sessions = sessions, onStatus = ::status).use { harness ->
+        val onLink = { link: PhoneLink? ->
+            links.linked(link)
+            if (link != null) night((link as CarPlayLink).session)
+        }
+        Harness(sessions = sessions, onStatus = ::status, onLink = onLink).use { harness ->
             val port = harness.nextPort()
             await("status joining known=false")
             val phone = RtspClient(harness.loopback, port)
@@ -126,12 +135,12 @@ class ConnectionTranscriptTest : WirelessBootstrapFixture() {
         assertEquals(FAILED, events.toList())
     }
 
-    private fun status(status: BringUpStatus) {
+    private fun status(status: LinkStatus) {
         events += "status " + when (status) {
-            BringUpStatus.Starting -> "starting"
-            BringUpStatus.CallingIphone -> "calling"
-            is BringUpStatus.Joining -> "joining known=${status.knownIphone}"
-            is BringUpStatus.Failed -> "failed: ${status.message}, retry in ${status.retryMillis} ms"
+            LinkStatus.Starting -> "starting"
+            LinkStatus.CallingPhone -> "calling"
+            is LinkStatus.Joining -> "joining known=${status.knownPhone}"
+            is LinkStatus.Failed -> "failed: ${status.message}, retry in ${status.retryMillis} ms"
         }
         model.bringUp(status)
     }
@@ -139,8 +148,7 @@ class ConnectionTranscriptTest : WirelessBootstrapFixture() {
     /** The night mode [session] holds for the iPhone, once the theme's send ran. */
     private fun night(session: AirPlaySession) {
         touchSender.submit {}.get(5, TimeUnit.SECONDS)
-        val pending = AirPlaySession::class.java.getDeclaredField("pendingNightMode").apply { isAccessible = true }.get(session)
-        events += "night for session ${number(session)}: $pending"
+        events += "night for session ${number(session)}: ${pendingNight(session)}"
     }
 
     private fun number(session: AirPlaySession): Int = synchronized(numbers) { numbers.getOrPut(session) { numbers.size + 1 } }

@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.config
 import com.shilapi.xcertplay.airplay.AirPlayInsets
 import com.shilapi.xcertplay.airplay.AirPlayViewArea
 import io.github.numberonebot.chairplay.carplay.toAirPlay
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

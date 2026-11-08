@@ -10,6 +10,8 @@ import io.github.numberonebot.chairplay.carplay.PhoneDataTap
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.config.writeTestSettings
+import io.github.numberonebot.chairplay.phone.LinkStatus
+import io.github.numberonebot.chairplay.phone.PhoneLink
 import com.shilapi.xcertplay.iap2.session.Iap2Session
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
 import com.shilapi.xcertplay.mfi.MfiAuthenticator
@@ -56,14 +58,16 @@ abstract class WirelessBootstrapFixture {
         /** Hears the sessions after the fixture's own log; the default hears nothing. */
         sessions: AirPlaySessionListener = object : AirPlaySessionListener {},
         /** Hears each status as it is queued in [statuses]. */
-        onStatus: (BringUpStatus) -> Unit = {},
+        onStatus: (LinkStatus) -> Unit = {},
+        /** Hears each link as it goes live, and null as it ends. */
+        onLink: (PhoneLink?) -> Unit = {},
     ) : Closeable {
         val loopback: InetAddress = InetAddress.getByName("127.0.0.1")
         val logs = CopyOnWriteArrayList<String>()
         val stacks = AtomicInteger()
         val parts = LinkedBlockingDeque<FakeParts>()
         val previousPortFree = AtomicBoolean()
-        val statuses = LinkedBlockingQueue<BringUpStatus>()
+        val statuses = LinkedBlockingQueue<LinkStatus>()
         val advertised = LinkedBlockingQueue<AirPlayConfig>()
         val displays = LinkedBlockingQueue<WindowSize>()
         // The AltScreen's size each bring-up read, null while it is off (a queue holds no nulls).
@@ -96,6 +100,7 @@ abstract class WirelessBootstrapFixture {
                     statuses.add(status)
                     onStatus(status)
                 }
+                it.onLink = onLink
                 it.onConnection = { now ->
                     displays.add(WindowSize(now.displayWidth, now.displayHeight))
                     altscreens.add(Holder(now.altscreen?.size))

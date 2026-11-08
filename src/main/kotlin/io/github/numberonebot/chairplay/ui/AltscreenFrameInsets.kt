@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
-import io.github.numberonebot.chairplay.config.AltscreenContent
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.config.AltscreenViewParts
 import io.github.numberonebot.chairplay.config.areaGroup
 import io.github.numberonebot.chairplay.config.DesktopConfig

@@ -7,10 +7,12 @@ import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.config.writeTestSettings
+import io.github.numberonebot.chairplay.phone.LinkStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
 import java.nio.file.Files
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -23,9 +25,9 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
         Harness().use { harness ->
             harness.nextPort()
 
-            assertEquals(BringUpStatus.Starting, harness.statuses.poll(10, TimeUnit.SECONDS))
-            assertEquals(BringUpStatus.CallingIphone, harness.statuses.poll(10, TimeUnit.SECONDS))
-            assertEquals(BringUpStatus.Joining(knownIphone = false), harness.statuses.poll(10, TimeUnit.SECONDS))
+            assertEquals(LinkStatus.Starting, harness.statuses.poll(10, TimeUnit.SECONDS))
+            assertEquals(LinkStatus.CallingPhone, harness.statuses.poll(10, TimeUnit.SECONDS))
+            assertEquals(LinkStatus.Joining(knownPhone = false), harness.statuses.poll(10, TimeUnit.SECONDS))
         }
     }
 
@@ -55,7 +57,7 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
     fun `parts that cannot be made fail the bring-up with the reason`() {
         val dir = Files.createTempDirectory("chairplay-bootstrap")
         writeTestSettings(dir)
-        val statuses = LinkedBlockingQueue<BringUpStatus>()
+        val statuses = LinkedBlockingQueue<LinkStatus>()
         val listener = object : AirPlaySessionListener {}
         WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, listener, PhoneDataTap.NONE) {
             throw IllegalArgumentException("Offline MFi directory is missing or invalid")
@@ -64,9 +66,30 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
 
             bootstrap.start()
 
-            assertEquals(BringUpStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
+            assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
             val failed = statuses.poll(10, TimeUnit.SECONDS)
-            assertEquals(BringUpStatus.Failed("Offline MFi directory is missing or invalid", 5_000L), failed)
+            assertEquals(LinkStatus.Failed("Offline MFi directory is missing or invalid", 5_000L), failed)
+        }
+    }
+
+    // The iPhone away (its Wi-Fi off, restarted): each failed bring-up starts the next one after 5 s, on and on.
+    @Test(timeout = 30_000)
+    fun `bring-up retries after a failure`() {
+        val dir = Files.createTempDirectory("chairplay-bootstrap")
+        writeTestSettings(dir)
+        val statuses = LinkedBlockingQueue<LinkStatus>()
+        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE) {
+            throw IOException("RFCOMM connect failed")
+        }.use { bootstrap ->
+            bootstrap.onStatus = statuses::add
+            bootstrap.start()
+            assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
+            assertEquals(LinkStatus.Failed("RFCOMM connect failed", 5_000L), statuses.poll(10, TimeUnit.SECONDS))
+            val failedAt = System.nanoTime()
+
+            assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
+            assertTrue("retried before its wait", System.nanoTime() - failedAt >= 4_500_000_000)
+            assertEquals(LinkStatus.Failed("RFCOMM connect failed", 5_000L), statuses.poll(10, TimeUnit.SECONDS))
         }
     }
 
@@ -75,20 +98,20 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
     fun `a stopped bring-up stays stopped until it is started`() {
         val dir = Files.createTempDirectory("chairplay-bootstrap")
         writeTestSettings(dir)
-        val statuses = LinkedBlockingQueue<BringUpStatus>()
+        val statuses = LinkedBlockingQueue<LinkStatus>()
         WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE) {
             throw IllegalArgumentException("no MFi files")
         }.use { bootstrap ->
             bootstrap.onStatus = statuses::add
             bootstrap.start()
-            assertEquals(BringUpStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
-            assertTrue(statuses.poll(10, TimeUnit.SECONDS) is BringUpStatus.Failed)
+            assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
+            assertTrue(statuses.poll(10, TimeUnit.SECONDS) is LinkStatus.Failed)
 
             bootstrap.stop()
 
             assertNull("no retry after the stop", statuses.poll(7, TimeUnit.SECONDS))
             bootstrap.start()
-            assertEquals(BringUpStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
+            assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
         }
     }
 }

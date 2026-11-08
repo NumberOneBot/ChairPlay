@@ -1,10 +1,21 @@
 package io.github.numberonebot.chairplay.session
 
 import com.shilapi.xcertplay.airplay.BplistCodec
+import io.github.numberonebot.chairplay.carplay.CarPlayMediaSink
+import io.github.numberonebot.chairplay.media.AudioRenderer
+import io.github.numberonebot.chairplay.media.ScreenDecoders
+import io.github.numberonebot.chairplay.media.VideoWindow
+import io.github.numberonebot.chairplay.phone.PhoneLink
+import io.github.numberonebot.chairplay.phone.Protocol
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Optional
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 /** WirelessBootstrap: the Bluetooth bootstrap, the session on the Wi-Fi, and when a session's end restarts it. */
 class WirelessBootstrapTest : WirelessBootstrapFixture() {
@@ -51,6 +62,27 @@ class WirelessBootstrapTest : WirelessBootstrapFixture() {
             assertEquals(2, harness.stacks.get())
             assertTrue("the replaced listener's port $port is still bound", harness.previousPortFree.get())
         }
+    }
+
+    // A session that goes active is the link, until it ends; a keyframe asked of it takes the screens' own request.
+    @Test(timeout = 30_000)
+    fun `an active session is the link, its keyframes through the screens`() {
+        val sink = CarPlayMediaSink(ScreenDecoders(mapOf(ScreenKind.MAIN to VideoWindow(320, 240))), AudioRenderer())
+        val asked = AtomicInteger()
+        sink.setVideoRecoveryHandler(110) { asked.incrementAndGet() }
+        val links = LinkedBlockingQueue<Optional<PhoneLink>>()
+        Harness(sink = sink, onLink = { links.add(Optional.ofNullable(it)) }).use { harness ->
+            RtspClient(harness.loopback, harness.nextPort()).use { client ->
+                assertOk(client.request("RECORD", "*"))
+                val link = links.poll(10, TimeUnit.SECONDS)!!.get()
+
+                link.keyframe(ScreenKind.MAIN)
+                awaitTrue { asked.get() == 1 }
+                assertEquals(Protocol.CARPLAY, link.protocol)
+            }
+            assertFalse(links.poll(10, TimeUnit.SECONDS)!!.isPresent)
+        }
+        sink.close()
     }
 
     @Test(timeout = 30_000)

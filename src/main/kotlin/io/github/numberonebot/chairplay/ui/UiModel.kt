@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
-import io.github.numberonebot.chairplay.session.BringUpStatus
+import io.github.numberonebot.chairplay.phone.LinkStatus
 import java.time.LocalTime
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -101,12 +101,12 @@ class UiModel(
         listeners.forEach { it(next) }
     }
 
-    fun bringUp(status: BringUpStatus) = update { state ->
+    fun bringUp(status: LinkStatus) = update { state ->
         when (status) {
-            BringUpStatus.Starting -> state.copy(phase = Phase.STARTING, reconnectPending = emptySet())
-            BringUpStatus.CallingIphone -> state.copy(phase = Phase.CALLING)
-            is BringUpStatus.Joining -> state.copy(phase = Phase.JOINING, knownIphone = status.knownIphone)
-            is BringUpStatus.Failed -> state.copy(phase = Phase.RETRYING, error = UiError(status.message, clock()), waiting = false)
+            LinkStatus.Starting -> state.copy(phase = Phase.STARTING, reconnectPending = emptySet())
+            LinkStatus.CallingPhone -> state.copy(phase = Phase.CALLING)
+            is LinkStatus.Joining -> state.copy(phase = Phase.JOINING, knownIphone = status.knownPhone)
+            is LinkStatus.Failed -> state.copy(phase = Phase.RETRYING, error = UiError(status.message, clock()), waiting = false)
         }
     }
 

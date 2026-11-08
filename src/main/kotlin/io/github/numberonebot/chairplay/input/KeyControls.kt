@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.input
 
-import io.github.numberonebot.chairplay.config.AltscreenContent
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.phone.CallKey
 import io.github.numberonebot.chairplay.phone.KnobInput
 import io.github.numberonebot.chairplay.phone.MediaKey

@@ -5,8 +5,8 @@ import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
 import com.shilapi.xcertplay.airplay.AirPlayInsets
 import com.shilapi.xcertplay.airplay.AirPlayViewArea
 import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
-import io.github.numberonebot.chairplay.config.AltscreenCards
-import io.github.numberonebot.chairplay.config.AltscreenContent
+import io.github.numberonebot.chairplay.phone.AltscreenCards
+import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.phone.ClusterSpec
 import io.github.numberonebot.chairplay.phone.Dock
 import io.github.numberonebot.chairplay.phone.Insets

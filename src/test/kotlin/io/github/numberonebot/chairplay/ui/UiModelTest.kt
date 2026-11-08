@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
-import io.github.numberonebot.chairplay.session.BringUpStatus
+import io.github.numberonebot.chairplay.phone.LinkStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -30,11 +30,11 @@ class UiModelTest {
         assertFalse(model(setupDone = false).state.waiting)
 
         val failing = model()
-        failing.bringUp(BringUpStatus.CallingIphone)
+        failing.bringUp(LinkStatus.CallingPhone)
         assertTrue(failing.state.waiting)
-        failing.bringUp(BringUpStatus.Failed("Bluetooth control ended TIMED_OUT", 5_000))
+        failing.bringUp(LinkStatus.Failed("Bluetooth control ended TIMED_OUT", 5_000))
         assertFalse(failing.state.waiting)
-        failing.bringUp(BringUpStatus.Starting)
+        failing.bringUp(LinkStatus.Starting)
         assertFalse(failing.state.waiting)
     }
 
@@ -71,12 +71,12 @@ class UiModelTest {
     fun `each bring-up step shows on the start screen`() {
         val model = model()
 
-        model.bringUp(BringUpStatus.CallingIphone)
+        model.bringUp(LinkStatus.CallingPhone)
         assertEquals(Phase.CALLING, model.state.phase)
-        model.bringUp(BringUpStatus.Joining(knownIphone = true))
+        model.bringUp(LinkStatus.Joining(knownPhone = true))
         assertEquals(Phase.JOINING, model.state.phase)
         assertTrue(model.state.knownIphone)
-        model.bringUp(BringUpStatus.Starting)
+        model.bringUp(LinkStatus.Starting)
         assertEquals(Phase.STARTING, model.state.phase)
     }
 
@@ -85,11 +85,11 @@ class UiModelTest {
     fun `the last error stays until a session is active`() {
         val model = model()
 
-        model.bringUp(BringUpStatus.Failed("Offline MFi directory is missing or invalid", 5_000))
+        model.bringUp(LinkStatus.Failed("Offline MFi directory is missing or invalid", 5_000))
         assertEquals(Phase.RETRYING, model.state.phase)
         assertEquals(UiError("Offline MFi directory is missing or invalid", LocalTime.of(14, 3, 5)), model.state.error)
-        model.bringUp(BringUpStatus.Starting)
-        model.bringUp(BringUpStatus.CallingIphone)
+        model.bringUp(LinkStatus.Starting)
+        model.bringUp(LinkStatus.CallingPhone)
         assertEquals("Offline MFi directory is missing or invalid", model.state.error?.message)
 
         model.sessionActive()
@@ -231,7 +231,7 @@ class UiModelTest {
         assertEquals(setOf("window.width"), model.state.restartPending)
 
         model.sessionEnded()
-        model.bringUp(BringUpStatus.Starting)
+        model.bringUp(LinkStatus.Starting)
         assertEquals(emptySet<String>(), model.state.reconnectPending)
         assertEquals(setOf("window.width"), model.state.restartPending)
     }
