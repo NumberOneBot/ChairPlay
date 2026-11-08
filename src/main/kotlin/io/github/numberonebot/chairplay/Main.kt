@@ -182,7 +182,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         ui.windowsChanged()
         altView.visibilityChanged()
     }
-    sink.onAltscreenStream = altView::newStream
+    audio.screens.onClusterStream = altView::newStream
     // taskkill without /F asks one of the app's windows to close: the AltScreen's or the controls window's ends the app
     // as the main window's does, where its close button only hides it.
     altscreen.onOutsideClose = { window.close() }

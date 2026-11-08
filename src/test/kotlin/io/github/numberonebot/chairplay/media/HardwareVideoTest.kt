@@ -1,6 +1,8 @@
 package io.github.numberonebot.chairplay.media
 
 import com.shilapi.xcertplay.airplay.VideoCodec
+import io.github.numberonebot.chairplay.carplay.annexBParameterSets
+import io.github.numberonebot.chairplay.phone.VideoCodecKind
 import org.bytedeco.ffmpeg.avutil.AVBufferRef
 import org.bytedeco.ffmpeg.global.avutil.*
 import org.bytedeco.javacpp.Pointer
@@ -19,17 +21,17 @@ class HardwareVideoTest {
     }
 
     private fun playAvc(decoder: VideoDecoder) {
-        decoder.configure(resource("/h264/avcC.bin"))
+        decoder.configure(annexBParameterSets(resource("/h264/avcC.bin"), VideoCodec.H264))
         repeat(3) { decoder.decode(resource("/h264/frame$it.h264")) }
     }
 
     @Test(timeout = 15000)
     fun `software HEVC keeps decoding after repeated stream configurations`() {
         var frames = 0
-        val config = resource("/hevc/hvcC.bin")
+        val config = annexBParameterSets(resource("/hevc/hvcC.bin"), VideoCodec.H265)
         val packets = (0..2).map { resource("/hevc/frame$it.hevc") }
-        VideoDecoder(onFrame = { frames++; it.release() }, videoCodec = VideoCodec.H265,
-            useHardware = false).use { decoder ->
+        VideoDecoder(onFrame = { frames++; it.release() }, codec = VideoCodecKind.H265,
+            hardware = false).use { decoder ->
             repeat(100) {
                 decoder.configure(config)
                 packets.forEach(decoder::decode)
@@ -42,7 +44,7 @@ class HardwareVideoTest {
     @Test
     fun `software selection never opens a GPU device`() {
         var frames = 0
-        VideoDecoder(onFrame = { frames++; it.release() }, useHardware = false,
+        VideoDecoder(onFrame = { frames++; it.release() }, hardware = false,
             hardwareFactory = { _, _ -> error("GPU must not be opened") }).use {
             playAvc(it)
             assertEquals(3, frames)
@@ -85,7 +87,7 @@ class HardwareVideoTest {
         var frames = 0
         var transfers = 0
         var recoveries = 0
-        VideoDecoder(onFrame = { frames++; it.release() }, onError = { recoveries++ },
+        VideoDecoder(onFrame = { frames++; it.release() }, recover = { recoveries++ },
             hardwareFactory = { context, codec ->
                 D3D11Video.open(context, codec) { destination, source ->
                     if (++transfers == 2) -1 else av_hwframe_transfer_data(destination, source, 0)
@@ -117,8 +119,8 @@ class HardwareVideoTest {
                     assertEquals(240.0, (frame.v.get(0).toInt() and 255).toDouble(), 3.0)
                 }
                 frame.release()
-            }, videoCodec = codec).use { decoder ->
-                decoder.configure(resource("/$dir/${if (hevc) "hvcC" else "avcC"}.bin"))
+            }, codec = if (hevc) VideoCodecKind.H265 else VideoCodecKind.H264).use { decoder ->
+                decoder.configure(annexBParameterSets(resource("/$dir/${if (hevc) "hvcC" else "avcC"}.bin"), codec))
                 repeat(3) { decoder.decode(resource("/$dir/frame$it.${if (hevc) "hevc" else "h264"}")) }
                 assertEquals(3, frames)
                 assertEquals(3L, decoder.hardwareFrames)

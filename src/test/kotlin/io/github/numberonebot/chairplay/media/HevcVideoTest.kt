@@ -1,6 +1,8 @@
 package io.github.numberonebot.chairplay.media
 
 import com.shilapi.xcertplay.airplay.VideoCodec
+import io.github.numberonebot.chairplay.carplay.CarPlayMediaSink
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -19,7 +21,8 @@ class HevcVideoTest {
     fun `both screens decode HEVC and can switch back to AVC`() {
         val main = VideoWindow(320, 240)
         val alt = VideoWindow(320, 240)
-        DesktopMediaSink(main, AudioRenderer(), altscreen = alt).use { sink ->
+        val screens = ScreenDecoders(mapOf(ScreenKind.MAIN to main, ScreenKind.CLUSTER to alt))
+        CarPlayMediaSink(screens, AudioRenderer()).use { sink ->
             for ((type, window) in listOf(110 to main, 111 to alt)) {
                 for (codec in listOf(VideoCodec.H265, VideoCodec.H264, VideoCodec.H265)) {
                     val hevc = codec == VideoCodec.H265

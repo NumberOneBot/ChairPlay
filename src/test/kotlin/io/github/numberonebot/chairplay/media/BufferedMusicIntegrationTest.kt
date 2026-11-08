@@ -1,6 +1,8 @@
 package io.github.numberonebot.chairplay.media
 
 import com.shilapi.xcertplay.airplay.*
+import io.github.numberonebot.chairplay.carplay.CarPlayMediaSink
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.DataOutputStream
@@ -23,7 +25,7 @@ class BufferedMusicIntegrationTest : AudioRendererFixture() {
         val expected = AacPcmDecoder(48_000, 2).use { decoder -> units.flatMap { decoder.decode(it).toList() }.toByteArray() }
         AudioRenderer(lineFactory = { _, _, _ -> RecordingLine().also { lines.add(it) } }, clock = clock::get,
             startFade = { StartFade(2000, 800) }).use { renderer ->
-            DesktopMediaSink(VideoWindow(320, 240), renderer).use { desktop ->
+            CarPlayMediaSink(ScreenDecoders(mapOf(ScreenKind.MAIN to VideoWindow(320, 240))), renderer).use { desktop ->
                 val sink = object : MediaSink by desktop, BufferedAudioStatusSink by desktop {
                     override fun onAudioRtp(id: AudioStreamId, format: AudioFormat, rtp: ByteArray, sample: Int) {
                         desktop.onAudioRtp(id, format, rtp, sample)

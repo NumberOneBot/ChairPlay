@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.bridge
 import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.media.DecodedFrame
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -87,6 +88,6 @@ class FrameOutputFailureTest {
     }
 
     private companion object {
-        const val MAIN_SCREEN = 110
+        val MAIN_SCREEN = ScreenKind.MAIN
     }
 }

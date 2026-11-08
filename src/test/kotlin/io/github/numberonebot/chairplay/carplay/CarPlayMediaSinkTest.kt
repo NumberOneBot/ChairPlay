@@ -1,10 +1,17 @@
-package io.github.numberonebot.chairplay.media
+package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.airplay.AudioCodecKind
 import com.shilapi.xcertplay.airplay.AudioFormat
 import com.shilapi.xcertplay.airplay.AudioStreamId
 import com.shilapi.xcertplay.airplay.VideoCodec
 import io.github.numberonebot.chairplay.bridge.FrameTap
+import io.github.numberonebot.chairplay.media.AudioRenderer
+import io.github.numberonebot.chairplay.media.DecodedFrame
+import io.github.numberonebot.chairplay.media.DuckSetting
+import io.github.numberonebot.chairplay.media.PcmLine
+import io.github.numberonebot.chairplay.media.ScreenDecoders
+import io.github.numberonebot.chairplay.media.VideoWindow
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -15,13 +22,29 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 /** A VideoWindow that never runs opens no window, so the sink is tested whole. */
-class DesktopMediaSinkTest {
+class CarPlayMediaSinkTest {
     private fun resource(name: String) =
         javaClass.getResourceAsStream("/h264/$name")!!.use { it.readBytes() }
 
+    /** The sink as the app builds it, over a main screen and, given [altscreen], the cluster's. */
+    private fun sink(
+        audio: AudioRenderer = AudioRenderer(),
+        log: (String) -> Unit = {},
+        altscreen: VideoWindow? = null,
+        hardwareDecoding: () -> Boolean = { true },
+        frameTap: FrameTap = FrameTap.NONE,
+        duckSetting: () -> DuckSetting = { DuckSetting() },
+    ): CarPlayMediaSink {
+        val windows = buildMap {
+            put(ScreenKind.MAIN, VideoWindow(320, 240))
+            if (altscreen != null) put(ScreenKind.CLUSTER, altscreen)
+        }
+        return CarPlayMediaSink(ScreenDecoders(windows, frameTap, log, hardwareDecoding), audio, log, duckSetting = duckSetting)
+    }
+
     @Test
     fun `recovery handler that ends the stream does not free the decoder mid-decode`() {
-        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer())
+        val sink = sink()
         val handlerDone = CountDownLatch(1)
         val handlerThread = arrayOfNulls<Thread>(1)
         sink.setVideoRecoveryHandler(110) {
@@ -47,7 +70,7 @@ class DesktopMediaSinkTest {
     // A new decoder would wait for one; the running one goes on with the frames that follow, as AndroidMediaSink does.
     @Test
     fun `the same configuration again keeps the decoder`() {
-        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer())
+        val sink = sink()
         var keyframesAsked = 0
         sink.setVideoRecoveryHandler(110) { keyframesAsked++ }
         sink.onVideoCodec(110, VideoCodec.H264)
@@ -66,9 +89,10 @@ class DesktopMediaSinkTest {
     @Test
     fun `an AltScreen stream set up is reported once, at its first picture`() {
         val altscreen = VideoWindow(320, 240)
-        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer(), altscreen = altscreen)
+        val screens = ScreenDecoders(mapOf(ScreenKind.MAIN to VideoWindow(320, 240), ScreenKind.CLUSTER to altscreen))
+        val sink = CarPlayMediaSink(screens, AudioRenderer())
         var reported = 0
-        sink.onAltscreenStream = { reported++ }
+        screens.onClusterStream = { reported++ }
 
         altscreen.onFrameShown()
         sink.onScreenStreamActive(111, true)
@@ -84,8 +108,8 @@ class DesktopMediaSinkTest {
 
     private class RecordingTap : FrameTap, Closeable {
         val events = mutableListOf<String>()
-        override fun frame(type: Int, frame: DecodedFrame) { events += "frame $type ${frame.width}x${frame.height}" }
-        override fun active(type: Int, active: Boolean) { events += "active $type $active" }
+        override fun frame(screen: ScreenKind, frame: DecodedFrame) { events += "frame $screen ${frame.width}x${frame.height}" }
+        override fun active(screen: ScreenKind, active: Boolean) { events += "active $screen $active" }
         override fun close() { events += "close" }
     }
 
@@ -94,7 +118,7 @@ class DesktopMediaSinkTest {
     @Test
     fun `the frame tap sees the stream and its pictures and closes with the sink`() {
         val tap = RecordingTap()
-        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer(), hardwareDecoding = { false }, frameTap = tap)
+        val sink = sink(hardwareDecoding = { false }, frameTap = tap)
         sink.onScreenStreamActive(110, true)
         sink.onVideoCodec(110, VideoCodec.H264)
         sink.onVideoConfig(110, resource("avcC.bin"))
@@ -104,19 +128,19 @@ class DesktopMediaSinkTest {
         sink.onVideoFrame(110, resource("frame1.h264"), 0, 0)
         sink.close()
 
-        assertEquals("active 110 true", tap.events.first())
-        assertTrue(tap.events.toString(), tap.events.any { it.startsWith("frame 110 ") })
-        assertEquals(listOf("active 110 false", "close"), tap.events.takeLast(2))
-        assertEquals(1, tap.events.count { it.startsWith("active 110 false") })
+        assertEquals("active MAIN true", tap.events.first())
+        assertTrue(tap.events.toString(), tap.events.any { it.startsWith("frame MAIN ") })
+        assertEquals(listOf("active MAIN false", "close"), tap.events.takeLast(2))
+        assertEquals(1, tap.events.count { it.startsWith("active MAIN false") })
     }
 
     private class ThrowingTap : FrameTap {
         val seen = mutableListOf<DecodedFrame>()
-        override fun frame(type: Int, frame: DecodedFrame) {
+        override fun frame(screen: ScreenKind, frame: DecodedFrame) {
             seen += frame
             throw OutOfMemoryError("Direct buffer memory")
         }
-        override fun active(type: Int, active: Boolean) {}
+        override fun active(screen: ScreenKind, active: Boolean) {}
     }
 
     // The window releases each picture it took once the next one comes, and the decoder fills it again: a picture
@@ -125,8 +149,7 @@ class DesktopMediaSinkTest {
     fun `a tap that throws leaves the picture to the window and the stream going`() {
         val tap = ThrowingTap()
         val logs = mutableListOf<String>()
-        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer(), log = { logs += it }, hardwareDecoding = { false },
-            frameTap = tap)
+        val sink = sink(log = { logs += it }, hardwareDecoding = { false }, frameTap = tap)
         sink.onVideoCodec(110, VideoCodec.H264)
         sink.onVideoConfig(110, resource("avcC.bin"))
         sink.onVideoFrame(110, resource("frame0.h264"), 0, 0)
@@ -141,8 +164,8 @@ class DesktopMediaSinkTest {
 
     private class AttachingTap : FrameTap {
         var request: () -> Unit = {}
-        override fun frame(type: Int, frame: DecodedFrame) {}
-        override fun active(type: Int, active: Boolean) {}
+        override fun frame(screen: ScreenKind, frame: DecodedFrame) {}
+        override fun active(screen: ScreenKind, active: Boolean) {}
         override fun attach(requestPicture: () -> Unit) { request = requestPicture }
     }
 
@@ -150,7 +173,7 @@ class DesktopMediaSinkTest {
     @Test
     fun `the tap's request for a picture reaches the main screen's recovery handler once a second`() {
         val tap = AttachingTap()
-        val sink = DesktopMediaSink(VideoWindow(320, 240), AudioRenderer(), frameTap = tap)
+        val sink = sink(frameTap = tap)
         val asked = java.util.concurrent.atomic.AtomicInteger()
         val first = CountDownLatch(1)
         sink.setVideoRecoveryHandler(110) { asked.incrementAndGet(); first.countDown() }
@@ -178,7 +201,7 @@ class DesktopMediaSinkTest {
         val line = RecordingLine()
         val clock = AtomicLong(1)
         val renderer = AudioRenderer({}, { _, _, _ -> line }, { clock.get() }, 5)
-        val sink = DesktopMediaSink(VideoWindow(320, 240), renderer, duckSetting = { DuckSetting(0.5f, iPhoneFirst = false) })
+        val sink = sink(renderer, duckSetting = { DuckSetting(0.5f, iPhoneFirst = false) })
         val media = AudioStreamId(102, "media")
         renderer.start(media, AudioFormat(AudioCodecKind.LPCM, 48_000, 2, 96, "media"))
 

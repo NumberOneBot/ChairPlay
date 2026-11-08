@@ -1,16 +1,18 @@
 package io.github.numberonebot.chairplay
 
 import io.github.numberonebot.chairplay.bridge.FrameOutput
+import io.github.numberonebot.chairplay.carplay.CarPlayMediaSink
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.VolumeStore
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.log.LogLevel
 import io.github.numberonebot.chairplay.media.AudioDevices
 import io.github.numberonebot.chairplay.media.AudioRenderer
-import io.github.numberonebot.chairplay.media.DesktopMediaSink
+import io.github.numberonebot.chairplay.media.ScreenDecoders
 import io.github.numberonebot.chairplay.media.StartFade
 import io.github.numberonebot.chairplay.media.VideoWindow
 import io.github.numberonebot.chairplay.media.Volume
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 
@@ -32,7 +34,9 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
     private val frameOutput = FrameOutput(
         screen = { display.get().let { WindowSize(it.width, it.height) } }, safe = { display.get().safeRect }, log = ::log,
     )
-    val sink: DesktopMediaSink
+    /** The main screen and the AltScreen, decoded into [window] and [altscreen]; the sink closes them. */
+    val screens: ScreenDecoders
+    val sink: CarPlayMediaSink
     private val renderer: AudioRenderer
     fun bufferedAudio(): Map<String, Any>? = sink.bufferedAudio.state()
     fun updateBufferedAudio() { if (sink.bufferedAudio.poll()) changed() }
@@ -54,8 +58,10 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
         renderer.configureSpatial {
             io.github.numberonebot.chairplay.media.apac.SpatialRuntime.requirePlan(dir, config.audioOutput)
         }
-        sink = DesktopMediaSink(window, renderer, ::log, input, config.echoCancellation, altscreen, duckSetting::get,
-            hardwareDecoding = { config.now().hardwareVideo }, frameTap = frameOutput)
+        screens = ScreenDecoders(mapOf(ScreenKind.MAIN to window, ScreenKind.CLUSTER to altscreen), frameOutput, ::log) {
+            config.now().hardwareVideo
+        }
+        sink = CarPlayMediaSink(screens, renderer, ::log, input, config.echoCancellation, duckSetting::get)
         frameOutput.enabled = config.display.share
     }
 

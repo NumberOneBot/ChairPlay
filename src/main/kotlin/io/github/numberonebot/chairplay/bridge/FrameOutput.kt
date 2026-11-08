@@ -3,7 +3,7 @@ package io.github.numberonebot.chairplay.bridge
 import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.media.DecodedFrame
-import io.github.numberonebot.chairplay.media.DesktopMediaSink
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import java.io.Closeable
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
@@ -12,16 +12,16 @@ import kotlin.concurrent.withLock
 /** Sees each decoded picture of a screen stream before its window takes it, and when the stream starts and stops. */
 interface FrameTap {
     /** On the decoder's thread; [frame]'s planes are valid only during the call, and the tap never releases it. */
-    fun frame(type: Int, frame: DecodedFrame)
-    fun active(type: Int, active: Boolean)
+    fun frame(screen: ScreenKind, frame: DecodedFrame)
+    fun active(screen: ScreenKind, active: Boolean)
 
-    /** Gives the tap a way to ask the iPhone for a new picture of the main screen; it may be called from any thread. */
+    /** Gives the tap a way to ask the phone for a new picture of the main screen; it may be called from any thread. */
     fun attach(requestPicture: () -> Unit) {}
 
     companion object {
         val NONE: FrameTap = object : FrameTap {
-            override fun frame(type: Int, frame: DecodedFrame) {}
-            override fun active(type: Int, active: Boolean) {}
+            override fun frame(screen: ScreenKind, frame: DecodedFrame) {}
+            override fun active(screen: ScreenKind, active: Boolean) {}
         }
     }
 }
@@ -107,8 +107,8 @@ internal class FrameOutput(
         this.requestPicture = requestPicture
     }
 
-    override fun frame(type: Int, frame: DecodedFrame) {
-        if (type != MAIN_SCREEN || !publishing) return
+    override fun frame(screen: ScreenKind, frame: DecodedFrame) {
+        if (screen != ScreenKind.MAIN || !publishing) return
         synchronized(convertLock) {
             val converter = converter
             if (!publishing || converter == null) return
@@ -125,8 +125,8 @@ internal class FrameOutput(
         }
     }
 
-    override fun active(type: Int, active: Boolean) {
-        if (type != MAIN_SCREEN) return
+    override fun active(screen: ScreenKind, active: Boolean) {
+        if (screen != ScreenKind.MAIN) return
         streamActive = active
         if (active || !publishing) return
         lock.withLock {
@@ -260,7 +260,6 @@ internal class FrameOutput(
         /** The default worker: the loop on a daemon thread of its own. */
         fun daemon(loop: Runnable): Thread = Thread(loop, "game-bridge").apply { isDaemon = true; start() }
 
-        private const val MAIN_SCREEN = DesktopMediaSink.MAIN_SCREEN
         private const val WAITING = 1
         private const val FROZEN = 3
         private const val WAKE_NANOS = 500_000_000L

@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.media
 
+import com.shilapi.xcertplay.airplay.VideoCodec
+import io.github.numberonebot.chairplay.carplay.annexBParameterSets
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -8,10 +10,10 @@ class VideoDecoderTest {
         javaClass.getResourceAsStream("/h264/$name")!!.use { it.readBytes() }
 
     @Test
-    fun `decodes annex-b stream with sps-pps from avcC`() {
+    fun `decodes annex-b stream with the sps-pps of avcC`() {
         val frames = mutableListOf<DecodedFrame>()
         VideoDecoder(onFrame = { frames += it }).use { decoder ->
-            decoder.configure(resource("avcC.bin"))
+            decoder.configure(annexBParameterSets(resource("avcC.bin"), VideoCodec.H264))
             repeat(3) { decoder.decode(resource("frame$it.h264")) }
         }
         assertEquals(3, frames.size)
@@ -30,8 +32,8 @@ class VideoDecoderTest {
     fun `a frame before the first keyframe asks for one`() {
         val frames = mutableListOf<DecodedFrame>()
         val errors = mutableListOf<String>()
-        VideoDecoder(onFrame = { frames += it }, onError = { errors += it }).use { decoder ->
-            decoder.configure(resource("avcC.bin"))
+        VideoDecoder(onFrame = { frames += it }, recover = { errors += it }).use { decoder ->
+            decoder.configure(annexBParameterSets(resource("avcC.bin"), VideoCodec.H264))
             decoder.decode(resource("frame1.h264"))
             assertEquals(0, frames.size)
             assertEquals(1, errors.size)
@@ -47,7 +49,7 @@ class VideoDecoderTest {
     fun `released pictures are refilled instead of allocated`() {
         var shown = 0
         VideoDecoder(onFrame = { shown++; it.release() }).use { decoder ->
-            decoder.configure(resource("avcC.bin"))
+            decoder.configure(annexBParameterSets(resource("avcC.bin"), VideoCodec.H264))
             repeat(3) { decoder.decode(resource("frame$it.h264")) }
             assertEquals(3, shown)
             assertEquals(1, decoder.pool.allocations)

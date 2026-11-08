@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.bridge
 
 import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.config.WindowSize
+import io.github.numberonebot.chairplay.phone.ScreenKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -194,8 +195,8 @@ class FrameOutputTest {
     }
 
     private companion object {
-        const val MAIN_SCREEN = 110
-        const val ALT_SCREEN = 111
+        val MAIN_SCREEN = ScreenKind.MAIN
+        val ALT_SCREEN = ScreenKind.CLUSTER
         /** Limited-range black as BGRA bytes 0, 0, 0, 255, read as a big-endian int. */
         const val BLACK = 0x000000FF
     }
