@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.config
 
 import com.shilapi.xcertplay.airplay.AirPlayInsets
 import com.shilapi.xcertplay.airplay.AirPlayViewArea
+import io.github.numberonebot.chairplay.carplay.toAirPlay
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -53,12 +54,12 @@ class AltscreenCustomAreaTest {
         val custom = configWith("altscreen.enabled=true", "altscreen.card.area=custom", "altscreen.card.area.custom=",
             "altscreen.map.area=custom")
         val areas = custom.airPlay.cluster!!.viewAreas!!
-        assertEquals(AreaPreset.CENTER3.area(1440, 540), areas[custom.altscreenAreaFor(AltscreenContent.CARD)])
-        assertEquals(AreaPreset.FULL.area(1440, 540), areas[custom.altscreenAreaFor(AltscreenContent.MAP)])
+        assertEquals(AreaPreset.CENTER3.area(1440, 540).toAirPlay(), areas[custom.altscreenAreaFor(AltscreenContent.CARD)])
+        assertEquals(AreaPreset.FULL.area(1440, 540).toAirPlay(), areas[custom.altscreenAreaFor(AltscreenContent.MAP)])
         assertEquals(presets, custom.altscreenAreaFor(AltscreenContent.MAP))
 
         val preset = configWith("altscreen.enabled=true", "altscreen.card.area=left3")
-        assertEquals(AreaPreset.LEFT3.area(1440, 540),
+        assertEquals(AreaPreset.LEFT3.area(1440, 540).toAirPlay(),
             preset.airPlay.cluster!!.viewAreas!![preset.altscreenAreaIndex(AltscreenContent.CARD, AreaChoice.Custom)])
     }
 

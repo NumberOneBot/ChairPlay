@@ -4,8 +4,7 @@ import com.shilapi.xcertplay.airplay.AirPlaySession
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.AreaGroup
 import io.github.numberonebot.chairplay.config.areaKey
-import io.github.numberonebot.chairplay.config.bootstrapRouteGuidance
-import io.github.numberonebot.chairplay.config.carPlayAvailability
+import io.github.numberonebot.chairplay.carplay.CarPlayConfig
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.carplay.CarPlayDataFeed
 import io.github.numberonebot.chairplay.carplay.CarPlayDataLog
@@ -75,7 +74,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     val controlsConfig = ControlsConfig.load(dir)
     log(controlsConfig.summary())
     log(config.displaySummary())
-    log("airplay sourceVersion=${config.airPlay.sourceVersion} bootstrapRouteGuidance=${bootstrapRouteGuidance()} carPlayAvailability=${carPlayAvailability()}")
+    log(CarPlayConfig.summary())
     val windows = AppWindows(dir, config, MainTitle.opening(config))
     val window = windows.main
     val title = MainTitle(window, config)
@@ -130,7 +129,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // Looks at the Windows theme for CarPlay's look, and at the GPS car for its page.
     val themeWatch = Executors.newSingleThreadScheduledExecutor { Thread(it, "theme-watch").apply { isDaemon = true } }
     val theme = CarPlayTheme(config.theme, themeWatch, touchSender, active::get)
-    val ui = ChairPlayUi(dir, config, { checkFirewall(config.airPlay.port) }, object : UiActions {
+    val ui = ChairPlayUi(dir, config, { checkFirewall(CarPlayConfig.PORT) }, object : UiActions {
         override fun connect() = Thread({
             lockReady.await()
             title.connecting()

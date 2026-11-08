@@ -1,18 +1,17 @@
 package io.github.numberonebot.chairplay.config
 
-import com.shilapi.xcertplay.airplay.AirPlayDisplayConfig
-import com.shilapi.xcertplay.airplay.AirPlayInsets
-import com.shilapi.xcertplay.airplay.AirPlayViewArea
-import com.shilapi.xcertplay.airplay.CarPlayClusterDisplay
+import io.github.numberonebot.chairplay.phone.ClusterSpec
+import io.github.numberonebot.chairplay.phone.Insets
+import io.github.numberonebot.chairplay.phone.ScreenArea
 import java.util.Properties
 
-/** What the altscreen shows: one of the cluster contents the iPhone lists in its altScreenURLs. */
-enum class AltscreenContent(val key: String, val cluster: CarPlayClusterDisplay.Content) {
+/** What the altscreen shows: one of the cluster contents the iPhone lists in its altScreenURLs (carplay.altscreenUrl). */
+enum class AltscreenContent(val key: String) {
     /** Our HUD: the iPhone sends the turn card, the window shows the HUD's own data. */
-    HUD("hud", CarPlayClusterDisplay.Content.TURN_CARD),
-    MAP("map", CarPlayClusterDisplay.Content.MAP),
-    MAP_CARD("map-card", CarPlayClusterDisplay.Content.INSTRUMENTS),
-    CARD("card", CarPlayClusterDisplay.Content.TURN_CARD);
+    HUD("hud"),
+    MAP("map"),
+    MAP_CARD("map-card"),
+    CARD("card");
 
     /** Whether altscreen.cards places anything in this view: Map + card's turn card; the others have none to place. */
     val placesCards: Boolean get() = this == MAP_CARD
@@ -28,18 +27,14 @@ enum class AltscreenContent(val key: String, val cluster: CarPlayClusterDisplay.
  * with Google Maps, the left for a left-hand drive car, the right for a right-hand drive one. Neither Google Maps nor
  * Apple Maps takes the card away for showETA=no&maneuverLayout=no, so there is no off.
  */
-enum class AltscreenCards(val key: String, val query: String) {
-    AUTO("auto", ""),
-    LEFT("left", "showETA=yes&maneuverLayout=leftAligned"),
-    RIGHT("right", "showETA=yes&maneuverLayout=rightAligned"),
-    TOP("top", "showETA=yes&maneuverLayout=topAligned");
+enum class AltscreenCards(val key: String) {
+    AUTO("auto"),
+    LEFT("left"),
+    RIGHT("right"),
+    TOP("top");
 
     fun next(): AltscreenCards = entries[(ordinal + 1) % entries.size]
 }
-
-/** The cluster URL the iPhone is asked for: [content] with the [cards] layout. */
-fun altscreenUrl(content: AltscreenContent, cards: AltscreenCards): String =
-    if (cards.query.isEmpty()) content.cluster.url else "${content.cluster.url}?${cards.query}"
 
 /**
  * The AltScreen window's title, with its stream size; without a route every mode looks alike, so the title says
@@ -73,19 +68,14 @@ fun hudShowsSession(content: AltscreenContent?, session: Boolean, demo: Boolean)
 fun drawnView(content: AltscreenContent, mapView: AltscreenContent, hud: Boolean, underHud: Boolean): AltscreenContent? =
     (if (content == AltscreenContent.HUD) mapView else content).takeIf { !hud || underHud }
 
-// The Audi Virtual Cockpit's 12.3-inch Kombi panel; DiPlay's cluster display reports the same 292 mm.
-private const val ALTSCREEN_WIDTH_MM = 292
-
 /**
- * The AltScreen as /info declares it: DiPlay's cluster display, with even margins as for its virtual cluster rather
- * than its car cluster's crop, and the view [areas]. DiPlay rounds its cluster stream to multiples of 8; the AltScreen
- * goes out at the size set, 1440x540 by default for Audi's panel (the MHI2Q CarPlay project declares it as 1440x542).
- * Nothing covers a window on a PC, so the safe area (where Apple Maps keeps its attribution and car marker) is the
- * whole panel unless altscreen.safe.* in [settings] leave room for an overlay.
+ * The AltScreen as the iPhone is told of it: [alt]'s size and view, and the view [areas]. Nothing covers a window on a
+ * PC, so the safe area (where Apple Maps keeps its attribution and car marker) is the whole panel unless altscreen.safe.*
+ * in [settings] leave room for an overlay.
  */
-internal fun altscreenDisplay(alt: Altscreen, settings: Properties, areas: List<AirPlayViewArea>?): AirPlayDisplayConfig {
+internal fun altscreenCluster(alt: Altscreen, settings: Properties, areas: List<ScreenArea>): ClusterSpec {
     val (width, height) = alt.size.width to alt.size.height
-    val safe = AirPlayInsets(
+    val safe = Insets(
         top = settings.nonNegativeSetting("altscreen.safe.top"),
         bottom = settings.nonNegativeSetting("altscreen.safe.bottom"),
         left = settings.nonNegativeSetting("altscreen.safe.left"),
@@ -94,17 +84,6 @@ internal fun altscreenDisplay(alt: Altscreen, settings: Properties, areas: List<
     require(safe.top + safe.bottom < height && safe.left + safe.right < width) {
         "altscreen.safe.* leave nothing of the ${width}x$height altscreen"
     }
-    return CarPlayClusterDisplay.config(
-        widthPixels = width,
-        heightPixels = height,
-        scalePercent = 100,
-        content = alt.content.cluster,
-    ).copy(
-        widthPixels = width,
-        heightPixels = height,
-        heightPhysicalMm = Math.round(ALTSCREEN_WIDTH_MM * height.toDouble() / width).toInt(),
-        safeArea = safe.takeIf { it != AirPlayInsets() },
-        initialUrl = altscreenUrl(alt.content, alt.cards),
-        viewAreas = areas,
-    )
+    return ClusterSpec(width, height, safe, areas, alt.content, alt.cards)
 }
+

@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.ui
 
 import io.github.numberonebot.chairplay.bluetooth.WindowsBluetooth
 import io.github.numberonebot.chairplay.bluetooth.pairedIphoneName
+import io.github.numberonebot.chairplay.carplay.CarPlayConfig
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.network.WlanApi
 import io.github.numberonebot.chairplay.config.SettingsFile
@@ -94,7 +95,7 @@ class ChairPlayUi(
         SetupInfo(
             mfiDirectory = config.mfiDirectory().toPath(),
             firewall = FirewallStatus.UNKNOWN,
-            firewallCommands = firewallHint(config.airPlay.port, ProcessHandle.current().info().command().orElse("java.exe")),
+            firewallCommands = firewallHint(CarPlayConfig.PORT,ProcessHandle.current().info().command().orElse("java.exe")),
             settingsFile = dir.resolve(DesktopConfig.SETTINGS_FILE),
             displayWidth = config.displayWidth,
             displayHeight = config.displayHeight,

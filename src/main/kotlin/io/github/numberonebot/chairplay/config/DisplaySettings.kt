@@ -1,19 +1,10 @@
 package io.github.numberonebot.chairplay.config
 
-import com.shilapi.xcertplay.airplay.AirPlayDisplayConfig
-import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
-import com.shilapi.xcertplay.airplay.AirPlayInsets
-import com.shilapi.xcertplay.airplay.AirPlayViewArea
+import io.github.numberonebot.chairplay.phone.Dock
+import io.github.numberonebot.chairplay.phone.Insets
+import io.github.numberonebot.chairplay.phone.ScreenSpec
+import io.github.numberonebot.chairplay.phone.TouchMode
 import java.util.Properties
-
-// /info's display features and primary input device (CarPlay's knob, low- and high-fidelity touch).
-private const val FEATURE_KNOB = 0x02
-private const val FEATURE_TAP_TOUCH = 0x04
-private const val FEATURE_SWIPE_TOUCH = 0x08
-private const val INPUT_TOUCH = 1
-private const val INPUT_KNOB = 3
-private val TOUCH_SWIPE = FEATURE_KNOB or FEATURE_SWIPE_TOUCH to INPUT_TOUCH
-private val TOUCH_NONE = FEATURE_KNOB to INPUT_KNOB
 
 internal const val MM_PER_INCH = 25.4
 
@@ -54,35 +45,27 @@ internal class DisplaySettings(settings: Properties) {
     val rightHandDrive = settings.booleanSetting("display.right.hand.drive", false)
 
     /** One view area over the whole screen carrying the dock edge; auto declares none, as before. */
-    private val viewAreas: List<AirPlayViewArea>? = settings.choiceSetting(
-        "display.dock", null,
-        mapOf("auto" to null, "driver" to AirPlayInfoPlist.DOCK_EDGE_DRIVER_SIDE, "bottom" to AirPlayInfoPlist.DOCK_EDGE_BOTTOM),
-    )?.let { edge -> listOf(AirPlayViewArea(width, height, dockEdge = edge)) }
+    private val dock: Dock = settings.choiceSetting(
+        "display.dock", Dock.AUTO, mapOf("auto" to Dock.AUTO, "driver" to Dock.DRIVER, "bottom" to Dock.BOTTOM),
+    )
 
     /** Pixels at each edge CarPlay keeps its controls out of; all zero declares none, as before. */
-    private val safeArea: AirPlayInsets? = run {
-        val insets = AirPlayInsets(
-            top = settings.nonNegativeSetting("display.safe.top"),
-            bottom = settings.nonNegativeSetting("display.safe.bottom"),
-            left = settings.nonNegativeSetting("display.safe.left"),
-            right = settings.nonNegativeSetting("display.safe.right"),
-        )
+    private val safe: Insets = Insets(
+        top = settings.nonNegativeSetting("display.safe.top"),
+        bottom = settings.nonNegativeSetting("display.safe.bottom"),
+        left = settings.nonNegativeSetting("display.safe.left"),
+        right = settings.nonNegativeSetting("display.safe.right"),
+    ).also { insets ->
         require(insets.left + insets.right < width) {
             "display.safe.left and display.safe.right leave no width on a $width-pixel screen"
         }
         require(insets.top + insets.bottom < height) {
             "display.safe.top and display.safe.bottom leave no height on a $height-pixel screen"
         }
-        insets.takeIf { it != AirPlayInsets() }
     }
 
     /** The screen less its insets, where the picture CarPlay keeps its controls inside lies; the whole screen without insets. */
-    val safeRect: AreaRect = AreaRect(
-        x = safeArea?.left ?: 0,
-        y = safeArea?.top ?: 0,
-        width = width - (safeArea?.left ?: 0) - (safeArea?.right ?: 0),
-        height = height - (safeArea?.top ?: 0) - (safeArea?.bottom ?: 0),
-    )
+    val safeRect: AreaRect = AreaRect(safe.left, safe.top, width - safe.left - safe.right, height - safe.top - safe.bottom)
 
     /** Whether the CarPlay picture is published for games to show on a car's screen (display.share). */
     val share = settings.booleanSetting("display.share", false)
@@ -94,7 +77,7 @@ internal class DisplaySettings(settings: Properties) {
      * square (the default, as a window is rectangular): the picture fills the screen with right-angled corners
      * (mainDisplayCornerMasks); rounded leaves CarPlay's rounded corners.
      */
-    private val squareCorners: Boolean? = settings.choiceSetting("display.corners", true, mapOf("rounded" to null, "square" to true))
+    private val roundedCorners: Boolean = settings.choiceSetting("display.corners", false, mapOf("rounded" to true, "square" to false))
 
     /**
      * display.touch, what the screen's touch can do, as /info's features and primaryInputDevice say it. With touch,
@@ -102,10 +85,12 @@ internal class DisplaySettings(settings: Properties) {
      * and the controls window, always declared) the primary input, and CarPlay leaves them out, while clicks and
      * drags still reach it as taps.
      */
-    private val touch: Pair<Int, Int> = settings.choiceSetting(
-        "display.touch", TOUCH_NONE,
-        mapOf("swipe" to TOUCH_SWIPE, "tap" to (FEATURE_KNOB or FEATURE_TAP_TOUCH to INPUT_TOUCH), "none" to TOUCH_NONE),
+    private val touch: TouchMode = settings.choiceSetting(
+        "display.touch", TouchMode.NONE, mapOf("swipe" to TouchMode.SWIPE, "tap" to TouchMode.TAP, "none" to TouchMode.NONE),
     )
+
+    /** The main screen as the iPhone is told of it. */
+    val screen = ScreenSpec(width, height, fps, physicalMm, safe, roundedCorners, dock, touch, safeAreaDrawOutside)
 
     /** What the iPhone is told about its screen, for the start-up log. */
     fun summary(): String {
@@ -114,21 +99,4 @@ internal class DisplaySettings(settings: Properties) {
         return "display ${width}x$height px, ${widthMm}x$heightMm mm ($ppi ppi), $fps fps; " +
             "window ${window.width}x${window.height}"
     }
-
-    /** The main screen as /info declares it. */
-    fun airPlay() = AirPlayDisplayConfig(
-        widthPixels = width,
-        heightPixels = height,
-        widthPhysicalMm = physicalMm.first,
-        heightPhysicalMm = physicalMm.second,
-        fps = fps,
-        features = touch.first,
-        primaryInputDevice = touch.second,
-        viewAreas = viewAreas,
-        safeArea = safeArea,
-        safeAreaDrawOutside = safeAreaDrawOutside,
-        mainDisplayCornerMasks = squareCorners,
-        // Upstream leaves the safe area out with square corners, to avoid a conflict with them; a set one stays.
-        mainDisplayDisableSafeArea = squareCorners == true && safeArea == null,
-    )
 }

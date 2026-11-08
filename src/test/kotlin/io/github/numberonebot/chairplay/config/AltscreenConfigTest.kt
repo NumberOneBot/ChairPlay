@@ -3,6 +3,8 @@ package io.github.numberonebot.chairplay.config
 import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
 import com.shilapi.xcertplay.airplay.AirPlayViewArea
 import com.shilapi.xcertplay.airplay.AirPlayInsets
+import io.github.numberonebot.chairplay.carplay.toAirPlay
+import io.github.numberonebot.chairplay.phone.ScreenArea
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
@@ -30,7 +32,7 @@ class AltscreenConfigTest {
 
         // Then each group's custom area, its preset's while no rectangle is saved.
         val customs = listOf(AreaPreset.FULL.area(1920, 720), AreaPreset.RIGHT3.area(1920, 720))
-        assertEquals(AreaPreset.entries.map { it.area(1920, 720) } + customs, config.airPlay.cluster!!.viewAreas)
+        assertEquals((AreaPreset.entries.map { it.area(1920, 720) } + customs).map { it.toAirPlay() }, config.airPlay.cluster!!.viewAreas)
         assertEquals(12, config.altscreenAreaCount)
         assertEquals(listOf(0, 0, 0, 9), AltscreenContent.entries.map(config::altscreenAreaFor))
         // Another part, set while CarPlay runs, is an area the iPhone already knows.
@@ -64,8 +66,8 @@ class AltscreenConfigTest {
     // middle with an even origin.
     @Test
     fun `Center 5 of 8 is the middle five eighths`() {
-        assertEquals(AirPlayViewArea(896, 540, originX = 272), AreaPreset.CENTER5.area(1440, 540))
-        assertEquals(AirPlayViewArea(1200, 720, originX = 360), AreaPreset.CENTER5.area(1920, 720))
+        assertEquals(ScreenArea(896, 540, x = 272), AreaPreset.CENTER5.area(1440, 540))
+        assertEquals(ScreenArea(1200, 720, x = 360), AreaPreset.CENTER5.area(1920, 720))
         assertEquals(AreaPreset.CENTER5, AreaPreset.of("center5"))
         assertEquals(10, AreaPreset.entries.size)
     }

@@ -1,8 +1,7 @@
 package io.github.numberonebot.chairplay.config
 
-import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
-import com.shilapi.xcertplay.airplay.AirPlayInsets
-import com.shilapi.xcertplay.airplay.AirPlayViewArea
+import io.github.numberonebot.chairplay.phone.Insets
+import io.github.numberonebot.chairplay.phone.ScreenArea
 
 /**
  * A part of the AltScreen's frame a view can show in, laid out for an 8:3 cluster, all of the full height: the whole
@@ -24,15 +23,15 @@ enum class AreaPreset(val key: String, private val eighths: Int) {
     RIGHT3("right3", 3);
 
     /** The part of a [width]x[height] frame. */
-    fun area(width: Int, height: Int): AirPlayViewArea {
-        if (this == FULL) return AirPlayViewArea(width, height)
+    fun area(width: Int, height: Int): ScreenArea {
+        if (this == FULL) return ScreenArea(width, height)
         val w = width * eighths / 8 / 8 * 8
         val x = when (this) {
             LEFT5, LEFT4, LEFT3 -> 0
             CENTER5, CENTER4, CENTER3 -> (width - w) / 4 * 2
             else -> width - w
         }
-        return AirPlayViewArea(w, height, originX = x)
+        return ScreenArea(w, height, x = x)
     }
 
     companion object {
@@ -82,7 +81,7 @@ class AltscreenViewParts(width: Int, height: Int, value: (String) -> String?) {
     private val offsets = mutableMapOf<AreaGroup, Int>()
     private val choices = mutableMapOf<AreaGroup, AreaChoice>()
     private val problems = mutableListOf<String>()
-    val areas: List<AirPlayViewArea>
+    val areas: List<ScreenArea>
 
     /** What reading the parts had to put right, for the log: a saved rectangle clamped into a smaller frame. */
     val warnings: List<String> get() = problems
@@ -121,9 +120,9 @@ class AltscreenViewParts(width: Int, height: Int, value: (String) -> String?) {
                 val across = if (left + right < area.width) 1.0 else area.width.toDouble() / own.width
                 val down = if (top + bottom < area.height) 1.0 else area.height.toDouble() / own.height
                 fun scaled(margin: Int, by: Double) = (margin * by).toInt()
-                area.copy(safeArea = AirPlayInsets(
-                    top = area.originY + scaled(top, down), bottom = height - area.originY - area.height + scaled(bottom, down),
-                    left = area.originX + scaled(left, across), right = width - area.originX - area.width + scaled(right, across)))
+                area.copy(safe = Insets(
+                    top = area.y + scaled(top, down), bottom = height - area.y - area.height + scaled(bottom, down),
+                    left = area.x + scaled(left, across), right = width - area.x - area.width + scaled(right, across)))
             }
         }
         areas = list
@@ -133,7 +132,7 @@ class AltscreenViewParts(width: Int, height: Int, value: (String) -> String?) {
      * [group]'s custom part: its saved rectangle on the grid, clamped into a frame made smaller since; while none is
      * saved, its preset, or its default one while it is set to custom, holds the place.
      */
-    private fun customArea(group: AreaGroup, choice: AreaChoice, width: Int, height: Int, value: (String) -> String?): AirPlayViewArea {
+    private fun customArea(group: AreaGroup, choice: AreaChoice, width: Int, height: Int, value: (String) -> String?): ScreenArea {
         val key = customKey(group)
         val text = value(key)?.trim()?.ifEmpty { null }
             ?: return ((choice as? AreaChoice.Preset)?.preset ?: defaultArea(group)).area(width, height)
@@ -163,46 +162,3 @@ class AltscreenViewParts(width: Int, height: Int, value: (String) -> String?) {
     /** The area [content] shows in, in the part it was set to. */
     fun indexOf(content: AltscreenContent): Int = indexOf(content, choiceOf(content))
 }
-
-/**
- * updateViewArea for the AltScreen: DiPlay's AirPlayInfoPlist.viewAreaCommand, which it sends for the main screen
- * alone, with the AltScreen's display. The iPhone acted on the main screen's only with the animation and the adjacent
- * areas, and it moves the AltScreen's too.
- */
-fun altscreenViewAreaCommand(index: Int, count: Int): Map<String, Any?> = linkedMapOf(
-    "type" to "updateViewArea",
-    "params" to linkedMapOf(
-        "uuid" to AirPlayInfoPlist.ALT_UUID,
-        "viewAreaIndex" to index,
-        "animationDurationMillis" to VIEW_AREA_ANIMATION_MILLIS,
-        "adjacentViewAreas" to (0 until count).filter { it != index },
-    ),
-)
-
-/**
- * Moves CarPlay on the AltScreen to a view area: [send] the session's updateViewArea, then [showView], which asks for
- * the AltScreen's view again with showUI once the move is over ([AREA_MOVE_SETTLE_MILLIS]). Seen on an iPhone 15 Pro Max (AirPlay 870.14): after updateViewArea alone the
- * view stays blurred, mid-way through its move, and once asked for again it is drawn in the new area, the rest of the
- * frame near black. [count] is how many areas the connection declared.
- */
-class AltscreenAreaMove(
-    private val count: () -> Int,
-    private val send: (Map<String, Any?>) -> Boolean,
-    private val showView: () -> Unit,
-) {
-    /** False when the iPhone was not sent the move. */
-    operator fun invoke(index: Int): Boolean {
-        if (!send(altscreenViewAreaCommand(index, count()))) return false
-        showView()
-        return true
-    }
-}
-
-/**
- * How long after updateViewArea the AltScreen's view is asked for again. Asked for 2 ms after, it stayed blurred: the
- * move's new codec configuration comes about 300 ms after the command, for its 300 ms; asked for a second after, the
- * view was drawn in the new area.
- */
-const val AREA_MOVE_SETTLE_MILLIS = 1_000L
-
-private const val VIEW_AREA_ANIMATION_MILLIS = 300

@@ -1,6 +1,5 @@
 package io.github.numberonebot.chairplay.config
 
-import com.shilapi.xcertplay.airplay.AirPlayConfig
 import com.shilapi.xcertplay.airplay.AirPlayIdentity
 import com.shilapi.xcertplay.airplay.PairingStore
 import io.github.numberonebot.chairplay.log.LogLevel
@@ -8,11 +7,12 @@ import io.github.numberonebot.chairplay.media.DuckSetting
 import io.github.numberonebot.chairplay.media.MediaDucking
 import io.github.numberonebot.chairplay.media.decibelGain
 import io.github.numberonebot.chairplay.network.SavedWifi
+import io.github.numberonebot.chairplay.phone.ClusterSpec
+import io.github.numberonebot.chairplay.phone.ScreenSpec
 import com.shilapi.xcertplay.transport.Iap2WirelessSecurity
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.security.MessageDigest
 import java.util.Properties
 import kotlin.io.path.appendText
 import kotlin.io.path.exists
@@ -36,7 +36,7 @@ fun mainWindowTitle(stream: WindowSize, status: String? = null): String =
 class DesktopConfig private constructor(private val dir: Path, startedWith: DesktopConfig?) {
     constructor(dir: Path) : this(dir, null)
 
-    // As the app starts the file gains what it lacks; read again later ([airPlayNow]), it is taken as it is.
+    // As the app starts the file gains what it lacks; read again later ([now]), it is taken as it is.
     private val settings = if (startedWith == null) loadSettings() else readSettings()
     val identity: AirPlayIdentity = startedWith?.identity ?: loadIdentity(dir)
     val pairings: PairingStore = startedWith?.pairings ?: loadPairings(dir)
@@ -70,7 +70,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
      * The car's name on the iPhone: in its CarPlay settings, in /info, in the iAP2 identification and as the
      * Bonjour service name, which holds at most 63 bytes of UTF-8. The window title does not follow it.
      */
-    private val deviceName: String = run {
+    val deviceName: String = run {
         val name = settings.getProperty("device.name")?.trim()?.ifEmpty { null } ?: DEFAULT_DEVICE_NAME
         require(name.toByteArray(Charsets.UTF_8).size <= 63 && name.none(Char::isISOControl)) {
             "device.name must be at most 63 bytes of UTF-8 without control characters, not \"$name\""
@@ -82,6 +82,9 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     internal val display = DisplaySettings(settings)
     val displayWidth = display.width
     val displayHeight = display.height
+
+    /** The CarPlay screen as the phone is told of it, which it asks at each connection. */
+    val screen: ScreenSpec = display.screen
 
     /** The CarPlay window on the PC; the picture is scaled into it, so it needs not match the display. */
     val window = display.window
@@ -160,8 +163,8 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     /** What reading the AltScreen's parts had to put right, such as a rectangle clamped into a smaller frame. */
     val altscreenWarnings: List<String> = viewParts?.warnings.orEmpty()
 
-    /** The AltScreen as /info declares it; null when off. The iPhone learns of it only when it connects. */
-    private val altscreenDisplay = altscreen?.let { altscreenDisplay(it, settings, altscreenAreas) }
+    /** The AltScreen as the phone is told of it; null when off. The iPhone learns of it only when it connects. */
+    val cluster: ClusterSpec? = altscreen?.let { altscreenCluster(it, settings, altscreenAreas.orEmpty()) }
 
     /** gps.*: the spoofed GPS and the car that drives it; the iPhone learns of the GPS when it connects. */
     val gps = settings.gpsSettings()
@@ -192,41 +195,26 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     /** [accentText] as 0xRRGGBB. */
     val accent: Int = accentText.drop(1).toInt(16)
 
-    /**
-     * DiPlay's production values (CarPlayHostActivity.airPlayConfig); btMac is replaced by the radio's. The
-     * CarPlay home screen shows the receiver's icon where a car shows its maker's; tapping it opens the settings screen.
-     */
-    val airPlay = AirPlayConfig(
-        keyboardInput = settings.booleanSetting("keyboard.text.input", true),
-        deviceName = deviceName,
-        deviceId = deviceId(identity),
-        btMac = deviceId(identity),
-        sourceVersion = sourceVersion(),
-        main = display.airPlay(),
-        rightHandDrive = display.rightHandDrive,
-        port = 7000,
-        hevc = settings.choiceSetting("video.codecs", true, mapOf("h264" to false, "h264+h265" to true)),
-        microphone = true,
-        // Without Opus the wireless iPhone opens no audio stream at all and plays on its own speaker.
-        microphoneOpus = true,
-        videoInCar = false,
-        mainBufferedAudio = settings.choiceSetting("audio.music.mode", true, mapOf("standard" to false, "buffered" to true)),
-        spatialAudio = startedWith != null && io.github.numberonebot.chairplay.media.apac.spatialConfigured(dir, settings),
-        cluster = altscreenDisplay,
-        oemLabel = settings.getProperty("car.label")?.trim()?.ifEmpty { null } ?: DEFAULT_CAR_LABEL,
-        icons = listOf(carIcon(dir, settings.getProperty("car.icon"))),
-    )
+    /** keyboard.text.input: the PC's keyboard types into the iPhone's text fields. */
+    val keyboardTextInput: Boolean = settings.booleanSetting("keyboard.text.input", true)
+
+    /** video.codecs: whether the iPhone may send H.265 as well as H.264. */
+    val h265: Boolean = settings.choiceSetting("video.codecs", true, mapOf("h264" to false, "h264+h265" to true))
+
+    /** audio.music.mode: buffered, apps that can send music ahead, so short Wi-Fi gaps do not interrupt it; or standard. */
+    val bufferedMusic: Boolean = settings.choiceSetting("audio.music.mode", true, mapOf("standard" to false, "buffered" to true))
+
+    /** Whether a connection offers spatial music; only a connection's settings ([now]) ask, as the check is slow. */
+    val spatialAudio: Boolean = startedWith != null && io.github.numberonebot.chairplay.media.apac.spatialConfigured(dir, settings)
+
+    /** car.label and car.icon: the button on the CarPlay home screen, where a car shows its maker's, for the settings screen. */
+    val carLabel: String = settings.getProperty("car.label")?.trim()?.ifEmpty { null } ?: DEFAULT_CAR_LABEL
+    internal val homeIcon = carIcon(dir, settings.getProperty("car.icon"))
 
     val hardwareVideo: Boolean = settings.choiceSetting("video.decoder", true, mapOf("hardware" to true, "software" to false))
 
     /** The settings as settings.properties has them now, with this start's identity and pairings. */
     fun now(): DesktopConfig = DesktopConfig(dir, this)
-
-    /**
-     * [airPlay] for the next connection: what the iPhone learns of its screens, which it asks at each connection, as
-     * [now] has it; the name as the app started with it, as the radio keeps it.
-     */
-    fun airPlayNow(now: DesktopConfig = now()): AirPlayConfig = now.airPlay.copy(deviceName = airPlay.deviceName)
 
     fun mfiDirectory(): File = dir.resolve("offline-mfi").toFile()
 
@@ -287,13 +275,6 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
             val choices = Iap2WirelessSecurity.entries.associateBy { it.name }
             require(security in choices) { "wifi.security must be one of ${choices.keys.joinToString()}, not $security" }
             return SavedWifi(ssid, settings.getProperty("wifi.passphrase").orEmpty(), choices.getValue(security))
-        }
-
-        /** DiPlayBootstrap.deviceId: a locally administered MAC derived from the AirPlay public key. */
-        fun deviceId(identity: AirPlayIdentity): String {
-            val bytes = MessageDigest.getInstance("SHA-256").digest(identity.publicKey).copyOf(6)
-            bytes[0] = ((bytes[0].toInt() and 0xfc) or 0x02).toByte()
-            return bytes.joinToString(":") { "%02X".format(it.toInt() and 0xff) }
         }
     }
 }

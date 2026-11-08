@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.config
 
-import com.shilapi.xcertplay.airplay.AirPlayViewArea
+import io.github.numberonebot.chairplay.phone.ScreenArea
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -45,7 +45,7 @@ class AreaRectTest {
 
     @Test
     fun `a rectangle is the view area at its place`() {
-        assertEquals(AirPlayViewArea(616, 468, originX = 412, originY = 36), AreaRect(412, 36, 616, 468).area())
+        assertEquals(ScreenArea(616, 468, x = 412, y = 36), AreaRect(412, 36, 616, 468).area())
         assertEquals("altscreen.card.area.custom", customKey(AreaGroup.CARD))
         assertEquals("altscreen.map.area.custom", customKey(AreaGroup.MAP))
     }

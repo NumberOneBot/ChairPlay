@@ -1,7 +1,6 @@
 package io.github.numberonebot.chairplay.config
 
-import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
-import com.shilapi.xcertplay.airplay.AirPlayViewArea
+import io.github.numberonebot.chairplay.phone.ScreenArea
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -13,55 +12,22 @@ class AltscreenAreasTest {
     fun `the parts are the whole frame and parts of its eighths`() {
         assertEquals(
             listOf(
-                AirPlayViewArea(1920, 720),
-                AirPlayViewArea(1200, 720), AirPlayViewArea(1200, 720, originX = 360), AirPlayViewArea(1200, 720, originX = 720),
-                AirPlayViewArea(960, 720), AirPlayViewArea(960, 720, originX = 480), AirPlayViewArea(960, 720, originX = 960),
-                AirPlayViewArea(720, 720), AirPlayViewArea(720, 720, originX = 600), AirPlayViewArea(720, 720, originX = 1200),
+                ScreenArea(1920, 720),
+                ScreenArea(1200, 720), ScreenArea(1200, 720, x = 360), ScreenArea(1200, 720, x = 720),
+                ScreenArea(960, 720), ScreenArea(960, 720, x = 480), ScreenArea(960, 720, x = 960),
+                ScreenArea(720, 720), ScreenArea(720, 720, x = 600), ScreenArea(720, 720, x = 1200),
             ),
             AreaPreset.entries.map { it.area(1920, 720) },
         )
         // A width keeps to a multiple of 8, as DiPlay's streams do, and the middle ones to an even origin.
         assertEquals(
             listOf(
-                AirPlayViewArea(1440, 540),
-                AirPlayViewArea(896, 540), AirPlayViewArea(896, 540, originX = 272), AirPlayViewArea(896, 540, originX = 544),
-                AirPlayViewArea(720, 540), AirPlayViewArea(720, 540, originX = 360), AirPlayViewArea(720, 540, originX = 720),
-                AirPlayViewArea(536, 540), AirPlayViewArea(536, 540, originX = 452), AirPlayViewArea(536, 540, originX = 904),
+                ScreenArea(1440, 540),
+                ScreenArea(896, 540), ScreenArea(896, 540, x = 272), ScreenArea(896, 540, x = 544),
+                ScreenArea(720, 540), ScreenArea(720, 540, x = 360), ScreenArea(720, 540, x = 720),
+                ScreenArea(536, 540), ScreenArea(536, 540, x = 452), ScreenArea(536, 540, x = 904),
             ),
             AreaPreset.entries.map { it.area(1440, 540) },
-        )
-    }
-
-    // Seen on an iPhone 15 Pro Max (AirPlay 870.14): after updateViewArea the AltScreen's view stays blurred, mid-way,
-    // until it is asked for again with showUI; then it is drawn in the new area. So a move sends the area, then the view.
-    @Test
-    fun `a move sends the area, then asks for the view again`() {
-        val sent = mutableListOf<String>()
-        val move = AltscreenAreaMove(count = { 3 }, send = { sent += "area ${(it["params"] as Map<*, *>)["viewAreaIndex"]}"; true },
-            showView = { sent += "view" })
-
-        assertEquals(true, move(2))
-        assertEquals(listOf("area 2", "view"), sent)
-    }
-
-    @Test
-    fun `a move the iPhone did not get asks for no view`() {
-        val sent = mutableListOf<String>()
-        val move = AltscreenAreaMove(count = { 3 }, send = { false }, showView = { sent += "view" })
-
-        assertEquals(false, move(1))
-        assertEquals(emptyList<String>(), sent)
-    }
-
-    // DiPlay's updateViewArea, which it sends for the main screen alone, addressed to the AltScreen.
-    @Test
-    fun `the AltScreen is moved to an area as DiPlay moves the main screen`() {
-        val command = altscreenViewAreaCommand(1, 6)
-
-        assertEquals("updateViewArea", command["type"])
-        assertEquals(
-            mapOf("uuid" to AirPlayInfoPlist.ALT_UUID, "viewAreaIndex" to 1, "animationDurationMillis" to 300, "adjacentViewAreas" to listOf(0, 2, 3, 4, 5)),
-            command["params"],
         )
     }
 }

@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.config
 
-import com.shilapi.xcertplay.airplay.AirPlayViewArea
+import io.github.numberonebot.chairplay.phone.ScreenArea
 
 /** The least width and height of a custom part, in pixels. */
 const val MIN_AREA = 64
@@ -36,7 +36,7 @@ data class AreaRect(val x: Int, val y: Int, val width: Int, val height: Int) {
     val isLargeEnough: Boolean get() = width >= MIN_AREA && height >= MIN_AREA
 
     /** The view area at its place. */
-    fun area(): AirPlayViewArea = AirPlayViewArea(width, height, originX = x, originY = y)
+    fun area(): ScreenArea = ScreenArea(width, height, x, y)
 
     override fun toString() = "$x, $y, $width, $height"
 

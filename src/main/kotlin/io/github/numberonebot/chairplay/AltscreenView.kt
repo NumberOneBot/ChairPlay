@@ -1,15 +1,15 @@
 package io.github.numberonebot.chairplay
 
 import com.shilapi.xcertplay.airplay.AirPlaySession
+import io.github.numberonebot.chairplay.carplay.AREA_MOVE_SETTLE_MILLIS
+import io.github.numberonebot.chairplay.carplay.AltscreenAreaMove
+import io.github.numberonebot.chairplay.carplay.altscreenUrl
 import io.github.numberonebot.chairplay.config.ALTSCREEN_MIN_WIDTH
-import io.github.numberonebot.chairplay.config.AREA_MOVE_SETTLE_MILLIS
-import io.github.numberonebot.chairplay.config.AltscreenAreaMove
 import io.github.numberonebot.chairplay.config.AltscreenCards
 import io.github.numberonebot.chairplay.config.AltscreenContent
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.config.altscreenTitle
-import io.github.numberonebot.chairplay.config.altscreenUrl
 import io.github.numberonebot.chairplay.config.drawnView
 import io.github.numberonebot.chairplay.config.fittedTo
 import io.github.numberonebot.chairplay.config.hudShowsSession

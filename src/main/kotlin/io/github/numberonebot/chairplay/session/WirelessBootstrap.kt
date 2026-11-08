@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.session
 import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.MediaSink
+import io.github.numberonebot.chairplay.carplay.CarPlayConfig
 import io.github.numberonebot.chairplay.carplay.DataLink
 import io.github.numberonebot.chairplay.carplay.PhoneDataTap
 import io.github.numberonebot.chairplay.config.DesktopConfig
@@ -155,20 +156,18 @@ class WirelessBootstrap internal constructor(
             val info = network.start(NETWORK_TIMEOUT_MILLIS)
             val host = HotspotAddressPolicy.select(info.hostAddresses) ?: info.hostAddress
                 ?: throw IOException("Wi-Fi adapter has no usable address")
-            val media = parts.media(sink, microphoneEnabled = config.airPlay.microphone)
+            val media = parts.media(sink, microphoneEnabled = CarPlayConfig.airPlay(config).microphone)
             val radio = parts.radioAddress()
             val now = config.now()
-            val sessionConfig = config.airPlayNow(now).copy(btMac = radio)
+            val sessionConfig = CarPlayConfig.airPlayNow(config, now).copy(btMac = radio)
             if (!stack.closed) onConnection(now)
             val sessions = BringUpSessions(stack, listener, ducks, { current === stack }, { restart(stack) }, ::log)
             network.validateReady()
             val airPlay = stack.own(AirPlayListener(
                 listOf(host) + info.hostAddresses.filter { it != host },
                 sessionConfig.port,
-                { socket ->
-                    AirPlaySession(socket, sessionConfig.copy(port = socket.localPort), config.identity,
-                        config.pairings, parts.mfi, sessions, media)
-                },
+                { socket -> AirPlaySession(socket, sessionConfig.copy(port = socket.localPort), config.identity, config.pairings,
+                    parts.mfi, sessions, media) },
                 { failed(stack, it) },
             ))
             val advertised = sessionConfig.copy(port = airPlay.start())
@@ -186,7 +185,7 @@ class WirelessBootstrap internal constructor(
                     onArtwork = { if (!stack.closed) data.onArtwork(DataLink.BLUETOOTH, it) }))
             stack.bootstrap = bootstrap
             val wireless = Iap2WirelessIdentification(radio, info.ssid)
-            val identification = desktopIdentification(radio, config.airPlay.deviceName, now.gps)
+            val identification = desktopIdentification(radio, config.deviceName, now.gps)
             val runtimeIdentification = identification.forWirelessLink(Iap2WirelessLinkRole.RUNTIME_TUNNEL, wireless)
             val endpoint = buildEndpoint(info, host, advertised.port, advertised, config.identity)
             media.setIapTunnelHandler { tunnel ->

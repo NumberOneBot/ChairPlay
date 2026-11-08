@@ -18,7 +18,8 @@ import java.util.HexFormat
  * screen's size, insets, dock, corners and touch, the AltScreen's areas, margins and view: the AirPlayConfig, and the
  * /info plist as its bytes and its displays. The expected transcript (airplay/info-transcript.txt) was recorded from
  * DesktopConfig.airPlay and airPlayNow, built in DesktopConfig from DiPlay's types, before the screens were described
- * in ChairPlay's own; a run that differs writes what it got to build/airplay-info-transcript.txt.
+ * in ChairPlay's own (ScreenSpec, ClusterSpec) and CarPlayConfig built it from them: the move changed nothing the
+ * iPhone is told. A run that differs writes what it got to build/airplay-info-transcript.txt.
  */
 class AirPlayInfoTranscriptTest {
     private val hex = HexFormat.of()
@@ -61,9 +62,9 @@ class AirPlayInfoTranscriptTest {
             lines += "## $name"
             val dir = appFolder(settings)
             val config = DesktopConfig(dir)
-            record("airPlay", config.airPlay)
+            record("airPlay", CarPlayConfig.airPlay(config))
             // The next connection's, with the spatial offer left out: it depends on this PC's decoder and output.
-            record("airPlayNow", config.airPlayNow().copy(spatialAudio = false))
+            record("airPlayNow", CarPlayConfig.airPlayNow(config).copy(spatialAudio = false))
         }
         lines += "## the next connection, the file edited after the start"
         lastAirPlay = emptyList()
@@ -71,7 +72,7 @@ class AirPlayInfoTranscriptTest {
         val config = DesktopConfig(dir)
         Files.writeString(dir.resolve("settings.properties"), "device.name=Second\ndisplay.width=1024\ndisplay.height=600\n" +
             "altscreen.enabled=true\naltscreen.content=card\n", StandardOpenOption.APPEND)
-        record("airPlayNow", config.airPlayNow().copy(spatialAudio = false))
+        record("airPlayNow", CarPlayConfig.airPlayNow(config).copy(spatialAudio = false))
 
         val expected = javaClass.getResourceAsStream("/airplay/info-transcript.txt")
             ?.use { String(it.readBytes(), Charsets.UTF_8) }?.replace("\r\n", "\n")?.trimEnd()
