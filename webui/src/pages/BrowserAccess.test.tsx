@@ -21,7 +21,7 @@ const openInBrowser = () => screen.getByRole('button', { name: 'Open in browser'
 const lock = (lock: Partial<AppState['lock']>): AppState['lock'] =>
   ({ mine: false, holder: null, shared: false, handOver: false, ...lock })
 
-describe('Browser access', () => {
+describe('Settings in a browser', () => {
   it('says when the port in the settings was taken', () => {
     browserAccess({ port: 51234, configuredPort: 7529 })
     expect(screen.getByRole('alert')).toBeTruthy()
@@ -46,6 +46,32 @@ describe('Browser access', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'Allow access from the local network' }))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'ui.network': 'true' }]))
+  })
+
+  // ui.port as saved, though this run fell back to another port.
+  it('shows the saved port', async () => {
+    const backend = new FakeBackend()
+    backend.data.values['ui.port'] = '8080'
+    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true, uiServer: uiServer({ port: 51234, configuredPort: 8080 }) })} backend={backend} />)
+
+    expect((await screen.findByRole('textbox', { name: 'Port' }) as HTMLInputElement).value).toBe('8080')
+  })
+
+  it('saves a port typed in, or keeps a refused one marked', async () => {
+    const backend = new FakeBackend()
+    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={backend} />)
+    const port = await screen.findByRole('textbox', { name: 'Port' }) as HTMLInputElement
+
+    fireEvent.change(port, { target: { value: '8080' } })
+    fireEvent.keyDown(port, { key: 'Enter' })
+    await waitFor(() => expect(backend.saved).toEqual([{ 'ui.port': '8080' }]))
+
+    backend.nextOutcome = { ok: false, errors: { 'ui.port': 'Enter a port from 1 to 65535' } }
+    fireEvent.change(port, { target: { value: '70000' } })
+    fireEvent.keyDown(port, { key: 'Enter' })
+
+    await waitFor(() => expect(port.getAttribute('aria-invalid')).toBe('true'))
+    expect(port.value).toBe('70000')
   })
 
   it('hands the settings from the window over to the browser', () => {

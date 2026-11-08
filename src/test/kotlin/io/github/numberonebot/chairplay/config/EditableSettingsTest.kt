@@ -172,6 +172,14 @@ class EditableSettingsTest {
         assertTrue("iphone.join.seconds" in errors("iphone.join.seconds" to "0"))
     }
 
+    // The settings' address in a browser: the server binds it as the app starts.
+    @Test
+    fun `the settings' port is a port, applied at the next start`() {
+        assertTrue(errors("ui.port" to "7529").isEmpty())
+        for (port in listOf("0", "70000", "port", "")) assertTrue(port, "ui.port" in errors("ui.port" to port))
+        assertEquals(Applies.RESTART, EditableSettings.applies("ui.port"))
+    }
+
     @Test
     fun `the network name must fit a Wi-Fi network`() {
         assertTrue("wifi.ssid" in errors("wifi.ssid" to " "))
