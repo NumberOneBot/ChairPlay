@@ -12,9 +12,10 @@ import io.github.numberonebot.chairplay.input.WheelAction
 /**
  * The settings as the pages read and save them: settings.properties ([settings]) with when each change applies, the
  * sound devices ([audioDevices]) beside them, and controls.properties ([bindings]) for the Keyboard page. The stored
- * Wi-Fi password never leaves: the page and the log learn only whether it is set. A save tells the [model] what waits
- * for a reconnection or a restart, [onSaved] what changed, [onBindings] the bindings to put in force, and the pages
- * ([changed]); a Wi-Fi network saved [connects] when the controller says the first one should.
+ * Wi-Fi password never leaves: the page and the log learn only whether it is set. A save, and each connection's reading
+ * of the settings ([connected]), tell the [model] what waits for a reconnection or a restart; a save tells [onSaved]
+ * what changed, [onBindings] the bindings to put in force, and the pages ([changed]); a Wi-Fi network saved [connects]
+ * when the controller says the first one should.
  */
 internal class UiSettings(
     private val settings: SettingsFile,
@@ -31,6 +32,12 @@ internal class UiSettings(
 ) {
     /** The settings as the app started with them, against which a change waits for the next start. */
     private val startup: Map<String, String> = settings.read()
+
+    /** The settings the connection under way, or the last one, was made with; null before a bring-up read them. */
+    private var connection: Map<String, String>? = null
+
+    /** Keeps [connection] and what the model is told waits in step, as a save and a bring-up's reading may meet. */
+    private val pendingLock = Any()
 
     /** Moves on with each settings save, for the state's settingsVersion, so an open page re-reads what it does not stream. */
     @Volatile
@@ -60,22 +67,19 @@ internal class UiSettings(
 
     fun save(changes: Map<String, String>): SaveResult {
         val normalized = changes.mapValues { (key, value) -> normalize(key, value) }
-        val (saved, phase) = synchronized(this) {
+        val saved = synchronized(this) {
             val current = settings.read()
             val errors = EditableSettings.validate(normalized, current)
             if (errors.isNotEmpty()) return SaveResult(errors, emptyMap())
             settings.write(normalized)
-            normalized.filter { (key, value) -> current[key] != value } to model.state.phase
+            normalized.filter { (key, value) -> current[key] != value }
         }
         val applies = normalized.keys.associateWith { appliesName(EditableSettings.applies(it)) }
         if (saved.isNotEmpty()) log("settings saved: ${saved.keys.joinToString()}")
         saved["ui.autoshow"]?.let { model.setAutoshow(it == "true") }
         if (saved.isNotEmpty()) onSaved(saved)
+        updatePending()
         val now = settings.read()
-        val restart = EditableSettings.keys.filter { EditableSettings.applies(it) == Applies.RESTART && now[it].orEmpty() != startup[it].orEmpty() }
-        val running = phase != Phase.SETUP && phase != Phase.IDLE
-        val reconnect = saved.keys.filter { EditableSettings.applies(it) == Applies.RECONNECT && running }
-        model.pending(reconnect.toSet(), restart.toSet())
         // While Get started is open it owns the first Connect: a network saved before its password must not start
         // a bring-up without one.
         if (!now["wifi.ssid"].isNullOrBlank() && model.wifiSaved() && connects()) {
@@ -85,6 +89,28 @@ internal class UiSettings(
         version++
         changed()
         return SaveResult(emptyMap(), applies)
+    }
+
+    /** A bring-up read [values]: its connection runs with them, so a change saved since waits for the next one. */
+    fun connected(values: Map<String, String>) {
+        synchronized(pendingLock) {
+            connection = values
+            updatePending()
+        }
+    }
+
+    /**
+     * What waits, as the settings file has it now: a restart key unlike the start's value, and while a connection runs,
+     * a reconnect key unlike the value it was made with. A value set back is in force again, and waits no more.
+     */
+    private fun updatePending() = synchronized(pendingLock) {
+        val now = settings.read()
+        fun differs(key: String, from: Map<String, String>) = normalize(key, now[key].orEmpty()) != normalize(key, from[key].orEmpty())
+        val phase = model.state.phase
+        val made = connection?.takeIf { phase != Phase.SETUP && phase != Phase.IDLE }
+        val restart = EditableSettings.keys.filter { EditableSettings.applies(it) == Applies.RESTART && differs(it, startup) }
+        val reconnect = made?.let { EditableSettings.keys.filter { key -> EditableSettings.applies(key) == Applies.RECONNECT && differs(key, it) } }
+        model.pending(reconnect.orEmpty().toSet(), restart.toSet())
     }
 
     /**

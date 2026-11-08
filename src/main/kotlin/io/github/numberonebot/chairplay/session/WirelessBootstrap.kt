@@ -56,7 +56,7 @@ class WirelessBootstrap internal constructor(
     @Volatile
     override var onLink: (PhoneLink?) -> Unit = {}
 
-    /** Hears the settings each bring-up offers the iPhone its screens by, read from the file then, on its thread. */
+    /** Hears the settings each bring-up makes its connection with, its network and screens, read as it starts, on its thread. */
     @Volatile
     var onConnection: (DesktopConfig) -> Unit = {}
 
@@ -145,14 +145,16 @@ class WirelessBootstrap internal constructor(
 
     private fun bringUp(stack: BringUpStack) {
         try {
+            // One reading of the file for the whole connection, the network's and the screens' alike: what onConnection
+            // hears is what this connection runs with, against which the page marks a change.
+            val now = config.now()
             val parts = stack.makeParts()
-            val network = stack.own(parts.network())
+            val network = stack.own(parts.network(now))
             val info = network.start(NETWORK_TIMEOUT_MILLIS)
             val host = HotspotAddressPolicy.select(info.hostAddresses) ?: info.hostAddress
                 ?: throw IOException("Wi-Fi adapter has no usable address")
             val media = parts.media(sink, microphoneEnabled = CarPlayConfig.airPlay(config).microphone).reportingFeedback(links::heard)
             val radio = parts.radioAddress()
-            val now = config.now()
             val sessionConfig = CarPlayConfig.airPlayNow(config, now).copy(btMac = radio)
             if (!stack.closed) onConnection(now)
             val sessions = BringUpSessions(stack, listener, ducks, links, { current === stack }, { restart(stack) }, ::log)

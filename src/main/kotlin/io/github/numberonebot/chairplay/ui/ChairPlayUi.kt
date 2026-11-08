@@ -215,6 +215,9 @@ class ChairPlayUi(
 
     fun bringUp(status: LinkStatus) = model.bringUp(status)
 
+    /** A bring-up read the settings as [now]: the pages mark a change against what its connection runs with. */
+    fun connected(now: DesktopConfig) = controller.connected(now.values)
+
     override fun sessionActive() = model.sessionActive()
 
     override fun sessionEnded() = model.sessionEnded()

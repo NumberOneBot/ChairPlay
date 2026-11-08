@@ -252,6 +252,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // The screens saved since come with the next connection: the main window takes the new picture's shape and size,
     // and the AltScreen turns on or off, or takes its new size and the view it starts with.
     carPlay.onConnection = { now ->
+        ui.connected(now)
         val size = WindowSize(now.displayWidth, now.displayHeight)
         if (size != window.stream) {
             log("display ${size.width}x${size.height} px from this connection on")

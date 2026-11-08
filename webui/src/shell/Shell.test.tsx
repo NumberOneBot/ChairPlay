@@ -125,6 +125,11 @@ describe('Shell toolbar', () => {
     expect(sectionOf('log.level')).toBe('experiments')
   })
 
+  // Typing into the iPhone is set beside the key bindings, so the bar's list of what waits names that page.
+  it('puts the keyboard text input on Keyboard', () => {
+    expect(sectionOf('keyboard.text.input')).toBe('keyboard')
+  })
+
   it('has no Restart needed while nothing waits for one', () => {
     render(<Shell state={appState(live)} backend={new FakeBackend()} />)
 

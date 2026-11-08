@@ -52,6 +52,17 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
         }
     }
 
+    // The page marks a change against what the connection was made with, so the network and the screens come from one
+    // reading of the file: a network saved as the network starts waits for the next connection, for both alike.
+    @Test(timeout = 30_000)
+    fun `a bring-up takes the network and the screens from one reading of the settings`() {
+        val save = { dir: java.nio.file.Path -> SettingsFile(dir.resolve("settings.properties")).write(mapOf("wifi.ssid" to "Garage")) }
+        Harness(onNetworkStart = save).use { harness ->
+            assertEquals("Home", harness.ssids.poll(10, TimeUnit.SECONDS))
+            assertEquals("Home", harness.parts.first.networks.poll(10, TimeUnit.SECONDS))
+        }
+    }
+
     // Missing MFi files stopped the start in the caller's thread, so the reason reached only the console.
     @Test(timeout = 30_000)
     fun `parts that cannot be made fail the bring-up with the reason`() {

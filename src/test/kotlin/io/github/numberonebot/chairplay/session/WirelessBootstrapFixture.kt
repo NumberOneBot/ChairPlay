@@ -61,6 +61,8 @@ abstract class WirelessBootstrapFixture {
         onStatus: (LinkStatus) -> Unit = {},
         /** Hears each link as it goes live, and null as it ends. */
         onLink: (PhoneLink?) -> Unit = {},
+        /** Runs as each bring-up's network starts, with the folder of the settings file. */
+        onNetworkStart: (Path) -> Unit = {},
     ) : Closeable {
         val loopback: InetAddress = InetAddress.getByName("127.0.0.1")
         val logs = CopyOnWriteArrayList<String>()
@@ -72,6 +74,8 @@ abstract class WirelessBootstrapFixture {
         val displays = LinkedBlockingQueue<WindowSize>()
         // The AltScreen's size each bring-up read, null while it is off (a queue holds no nulls).
         val altscreens = LinkedBlockingQueue<Holder>()
+        /** The Wi-Fi network each bring-up read with the screens. */
+        val ssids = LinkedBlockingQueue<String>()
         val dir: Path = Files.createTempDirectory("chairplay-bootstrap")
         private val previousPort = AtomicInteger()
         private val advertisedPorts = LinkedBlockingQueue<Int>()
@@ -89,7 +93,7 @@ abstract class WirelessBootstrapFixture {
             }
             WirelessBootstrap(DesktopConfig(dir), sink, listener, tap) {
                 if (stacks.incrementAndGet() > 1) previousPortFree.set(bindable(loopback, previousPort.get()))
-                FakeParts(info(listOf(loopback))) { config ->
+                FakeParts(info(listOf(loopback)), onNetworkStart = { onNetworkStart(dir) }) { config ->
                     previousPort.set(config.port)
                     advertisedPorts.add(config.port)
                     advertised.add(config)
@@ -104,6 +108,7 @@ abstract class WirelessBootstrapFixture {
                 it.onConnection = { now ->
                     displays.add(WindowSize(now.displayWidth, now.displayHeight))
                     altscreens.add(Holder(now.altscreen?.size))
+                    now.wifi?.let { wifi -> ssids.add(wifi.ssid) }
                 }
             }
         }
@@ -186,6 +191,7 @@ abstract class WirelessBootstrapFixture {
     /** No Wi-Fi, Bluetooth or MFi. Each iAP2 run reports ready, then lasts as long as its link. */
     internal class FakeParts(
         private val info: WirelessHotspotInfo,
+        private val onNetworkStart: () -> Unit = {},
         private val onAdvertise: (AirPlayConfig) -> Unit,
     ) : WirelessParts {
         val link = SilentStream()
@@ -196,8 +202,12 @@ abstract class WirelessBootstrapFixture {
         val runs = LinkedBlockingQueue<Pair<Iap2IdentificationConfig, Iap2LocationProvider?>>()
         override val mfi: MfiAuthenticator? = null
 
-        override fun network() = object : WirelessHotspotManager {
-            override fun start(timeoutMillis: Long) = info
+        /** The Wi-Fi network each start of the network was given. */
+        val networks = LinkedBlockingQueue<String>()
+
+        override fun network(now: DesktopConfig) = object : WirelessHotspotManager {
+            init { now.wifi?.let { networks.add(it.ssid) } }
+            override fun start(timeoutMillis: Long) = info.also { onNetworkStart() }
             override fun close() {}
         }
 

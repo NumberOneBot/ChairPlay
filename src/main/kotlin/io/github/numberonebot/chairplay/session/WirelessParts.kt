@@ -36,7 +36,8 @@ private const val SUBSCRIPTION_SEND_TIMEOUT_MILLIS = 5_000L
 /** What a bring-up takes from the PC's radios and the iPhone; tests substitute fakes. */
 internal interface WirelessParts {
     val mfi: MfiAuthenticator?
-    fun network(): WirelessHotspotManager
+    /** The network the bring-up's reading of the settings ([now]) names. */
+    fun network(now: DesktopConfig): WirelessHotspotManager
     fun radioAddress(): String
     fun media(sink: MediaSink, microphoneEnabled: Boolean): AirPlayMediaHandler
     /** Returns the started advertisement. */
@@ -61,9 +62,9 @@ internal class DesktopParts(private val config: DesktopConfig, private val log: 
     override val mfi = LocalMfiAuthenticationClient.load(config.mfiDirectory())
 
     /** Read for each bring-up, so a network changed on the start screen applies with the next connection. */
-    override fun network() = DesktopNetwork(
-        config.currentWifi() ?: throw IOException("no Wi-Fi network is set: enter it on the start screen (wifi.ssid)"),
-        config.currentEthernetAdapter(),
+    override fun network(now: DesktopConfig) = DesktopNetwork(
+        now.wifi ?: throw IOException("no Wi-Fi network is set: enter it on the start screen (wifi.ssid)"),
+        now.ethernetAdapter,
     )
 
     override fun radioAddress() = WindowsBluetooth.localRadioAddress()

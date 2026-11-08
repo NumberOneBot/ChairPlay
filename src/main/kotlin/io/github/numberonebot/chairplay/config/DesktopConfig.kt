@@ -40,6 +40,10 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
 
     // As the app starts the file gains what it lacks; read again later ([now]), it is taken as it is.
     private val settings = if (startedWith == null) loadSettings() else readSettings()
+
+    /** Every setting as this reading of the file has it, by key: what a connection made with it runs with. */
+    val values: Map<String, String> = settings.stringPropertyNames().associateWith(settings::getProperty)
+
     val identity: AirPlayIdentity = startedWith?.identity ?: loadIdentity(dir)
     val pairings: PairingStore = startedWith?.pairings ?: loadPairings(dir)
     val iphoneAddress: String? = settings.getProperty("iphone.address")?.trim()?.ifEmpty { null }
@@ -54,13 +58,14 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     /** True once an iPhone has paired with this app: its AirPlay pairing record is in pairings/. */
     fun iphoneKnown(): Boolean = Files.list(dir.resolve("pairings")).use { it.findAny().isPresent }
 
-    /** The Wi-Fi network as the app started with it; null until wifi.ssid is set, which the start screen asks for. */
+    /**
+     * The Wi-Fi network as this reading has it (the app's start, or a bring-up's [now]); null until wifi.ssid is set,
+     * which the start screen asks for.
+     */
     val wifi: SavedWifi? = savedWifi(settings)
 
-    /** The Wi-Fi network as settings.properties has it now: the start screen may have changed it since the start. */
-    fun currentWifi(): SavedWifi? = savedWifi(readSettings())
-
-    fun currentEthernetAdapter(): String = readSettings().getProperty("network.ethernet.adapter", "").trim()
+    /** network.ethernet.adapter: the adapter's GUID, blank for the only active one. */
+    val ethernetAdapter: String = settings.getProperty("network.ethernet.adapter", "").trim()
 
     /** ui.autoconnect: the app connects to the iPhone as it starts; false waits for Connect on the start screen. */
     val autoconnect: Boolean = settings.booleanSetting("ui.autoconnect", true)

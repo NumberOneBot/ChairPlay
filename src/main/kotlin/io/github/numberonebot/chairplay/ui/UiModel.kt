@@ -39,7 +39,7 @@ data class UiState(
     val error: UiError? = null,
     val knownIphone: Boolean = false,
     val autoshow: Boolean,
-    /** Saved settings that apply with the next connection, which has not started yet. */
+    /** Saved settings unlike the values the connection under way was made with, which apply with the next one. */
     val reconnectPending: Set<String> = emptySet(),
     /** Saved settings that differ from what the app started with and apply at the next start. */
     val restartPending: Set<String> = emptySet(),
@@ -125,9 +125,13 @@ class UiModel(
         state.copy(phase = Phase.STARTING, screen = if (fromCarPlay) Screen.START else state.screen, waiting = fromCarPlay)
     }
 
-    /** Disconnect: no session and no bring-up until Connect; CarPlay's picture gives way to the start screen. */
+    /**
+     * Disconnect: no session and no bring-up until Connect; CarPlay's picture gives way to the start screen. Nothing
+     * waits for a connection: the next one reads the settings as they are then.
+     */
     fun disconnected() = update { state ->
-        state.copy(phase = Phase.IDLE, screen = if (state.screen == Screen.CARPLAY) Screen.START else state.screen, waiting = false)
+        state.copy(phase = Phase.IDLE, screen = if (state.screen == Screen.CARPLAY) Screen.START else state.screen, waiting = false,
+            reconnectPending = emptySet())
     }
 
     /** The car button on the CarPlay home screen. */
@@ -156,6 +160,7 @@ class UiModel(
 
     fun setAutoshow(autoshow: Boolean) = update { it.copy(autoshow = autoshow) }
 
+    /** What waits now, in place of what waited before: a change set back waits no more. */
     fun pending(reconnect: Set<String>, restart: Set<String>) =
-        update { it.copy(reconnectPending = it.reconnectPending + reconnect, restartPending = restart) }
+        update { it.copy(reconnectPending = reconnect, restartPending = restart) }
 }

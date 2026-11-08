@@ -31,7 +31,7 @@ export function sectionOf(key: string): Section {
   if (key.startsWith('altscreen.')) return 'altscreen'
   if (key.startsWith('audio.')) return 'audio'
   if (key.startsWith('gps.')) return 'gps'
-  if (key.startsWith('key.')) return 'keyboard'
+  if (key.startsWith('key.') || key.startsWith('keyboard.')) return 'keyboard'
   return 'connection'
 }
 

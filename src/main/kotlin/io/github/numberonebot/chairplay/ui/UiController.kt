@@ -263,6 +263,9 @@ class UiController(
 
     override fun saveSettings(changes: Map<String, String>): SaveResult = settingsApi.save(changes)
 
+    /** A bring-up read [values] from the settings file: the connection it makes runs with them. */
+    fun connected(values: Map<String, String>) = settingsApi.connected(values)
+
     override fun connect(): String? {
         if (model.state.phase == Phase.SETUP) return "Enter the Wi-Fi network first"
         connectNow()

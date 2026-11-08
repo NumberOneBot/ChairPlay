@@ -117,10 +117,10 @@ class DesktopConfigTest {
         val config = DesktopConfig(dir)
 
         assertNull(config.wifi)
-        assertNull(config.currentWifi())
+        assertNull(config.now().wifi)
         SettingsFile(dir.resolve("settings.properties")).write(mapOf("wifi.ssid" to "Home", "wifi.passphrase" to "secret123"))
-        assertEquals("Home", config.currentWifi()?.ssid)
-        assertEquals("secret123", config.currentWifi()?.passphrase)
+        assertEquals("Home", config.now().wifi?.ssid)
+        assertEquals("secret123", config.now().wifi?.passphrase)
     }
 
     // What the iPhone learns of its screens it asks at each connection, so a changed one applies at the next; the name

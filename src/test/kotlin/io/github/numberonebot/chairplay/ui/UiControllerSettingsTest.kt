@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
+import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.SetupStore
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -15,6 +16,7 @@ class UiControllerSettingsTest : UiControllerFixture() {
     @Test
     fun `the CarPlay screen's corners and edges wait for the next connection`() {
         val ui = controller()
+        ui.connected(SettingsFile(file).read())
 
         ui.saveSettings(mapOf("display.corners" to "rounded", "display.safe.draw.outside" to "false"))
 
@@ -118,6 +120,7 @@ class UiControllerSettingsTest : UiControllerFixture() {
     @Test
     fun `a Wi-Fi change during a session waits for a reconnect`() {
         val ui = controller()
+        ui.connected(SettingsFile(file).read())
         ui.model.sessionActive()
 
         ui.saveSettings(mapOf("wifi.ssid" to "Garage"))
