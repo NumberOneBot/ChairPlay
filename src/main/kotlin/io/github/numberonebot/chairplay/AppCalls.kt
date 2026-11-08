@@ -3,8 +3,8 @@ package io.github.numberonebot.chairplay
 import io.github.numberonebot.chairplay.data.Call
 import io.github.numberonebot.chairplay.data.CallDirection
 import io.github.numberonebot.chairplay.data.CallStatus
-import io.github.numberonebot.chairplay.data.CarPlayDataBus
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent
+import io.github.numberonebot.chairplay.data.PhoneDataBus
+import io.github.numberonebot.chairplay.data.PhoneDataEvent
 import io.github.numberonebot.chairplay.media.VideoWindow
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -36,8 +36,8 @@ class CallAlert(
  * (pause or play), and an incoming call flashes the CarPlay [window]'s taskbar button and, with [frontOnCall], brings
  * the window forward.
  */
-internal fun watchCarPlayData(
-    bus: CarPlayDataBus,
+internal fun watchPhoneData(
+    bus: PhoneDataBus,
     playing: () -> Boolean,
     controlsChanged: () -> Unit,
     window: VideoWindow,
@@ -49,7 +49,7 @@ internal fun watchCarPlayData(
         val now = playing()
         if (wasPlaying.getAndSet(now) != now) controlsChanged()
         // A session gone takes its calls along.
-        if (event is CarPlayDataEvent.CallChanged) alert.calls(event.calls)
-        if (event is CarPlayDataEvent.Cleared) alert.calls(emptyList())
+        if (event is PhoneDataEvent.CallChanged) alert.calls(event.calls)
+        if (event is PhoneDataEvent.Cleared) alert.calls(emptyList())
     }
 }

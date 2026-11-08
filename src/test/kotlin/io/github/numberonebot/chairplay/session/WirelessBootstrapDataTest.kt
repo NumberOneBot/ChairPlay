@@ -2,8 +2,8 @@ package io.github.numberonebot.chairplay.session
 
 import com.shilapi.xcertplay.airplay.BplistCodec
 import com.shilapi.xcertplay.airplay.MediaSink
-import io.github.numberonebot.chairplay.data.CarPlayDataTap
-import io.github.numberonebot.chairplay.data.DataLink
+import io.github.numberonebot.chairplay.carplay.DataLink
+import io.github.numberonebot.chairplay.carplay.PhoneDataTap
 import io.github.numberonebot.chairplay.drive.PacedLocation
 import io.github.numberonebot.chairplay.media.AudioDuckSink
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
@@ -128,7 +128,7 @@ class WirelessBootstrapDataTest : WirelessBootstrapFixture() {
         }
     }
 
-    private class RecordingTap : CarPlayDataTap {
+    private class RecordingTap : PhoneDataTap {
         val frames = LinkedBlockingQueue<Pair<DataLink, Int>>()
         val ends = AtomicInteger()
         override fun onFrame(link: DataLink, frame: Iap2Frame) {

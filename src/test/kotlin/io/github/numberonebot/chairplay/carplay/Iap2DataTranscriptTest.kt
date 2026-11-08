@@ -1,20 +1,23 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.iap2.body.Iap2BodyBuilder
 import com.shilapi.xcertplay.iap2.message.Iap2Messages
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
 import com.shilapi.xcertplay.transport.Iap2ArtworkTransfer
+import io.github.numberonebot.chairplay.data.PhoneDataBus
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Characterization: one scripted session of the iPhone's data messages, the frames of the bus tests and more, and what
- * the bus makes of them: the events each step raises and the snapshot after it. The expected transcript
- * (iap2/data-transcript.txt) was recorded from CarPlayDataBus, iAP2 decoding and the bus in one class.
+ * Characterization: one scripted session of the iPhone's data messages, the frames of the decoder tests and more, and
+ * what the decoder and its bus make of them: the events each step raises and the snapshot after it. The expected
+ * transcript (iap2/data-transcript.txt) was recorded from CarPlayDataBus, iAP2 decoding and the bus in one class,
+ * before the decoding moved into Iap2DataDecoder: the split changed nothing the bus's listeners can see.
  */
-class CarPlayDataTranscriptTest {
+class Iap2DataTranscriptTest {
     private var now = 0L
-    private val bus = CarPlayDataBus(nanoTime = { now })
+    private val bus = PhoneDataBus()
+    private val decoder = Iap2DataDecoder(bus, nanoTime = { now })
     private val lines = ArrayList<String>()
 
     init {
@@ -29,7 +32,7 @@ class CarPlayDataTranscriptTest {
             "calls=${s.calls} communications=${s.communications} power=${s.power}"
     }
 
-    private fun frame(id: Int, block: Iap2BodyBuilder.() -> Unit) = bus.accept(Iap2Messages.buildRaw(id, block))
+    private fun frame(id: Int, block: Iap2BodyBuilder.() -> Unit) = decoder.accept(Iap2Messages.buildRaw(id, block))
 
     private fun maneuver(index: Int, type: Int, road: String) = frame(0x5202) {
         u16(1, index)
@@ -170,9 +173,9 @@ class CarPlayDataTranscriptTest {
         step("elapsed time") { frame(0x5001) { group(1) { u32(1, 1_500) } } }
         step("paused") { frame(0x5001) { group(1) { u8(0, 2) } } }
         step("a title cleared") { frame(0x5001) { group(0) { string(1, "") } } }
-        step("artwork") { bus.acceptArtwork(Iap2ArtworkTransfer(7, byteArrayOf(1, 2, 3))) }
-        step("the same artwork") { bus.acceptArtwork(Iap2ArtworkTransfer(7, byteArrayOf(1, 2, 3))) }
-        step("artwork cleared") { bus.acceptArtwork(Iap2ArtworkTransfer(7, ByteArray(0))) }
+        step("artwork") { decoder.acceptArtwork(Iap2ArtworkTransfer(7, byteArrayOf(1, 2, 3))) }
+        step("the same artwork") { decoder.acceptArtwork(Iap2ArtworkTransfer(7, byteArrayOf(1, 2, 3))) }
+        step("artwork cleared") { decoder.acceptArtwork(Iap2ArtworkTransfer(7, ByteArray(0))) }
         step("a call rings") {
             frame(0x4155) {
                 string(0, "+15551234567")
@@ -246,9 +249,9 @@ class CarPlayDataTranscriptTest {
         }
         step("the same power") { frame(0xae01) { u16(6, 37) } }
         step("a list, not decoded") { frame(0x4171) { string(0, "list") } }
-        step("a body that is no parameter list") { bus.accept(Iap2Frame(0x5201, byteArrayOf(0, 9, 0))) }
-        step("the session ends") { bus.clear() }
-        step("and ends again") { bus.clear() }
+        step("a body that is no parameter list") { decoder.accept(Iap2Frame(0x5201, byteArrayOf(0, 9, 0))) }
+        step("the session ends") { decoder.clear() }
+        step("and ends again") { decoder.clear() }
         step("a new session's power") { frame(0xae01) { u16(6, 100) } }
         step("a new session's maneuver, then route") {
             maneuver(1, 2, "Oak Avenue")

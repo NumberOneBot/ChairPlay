@@ -1,6 +1,13 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
-import com.shilapi.xcertplay.media.CarPlayPlaybackStatus
+import io.github.numberonebot.chairplay.data.Call
+import io.github.numberonebot.chairplay.data.Communications
+import io.github.numberonebot.chairplay.data.Lane
+import io.github.numberonebot.chairplay.data.LaneGuidance
+import io.github.numberonebot.chairplay.data.Maneuver
+import io.github.numberonebot.chairplay.data.NowPlaying
+import io.github.numberonebot.chairplay.data.Power
+import io.github.numberonebot.chairplay.data.RouteGuidance
 
 // Updates carry only what changed: an absent parameter keeps the previous value, a present empty string clears it.
 
@@ -20,24 +27,24 @@ internal fun DecodedFields.bool(name: String, previous: Boolean?): Boolean? =
 internal fun DecodedFields.ints(name: String, previous: List<Int>): List<Int> =
     if (has(name)) values[name] as List<Int> else previous
 
-internal inline fun <reified E> DecodedFields.coded(name: String, previous: E?): E? where E : Enum<E>, E : Iap2Coded =
-    if (has(name)) codeOf<E>((values[name] as CodedValue).code) else previous
+internal fun <E : Enum<E>> DecodedFields.coded(name: String, codes: Iap2Codes<E>, previous: E?): E? =
+    if (has(name)) codes.of((values[name] as CodedValue).code) else previous
 
 internal fun DecodedFields.group(name: String): DecodedFields? = values[name] as? DecodedFields
 
 internal fun RouteGuidance.merged(fields: DecodedFields) = copy(
-    state = fields.coded("routeGuidanceState", state),
-    maneuverState = fields.coded("maneuverState", maneuverState),
+    state = fields.coded("routeGuidanceState", Iap2DataCodes.routeGuidanceState, state),
+    maneuverState = fields.coded("maneuverState", Iap2DataCodes.maneuverState, maneuverState),
     currentRoad = fields.string("currentRoadName", currentRoad),
     destination = fields.string("destinationName", destination),
     arrivalEpochSeconds = fields.long("estimatedTimeOfArrival", arrivalEpochSeconds),
     remainingSeconds = fields.long("timeRemainingToDestination", remainingSeconds),
     remainingMeters = fields.long("distanceRemaining", remainingMeters),
     remainingText = fields.string("distanceRemainingDisplayStr", remainingText),
-    remainingUnits = fields.coded("distanceRemainingDisplayUnits", remainingUnits),
+    remainingUnits = fields.coded("distanceRemainingDisplayUnits", Iap2DataCodes.distanceUnits, remainingUnits),
     distanceToManeuverMeters = fields.long("distanceToNextManeuver", distanceToManeuverMeters),
     distanceToManeuverText = fields.string("distanceToNextManeuverDisplayStr", distanceToManeuverText),
-    distanceToManeuverUnits = fields.coded("distanceToNextManeuverDisplayUnits", distanceToManeuverUnits),
+    distanceToManeuverUnits = fields.coded("distanceToNextManeuverDisplayUnits", Iap2DataCodes.distanceUnits, distanceToManeuverUnits),
     currentManeuverIndexes = fields.ints("currentManeuverList", currentManeuverIndexes),
     maneuverCount = fields.int("maneuverCount", maneuverCount),
     visibleInApp = fields.bool("visibleInApp", visibleInApp),
@@ -53,9 +60,9 @@ internal fun Maneuver.merged(fields: DecodedFields) = copy(
     afterRoad = fields.string("afterManeuverRoadName", afterRoad),
     distanceBetweenMeters = fields.long("distanceBetweenManeuver", distanceBetweenMeters),
     distanceBetweenText = fields.string("distanceBetweenManeuverDisplayStr", distanceBetweenText),
-    distanceBetweenUnits = fields.coded("distanceBetweenManeuverDisplayUnits", distanceBetweenUnits),
-    drivingSide = fields.coded("drivingSide", drivingSide),
-    junctionType = fields.coded("junctionType", junctionType),
+    distanceBetweenUnits = fields.coded("distanceBetweenManeuverDisplayUnits", Iap2DataCodes.distanceUnits, distanceBetweenUnits),
+    drivingSide = fields.coded("drivingSide", Iap2DataCodes.drivingSide, drivingSide),
+    junctionType = fields.coded("junctionType", Iap2DataCodes.junctionType, junctionType),
     junctionAngles = fields.ints("junctionElementAngles", junctionAngles),
     exitAngle = fields.int("junctionElementExitAngle", exitAngle),
 )
@@ -74,7 +81,7 @@ internal fun laneGuidance(fields: DecodedFields) = LaneGuidance(
     description = fields.string("laneGuidanceDescription", null),
 )
 
-/** What upstream's CarPlayPlaybackStatus does not read; the bus takes the rest from it. */
+/** What upstream's CarPlayPlaybackStatus does not read; the decoder takes the rest from it. */
 internal fun NowPlaying.merged(fields: DecodedFields): NowPlaying {
     val item = fields.group("mediaItem")
     val playback = fields.group("playback")
@@ -92,11 +99,11 @@ internal fun NowPlaying.merged(fields: DecodedFields): NowPlaying {
     }
     if (playback != null) {
         next = next.copy(
-            status = playback.coded("playbackStatus", status),
+            status = playback.coded("playbackStatus", Iap2DataCodes.playbackStatus, status),
             queueIndex = playback.long("queueIndex", queueIndex),
             queueCount = playback.long("queueCount", queueCount),
-            shuffle = playback.coded("shuffleMode", shuffle),
-            repeat = playback.coded("repeatMode", repeat),
+            shuffle = playback.coded("shuffleMode", Iap2DataCodes.shuffleMode, shuffle),
+            repeat = playback.coded("repeatMode", Iap2DataCodes.repeatMode, repeat),
             appBundleId = playback.string("appBundleId", appBundleId),
         )
     }
@@ -106,18 +113,18 @@ internal fun NowPlaying.merged(fields: DecodedFields): NowPlaying {
 internal fun Call.merged(fields: DecodedFields) = copy(
     remoteId = fields.string("remoteId", remoteId),
     displayName = fields.string("displayName", displayName),
-    status = fields.coded("status", status),
-    direction = fields.coded("direction", direction),
+    status = fields.coded("status", Iap2DataCodes.callStatus, status),
+    direction = fields.coded("direction", Iap2DataCodes.callDirection, direction),
     label = fields.string("label", label),
-    service = fields.coded("service", service),
+    service = fields.coded("service", Iap2DataCodes.callService, service),
     conferenced = fields.bool("isConferenced", conferenced),
     conferenceGroup = fields.int("conferenceGroup", conferenceGroup),
-    disconnectReason = fields.coded("disconnectReason", disconnectReason),
+    disconnectReason = fields.coded("disconnectReason", Iap2DataCodes.disconnectReason, disconnectReason),
 )
 
 internal fun Communications.merged(fields: DecodedFields) = copy(
     signalStrength = fields.int("signalStrength", signalStrength),
-    registration = fields.coded("registrationStatus", registration),
+    registration = fields.coded("registrationStatus", Iap2DataCodes.registrationStatus, registration),
     airplaneMode = fields.bool("airplaneModeStatus", airplaneMode),
     carrier = fields.string("carrierName", null)?.ifEmpty { null } ?: fields.string("carrierId", null) ?: carrier,
     telephonyEnabled = fields.bool("telephonyEnabled", telephonyEnabled),
@@ -130,6 +137,6 @@ internal fun Communications.merged(fields: DecodedFields) = copy(
 
 internal fun Power.merged(fields: DecodedFields) = copy(
     chargeLevel = fields.int("batteryChargeLevel", chargeLevel),
-    chargingState = fields.coded("batteryChargingState", chargingState),
+    chargingState = fields.coded("batteryChargingState", Iap2DataCodes.batteryChargingState, chargingState),
     externalChargerConnected = fields.bool("isExternalChargerConnected", externalChargerConnected),
 )

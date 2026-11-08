@@ -3,9 +3,9 @@ package io.github.numberonebot.chairplay.session
 import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.MediaSink
+import io.github.numberonebot.chairplay.carplay.DataLink
+import io.github.numberonebot.chairplay.carplay.PhoneDataTap
 import io.github.numberonebot.chairplay.config.DesktopConfig
-import io.github.numberonebot.chairplay.data.CarPlayDataTap
-import io.github.numberonebot.chairplay.data.DataLink
 import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.drive.PacedLocation
 import io.github.numberonebot.chairplay.media.AudioDuckSink
@@ -52,10 +52,10 @@ class WirelessBootstrap internal constructor(
     private val config: DesktopConfig,
     private val sink: MediaSink,
     private val listener: AirPlaySessionListener,
-    private val data: CarPlayDataTap = CarPlayDataTap.NONE,
+    private val data: PhoneDataTap = PhoneDataTap.NONE,
     private val newParts: () -> WirelessParts,
 ) : Closeable {
-    constructor(config: DesktopConfig, sink: MediaSink, listener: AirPlaySessionListener, data: CarPlayDataTap = CarPlayDataTap.NONE) :
+    constructor(config: DesktopConfig, sink: MediaSink, listener: AirPlaySessionListener, data: PhoneDataTap = PhoneDataTap.NONE) :
         this(config, sink, listener, data, { DesktopParts(config, listener::onDebugLog) })
 
     /** Receives each bring-up's progress, on the bring-up's threads. */

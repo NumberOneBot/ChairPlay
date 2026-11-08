@@ -7,8 +7,8 @@ import io.github.numberonebot.chairplay.config.areaKey
 import io.github.numberonebot.chairplay.config.bootstrapRouteGuidance
 import io.github.numberonebot.chairplay.config.carPlayAvailability
 import io.github.numberonebot.chairplay.config.WindowSize
-import io.github.numberonebot.chairplay.data.CarPlayData
-import io.github.numberonebot.chairplay.data.CarPlayDataLog
+import io.github.numberonebot.chairplay.carplay.CarPlayDataFeed
+import io.github.numberonebot.chairplay.carplay.CarPlayDataLog
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.Size
@@ -224,12 +224,12 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         audio.updateBufferedAudio()
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
     // The iPhone's route, song, call and battery messages, for later screens and, with log.carplay.data, a file.
-    val carPlayData = CarPlayData(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
+    val carPlayData = CarPlayDataFeed(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
     // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it. An incoming
     // call flashes the CarPlay window's taskbar button, and brings the window forward with window.front.on.call.
     appControls.playing = { active.get() != null && carPlayData.bus.snapshot().nowPlaying?.playing == true }
-    watchCarPlayData(carPlayData.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
-    altView.paint(carPlayData, driving, config.accent)
+    watchPhoneData(carPlayData.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
+    altView.paint(carPlayData.bus, driving, config.accent)
     val bootstrap = WirelessBootstrap(config, sink, appControls.textInput.listener(sessionListener(active, ui, window, title, theme, ::sessionChanged)), carPlayData)
     bootstrap.newLocation = driving::location
     restartBootstrap.set(bootstrap::restart)

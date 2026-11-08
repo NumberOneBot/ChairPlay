@@ -1,18 +1,31 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.ArtworkChanged
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.CallChanged
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.Cleared
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.CommunicationsChanged
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.NowPlayingChanged
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.PowerChanged
 import com.shilapi.xcertplay.transport.Iap2ArtworkTransfer
+import io.github.numberonebot.chairplay.data.Artwork
+import io.github.numberonebot.chairplay.data.BatteryChargingState
+import io.github.numberonebot.chairplay.data.Call
+import io.github.numberonebot.chairplay.data.CallDirection
+import io.github.numberonebot.chairplay.data.CallStatus
+import io.github.numberonebot.chairplay.data.Communications
+import io.github.numberonebot.chairplay.data.DisconnectReason
+import io.github.numberonebot.chairplay.data.NowPlaying
+import io.github.numberonebot.chairplay.data.PhoneDataEvent
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.ArtworkChanged
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.CallChanged
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.Cleared
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.CommunicationsChanged
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.NowPlayingChanged
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.PowerChanged
+import io.github.numberonebot.chairplay.data.PhoneDataSnapshot
+import io.github.numberonebot.chairplay.data.PlaybackStatus
+import io.github.numberonebot.chairplay.data.Power
+import io.github.numberonebot.chairplay.data.ShuffleMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** CarPlayDataBus: now playing, artwork, calls, communications and power, and how it raises events and clears. */
-class CarPlayDataBusTest : CarPlayDataBusFixture() {
+/** Iap2DataDecoder: now playing, artwork, calls, communications and power, and how the bus raises events and clears. */
+class Iap2DataDecoderTest : Iap2DataDecoderFixture() {
     @Test
     fun `now playing keeps what each update leaves out`() {
         frame(0x5001) {
@@ -45,7 +58,7 @@ class CarPlayDataBusTest : CarPlayDataBusFixture() {
         )
 
         frame(0x5001) { group(1) { u8(0, 2) } }
-        val paused = last<NowPlayingChanged>().nowPlaying
+        val paused = last<NowPlayingChanged>().nowPlaying!!
         assertEquals(PlaybackStatus.PAUSED, paused.status)
         assertEquals(false, paused.playing)
         assertEquals("Song", bus.snapshot().nowPlaying!!.title)
@@ -53,7 +66,7 @@ class CarPlayDataBusTest : CarPlayDataBusFixture() {
 
     @Test
     fun `artwork arrives as bytes`() {
-        bus.acceptArtwork(Iap2ArtworkTransfer(7, byteArrayOf(1, 2, 3)))
+        decoder.acceptArtwork(Iap2ArtworkTransfer(7, byteArrayOf(1, 2, 3)))
 
         assertEquals(Artwork(7, byteArrayOf(1, 2, 3)), last<ArtworkChanged>().artwork)
         assertEquals(3, bus.snapshot().artwork!!.size)
@@ -107,7 +120,7 @@ class CarPlayDataBusTest : CarPlayDataBusFixture() {
             u8(5, 1)
             u16(6, 37)
         }
-        val power = last<PowerChanged>().power
+        val power = last<PowerChanged>().power!!
         assertEquals(Power(37, BatteryChargingState.CHARGING, true), power)
         // The iPhone sends percent: 38 in the data log while it showed 37 %.
         assertEquals(37, power.batteryPercent)
@@ -120,7 +133,7 @@ class CarPlayDataBusTest : CarPlayDataBusFixture() {
             string(3, "")
             string(4, "UA-KYIVSTAR")
         }
-        assertEquals("UA-KYIVSTAR", last<CommunicationsChanged>().communications.carrier)
+        assertEquals("UA-KYIVSTAR", last<CommunicationsChanged>().communications!!.carrier)
     }
 
     @Test
@@ -133,7 +146,7 @@ class CarPlayDataBusTest : CarPlayDataBusFixture() {
 
     @Test
     fun `a listener that leaves hears nothing more and one that fails does not stop the others`() {
-        val heard = ArrayList<CarPlayDataEvent>()
+        val heard = ArrayList<PhoneDataEvent>()
         bus.addListener { error("listener failed") }
         val registration = bus.addListener { heard += it }
         frame(0xae01) { u16(6, 100) }
@@ -149,9 +162,9 @@ class CarPlayDataBusTest : CarPlayDataBusFixture() {
         frame(0xae01) { u16(6, 100) }
         frame(0x4158) { string(3, "Carrier") }
 
-        bus.clear()
+        decoder.clear()
 
         assertEquals(Cleared, events.last())
-        assertEquals(CarPlayDataSnapshot(), bus.snapshot())
+        assertEquals(PhoneDataSnapshot(), bus.snapshot())
     }
 }

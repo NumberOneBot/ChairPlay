@@ -3,12 +3,12 @@ package io.github.numberonebot.chairplay.hud
 import io.github.numberonebot.chairplay.data.Call
 import io.github.numberonebot.chairplay.data.CallDirection
 import io.github.numberonebot.chairplay.data.CallStatus
-import io.github.numberonebot.chairplay.data.CarPlayDataSnapshot
 import io.github.numberonebot.chairplay.data.DistanceUnits
 import io.github.numberonebot.chairplay.data.Lane
 import io.github.numberonebot.chairplay.data.LaneGuidance
 import io.github.numberonebot.chairplay.data.Maneuver
 import io.github.numberonebot.chairplay.data.NowPlaying
+import io.github.numberonebot.chairplay.data.PhoneDataSnapshot
 import io.github.numberonebot.chairplay.data.PlaybackStatus
 import io.github.numberonebot.chairplay.data.RouteGuidance
 import io.github.numberonebot.chairplay.data.RouteGuidanceState
@@ -37,7 +37,7 @@ class HudStateTest {
 
     @Test
     fun `a route shows the next maneuver and the arrival`() {
-        val hud = hudState(CarPlayDataSnapshot(route = route), zone)
+        val hud = hudState(PhoneDataSnapshot(route = route), zone)
 
         val maneuver = hud.maneuver!!
         assertEquals("вул. Липська", maneuver.road)
@@ -49,7 +49,7 @@ class HudStateTest {
     // The maneuver renderer draws from the iPhone's own maneuver and the metres to it.
     @Test
     fun `the maneuver keeps what the renderer needs`() {
-        val hud = hudState(CarPlayDataSnapshot(route = route.copy(distanceToManeuverMeters = 152)), zone)
+        val hud = hudState(PhoneDataSnapshot(route = route.copy(distanceToManeuverMeters = 152)), zone)
 
         assertEquals(route.nextManeuver, hud.maneuver!!.next)
         assertEquals(152L, hud.maneuver!!.distanceMeters)
@@ -60,7 +60,7 @@ class HudStateTest {
     fun `lanes show while the iPhone says so`() {
         val lanes = LaneGuidance(4, listOf(Lane(0, 2, listOf(0))))
         fun hudLanes(showing: Boolean?) =
-            hudState(CarPlayDataSnapshot(route = route.copy(laneGuidanceIndex = 4, laneGuidanceShowing = showing), lanes = lanes), zone)
+            hudState(PhoneDataSnapshot(route = route.copy(laneGuidanceIndex = 4, laneGuidanceShowing = showing), lanes = lanes), zone)
                 .maneuver!!.lanes
 
         assertEquals(lanes, hudLanes(true))
@@ -74,7 +74,7 @@ class HudStateTest {
     // not say which app is on the CarPlay screen: visibleInApp stayed true while the music app was in front.
     @Test
     fun `with guidance the route and the song show side by side`() {
-        val hud = hudState(CarPlayDataSnapshot(route = route.copy(visibleInApp = true), nowPlaying = song), zone)
+        val hud = hudState(PhoneDataSnapshot(route = route.copy(visibleInApp = true), nowPlaying = song), zone)
 
         assertNotNull(hud.maneuver)
         assertEquals("Gasoline", hud.media!!.title)
@@ -84,16 +84,16 @@ class HudStateTest {
     @Test
     fun `guidance toward the route counts as guidance`() {
         for (state in listOf(RouteGuidanceState.PROCEED_TO_ROUTE, RouteGuidanceState.LOCATING, RouteGuidanceState.REROUTING)) {
-            assertNotNull(state.name, hudState(CarPlayDataSnapshot(route = route.copy(state = state)), zone).maneuver)
+            assertNotNull(state.name, hudState(PhoneDataSnapshot(route = route.copy(state = state)), zone).maneuver)
         }
         for (state in listOf(RouteGuidanceState.LOADING, RouteGuidanceState.ARRIVED)) {
-            assertNull(state.name, hudState(CarPlayDataSnapshot(route = route.copy(state = state)), zone).maneuver)
+            assertNull(state.name, hudState(PhoneDataSnapshot(route = route.copy(state = state)), zone).maneuver)
         }
     }
 
     @Test
     fun `without guidance only the song shows`() {
-        val hud = hudState(CarPlayDataSnapshot(route = route.copy(state = RouteGuidanceState.NO_ROUTE_SET), nowPlaying = song), zone)
+        val hud = hudState(PhoneDataSnapshot(route = route.copy(state = RouteGuidanceState.NO_ROUTE_SET), nowPlaying = song), zone)
 
         assertNull(hud.maneuver)
         assertEquals("Gasoline", hud.media!!.title)
@@ -101,7 +101,7 @@ class HudStateTest {
 
     @Test
     fun `no route shows no maneuver`() {
-        val hud = hudState(CarPlayDataSnapshot(route = route.copy(state = RouteGuidanceState.NO_ROUTE_SET)), zone)
+        val hud = hudState(PhoneDataSnapshot(route = route.copy(state = RouteGuidanceState.NO_ROUTE_SET)), zone)
 
         assertNull(hud.maneuver)
         assertNull(hud.arrival)
@@ -114,7 +114,7 @@ class HudStateTest {
             title = "Gasoline", artist = "Twin Fin", album = "Gasoline", durationMillis = 166_721, elapsedMillis = 41_680,
             status = PlaybackStatus.PLAYING, playing = true, appName = "YouTube Music",
         )
-        val media = hudState(CarPlayDataSnapshot(nowPlaying = song), zone).media!!
+        val media = hudState(PhoneDataSnapshot(nowPlaying = song), zone).media!!
 
         assertEquals("Gasoline", media.title)
         assertEquals("Twin Fin", media.artist)
@@ -127,20 +127,20 @@ class HudStateTest {
     @Test
     fun `a ringing or active call goes on top`() {
         val ringing = Call(id = "1", displayName = "Mom", status = CallStatus.RINGING, direction = CallDirection.INCOMING)
-        assertNotNull(hudState(CarPlayDataSnapshot(calls = listOf(ringing)), zone).call)
-        assertNotNull(hudState(CarPlayDataSnapshot(calls = listOf(ringing.copy(status = CallStatus.ACTIVE))), zone).call)
-        assertNull(hudState(CarPlayDataSnapshot(calls = listOf(ringing.copy(status = CallStatus.DISCONNECTED))), zone).call)
+        assertNotNull(hudState(PhoneDataSnapshot(calls = listOf(ringing)), zone).call)
+        assertNotNull(hudState(PhoneDataSnapshot(calls = listOf(ringing.copy(status = CallStatus.ACTIVE))), zone).call)
+        assertNull(hudState(PhoneDataSnapshot(calls = listOf(ringing.copy(status = CallStatus.DISCONNECTED))), zone).call)
     }
 
     // Text from the iPhone is cut before it reaches the drawing, which measures it.
     @Test
     fun `very long text is cut`() {
-        val media = hudState(CarPlayDataSnapshot(nowPlaying = NowPlaying(title = "x".repeat(10_000))), zone).media!!
+        val media = hudState(PhoneDataSnapshot(nowPlaying = NowPlaying(title = "x".repeat(10_000))), zone).media!!
         assertEquals(256, media.title!!.length)
     }
 
     @Test
     fun `an empty snapshot shows nothing`() {
-        assertEquals(HudState(), hudState(CarPlayDataSnapshot(), zone))
+        assertEquals(HudState(), hudState(PhoneDataSnapshot(), zone))
     }
 }

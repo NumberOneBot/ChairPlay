@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.iap2.message.Iap2ControlMessages
 import com.shilapi.xcertplay.iap2.message.Iap2Messages

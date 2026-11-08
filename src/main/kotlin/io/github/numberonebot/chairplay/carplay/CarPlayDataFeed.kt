@@ -1,11 +1,12 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
 import com.shilapi.xcertplay.transport.Iap2ArtworkTransfer
+import io.github.numberonebot.chairplay.data.PhoneDataBus
 import java.io.Closeable
 
 /** What the wireless bring-up hands over from its iAP2 links besides the bring-up itself. */
-interface CarPlayDataTap {
+interface PhoneDataTap {
     /** A frame the control loop did not handle itself, on that link's control thread. */
     fun onFrame(link: DataLink, frame: Iap2Frame) {}
 
@@ -16,26 +17,26 @@ interface CarPlayDataTap {
     fun onSessionEnded() {}
 
     companion object {
-        val NONE: CarPlayDataTap = object : CarPlayDataTap {}
+        val NONE: PhoneDataTap = object : PhoneDataTap {}
     }
 }
 
 /** The data [bus] and, with log.carplay.data, the data [log], fed by the iAP2 links of every CarPlay session. */
-class CarPlayData(private val log: CarPlayDataLog?) : CarPlayDataTap, Closeable {
-    val bus = CarPlayDataBus()
+class CarPlayDataFeed(private val log: CarPlayDataLog?, val bus: PhoneDataBus = PhoneDataBus()) : PhoneDataTap, Closeable {
+    private val decoder = Iap2DataDecoder(bus)
 
     override fun onFrame(link: DataLink, frame: Iap2Frame) {
         if (!CarPlayDataMessages.isData(frame.messageId)) return
         log?.frame(link, frame)
-        bus.accept(frame)
+        decoder.accept(frame)
     }
 
     override fun onArtwork(link: DataLink, transfer: Iap2ArtworkTransfer) {
         log?.artwork(link, transfer)
-        bus.acceptArtwork(transfer)
+        decoder.acceptArtwork(transfer)
     }
 
-    override fun onSessionEnded() = bus.clear()
+    override fun onSessionEnded() = decoder.clear()
 
     override fun close() {
         log?.close()

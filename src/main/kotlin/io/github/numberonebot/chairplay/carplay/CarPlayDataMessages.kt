@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.iap2.catalog.Iap2Endpoints
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
@@ -107,8 +107,7 @@ internal object CarPlayDataMessages {
 
     private fun field(id: Int, name: String, kind: Kind) = Field(id, name, kind)
 
-    private inline fun <reified E> enumField(id: Int, name: String): Field where E : Enum<E>, E : Iap2Coded =
-        Field(id, name, Kind.ENUM, names = codeNames<E>())
+    private fun enumField(id: Int, name: String, codes: Iap2Codes<*>) = Field(id, name, Kind.ENUM, names = codes.names)
 
     private fun group(id: Int, name: String, vararg children: Field, repeated: Boolean = false) =
         Field(id, name, Kind.GROUP, children = children.toList(), repeated = repeated)
@@ -120,18 +119,18 @@ internal object CarPlayDataMessages {
             0x5201, "RouteGuidanceUpdate",
             listOf(
                 field(0, "displayComponentIds", Kind.U16_LIST),
-                enumField<RouteGuidanceState>(1, "routeGuidanceState"),
-                enumField<ManeuverState>(2, "maneuverState"),
+                enumField(1, "routeGuidanceState", Iap2DataCodes.routeGuidanceState),
+                enumField(2, "maneuverState", Iap2DataCodes.maneuverState),
                 field(3, "currentRoadName", Kind.STRING),
                 field(4, "destinationName", Kind.STRING),
                 field(5, "estimatedTimeOfArrival", Kind.U64),
                 field(6, "timeRemainingToDestination", Kind.U64),
                 field(7, "distanceRemaining", Kind.U32),
                 field(8, "distanceRemainingDisplayStr", Kind.STRING),
-                enumField<DistanceUnits>(9, "distanceRemainingDisplayUnits"),
+                enumField(9, "distanceRemainingDisplayUnits", Iap2DataCodes.distanceUnits),
                 field(10, "distanceToNextManeuver", Kind.U32),
                 field(11, "distanceToNextManeuverDisplayStr", Kind.STRING),
-                enumField<DistanceUnits>(12, "distanceToNextManeuverDisplayUnits"),
+                enumField(12, "distanceToNextManeuverDisplayUnits", Iap2DataCodes.distanceUnits),
                 field(13, "currentManeuverList", Kind.U16_LIST),
                 field(14, "maneuverCount", Kind.U16),
                 field(15, "visibleInApp", Kind.BOOL),
@@ -148,13 +147,13 @@ internal object CarPlayDataMessages {
                 field(0, "displayComponentIds", Kind.U16_LIST),
                 field(1, "index", Kind.U16),
                 field(2, "maneuverDescription", Kind.STRING),
-                enumField<ManeuverType>(3, "maneuverType"),
+                enumField(3, "maneuverType", Iap2DataCodes.maneuverType),
                 field(4, "afterManeuverRoadName", Kind.STRING),
                 field(5, "distanceBetweenManeuver", Kind.U32),
                 field(6, "distanceBetweenManeuverDisplayStr", Kind.STRING),
-                enumField<DistanceUnits>(7, "distanceBetweenManeuverDisplayUnits"),
-                enumField<DrivingSide>(8, "drivingSide"),
-                enumField<JunctionType>(9, "junctionType"),
+                enumField(7, "distanceBetweenManeuverDisplayUnits", Iap2DataCodes.distanceUnits),
+                enumField(8, "drivingSide", Iap2DataCodes.drivingSide),
+                enumField(9, "junctionType", Iap2DataCodes.junctionType),
                 field(10, "junctionElementAngles", Kind.I16_LIST),
                 field(11, "junctionElementExitAngle", Kind.I16),
             ),
@@ -169,7 +168,7 @@ internal object CarPlayDataMessages {
                 group(
                     2, "laneInformation",
                     field(0, "position", Kind.U16),
-                    enumField<LaneStatus>(1, "status"),
+                    enumField(1, "status", Iap2DataCodes.laneStatus),
                     field(2, "angles", Kind.I16_LIST),
                     field(3, "highlightAngle", Kind.I16),
                     repeated = true,
@@ -213,13 +212,13 @@ internal object CarPlayDataMessages {
                 ),
                 group(
                     1, "playback",
-                    enumField<PlaybackStatus>(0, "playbackStatus"),
+                    enumField(0, "playbackStatus", Iap2DataCodes.playbackStatus),
                     field(1, "elapsedTimeMs", Kind.U32),
                     field(2, "queueIndex", Kind.U32),
                     field(3, "queueCount", Kind.U32),
                     field(4, "queueChapterIndex", Kind.U32),
-                    enumField<ShuffleMode>(5, "shuffleMode"),
-                    enumField<RepeatMode>(6, "repeatMode"),
+                    enumField(5, "shuffleMode", Iap2DataCodes.shuffleMode),
+                    enumField(6, "repeatMode", Iap2DataCodes.repeatMode),
                     field(7, "appName", Kind.STRING),
                     field(8, "mediaLibraryUid", Kind.STRING),
                     field(12, "playbackSpeed", Kind.U16),
@@ -235,22 +234,22 @@ internal object CarPlayDataMessages {
             listOf(
                 field(0, "remoteId", Kind.STRING),
                 field(1, "displayName", Kind.STRING),
-                enumField<CallStatus>(2, "status"),
-                enumField<CallDirection>(3, "direction"),
+                enumField(2, "status", Iap2DataCodes.callStatus),
+                enumField(3, "direction", Iap2DataCodes.callDirection),
                 field(4, "callUuid", Kind.STRING),
                 field(6, "addressBookId", Kind.STRING),
                 field(7, "label", Kind.STRING),
-                enumField<CallService>(8, "service"),
+                enumField(8, "service", Iap2DataCodes.callService),
                 field(9, "isConferenced", Kind.BOOL),
                 field(10, "conferenceGroup", Kind.U8),
-                enumField<DisconnectReason>(11, "disconnectReason"),
+                enumField(11, "disconnectReason", Iap2DataCodes.disconnectReason),
             ),
         ),
         Schema(
             0x4158, "CommunicationsUpdate",
             listOf(
                 field(0, "signalStrength", Kind.U8),
-                enumField<RegistrationStatus>(1, "registrationStatus"),
+                enumField(1, "registrationStatus", Iap2DataCodes.registrationStatus),
                 field(2, "airplaneModeStatus", Kind.BOOL),
                 field(3, "carrierName", Kind.STRING),
                 // An iPhone 15 on iOS 18.6 sends "UA-KYIVSTAR" here and leaves carrierName empty.
@@ -276,7 +275,7 @@ internal object CarPlayDataMessages {
                 field(1, "deviceBatteryWillChargeIfPowerIsPresent", Kind.BOOL),
                 field(2, "accessoryPowerMode", Kind.U8),
                 field(4, "isExternalChargerConnected", Kind.BOOL),
-                enumField<BatteryChargingState>(5, "batteryChargingState"),
+                enumField(5, "batteryChargingState", Iap2DataCodes.batteryChargingState),
                 field(6, "batteryChargeLevel", Kind.U16),
             ),
         ),

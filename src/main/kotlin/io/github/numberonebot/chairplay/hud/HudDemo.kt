@@ -1,6 +1,5 @@
 package io.github.numberonebot.chairplay.hud
 
-import io.github.numberonebot.chairplay.data.CarPlayDataSnapshot
 import io.github.numberonebot.chairplay.data.DrivingSide
 import io.github.numberonebot.chairplay.data.JunctionType
 import io.github.numberonebot.chairplay.data.Lane
@@ -9,6 +8,7 @@ import io.github.numberonebot.chairplay.data.LaneStatus
 import io.github.numberonebot.chairplay.data.Maneuver
 import io.github.numberonebot.chairplay.data.ManeuverType
 import io.github.numberonebot.chairplay.data.NowPlaying
+import io.github.numberonebot.chairplay.data.PhoneDataSnapshot
 import io.github.numberonebot.chairplay.data.RouteGuidance
 import io.github.numberonebot.chairplay.data.RouteGuidanceState
 import kotlin.math.roundToLong
@@ -39,12 +39,12 @@ class HudDemo(
     val laneEvents: Int get() = LANE_SWITCHES.size
 
     /** The bus as it would be [elapsedMillis] into the demo. */
-    fun snapshot(elapsedMillis: Long): CarPlayDataSnapshot {
+    fun snapshot(elapsedMillis: Long): PhoneDataSnapshot {
         if (lanes) return laneSwitching(elapsedMillis)
         val full = route(elapsedMillis)
         if (!cycle) return full
         val into = elapsedMillis.coerceAtLeast(0) % CYCLE_MILLIS
-        return CarPlayDataSnapshot(
+        return PhoneDataSnapshot(
             route = full.route.takeIf { into in CYCLE_ROUTE },
             nowPlaying = full.nowPlaying.takeIf { into < CYCLE_SONG_END },
         )
@@ -55,7 +55,7 @@ class HudDemo(
      * lanes take the place of the iPhone's, and the rest stays the iPhone's, so the maneuver shares the HUD with the
      * song as guidance does on a drive, and a call covers both. A demo [withMedia] shows its own song instead.
      */
-    fun snapshot(elapsedMillis: Long, live: CarPlayDataSnapshot): CarPlayDataSnapshot {
+    fun snapshot(elapsedMillis: Long, live: PhoneDataSnapshot): PhoneDataSnapshot {
         val demo = snapshot(elapsedMillis)
         return live.copy(
             route = demo.route,
@@ -68,14 +68,14 @@ class HudDemo(
     /** One lap: every maneuver, the flag held at the destination, and a spell without guidance before the next. */
     val lapMillis: Long get() = STEP_MILLIS * ROUTE.size + ARRIVED_MILLIS + GAP_MILLIS
 
-    private fun route(elapsedMillis: Long): CarPlayDataSnapshot {
+    private fun route(elapsedMillis: Long): PhoneDataSnapshot {
         val elapsed = elapsedMillis.coerceAtLeast(0)
         val lap = (elapsed / lapMillis).toInt()
         val inLap = elapsed % lapMillis
         val driving = STEP_MILLIS * ROUTE.size
         val song = NowPlaying(title = "Demo song", artist = "ChairPlay", album = "Maneuvers", playing = true, appName = "Demo")
             .takeIf { withMedia }
-        if (inLap >= driving + ARRIVED_MILLIS) return CarPlayDataSnapshot(route = null, nowPlaying = song)
+        if (inLap >= driving + ARRIVED_MILLIS) return PhoneDataSnapshot(route = null, nowPlaying = song)
         val inRoute = minOf(inLap / STEP_MILLIS, ROUTE.size - 1L).toInt()
         // Arrived: the distance stays at zero while the flag waves.
         val into = if (inLap >= driving) STEP_MILLIS else inLap % STEP_MILLIS
@@ -97,10 +97,10 @@ class HudDemo(
             laneGuidanceShowing = false,
             sourceName = "ChairPlay demo",
         )
-        return CarPlayDataSnapshot(route = route, nowPlaying = song)
+        return PhoneDataSnapshot(route = route, nowPlaying = song)
     }
 
-    private fun laneSwitching(elapsedMillis: Long): CarPlayDataSnapshot {
+    private fun laneSwitching(elapsedMillis: Long): PhoneDataSnapshot {
         val event = (elapsedMillis.coerceAtLeast(0) / LANE_STEP_MILLIS).toInt()
         val lanes = LANE_SWITCHES[event % LANE_SWITCHES.size]
         val route = RouteGuidance(
@@ -117,7 +117,7 @@ class HudDemo(
             laneGuidanceShowing = lanes.isNotEmpty(),
             sourceName = "ChairPlay demo",
         )
-        return CarPlayDataSnapshot(route = route, lanes = LaneGuidance(event, lanes).takeIf { lanes.isNotEmpty() })
+        return PhoneDataSnapshot(route = route, lanes = LaneGuidance(event, lanes).takeIf { lanes.isNotEmpty() })
     }
 
     /** When, in the lanes demo's first round, a screenshot shows each lane event settled. */
@@ -165,11 +165,11 @@ class HudDemo(
      * A demo playing: the bus as it is now in it, alone ([snapshot]) or played over the iPhone's ([over]), and [stop],
      * after which it draws no more.
      */
-    class Running(private val at: (CarPlayDataSnapshot) -> CarPlayDataSnapshot, private val onStop: () -> Unit) {
-        val snapshot: () -> CarPlayDataSnapshot = { at(CarPlayDataSnapshot()) }
+    class Running(private val at: (PhoneDataSnapshot) -> PhoneDataSnapshot, private val onStop: () -> Unit) {
+        val snapshot: () -> PhoneDataSnapshot = { at(PhoneDataSnapshot()) }
 
         /** The demo now over [live], the iPhone's bus: see [HudDemo.snapshot]. */
-        fun over(live: CarPlayDataSnapshot): CarPlayDataSnapshot = at(live)
+        fun over(live: PhoneDataSnapshot): PhoneDataSnapshot = at(live)
 
         fun stop() = onStop()
     }

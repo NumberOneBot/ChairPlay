@@ -1,14 +1,24 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.LanesChanged
-import io.github.numberonebot.chairplay.data.CarPlayDataEvent.RouteChanged
+import io.github.numberonebot.chairplay.data.DistanceUnits
+import io.github.numberonebot.chairplay.data.DrivingSide
+import io.github.numberonebot.chairplay.data.JunctionType
+import io.github.numberonebot.chairplay.data.Lane
+import io.github.numberonebot.chairplay.data.LaneGuidance
+import io.github.numberonebot.chairplay.data.LaneStatus
+import io.github.numberonebot.chairplay.data.Maneuver
+import io.github.numberonebot.chairplay.data.ManeuverState
+import io.github.numberonebot.chairplay.data.ManeuverType
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.LanesChanged
+import io.github.numberonebot.chairplay.data.PhoneDataEvent.RouteChanged
+import io.github.numberonebot.chairplay.data.RouteGuidanceState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** CarPlayDataBus: route guidance, its maneuvers, and the lane guidance it makes current. */
-class CarPlayDataBusRouteTest : CarPlayDataBusFixture() {
+/** Iap2DataDecoder: route guidance, its maneuvers, and the lane guidance it makes current. */
+class Iap2DataDecoderRouteTest : Iap2DataDecoderFixture() {
     private fun maneuver(index: Int, type: Int, road: String) = frame(0x5202) {
         u16(1, index)
         u8(3, type)
@@ -46,7 +56,7 @@ class CarPlayDataBusRouteTest : CarPlayDataBusFixture() {
             string(19, "Maps")
         }
 
-        val route = last<RouteChanged>().route
+        val route = last<RouteChanged>().route!!
         val next = Maneuver(
             index = 3, typeCode = 2, description = "Turn right onto Oak Avenue", afterRoad = "Oak Avenue",
             distanceBetweenMeters = 300, drivingSide = DrivingSide.LEFT, junctionType = JunctionType.INTERSECTION,
@@ -84,7 +94,7 @@ class CarPlayDataBusRouteTest : CarPlayDataBusFixture() {
             bool(15, false)
         }
 
-        val route = last<RouteChanged>().route
+        val route = last<RouteChanged>().route!!
         assertEquals(120L, route.distanceToManeuverMeters)
         // Whether the navigation app shows the guidance on the CarPlay screen now.
         assertEquals(false, route.visibleInApp)
@@ -106,7 +116,7 @@ class CarPlayDataBusRouteTest : CarPlayDataBusFixture() {
         now += 3_000_000_000L
 
         assertNull(bus.snapshot().route!!.nextManeuver)
-        assertNull(last<RouteChanged>().route.nextManeuver)
+        assertNull(last<RouteChanged>().route!!.nextManeuver)
     }
 
     @Test
@@ -119,7 +129,7 @@ class CarPlayDataBusRouteTest : CarPlayDataBusFixture() {
         }
         frame(0x5201) { u8(1, 2) }
 
-        val route = last<RouteChanged>().route
+        val route = last<RouteChanged>().route!!
         assertEquals(RouteGuidanceState.ARRIVED, route.state)
         assertNull(route.nextManeuver)
         assertTrue(route.currentManeuvers.isEmpty())

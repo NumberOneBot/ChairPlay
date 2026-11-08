@@ -21,10 +21,10 @@ class ProtocolBoundaryTest {
     }
 
     @Test
-    fun `phone package never imports DiPlay`() {
-        val offenders = kotlinFiles().map { relative(it) }.filter { it.startsWith("phone/") }
+    fun `phone and data packages never import DiPlay`() {
+        val offenders = kotlinFiles().map { relative(it) }.filter { it.startsWith("phone/") || it.startsWith("data/") }
             .filter { importsDiPlay(sourceRoot.resolve(it)) }
-        assertTrue("Files under phone/ import com.shilapi.: $offenders", offenders.isEmpty())
+        assertTrue("Files under phone/ or data/ import com.shilapi.: $offenders", offenders.isEmpty())
     }
 
     private fun kotlinFiles(): List<Path> = Files.walk(sourceRoot).use { stream ->
@@ -59,7 +59,12 @@ class ProtocolBoundaryTest {
             "SessionListener.kt",
             "bluetooth/WindowsBluetooth.kt",
             "carplay/CarPlayControl.kt",
+            "carplay/CarPlayDataFeed.kt",
+            "carplay/CarPlayDataLog.kt",
+            "carplay/CarPlayDataMessages.kt",
             "carplay/CarPlayMediaSink.kt",
+            "carplay/DataSubscriptions.kt",
+            "carplay/Iap2DataDecoder.kt",
             "config/AltscreenAreas.kt",
             "config/AltscreenSettings.kt",
             "config/AreaRect.kt",
@@ -68,12 +73,6 @@ class ProtocolBoundaryTest {
             "config/DisplaySettings.kt",
             "config/EditableSettings.kt",
             "config/PairingFiles.kt",
-            "data/CarPlayData.kt",
-            "data/CarPlayDataBus.kt",
-            "data/CarPlayDataLog.kt",
-            "data/CarPlayDataMerges.kt",
-            "data/CarPlayDataMessages.kt",
-            "data/DataSubscriptions.kt",
             "discovery/CarPlayTxt.kt",
             "discovery/DesktopBonjour.kt",
             "drive/Drive.kt",

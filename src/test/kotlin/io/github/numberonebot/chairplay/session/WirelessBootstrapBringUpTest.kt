@@ -2,11 +2,11 @@ package io.github.numberonebot.chairplay.session
 
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.MediaSink
+import io.github.numberonebot.chairplay.carplay.PhoneDataTap
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.config.writeTestSettings
-import io.github.numberonebot.chairplay.data.CarPlayDataTap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -57,7 +57,7 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
         writeTestSettings(dir)
         val statuses = LinkedBlockingQueue<BringUpStatus>()
         val listener = object : AirPlaySessionListener {}
-        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, listener, CarPlayDataTap.NONE) {
+        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, listener, PhoneDataTap.NONE) {
             throw IllegalArgumentException("Offline MFi directory is missing or invalid")
         }.use { bootstrap ->
             bootstrap.onStatus = statuses::add
@@ -76,7 +76,7 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
         val dir = Files.createTempDirectory("chairplay-bootstrap")
         writeTestSettings(dir)
         val statuses = LinkedBlockingQueue<BringUpStatus>()
-        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, CarPlayDataTap.NONE) {
+        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE) {
             throw IllegalArgumentException("no MFi files")
         }.use { bootstrap ->
             bootstrap.onStatus = statuses::add

@@ -1,20 +1,22 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.iap2.message.Iap2Messages
 import com.shilapi.xcertplay.transport.Iap2ArtworkTransfer
+import io.github.numberonebot.chairplay.data.Artwork
+import io.github.numberonebot.chairplay.data.PhoneDataSnapshot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files
 
-class CarPlayDataTest {
+class CarPlayDataFeedTest {
     private val dir = Files.createTempDirectory("chairplay-data")
     private val power = Iap2Messages.buildRaw(0xae01) { u16(6, 0xffff) }
 
     @Test
     fun `frames and artwork reach the bus and the log`() {
         val log = CarPlayDataLog(dir)
-        val data = CarPlayData(log)
+        val data = CarPlayDataFeed(log)
 
         data.onFrame(DataLink.WIFI, power)
         data.onArtwork(DataLink.WIFI, Iap2ArtworkTransfer(3, byteArrayOf(9)))
@@ -30,12 +32,12 @@ class CarPlayDataTest {
 
     @Test
     fun `without a log the bus still hears everything and the end of a session clears it`() {
-        val data = CarPlayData(null)
+        val data = CarPlayDataFeed(null)
 
         data.onFrame(DataLink.BLUETOOTH, power)
         assertEquals(0xffff, data.bus.snapshot().power!!.chargeLevel)
 
         data.onSessionEnded()
-        assertEquals(CarPlayDataSnapshot(), data.bus.snapshot())
+        assertEquals(PhoneDataSnapshot(), data.bus.snapshot())
     }
 }

@@ -4,10 +4,10 @@ import io.github.numberonebot.chairplay.data.Artwork
 import io.github.numberonebot.chairplay.data.Call
 import io.github.numberonebot.chairplay.data.CallDirection
 import io.github.numberonebot.chairplay.data.CallStatus
-import io.github.numberonebot.chairplay.data.CarPlayDataSnapshot
 import io.github.numberonebot.chairplay.data.LaneStatus
 import io.github.numberonebot.chairplay.data.ManeuverType
 import io.github.numberonebot.chairplay.data.NowPlaying
+import io.github.numberonebot.chairplay.data.PhoneDataSnapshot
 import io.github.numberonebot.chairplay.data.RouteGuidance
 import io.github.numberonebot.chairplay.data.RouteGuidanceState
 import io.github.numberonebot.chairplay.hud.maneuver.ArrowProgress
@@ -100,7 +100,7 @@ class HudDemoTest {
         val song = NowPlaying(title = "Live song", artist = "Live artist", playing = true, appName = "Music", artworkTransferId = 7)
         val cover = Artwork(7, byteArrayOf(1, 2, 3))
         val guidance = RouteGuidance(state = RouteGuidanceState.ROUTE_SET, currentRoad = "Real Road", distanceToManeuverMeters = 900)
-        val live = CarPlayDataSnapshot(route = guidance, nowPlaying = song, artwork = cover)
+        val live = PhoneDataSnapshot(route = guidance, nowPlaying = song, artwork = cover)
         val demo = HudDemo(withMedia = false)
 
         val shown = demo.snapshot(0, live)
@@ -128,14 +128,14 @@ class HudDemoTest {
         assertNull(hudState(HudDemo(withMedia = true, cycle = true).snapshot(15_000, live)).media)
 
         // Without a session the demo is what it was.
-        assertEquals(demo.snapshot(0), demo.snapshot(0, CarPlayDataSnapshot()))
+        assertEquals(demo.snapshot(0), demo.snapshot(0, PhoneDataSnapshot()))
     }
 
     @Test(timeout = 10_000)
     fun `a running demo plays over the bus it is given`() {
         val running = HudDemo(withMedia = false).start({}) {}
         try {
-            val live = CarPlayDataSnapshot(nowPlaying = NowPlaying(title = "Live song", playing = true))
+            val live = PhoneDataSnapshot(nowPlaying = NowPlaying(title = "Live song", playing = true))
             val shown = running.over(live)
             assertNotNull(shown.route)
             assertEquals("Live song", shown.nowPlaying!!.title)

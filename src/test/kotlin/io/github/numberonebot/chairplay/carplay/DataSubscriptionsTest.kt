@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.data
+package io.github.numberonebot.chairplay.carplay
 
 import io.github.numberonebot.chairplay.session.desktopIdentification
 import com.shilapi.xcertplay.iap2.body.Iap2BodyReader

@@ -1,36 +1,27 @@
 package io.github.numberonebot.chairplay.data
 
-/** An enumeration of Apple's iAP2 spec: [code] is its value on the wire. */
-interface Iap2Coded {
-    val code: Int
-}
-
-internal inline fun <reified E> codeOf(code: Int?): E? where E : Enum<E>, E : Iap2Coded =
-    code?.let { value -> enumValues<E>().firstOrNull { it.code == value } }
-
-internal inline fun <reified E> codeNames(): Map<Int, String> where E : Enum<E>, E : Iap2Coded =
-    enumValues<E>().associate { it.code to it.name }
+// What a phone tells the car besides the picture, whatever its protocol. CarPlay's wire codes for these enums are in
+// carplay/Iap2DataCodes.kt; only the maneuver and lane codes are the app's own too.
 
 /** RouteGuidanceState (0x5201 parameter 1). */
-enum class RouteGuidanceState(override val code: Int) : Iap2Coded {
-    NO_ROUTE_SET(0), ROUTE_SET(1), ARRIVED(2), LOADING(3), LOCATING(4), REROUTING(5), PROCEED_TO_ROUTE(6),
-}
+enum class RouteGuidanceState { NO_ROUTE_SET, ROUTE_SET, ARRIVED, LOADING, LOCATING, REROUTING, PROCEED_TO_ROUTE }
 
 /** ManeuverState (0x5201 parameter 2): how close the next maneuver is. */
-enum class ManeuverState(override val code: Int) : Iap2Coded { CONTINUE(0), INITIAL(1), PREPARE(2), EXECUTE(3) }
+enum class ManeuverState { CONTINUE, INITIAL, PREPARE, EXECUTE }
 
 /** The units of the iPhone's own distance text. */
-enum class DistanceUnits(override val code: Int) : Iap2Coded { KILOMETERS(0), MILES(1), METERS(2), YARDS(3), FEET(4) }
+enum class DistanceUnits { KILOMETERS, MILES, METERS, YARDS, FEET }
 
-enum class DrivingSide(override val code: Int) : Iap2Coded { RIGHT(0), LEFT(1) }
+enum class DrivingSide { RIGHT, LEFT }
 
-enum class JunctionType(override val code: Int) : Iap2Coded { INTERSECTION(0), ROUNDABOUT(1) }
+enum class JunctionType { INTERSECTION, ROUNDABOUT }
 
 /**
  * RouteGuidanceManeuverType (0x5202 parameter 3), the same codes upstream's BydManeuverCodes and
  * FceManeuverCodes map to cluster glyphs. 28 to 46 are the exits of a roundabout, first to nineteenth.
+ * Apple's [code]s are the app's maneuver codes, whatever the phone: the HUD and the MHI2Q renderer draw by them.
  */
-enum class ManeuverType(override val code: Int) : Iap2Coded {
+enum class ManeuverType(val code: Int) {
     NO_TURN(0), LEFT_TURN(1), RIGHT_TURN(2), STRAIGHT_AHEAD(3), U_TURN(4), FOLLOW_ROAD(5), ENTER_ROUNDABOUT(6),
     EXIT_ROUNDABOUT(7), OFF_RAMP(8), ON_RAMP(9), ARRIVE_END_OF_NAVIGATION(10), START_ROUTE(11), ARRIVE_AT_DESTINATION(12),
     KEEP_LEFT(13), KEEP_RIGHT(14), ENTER_FERRY(15), EXIT_FERRY(16), CHANGE_FERRY(17), START_ROUTE_WITH_U_TURN(18),
@@ -49,30 +40,28 @@ enum class ManeuverType(override val code: Int) : Iap2Coded {
     val roundaboutExit: Int? get() = if (code in 28..46) code - 27 else null
 }
 
-/** A lane's state in LaneGuidanceInfoUpdate (0x5204). */
-enum class LaneStatus(override val code: Int) : Iap2Coded { NOT_GOOD(0), GOOD(1), PREFERRED(2) }
+/** A lane's state in LaneGuidanceInfoUpdate (0x5204); Apple's [code]s are what the MHI2Q renderer draws by. */
+enum class LaneStatus(val code: Int) { NOT_GOOD(0), GOOD(1), PREFERRED(2) }
 
-enum class PlaybackStatus(override val code: Int) : Iap2Coded { STOPPED(0), PLAYING(1), PAUSED(2), SEEK_FORWARD(3), SEEK_BACKWARD(4) }
+enum class PlaybackStatus { STOPPED, PLAYING, PAUSED, SEEK_FORWARD, SEEK_BACKWARD }
 
-enum class ShuffleMode(override val code: Int) : Iap2Coded { OFF(0), SONGS(1), ALBUMS(2) }
+enum class ShuffleMode { OFF, SONGS, ALBUMS }
 
-enum class RepeatMode(override val code: Int) : Iap2Coded { OFF(0), ONE(1), ALL(2) }
+enum class RepeatMode { OFF, ONE, ALL }
 
-enum class CallStatus(override val code: Int) : Iap2Coded {
-    DISCONNECTED(0), SENDING(1), RINGING(2), CONNECTING(3), ACTIVE(4), HELD(5), DISCONNECTING(6),
+enum class CallStatus { DISCONNECTED, SENDING, RINGING, CONNECTING, ACTIVE, HELD, DISCONNECTING }
+
+enum class CallDirection { UNKNOWN, INCOMING, OUTGOING }
+
+enum class CallService { UNKNOWN, TELEPHONY, FACETIME_AUDIO, FACETIME_VIDEO }
+
+enum class DisconnectReason { ENDED, DECLINED, FAILED }
+
+enum class RegistrationStatus {
+    UNKNOWN, NOT_REGISTERED, SEARCHING, DENIED, REGISTERED_HOME, REGISTERED_ROAMING, EMERGENCY_CALLS_ONLY,
 }
 
-enum class CallDirection(override val code: Int) : Iap2Coded { UNKNOWN(0), INCOMING(1), OUTGOING(2) }
-
-enum class CallService(override val code: Int) : Iap2Coded { UNKNOWN(0), TELEPHONY(1), FACETIME_AUDIO(2), FACETIME_VIDEO(3) }
-
-enum class DisconnectReason(override val code: Int) : Iap2Coded { ENDED(0), DECLINED(1), FAILED(2) }
-
-enum class RegistrationStatus(override val code: Int) : Iap2Coded {
-    UNKNOWN(0), NOT_REGISTERED(1), SEARCHING(2), DENIED(3), REGISTERED_HOME(4), REGISTERED_ROAMING(5), EMERGENCY_CALLS_ONLY(6),
-}
-
-enum class BatteryChargingState(override val code: Int) : Iap2Coded { DISABLED(0), CHARGING(1), CHARGED(2) }
+enum class BatteryChargingState { DISABLED, CHARGING, CHARGED }
 
 /** One maneuver of the route, from RouteGuidanceManeuverUpdate (0x5202); the iPhone sends each once per route. */
 data class Maneuver(
@@ -92,7 +81,7 @@ data class Maneuver(
     /** The angle of the road the maneuver leaves the junction by. */
     val exitAngle: Int? = null,
 ) {
-    val type: ManeuverType? get() = codeOf<ManeuverType>(typeCode)
+    val type: ManeuverType? get() = ManeuverType.entries.firstOrNull { it.code == typeCode }
 }
 
 /** The route from RouteGuidanceUpdate (0x5201), each value as last sent, with its maneuvers. */
@@ -123,7 +112,7 @@ data class RouteGuidance(
     /**
      * The maneuver to show, by upstream's BydHudRouteState rules: the first current one, kept through the
      * iPhone's brief empty lists, gone after 3 s of an empty list, 30 s without a route update, or at the
-     * end of the route. The rules depend on time: [CarPlayDataBus.snapshot] brings them up to date.
+     * end of the route. The rules depend on time: [PhoneDataBus.snapshot] brings them up to date.
      */
     val nextManeuver: Maneuver? = null,
     /** The current maneuvers whose details have arrived, in the iPhone's order. */
@@ -141,7 +130,7 @@ data class Lane(
     /** The way the route takes from this lane, when the iPhone marks one. */
     val highlightAngle: Int? = null,
 ) {
-    val status: LaneStatus? get() = codeOf<LaneStatus>(statusCode)
+    val status: LaneStatus? get() = LaneStatus.entries.firstOrNull { it.code == statusCode }
 
     /** The lane's main way: the highlighted angle, else the first, as the MHI2Q project's parser reads it. */
     val direction: Int? get() = highlightAngle ?: angles.firstOrNull()
@@ -215,6 +204,9 @@ data class Call(
 ) {
     /** What a call card shows: the contact's name, else the number. */
     val name: String? get() = displayName ?: remoteId
+
+    /** The call is over, or about to be: it leaves the bus's calls. */
+    val ended: Boolean get() = status == CallStatus.DISCONNECTED || status == CallStatus.DISCONNECTING
 }
 
 /** CommunicationsUpdate (0x4158), each value as last sent. */
@@ -244,7 +236,7 @@ data class Power(
 }
 
 /** Everything the bus knows, as of its last change. */
-data class CarPlayDataSnapshot(
+data class PhoneDataSnapshot(
     val route: RouteGuidance? = null,
     /**
      * The current lane event: the one whose index [RouteGuidance.laneGuidanceIndex] names. Whether to show it is
@@ -260,16 +252,17 @@ data class CarPlayDataSnapshot(
 )
 
 /** One change on the bus; the snapshot already holds it when listeners hear of it. */
-sealed interface CarPlayDataEvent {
-    data class RouteChanged(val route: RouteGuidance) : CarPlayDataEvent
+sealed interface PhoneDataEvent {
+    /** The route changed; null when the phone dropped it (the iPhone never does: it sends its end as a state). */
+    data class RouteChanged(val route: RouteGuidance?) : PhoneDataEvent
     /** The current lane event changed; null when there is none. */
-    data class LanesChanged(val lanes: LaneGuidance?) : CarPlayDataEvent
-    data class NowPlayingChanged(val nowPlaying: NowPlaying) : CarPlayDataEvent
-    data class ArtworkChanged(val artwork: Artwork) : CarPlayDataEvent
+    data class LanesChanged(val lanes: LaneGuidance?) : PhoneDataEvent
+    data class NowPlayingChanged(val nowPlaying: NowPlaying?) : PhoneDataEvent
+    data class ArtworkChanged(val artwork: Artwork) : PhoneDataEvent
     /** [call] as updated, also when it ended and has left [calls]. */
-    data class CallChanged(val call: Call, val calls: List<Call>) : CarPlayDataEvent
-    data class CommunicationsChanged(val communications: Communications) : CarPlayDataEvent
-    data class PowerChanged(val power: Power) : CarPlayDataEvent
-    /** The CarPlay session ended: the snapshot is empty again. */
-    data object Cleared : CarPlayDataEvent
+    data class CallChanged(val call: Call, val calls: List<Call>) : PhoneDataEvent
+    data class CommunicationsChanged(val communications: Communications?) : PhoneDataEvent
+    data class PowerChanged(val power: Power?) : PhoneDataEvent
+    /** The phone's session ended: the snapshot is empty again. */
+    data object Cleared : PhoneDataEvent
 }

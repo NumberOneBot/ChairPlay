@@ -13,7 +13,7 @@ import io.github.numberonebot.chairplay.config.altscreenUrl
 import io.github.numberonebot.chairplay.config.drawnView
 import io.github.numberonebot.chairplay.config.fittedTo
 import io.github.numberonebot.chairplay.config.hudShowsSession
-import io.github.numberonebot.chairplay.data.CarPlayData
+import io.github.numberonebot.chairplay.data.PhoneDataBus
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.GaugeMotion
 import io.github.numberonebot.chairplay.drive.GaugePainter
@@ -249,12 +249,12 @@ internal class AltscreenView(
     }
 
     /**
-     * The AltScreen's HUD shows [data]'s route, song and call, drawn again when it changes, in the [accent] (ui.accent),
+     * The AltScreen's HUD shows [bus]'s route, song and call, drawn again when it changes, in the [accent] (ui.accent),
      * with the GPS car's speedometer and tachometer over whatever the AltScreen shows while [driving] drives it.
      * CHAIRPLAY_HUD_DEMO plays a made-up route in place of the iPhone's guidance, beside its song, for watching the
      * maneuvers (HudDemo).
      */
-    fun paint(data: CarPlayData, driving: Driving, accent: Int) {
+    fun paint(bus: PhoneDataBus, driving: Driving, accent: Int) {
         HudDemo.fromEnvironment()?.let { demo ->
             hudDemo.set((if (demo.lanes) "lanes" else "maneuvers") to demo.start(window::repaint) { name ->
                 window.screenshot { image -> saveScreenshot(image, dir, ::log, "altscreen-demo-$name") }
@@ -264,11 +264,11 @@ internal class AltscreenView(
         val gaugeMotion = GaugeMotion()
         window.overlay = HudPainter({
             val demo = hudDemo.get()?.second
-            val snapshot = data.bus.snapshot().let { live -> demo?.over(live) ?: live }
+            val snapshot = bus.snapshot().let { live -> demo?.over(live) ?: live }
             val state = if (hudShowsSession(content, active() != null, demo != null)) hudState(snapshot) else HudState()
             HudView(demo != null || active() != null, state, snapshot.artwork, gaugeMotion.there, gaugeMotion.smallness)
         }, ::log, window::repaint, accent)
-        data.bus.addListener { if (window.hud) window.repaint() }
+        bus.addListener { if (window.hud) window.repaint() }
         window.topLayer = GaugePainter(driving::gauges, ::log, accent, gaugeMotion, ::smallWellScale)
     }
 

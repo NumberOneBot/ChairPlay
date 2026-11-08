@@ -2,10 +2,10 @@ package io.github.numberonebot.chairplay.hud
 
 import io.github.numberonebot.chairplay.data.CallDirection
 import io.github.numberonebot.chairplay.data.CallStatus
-import io.github.numberonebot.chairplay.data.CarPlayDataSnapshot
 import io.github.numberonebot.chairplay.data.DistanceUnits
 import io.github.numberonebot.chairplay.data.LaneGuidance
 import io.github.numberonebot.chairplay.data.Maneuver
+import io.github.numberonebot.chairplay.data.PhoneDataSnapshot
 import io.github.numberonebot.chairplay.data.RouteGuidance
 import io.github.numberonebot.chairplay.data.RouteGuidanceState
 import java.time.Instant
@@ -57,7 +57,7 @@ private fun String?.clip(): String? = this?.ifBlank { null }?.take(MAX_TEXT)
  * while the iPhone guides (RouteGuidanceUpdate's state), and a call on top. Which app is on the CarPlay screen the
  * iPhone does not say; visibleInApp stayed true with the music app in front.
  */
-fun hudState(snapshot: CarPlayDataSnapshot, zone: ZoneId = ZoneId.systemDefault()): HudState {
+fun hudState(snapshot: PhoneDataSnapshot, zone: ZoneId = ZoneId.systemDefault()): HudState {
     val route = snapshot.route?.takeIf { it.state in GUIDING }
     val maneuver = route?.let {
         val next = it.nextManeuver

@@ -6,10 +6,10 @@ import com.shilapi.xcertplay.airplay.AirPlayMediaHandler
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.CarPlayMediaEngine
 import com.shilapi.xcertplay.airplay.MediaSink
+import io.github.numberonebot.chairplay.carplay.PhoneDataTap
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.config.writeTestSettings
-import io.github.numberonebot.chairplay.data.CarPlayDataTap
 import com.shilapi.xcertplay.iap2.session.Iap2Session
 import com.shilapi.xcertplay.iap2.wire.Iap2Frame
 import com.shilapi.xcertplay.mfi.MfiAuthenticator
@@ -48,7 +48,7 @@ abstract class WirelessBootstrapFixture {
 
     /** A bootstrap over fakes on 127.0.0.1; each stack's parts and advertised port are recorded. */
     internal inner class Harness(
-        tap: CarPlayDataTap = CarPlayDataTap.NONE,
+        tap: PhoneDataTap = PhoneDataTap.NONE,
         knownIphone: Boolean = false,
         settings: String = "",
         sink: MediaSink = object : MediaSink {},
