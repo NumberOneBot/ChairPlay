@@ -138,7 +138,10 @@ class DriveControl(
     /** Asks for drive mode [on] or off from any thread; the next [pass] puts it in force. */
     fun requestKeyboard(on: Boolean) = keyboardRequest.set(on)
 
-    /** Puts the drive mode last asked for in force: each [pass] does, and a game's telemetry driving instead of it. */
+    /**
+     * Puts the drive mode last asked for in force, on the main thread: each [pass] does, and a game's telemetry driving
+     * instead of it.
+     */
     fun takeKeyboardRequest() {
         keyboardRequest.getAndSet(null)?.let { on -> if (on != keyboard) toggleKeyboard() }
     }

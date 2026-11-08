@@ -248,4 +248,15 @@ class CarModelTest {
             assertTrue("speed ${car.state.speed}", car.state.speed > 10.0)
         }
     }
+
+    // A game's rpm past this car's red line is shown as given, but the car's own steps never rev past its red line.
+    @Test
+    fun `stepping from a game's rpm past the red line keeps the engine within it`() {
+        val car = CarModel(CarSpec(), CarState(speed = 20.0, rpm = 8800.0, gear = 3))
+        assertEquals(8800.0, car.state.rpm, 0.0)
+        for (throttle in listOf(1.0, 0.0)) {
+            val state = car.step(CarInput(throttle = throttle), dt)
+            assertTrue("rpm ${state.rpm}", state.rpm <= car.spec.redlineRpm)
+        }
+    }
 }
