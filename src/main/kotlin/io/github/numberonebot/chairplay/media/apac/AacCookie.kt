@@ -4,7 +4,7 @@ package io.github.numberonebot.chairplay.media.apac
 internal const val AAC_LC_48K_STEREO = 0x800000L
 
 /**
- * The cookie for an APAP stream that gets none (YouTube's: no SETMAGICCOOKIE, no cookie in its packets), when its
+ * The cookie for an APAP stream that gets none (YouTube's stream started with no cookie in its packets and no SETMAGICCOOKIE before them), when its
  * SETUP said plain AAC-LC. It is the ES_Descriptor a real buffered AAC cookie is: ES_Descriptor (tag 3) holding a
  * DecoderConfigDescriptor (tag 4: MPEG-4 audio 0x40, audio stream 0x15) whose DecoderSpecificInfo (tag 5) is the
  * AudioSpecificConfig 0x11 0x90 (AAC-LC, 48 kHz, 2 channels, 1024 frames), then the SLConfigDescriptor (tag 6).

@@ -4,7 +4,7 @@ import java.io.IOException
 import kotlin.math.floor
 import kotlin.math.pow
 
-internal data class SpatialSetup(val index: Int, val soundCheckTargets: Map<Int, Float>, val audioFormat: Long = 0)
+internal data class SpatialSetup(val index: Int, val soundCheckTargets: Map<Int, Float>, val audioFormat: Long)
 
 /** Validate the complete APAP offer before the core retires a working buffered owner. */
 internal fun spatialSetup(stream: Map<String, Any?>): SpatialSetup {
@@ -16,7 +16,7 @@ internal fun spatialSetup(stream: Map<String, Any?>): SpatialSetup {
         (stream["shk"] as? ByteArray)?.size != 32 || apapInteger(stream["spf"]) != 1024L ||
         stream["audioType"] != "media" || stream["isMedia"]?.let { it != true } == true ||
         stream["audioMode"]?.let { it != "default" } == true ||
-        apapInteger(stream["audioFormat"]) != if (index == 23) 0x800000L else 0L) invalid()
+        apapInteger(stream["audioFormat"]) != if (index == 23) AAC_LC_48K_STEREO else 0L) invalid()
     if (stream["ct"]?.let { apapInteger(it) != if (index == 23) 4L else 0L } == true) invalid()
     val targets = (stream["soundCheckMediaKind"] as? Map<*, *>)?.entries?.associate { (key, value) ->
         val kind = key.toString().toIntOrNull() ?: invalid()
