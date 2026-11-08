@@ -111,6 +111,32 @@ export function ExperimentsPage({
           {sizes.screenshots ? <span className="folder-size">{byteSize(sizes.screenshots)}</span> : null}
         </span>
       </Row>
+      <Group title="Integrations" note="With games and other apps on this PC" />
+      <Row
+        label="CarPlay picture"
+        title="Let a game or another app on this PC show the CarPlay picture on its own screen"
+      >
+        <Switch
+          label="Publish as a shared texture"
+          checked={settings.value('display.share') === 'true'}
+          onChange={(checked) => settings.save({ 'display.share': String(checked) })}
+        />
+      </Row>
+      <Row
+        label="GPS car"
+        title={
+          gpsOn
+            ? 'Move the GPS car by the position, heading, and speed a game or another app sends; the gamepad and keys drive it again when it stops sending'
+            : 'Turn on the GPS on its page first'
+        }
+      >
+        <Switch
+          label="Drive from other apps"
+          checked={settings.value('gps.external') === 'true'}
+          disabled={!gpsOn}
+          onChange={(checked) => settings.save({ 'gps.external': String(checked) })}
+        />
+      </Row>
       <Group title="HUD demo" note="On the AltScreen's HUD" />
       {DEMOS.map(([kind, label, title]) => {
         const playing = demo?.playing === kind
@@ -130,32 +156,6 @@ export function ExperimentsPage({
           </Row>
         )
       })}
-      <Group title="Integrations" note="With games and other apps on this PC" />
-      <Row
-        label="CarPlay picture"
-        title="Publish the CarPlay picture as a shared texture, so a game or another app can show it on its own screen"
-      >
-        <Switch
-          label="Share the CarPlay picture"
-          checked={settings.value('display.share') === 'true'}
-          onChange={(checked) => settings.save({ 'display.share': String(checked) })}
-        />
-      </Row>
-      <Row
-        label="GPS car"
-        title={
-          gpsOn
-            ? 'Move the GPS car by the position, heading, and speed a game or another app sends; the gamepad and keys drive it again when it stops sending'
-            : 'Turn on the GPS on its page first'
-        }
-      >
-        <Switch
-          label="Drive the GPS car from other apps"
-          checked={settings.value('gps.external') === 'true'}
-          disabled={!gpsOn}
-          onChange={(checked) => settings.save({ 'gps.external': String(checked) })}
-        />
-      </Row>
     </>
   )
 }

@@ -101,7 +101,7 @@ describe('Experiments page', () => {
   it('saves sharing the CarPlay picture', async () => {
     const backend = await experiments()
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Share the CarPlay picture' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Publish as a shared texture' }))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'display.share': 'true' }]))
   })
@@ -111,7 +111,7 @@ describe('Experiments page', () => {
     backend.data = { ...backend.data, values: { ...backend.data.values, 'gps.enabled': 'true' } }
     await experiments(appState(live), backend)
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Drive the GPS car from other apps' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Drive from other apps' }))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'gps.external': 'true' }]))
   })
@@ -121,7 +121,7 @@ describe('Experiments page', () => {
     backend.data = { ...backend.data, values: { ...backend.data.values, 'gps.enabled': 'false' } }
     await experiments(appState(live), backend)
 
-    const drive = screen.getByRole('switch', { name: 'Drive the GPS car from other apps' }) as HTMLInputElement
+    const drive = screen.getByRole('switch', { name: 'Drive from other apps' }) as HTMLInputElement
     expect(drive.disabled).toBe(true)
   })
 

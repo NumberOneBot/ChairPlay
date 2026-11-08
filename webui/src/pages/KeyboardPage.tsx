@@ -54,7 +54,7 @@ const GROUPS: [group: string, actions: [key: string, label: string, title?: stri
       ['key.reconnect', 'Reconnect', 'End the CarPlay session gracefully and connect again'],
       ['key.screenshot', 'Screenshot', 'Save the CarPlay screen as a PNG file in the screenshots folder'],
       ['key.fullscreen', 'Full screen', 'Toggle full screen for the focused CarPlay or AltScreen window'],
-      ['key.drive', 'Drive mode', 'Drive the GPS car with the arrows instead of the knob, until pressed again'],
+      ['key.drive', 'Drive mode', 'Drive the GPS car with the arrow keys instead of moving through CarPlay, until pressed again'],
       ['key.gauges', 'Gauge size', "Switch the GPS car's gauges between large and small"],
     ],
   ],

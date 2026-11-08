@@ -40,7 +40,7 @@ enum class ControlAction(val key: String, val defaults: String, val description:
     VOLUME_DOWN("key.volume.down", "Ctrl+Down", "turn ChairPlay's own volume down"),
     VOLUME_MUTE("key.volume.mute", "Ctrl+M", "mute or unmute ChairPlay"),
     DRIVE(
-        "key.drive", "F10", "drive the GPS car: the arrows then steer and work the pedals instead of the knob, until pressed again",
+        "key.drive", "F10", "drive the GPS car: the arrow keys then work the pedals and steer instead of moving through CarPlay, until pressed again",
         yields = true,
     ),
     GAUGES("key.gauges", "Shift+F10", "switch the GPS car's gauges between large and small, and save it", yields = true),

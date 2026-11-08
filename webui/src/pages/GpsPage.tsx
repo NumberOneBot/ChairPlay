@@ -145,7 +145,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
         )}
         <Group title="Virtual car" note={now?.going} />
         <Row
-          title={`Drive the car with the arrows instead of the knob, and show its speedometer and tachometer on the AltScreen${driveKey ? ` (${keyLabel(driveKey)})` : ''}`}
+          title={`Drive the GPS car with the arrow keys and show its speedometer and tachometer on the AltScreen${driveKey ? ` (${keyLabel(driveKey)})` : ''}. Up and Down are the pedals, Left and Right steer, and the arrows stop moving through CarPlay until drive mode is off.`}
         >
           <Switch
             label="Drive mode"
