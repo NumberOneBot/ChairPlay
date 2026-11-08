@@ -183,7 +183,7 @@ class ChairPlayUi(
         )
         controlsView = controls?.let {
             EmbeddedUi(
-                server.url.replaceFirst("/?", "/controls?"),
+                "${server.url}controls",
                 showsUi = { true },
                 backend = { WebView2(userData, debug) },
                 openBrowser = null,

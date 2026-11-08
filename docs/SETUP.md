@@ -167,7 +167,7 @@ While the page covers the window, the keyboard and the mouse are the page's; whi
 
 The page runs in Microsoft Edge WebView2, which Windows 11 and an updated Windows 10 carry. Without it (or without `chairplay_webview.dll`) the app opens the page in the default browser, says so in the log, and the car button minimizes the window as before. WebView2 keeps its profile (cache) in the `webview2` folder next to `ChairPlay.exe`, with the app's other data.
 
-The page talks to the app over HTTP on `127.0.0.1` only, on a free port, with a random key in its address; the log has the whole address from the start (`UI at http://127.0.0.1:<port>/?token=<key>`), and any browser on the PC can open it, for example to look at the screens from a second monitor. Every API call carries the key, and a request naming another host than `127.0.0.1` or `localhost` is refused.
+The page talks to the app over HTTP on `127.0.0.1` only, on a free port, with no key; the log has the address from the start (`UI at http://127.0.0.1:<port>/`), and any browser on the PC can open it, for example to look at the screens from a second monitor. A request naming another host than `127.0.0.1`, `localhost` or `[::1]` with that port is refused, and so is a POST from another site's page, so the web sites you visit cannot change the settings. The saved Wi-Fi password goes only to this PC.
 
 ### Changing the screens
 
@@ -182,7 +182,7 @@ The page's sources are in `webui\src`. To work on them with Vite's dev server, w
    ```
 
    Its proxy sends `/api` to `127.0.0.1:%CHAIRPLAY_UI_PORT%` (47800 when unset).
-3. Open `http://localhost:5173/?token=<the key from the app's log>` in a browser.
+3. Open `http://localhost:5173/` in a browser.
 
 `npm test` (or `gradlew webuiTest`) runs the page's tests, and `gradlew webuiBuild` builds it as the app ships it. `CHAIRPLAY_UI_DEBUG=1` turns on the developer tools (F12) and the context menu inside the app's window.
 

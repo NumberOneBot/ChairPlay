@@ -17,43 +17,33 @@ class UiServerTest {
         "assets/app.js" to "console.log(1)",
         "assets/Inter-Regular-abc123.ttf" to "font",
     )
-    private val server = UiServer(api, { assets[it]?.toByteArray() }, token = "t0ken").also { it.start() }
+    private val server = UiServer(api, { assets[it]?.toByteArray() }).also { it.start() }
     private val client = HttpClient.newHttpClient()
     private val base = "http://127.0.0.1:${server.port}"
 
     @After
     fun close() = server.close()
 
-    private fun get(path: String, token: String? = "t0ken"): HttpResponse<String> {
-        val request = HttpRequest.newBuilder(URI("$base$path")).apply { token?.let { header("Authorization", "Bearer $it") } }.build()
-        return client.send(request, HttpResponse.BodyHandlers.ofString())
-    }
+    private fun get(path: String): HttpResponse<String> =
+        client.send(HttpRequest.newBuilder(URI("$base$path")).build(), HttpResponse.BodyHandlers.ofString())
 
     private fun post(path: String, body: String, type: String = "application/json"): HttpResponse<String> {
         val request = HttpRequest.newBuilder(URI("$base$path"))
-            .header("Authorization", "Bearer t0ken").header("Content-Type", type)
+            .header("Content-Type", type)
             .POST(HttpRequest.BodyPublishers.ofString(body)).build()
         return client.send(request, HttpResponse.BodyHandlers.ofString())
     }
 
     @Test
-    fun `the page's address carries the token`() {
-        assertEquals("http://127.0.0.1:${server.port}/?token=t0ken", server.url)
-    }
-
-    @Test
-    fun `the API needs the token`() {
-        assertEquals(401, get("/api/state", token = null).statusCode())
-        assertEquals(401, get("/api/state", token = "wrong").statusCode())
-        assertEquals(200, get("/api/state").statusCode())
-        assertEquals(200, get("/api/state?token=t0ken", token = null).statusCode())
+    fun `the page's address is plain`() {
+        assertEquals("http://127.0.0.1:${server.port}/", server.url)
     }
 
     // Another site's page reaching 127.0.0.1 through a name of its own (DNS rebinding) sends its own Host.
     @Test
     fun `requests for another host are refused`() {
         Socket("127.0.0.1", server.port).use { socket ->
-            socket.getOutputStream().write("GET /api/state?token=t0ken HTTP/1.1\r\nHost: evil.example:${server.port}\r\nConnection: close\r\n\r\n".toByteArray())
+            socket.getOutputStream().write("GET /api/state HTTP/1.1\r\nHost: evil.example:${server.port}\r\nConnection: close\r\n\r\n".toByteArray())
             val status = socket.getInputStream().bufferedReader().readLine()
             assertTrue(status, status.startsWith("HTTP/1.1 403"))
         }
@@ -122,13 +112,6 @@ class UiServerTest {
         assertEquals(200, post("/api/demo", """{"kind":null}""").statusCode())
         assertEquals(409, post("/api/demo", """{"kind":"tetris"}""").statusCode())
         assertEquals(listOf("demo lanes", "demo null", "demo tetris"), api.calls)
-    }
-
-    // The eye beside the password asks for the saved one alone, with the token like every other call.
-    @Test
-    fun `the saved password comes only when asked for, with the token`() {
-        assertEquals(401, get("/api/passphrase", token = null).statusCode())
-        assertEquals(mapOf("passphrase" to "secret123"), Json.parse(get("/api/passphrase").body()))
     }
 
     @Test
@@ -235,26 +218,26 @@ class UiServerTest {
     }
 
     @Test
-    fun `the built page is served without the token`() {
-        val index = get("/", token = null)
+    fun `the built page is served`() {
+        val index = get("/")
         assertEquals(200, index.statusCode())
         assertEquals("text/html; charset=utf-8", index.headers().firstValue("Content-Type").get())
         assertTrue(index.headers().firstValue("Content-Security-Policy").isPresent)
 
-        val script = get("/assets/app.js", token = null)
+        val script = get("/assets/app.js")
         assertEquals("text/javascript; charset=utf-8", script.headers().firstValue("Content-Type").get())
         assertEquals("console.log(1)", script.body())
-        assertEquals("font/ttf", get("/assets/Inter-Regular-abc123.ttf", token = null).headers().firstValue("Content-Type").get())
+        assertEquals("font/ttf", get("/assets/Inter-Regular-abc123.ttf").headers().firstValue("Content-Type").get())
 
         // The page's own routes fall back to it; a missing file does not.
-        assertEquals(index.body(), get("/settings", token = null).body())
-        assertEquals(404, get("/assets/missing.js", token = null).statusCode())
-        assertEquals(404, get("/%2e%2e/secret.txt", token = null).statusCode())
+        assertEquals(index.body(), get("/settings").body())
+        assertEquals(404, get("/assets/missing.js").statusCode())
+        assertEquals(404, get("/%2e%2e/secret.txt").statusCode())
     }
 
     @Test(timeout = 20_000)
     fun `events carry the state and each change`() {
-        val request = HttpRequest.newBuilder(URI("$base/api/events?token=t0ken")).build()
+        val request = HttpRequest.newBuilder(URI("$base/api/events")).build()
         val response = client.send(request, HttpResponse.BodyHandlers.ofLines())
         assertEquals("text/event-stream; charset=utf-8", response.headers().firstValue("Content-Type").get())
         val lines = response.body().iterator()

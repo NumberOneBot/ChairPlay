@@ -45,7 +45,7 @@ class EmbeddedUiTest {
     }
 
     private fun ui(make: () -> WebViewBackend = { backend }) =
-        EmbeddedUi("http://127.0.0.1:1/?token=t", { shows }, make, { opened += it }, { logged += it }, { embedded = it })
+        EmbeddedUi("http://127.0.0.1:1/", { shows }, make, { opened += it }, { logged += it }, { embedded = it })
 
     @Test
     fun `the page opens hidden in the window and shows on the first layout`() {
@@ -54,7 +54,7 @@ class EmbeddedUiTest {
         ui.attach(42)
         ui.layout(1280, 720)
 
-        assertEquals(listOf("create 42", "navigate http://127.0.0.1:1/?token=t", "bounds 1280x720", "show", "focus view"), calls)
+        assertEquals(listOf("create 42", "navigate http://127.0.0.1:1/", "bounds 1280x720", "show", "focus view"), calls)
         assertEquals(true, embedded)
     }
 
@@ -117,7 +117,7 @@ class EmbeddedUiTest {
     }
 
     private fun controlsPage() =
-        EmbeddedUi("http://127.0.0.1:1/controls?token=t", { true }, { backend }, { opened += it }, { logged += it }, { embedded = it },
+        EmbeddedUi("http://127.0.0.1:1/controls", { true }, { backend }, { opened += it }, { logged += it }, { embedded = it },
             takesKeyboard = false)
 
     // The controls window's page: the window keeps the keyboard, so the keys stay CarPlay's, where with the page they
@@ -128,7 +128,7 @@ class EmbeddedUiTest {
         val ui = controlsPage()
         ui.attach(42)
         ui.layout(720, 320)
-        assertEquals(listOf("create 42", "navigate http://127.0.0.1:1/controls?token=t", "bounds 720x320", "show"), calls)
+        assertEquals(listOf("create 42", "navigate http://127.0.0.1:1/controls", "bounds 720x320", "show"), calls)
         calls.clear()
 
         pageFocused = true
@@ -166,7 +166,7 @@ class EmbeddedUiTest {
         ui.layout(1280, 720)
         ui.detach()
 
-        assertEquals(listOf("http://127.0.0.1:1/?token=t"), opened)
+        assertEquals(listOf("http://127.0.0.1:1/"), opened)
         assertEquals(false, embedded)
         assertTrue(logged.single(), "WebView2 is unavailable" in logged.single() && "browser" in logged.single())
         assertEquals(emptyList<String>(), calls)
@@ -175,7 +175,7 @@ class EmbeddedUiTest {
     // The controls window has no browser to fall back to: it says why and stays empty.
     @Test
     fun `a page with no browser to fall back to says why`() {
-        val ui = EmbeddedUi("http://127.0.0.1:1/controls?token=t", { true }, { throw WebViewUnavailable("WebView2 is unavailable") },
+        val ui = EmbeddedUi("http://127.0.0.1:1/controls", { true }, { throw WebViewUnavailable("WebView2 is unavailable") },
             openBrowser = null, log = { logged += it }, onEmbedded = { embedded = it }, takesKeyboard = false)
 
         ui.attach(42)

@@ -1,5 +1,5 @@
-// The app's API client (UiServer.kt): JSON over HTTP on 127.0.0.1, with the token from the page's own address. The
-// types it speaks are in api.ts.
+// The app's API client (UiServer.kt): JSON over HTTP on 127.0.0.1, to the address the page came from. The types it
+// speaks are in api.ts.
 import type {
   AltscreenContent,
   AppState,
@@ -20,19 +20,13 @@ import type {
 export class ApiError extends Error {}
 
 export class Api implements Backend {
-  constructor(private readonly token: string) {}
-
   private async request(method: 'GET' | 'POST', path: string, body?: unknown): Promise<{ status: number; data: any }> {
     const response = await fetch(`/api/${path}`, {
       method,
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      },
+      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
     const data = await response.json().catch(() => ({}))
-    if (response.status === 401) throw new ApiError('Token refused. Open the address printed in the console again.')
     return { status: response.status, data }
   }
 
@@ -157,7 +151,7 @@ export class Api implements Backend {
     let poll: number | undefined
     let stopped = false
     const open = () => {
-      source = new EventSource(`/api/events?token=${encodeURIComponent(this.token)}`)
+      source = new EventSource('/api/events')
       source.onmessage = (event) => {
         onLost(false)
         onState(JSON.parse(event.data) as AppState)
@@ -184,9 +178,4 @@ export class Api implements Backend {
       window.clearTimeout(poll)
     }
   }
-}
-
-/** The token in the page's address (?token=...). */
-export function tokenFrom(search: string): string | null {
-  return new URLSearchParams(search).get('token')
 }

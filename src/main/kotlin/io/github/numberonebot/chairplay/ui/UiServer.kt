@@ -6,19 +6,16 @@ import java.io.Closeable
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.net.URLDecoder
-import java.security.MessageDigest
-import java.security.SecureRandom
-import java.util.Base64
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
  * The UI's bridge to the app: an HTTP server on 127.0.0.1 that serves the built page from [assets] and the JSON API
- * of [api], on [port] or, with 0, a free one. Every API call carries [token], a random secret the page gets in its
- * own address ([url]), as `Authorization: Bearer` or the `token` query parameter (EventSource cannot set headers).
- * Requests naming another host are refused, so a web page cannot reach the API through a name of its own that
- * resolves to 127.0.0.1. The page itself holds no secret and is served to anyone on this PC.
+ * of [api], on [port] or, with 0, a free one, at a plain address ([url]) with no secret in it. [RequestChecks] stands
+ * in for one: a request naming another host than this PC's loopback names with this port is refused, so a web page
+ * cannot reach the API through a name of its own that resolves to 127.0.0.1; a POST from another site's page (its
+ * `Origin`) is refused, so the sites the user visits cannot change anything; and the saved Wi-Fi password is given
+ * only to a client on this PC.
  *
  * API: GET state and settings, POST settings ({"changes": {key: value}}), connect, reconnect, screen
  * ({"screen": "start" | "settings" | "carplay"}), window ({"name": "altscreen" | "controls", "visible": bool}), control
@@ -30,17 +27,17 @@ class UiServer(
     private val api: UiApi,
     private val assets: (String) -> ByteArray?,
     private val requestedPort: Int = 0,
-    private val token: String = newToken(),
     private val log: (String) -> Unit = {},
 ) : Closeable {
     private val executor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "ui-http").apply { isDaemon = true } }
     private val server: HttpServer = HttpServer.create(InetSocketAddress(InetAddress.getLoopbackAddress(), requestedPort), 0)
+    private val checks = RequestChecks(server.address.port)
     @Volatile private var closing = false
 
     val port: Int get() = server.address.port
 
-    /** The page's address, with the token. */
-    val url: String get() = "http://127.0.0.1:$port/?token=$token"
+    /** The page's address. */
+    val url: String get() = "http://127.0.0.1:$port/"
 
     fun start() {
         server.executor = executor
@@ -71,7 +68,7 @@ class UiServer(
             add("Referrer-Policy", "no-referrer")
         }
         val host = exchange.requestHeaders.getFirst("Host")
-        if (host != "127.0.0.1:$port" && host != "localhost:$port") {
+        if (!checks.hostAllowed(host)) {
             json(exchange, 403, mapOf("error" to "wrong host"))
             return
         }
@@ -79,20 +76,7 @@ class UiServer(
         if (path.startsWith("/api/")) api(exchange, path.removePrefix("/api/")) else page(exchange, path)
     }
 
-    private fun authorized(exchange: HttpExchange): Boolean {
-        val header = exchange.requestHeaders.getFirst("Authorization")?.removePrefix("Bearer ")
-        val query = exchange.requestURI.rawQuery?.split('&')?.firstNotNullOfOrNull { part ->
-            part.split('=', limit = 2).takeIf { it.size == 2 && it[0] == "token" }?.let { URLDecoder.decode(it[1], Charsets.UTF_8) }
-        }
-        val given = header ?: query ?: return false
-        return MessageDigest.isEqual(given.toByteArray(), token.toByteArray())
-    }
-
     private fun api(exchange: HttpExchange, route: String) {
-        if (!authorized(exchange)) {
-            json(exchange, 401, mapOf("error" to "missing or wrong token"))
-            return
-        }
         val method = exchange.requestMethod
         val posts = setOf("settings", "controls", "connect", "reconnect", "disconnect", "screen", "window", "control", "key", "keyboard-focus", "altscreen", "open", "window-size", "firewall-rule", "forget", "altscreen-frame", "demo", "volume", "windows-location", "gps-drive", "screenshot", "drive-mode", "check-updates")
         val gets = setOf("state", "settings", "passphrase", "controls", "folder-sizes", "events")
@@ -100,7 +84,11 @@ class UiServer(
             method == "GET" && route in gets -> when (route) {
                 "state" -> json(exchange, 200, api.state())
                 "settings" -> json(exchange, 200, api.settings())
-                "passphrase" -> json(exchange, 200, mapOf("passphrase" to api.savedPassphrase()))
+                "passphrase" -> if (checks.fromThisPc(exchange.remoteAddress.address)) {
+                    json(exchange, 200, mapOf("passphrase" to api.savedPassphrase()))
+                } else {
+                    json(exchange, 403, mapOf("error" to "The saved password is shown only on this PC"))
+                }
                 "folder-sizes" -> json(exchange, 200, api.folderSizes())
                 "controls" -> api.controls()?.let { json(exchange, 200, it) } ?: json(exchange, 404, mapOf("error" to "no key bindings"))
                 else -> events(exchange)
@@ -112,6 +100,11 @@ class UiServer(
     }
 
     private fun post(exchange: HttpExchange, route: String) {
+        // handle() has let only an allowed Host through, so it is there.
+        if (!checks.originAllowed(exchange.requestHeaders.getFirst("Origin"), exchange.requestHeaders.getFirst("Host"))) {
+            json(exchange, 403, mapOf("error" to "cross-site request refused"))
+            return
+        }
         val type = exchange.requestHeaders.getFirst("Content-Type").orEmpty()
         if (!type.startsWith("application/json")) {
             json(exchange, 415, mapOf("error" to "send application/json"))
@@ -211,12 +204,6 @@ class UiServer(
         private const val KEEP_ALIVE_MILLIS = 15_000L
         private const val CSP = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; " +
             "object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
-
-        /** 32 random bytes in URL-safe Base64. */
-        fun newToken(): String {
-            val bytes = ByteArray(32).also(SecureRandom()::nextBytes)
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
-        }
 
         private fun contentType(file: String): String = when (file.substringAfterLast('.').lowercase()) {
             "html" -> "text/html; charset=utf-8"

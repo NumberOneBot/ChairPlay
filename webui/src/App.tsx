@@ -1,22 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { applyAccent } from './accent'
 import type { AppState } from './api'
-import { Api, tokenFrom } from './apiClient'
+import { Api } from './apiClient'
 import { ControlsScreen } from './ControlsScreen'
 import { Shell } from './shell/Shell'
 
 export function App() {
-  const token = tokenFrom(window.location.search)
-  const api = useMemo(() => (token ? new Api(token) : null), [token])
+  const api = useMemo(() => new Api(), [])
   const [state, setState] = useState<AppState | null>(null)
   const [lost, setLost] = useState(false)
 
-  useEffect(() => (api ? api.subscribe(setState, setLost) : undefined), [api])
+  useEffect(() => api.subscribe(setState, setLost), [api])
   useEffect(() => applyAccent(state?.accent), [state?.accent])
 
-  if (!api) {
-    return <p className="app-message">No key in the address. Open the address printed in the console.</p>
-  }
   // The controls window opens /controls; everything else is the main window's settings.
   const controlsPage = window.location.pathname === '/controls'
   if (controlsPage) {
