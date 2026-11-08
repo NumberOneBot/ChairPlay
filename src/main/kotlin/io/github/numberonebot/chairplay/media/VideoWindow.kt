@@ -55,14 +55,12 @@ class VideoWindow(
     /** True moves the window by a press anywhere on it, as by its title bar; it then gets no left-button clicks. */
     private val dragAnywhere: Boolean = false,
 ) : Closeable {
-    /** The picture it shows, as it opened with it or [setStream] changed it since. */
+    /** The picture it shows, as it opened with it or took the shape and size of since ([setStream]), on the GL thread. */
     @Volatile
     var stream: WindowSize? = stream
         private set
     private val streamRequest = AtomicReference<WindowSize?>()
     private val minRequest = AtomicReference<WindowSize?>()
-    // The picture the window last took the shape and size of, on the GL thread.
-    private var appliedStream: WindowSize? = stream
     private val latest = AtomicReference<DecodedFrame?>()
     private val closing = AtomicBoolean()
     private val minimizing = AtomicBoolean()
@@ -111,7 +109,6 @@ class VideoWindow(
      * the picture's shape.
      */
     fun setStream(size: WindowSize, min: WindowSize? = null) {
-        stream = size
         minRequest.set(min)
         streamRequest.set(size)
         wake()
@@ -351,8 +348,8 @@ class VideoWindow(
 
     /** [setStream] on the GL thread: the new picture's shape and smallest size, and the window's size for it. */
     private fun applyStream(window: Long, size: WindowSize) {
-        val old = appliedStream
-        appliedStream = size
+        val old = stream
+        stream = size
         if (size == old) return
         val w = IntArray(1)
         val h = IntArray(1)
@@ -427,6 +424,7 @@ class VideoWindow(
         if (clearRequest.getAndSet(false)) {
             latest.getAndSet(null)?.release()
             picture = null
+            pictureSize = Size(0, 0)
         }
         val fresh = latest.getAndSet(null)
         if (fresh != null) {
