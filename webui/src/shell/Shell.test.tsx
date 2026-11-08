@@ -129,6 +129,17 @@ describe('Shell toolbar', () => {
     render(<Shell state={appState(live)} backend={new FakeBackend()} />)
 
     expect(screen.queryByRole('img', { name: 'Restart needed' })).toBeNull()
+    expect(screen.queryByRole('img', { name: 'Reconnect needed' })).toBeNull()
+  })
+
+  // A change for the next connection is marked in the bar too, as at its field: ⟳, not the restart's sign.
+  it('says in the toolbar when changes wait for the next connection', () => {
+    render(<Shell state={appState({ ...live, reconnectPending: ['display.physical.width.mm'] })} backend={new FakeBackend()} />)
+
+    const bar = within(screen.getByRole('banner'))
+    expect(bar.getByRole('img', { name: 'Reconnect needed' })).toBeTruthy()
+    expect(bar.getByTestId('reconnect-mark')).toBeTruthy()
+    expect(bar.queryByTestId('restart-mark')).toBeNull()
   })
 })
 

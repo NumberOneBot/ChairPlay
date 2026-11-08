@@ -18,7 +18,9 @@ const DOT = { ok: 'ok', busy: 'busy', warn: 'warn', idle: '' } as const
  */
 export function Toolbar({ state, backend, guide }: { state: AppState; backend: Backend; guide?: Steps | null }) {
   const session = state.canShowCarPlay
-  const restart = sectionsOf(state.restartPending).map((id) => SECTIONS.find((section) => section.id === id)!.title)
+  const titles = (keys: string[]) => sectionsOf(keys).map((id) => SECTIONS.find((section) => section.id === id)!.title)
+  const restart = titles(state.restartPending)
+  const reconnect = titles(state.reconnectPending)
   const idle = state.phase === 'setup' || state.phase === 'idle'
   const reconnectKey = state.controls?.keys.reconnect
   // Under Get started the status says where the steps stand, and Connect waits for the last of them, then lights up.
@@ -45,18 +47,24 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
       <WindowButton state={state} backend={backend} name="altscreen" label="AltScreen" icon={<AltScreenIcon />} />
       <WindowButton state={state} backend={backend} name="controls" label="Controls" icon={<ControlsIcon />} />
       <span className="grow" />
-      {restart.length > 0 && (
-        <>
-          {/* The sign alone: at 640 px "Restart needed" and the connection's status never shared the bar whole */}
-          <PendingMark
-            what="restart"
-            className="pending"
-            label="Restart needed"
-            title={`Restart ChairPlay to apply: ${restart.join(', ')}`}
-          />
-          <span className="sep" />
-        </>
+      {/* The signs alone: at 640 px "Restart needed" and the connection's status never shared the bar whole */}
+      {reconnect.length > 0 && (
+        <PendingMark
+          what="reconnect"
+          className="pending"
+          label="Reconnect needed"
+          title={`Reconnect to apply: ${reconnect.join(', ')}`}
+        />
       )}
+      {restart.length > 0 && (
+        <PendingMark
+          what="restart"
+          className="pending"
+          label="Restart needed"
+          title={`Restart ChairPlay to apply: ${restart.join(', ')}`}
+        />
+      )}
+      {(reconnect.length > 0 || restart.length > 0) && <span className="sep" />}
       <span className="chip" title={status.detail}>
         <span className={`dot ${DOT[status.tone]}`} />
         <b>{status.title}</b>
