@@ -48,8 +48,10 @@ tasks.named<Sync>("upstreamCore") {
             patch("            Log.w(TAG, \"buffered audio listener failed\", error)",
                 "            spatial?.close()\n            Log.w(TAG, \"buffered audio listener failed\", error)")
             patch("\"audioBufferSize\" to BufferedAudioStream.AUDIO_BUFFER_BYTES", "\"audioBufferSize\" to buffered.audioBufferBytes")
+            // SETRATE waits for the clock sync (gradle/timing-upstream.gradle.kts): pass session::syncedNtp again when
+            // upstream syncs before answering SETRATE.
             patch("        val rtpTime = (body[\"rtpTime\"] as? Number)?.toLong()",
-                "        if (buffered.apap != null) return spatialControl(buffered, method, body, session.syncedNtp())\n" +
+                "        if (buffered.apap != null) return spatialControl(buffered, method, body, session::syncedNtpForAnchor)\n" +
                 "        val rtpTime = (body[\"rtpTime\"] as? Number)?.toLong()")
         }
     }

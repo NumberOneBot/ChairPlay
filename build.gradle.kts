@@ -56,6 +56,7 @@ tasks.test {
 apply(from = "gradle/upstream.gradle.kts")
 apply(from = "gradle/apap-upstream.gradle.kts")
 apply(from = "gradle/spatial-session.gradle.kts")
+apply(from = "gradle/timing-upstream.gradle.kts")
 
 sourceSets {
     test {

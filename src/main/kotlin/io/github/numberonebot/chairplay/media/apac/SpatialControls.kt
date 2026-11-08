@@ -16,13 +16,13 @@ internal fun spatialAnchor(anchor: Map<String, Any?>?): Map<String, Any?>? = anc
     "mediaTimeValue" to anchor["rtpTime"], "mediaTimeScale" to 48000, "status" to 0))
 
 internal fun spatialControl(stream: BufferedAudioStream, method: String, body: Map<String, Any?>,
-    now: BigInteger): Map<String, Any?>? = when (method) {
+    now: () -> BigInteger): Map<String, Any?>? = when (method) {
     "SETMAGICCOOKIE" -> { stream.apap!!.remember(body); null }
     "GETANCHOR" -> spatialAnchor(stream.anchor()) ?: mapOf("status" to -6718)
     "SETRATE", "SETRATEANCHORTIME" -> {
         val rate = (body["rate"] as? Number)?.toDouble()
         if (rate != 0.0 && rate != 1.0) throw java.io.IOException("Unsupported spatial playback rate")
-        val reply = spatialAnchor(stream.setRate(apapControlTime(body), rate.toInt(), now))
+        val reply = spatialAnchor(stream.setRate(apapControlTime(body), rate.toInt(), now()))
         if (method == "SETRATEANCHORTIME" && reply != null) reply + mapOf(
             "firstAvailableRTPTime" to reply["rtpTime"], "firstAvailableMediaTimeValue" to reply["mediaTimeValue"],
             "firstAvailableMediaTimeScale" to 48000, "renderStartNetworkTimeSecs" to reply["networkTimeSecs"],
