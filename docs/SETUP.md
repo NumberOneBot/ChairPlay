@@ -73,6 +73,7 @@ The files below live in the app folder, next to `ChairPlay.exe`.
    - `ui.autoshow` (default `true`): show CarPlay over the settings as soon as the iPhone connects; `false` stays on the settings, whose CarPlay button then shows it;
    - `ui.controls.keys` (default `false`): `true` shows each controls window button's key on it, not only while Alt is held (Show keys on the buttons, on the Keyboard page);
    - `ui.accent` (default `#0a84ff`, iOS's blue): the accent colour of the settings, the controls window, and the HUD, written `#rrggbb`; every lighter, darker, or fainter shade of it is made from it;
+   - `ui.port` (default `7529`, PLAY on a phone keypad): the port of the settings' address in a browser, `http://127.0.0.1:7529/`. When another program has it at start, the app takes a free port for that run, as the log and the Connection page say;
    - `iphone.address`: the iPhone's Bluetooth address, only needed when several phones are paired;
    - `iphone.join.seconds` (default 30): how long an iPhone that paired before has to join the Wi-Fi after the Bluetooth start before the app starts over and gives it the network again. It joins within a second or two, so this only matters when it lost the Wi-Fi meanwhile; a new iPhone always has five minutes, to accept CarPlay. Ctrl+R (`key.reconnect`) starts over at once, ending a running session as closing the window does;
    - `device.name`: the name the iPhone shows for the PC, in its CarPlay settings and on the network (default ChairPlay, at most 63 bytes); the window title stays ChairPlay;
@@ -167,13 +168,13 @@ While the page covers the window, the keyboard and the mouse are the page's; whi
 
 The page runs in Microsoft Edge WebView2, which Windows 11 and an updated Windows 10 carry. Without it (or without `chairplay_webview.dll`) the app opens the page in the default browser, says so in the log, and the car button minimizes the window as before. WebView2 keeps its profile (cache) in the `webview2` folder next to `ChairPlay.exe`, with the app's other data.
 
-The page talks to the app over HTTP on `127.0.0.1` only, on a free port, with no key; the log has the address from the start (`UI at http://127.0.0.1:<port>/`), and any browser on the PC can open it, for example to look at the screens from a second monitor. A request naming another host than `127.0.0.1`, `localhost` or `[::1]` with that port is refused, and so is a POST from another site's page, so the web sites you visit cannot change the settings. The saved Wi-Fi password goes only to this PC.
+The page talks to the app over HTTP on `127.0.0.1` only, on port 7529 (`ui.port`, or a free one when that is taken), with no key; the log has the address from the start (`UI at http://127.0.0.1:<port>/`), and any browser on the PC can open it, for example to look at the screens from a second monitor. A request naming another host than `127.0.0.1`, `localhost` or `[::1]` with that port is refused, and so is a POST from another site's page, so the web sites you visit cannot change the settings. The saved Wi-Fi password goes only to this PC.
 
 ### Changing the screens
 
 The page's sources are in `webui\src`. To work on them with Vite's dev server, which reloads the page on every save:
 
-1. Start the app with a fixed port for its HTTP server, for example from a Command Prompt in the app folder: `set CHAIRPLAY_UI_PORT=47800` and then `ChairPlay.exe`. Without an iPhone at hand, put `wifi.ssid=TestNet` and `iphone.address=02:00:00:00:00:01` in a test folder's `settings.properties` (`gradlew deploy -Pchairplay.home=<test folder>`), so it connects to nothing.
+1. Start the app (`ChairPlay.exe` in the app folder). Without an iPhone at hand, put `wifi.ssid=TestNet` and `iphone.address=02:00:00:00:00:01` in a test folder's `settings.properties` (`gradlew deploy -Pchairplay.home=<test folder>`), so it connects to nothing.
 2. In `webui\`, start the dev server with the build's own Node.js (run `gradlew npmCi` once first):
 
    ```
@@ -181,7 +182,7 @@ The page's sources are in `webui\src`. To work on them with Vite's dev server, w
    npm run dev
    ```
 
-   Its proxy sends `/api` to `127.0.0.1:%CHAIRPLAY_UI_PORT%` (47800 when unset).
+   Its proxy sends `/api` to `127.0.0.1:7529`, the app's port, unless `CHAIRPLAY_UI_PORT` names another; set before `ChairPlay.exe` starts, the same variable moves the app to that port too, in place of `ui.port`.
 3. Open `http://localhost:5173/` in a browser.
 
 `npm test` (or `gradlew webuiTest`) runs the page's tests, and `gradlew webuiBuild` builds it as the app ships it. `CHAIRPLAY_UI_DEBUG=1` turns on the developer tools (F12) and the context menu inside the app's window.

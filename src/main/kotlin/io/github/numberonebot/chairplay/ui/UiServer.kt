@@ -5,14 +5,13 @@ import com.sun.net.httpserver.HttpServer
 import java.io.Closeable
 import java.io.IOException
 import java.net.InetAddress
-import java.net.InetSocketAddress
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
  * The UI's bridge to the app: an HTTP server on 127.0.0.1 that serves the built page from [assets] and the JSON API
- * of [api], on [port] or, with 0, a free one, at a plain address ([url]) with no secret in it. [RequestChecks] stands
- * in for one: a request naming another host than this PC's loopback names with this port is refused, so a web page
+ * of [api], on the port asked for or, when it is taken or 0, a free one ([port]), at a plain address ([url]) with no
+ * secret in it. [RequestChecks] stands in for one: a request naming another host than this PC's loopback names with this port is refused, so a web page
  * cannot reach the API through a name of its own that resolves to 127.0.0.1; a POST from another site's page (its
  * `Origin`) is refused, so the sites the user visits cannot change anything; and the saved Wi-Fi password is given
  * only to a client on this PC.
@@ -30,11 +29,15 @@ class UiServer(
     private val log: (String) -> Unit = {},
 ) : Closeable {
     private val executor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "ui-http").apply { isDaemon = true } }
-    private val server: HttpServer = HttpServer.create(InetSocketAddress(InetAddress.getLoopbackAddress(), requestedPort), 0)
+    private val server: HttpServer = openHttpServer(requestedPort, InetAddress.getLoopbackAddress(), log)
     private val checks = RequestChecks(server.address.port)
     @Volatile private var closing = false
 
+    /** The port in use: [configuredPort], or a free one when that was taken. */
     val port: Int get() = server.address.port
+
+    /** The port asked for (ui.port); 0 asks for any free one. */
+    val configuredPort: Int = requestedPort
 
     /** The page's address. */
     val url: String get() = "http://127.0.0.1:$port/"
@@ -82,7 +85,7 @@ class UiServer(
         val gets = setOf("state", "settings", "passphrase", "controls", "folder-sizes", "events")
         when {
             method == "GET" && route in gets -> when (route) {
-                "state" -> json(exchange, 200, api.state())
+                "state" -> json(exchange, 200, state())
                 "settings" -> json(exchange, 200, api.settings())
                 "passphrase" -> if (checks.fromThisPc(exchange.remoteAddress.address)) {
                     json(exchange, 200, mapOf("passphrase" to api.savedPassphrase()))
@@ -124,6 +127,10 @@ class UiServer(
         json(exchange, status, answer)
     }
 
+    /** The app's state, and which port this server took (the Connection page says when it is not ui.port's). */
+    private fun state(): Map<String, Any?> =
+        api.state() + ("uiServer" to mapOf("port" to port, "configuredPort" to configuredPort))
+
     /** Server-sent events: the state now, then again on every change, with a comment now and then to keep it open. */
     private fun events(exchange: HttpExchange) {
         exchange.responseHeaders.apply {
@@ -140,7 +147,7 @@ class UiServer(
                     out.write(": keep-alive\n\n".toByteArray())
                 } else {
                     seen = version
-                    out.write("data: ${Json.write(api.state())}\n\n".toByteArray(Charsets.UTF_8))
+                    out.write("data: ${Json.write(state())}\n\n".toByteArray(Charsets.UTF_8))
                 }
                 out.flush()
             }

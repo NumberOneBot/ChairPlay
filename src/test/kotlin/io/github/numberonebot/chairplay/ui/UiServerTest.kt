@@ -55,8 +55,11 @@ class UiServerTest {
 
         assertEquals("application/json; charset=utf-8", response.headers().firstValue("Content-Type").get())
         assertEquals("no-store", response.headers().firstValue("Cache-Control").get())
-        assertEquals(mapOf("version" to 0L, "phase" to "idle"), Json.parse(response.body()))
+        assertEquals(mapOf("version" to 0L, "phase" to "idle"), versionAndPhase(response.body()))
     }
+
+    // The state carries the server's own fields too (UiServerPortTest); these tests look at the app's.
+    private fun versionAndPhase(json: String): Map<*, *> = (Json.parse(json) as Map<*, *>).filterKeys { it == "version" || it == "phase" }
 
     // A page with the keyboard hands the app's keys on: the key by name, pressed, repeated or released, and whether
     // every key of the app works over it (the controls window) or only those the settings leave (F11, F12 and such).
@@ -242,9 +245,11 @@ class UiServerTest {
         assertEquals("text/event-stream; charset=utf-8", response.headers().firstValue("Content-Type").get())
         val lines = response.body().iterator()
 
-        assertEquals("data: {\"version\":0,\"phase\":\"idle\"}", lines.next())
+        val first = lines.next()
+        assertTrue(first, first.startsWith("data: "))
+        assertEquals(mapOf("version" to 0L, "phase" to "idle"), versionAndPhase(first.removePrefix("data: ")))
         api.change("active")
         val next = generateSequence { lines.next() }.first { it.startsWith("data: ") }
-        assertEquals("data: {\"version\":1,\"phase\":\"active\"}", next)
+        assertEquals(mapOf("version" to 1L, "phase" to "active"), versionAndPhase(next.removePrefix("data: ")))
     }
 }

@@ -3,6 +3,7 @@ import { Group, Row, Switch, type Choice } from '../shell/controls'
 import { Field, PasswordField, Select } from '../shell/fields'
 import { InfoIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
+import { BrowserAccess } from './BrowserAccess'
 import { ErrorMessage, SetupMessages } from './messages'
 import { Changed, pendingOf } from './parts'
 import { NetworkConnection, showNetworkConnection, WifiHidden } from './NetworkConnection'
@@ -144,6 +145,7 @@ export function ConnectionPage(props: {
         />
         {later('ui.autoshow')}
       </Row>
+      <BrowserAccess state={state} />
     </>
   )
 }

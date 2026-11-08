@@ -16,6 +16,7 @@ export function appState(overrides: Partial<AppState> = {}): AppState {
     gps: null,
     bufferedAudio: null,
     embedded: true,
+    uiServer: { port: 7529, configuredPort: 7529 },
     wifi: { ssid: 'Home', security: 'WPA_WPA2', passphraseSet: true },
     reconnectPending: [],
     restartPending: [],

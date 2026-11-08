@@ -45,7 +45,7 @@ interface UiSessions {
  * 127.0.0.1, and the page in the main window ([view]), or in the default browser without WebView2. [wake] makes
  * the window's loop lay the page out again after a change; [actions] connect and reconnect.
  *
- * CHAIRPLAY_UI_PORT fixes the bridge's port, for Vite's dev server; CHAIRPLAY_UI_DEBUG=1 allows the web view's
+ * CHAIRPLAY_UI_PORT sets the bridge's port in place of ui.port, for Vite's dev server; CHAIRPLAY_UI_DEBUG=1 allows the web view's
  * developer tools.
  */
 class ChairPlayUi(
@@ -153,7 +153,7 @@ class ChairPlayUi(
 
     private val api = AppUiApi(controller, { updates.check() }) { driving }
 
-    private val server = UiServer(api, pageAssets(), System.getenv("CHAIRPLAY_UI_PORT")?.toIntOrNull() ?: 0, log = log)
+    private val server = UiServer(api, pageAssets(), System.getenv("CHAIRPLAY_UI_PORT")?.toIntOrNull() ?: config.uiServer.port, log = log)
 
     /** The page in the main window; give it to the window before it opens. */
     val view: EmbeddedUi

@@ -38,6 +38,11 @@ internal val SETTINGS_TEMPLATE = listOf(
             "fainter shades are made from it.",
         "ui.accent" to DEFAULT_ACCENT,
     ),
+    SettingBlock(
+        "The port of the settings' address in a browser, http://127.0.0.1:7529/ (7529 spells PLAY on a phone keypad).\n" +
+            "When another program has it, the app takes a free port for that run and says so on the Connection page.",
+        "ui.port" to "7529",
+    ),
     SettingBlock("The car's name on the iPhone (CarPlay settings, the network); blank is 'ChairPlay'.", "device.name" to ""),
     SettingBlock(
         "The car button on the CarPlay home screen: its label, and a square image in this folder\n" +

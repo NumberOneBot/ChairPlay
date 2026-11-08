@@ -197,6 +197,9 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     /** [accentText] as 0xRRGGBB. */
     val accent: Int = accentText.drop(1).toInt(16)
 
+    /** ui.port: where the settings' page is served. */
+    val uiServer: UiServerSettings = settings.uiServerSettings()
+
     /** keyboard.text.input: the PC's keyboard types into the iPhone's text fields. */
     val keyboardTextInput: Boolean = settings.booleanSetting("keyboard.text.input", true)
 
