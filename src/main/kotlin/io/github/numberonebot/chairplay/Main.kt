@@ -5,12 +5,10 @@ import io.github.numberonebot.chairplay.config.AreaGroup
 import io.github.numberonebot.chairplay.config.areaKey
 import io.github.numberonebot.chairplay.carplay.CarPlayConfig
 import io.github.numberonebot.chairplay.config.WindowSize
-import io.github.numberonebot.chairplay.carplay.CarPlayDataFeed
-import io.github.numberonebot.chairplay.carplay.CarPlayDataLog
+import io.github.numberonebot.chairplay.carplay.CarPlayProtocol
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.Size
-import io.github.numberonebot.chairplay.carplay.carPlaySessions
 import io.github.numberonebot.chairplay.input.TouchQueue
 import io.github.numberonebot.chairplay.input.TouchTracker
 import io.github.numberonebot.chairplay.log.AppLog
@@ -22,7 +20,6 @@ import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.AlmanacCache
 import io.github.numberonebot.chairplay.media.saveScreenshot
 import io.github.numberonebot.chairplay.phone.PhoneLink
-import io.github.numberonebot.chairplay.session.WirelessBootstrap
 import io.github.numberonebot.chairplay.ui.BuildInfo
 import io.github.numberonebot.chairplay.ui.ChairPlayUi
 import io.github.numberonebot.chairplay.ui.startLine
@@ -83,7 +80,6 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // Set once the UI exists: the controls window's page hears of what it shows changing.
     val controlsChanged = AtomicReference<() -> Unit> {}
     val audio = AppAudio(dir, config, window, altscreen) { controlsChanged.get()() }
-    val sink = audio.sink
     val active = AtomicReference<PhoneLink?>()
     // sendTouch writes to the iPhone's socket and can block; the GL thread only maps and enqueues.
     // One thread keeps the press, moves and release in order.
@@ -117,7 +113,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     val appControls = AppControls(bindings, audio.volume, driving, altView, touchSender, active::get, ::screenshots, reconnect = {
         log("reconnecting at the user's request")
         title.reconnect()
-        sink.fadeOut()
+        audio.fadeOut()
         sessionDropped.get()()
         reconnect()
     }) { controlsChanged.get()() }.apply { fullscreen = window::toggleFullscreen }
@@ -137,7 +133,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         override fun disconnect() {
             log("disconnecting at the user's request")
             title.reconnecting.set(false)
-            sink.fadeOut()
+            audio.fadeOut()
             Thread({ stopBootstrap.get()() }, "disconnect").apply { isDaemon = true }.start()
         }
     }, window::repaint, ::log, buildMap {
@@ -220,17 +216,16 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         if (driving.state()["listening"] != true) driving.onSent()
         audio.updateBufferedAudio()
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
-    // The iPhone's route, song, call and battery messages, for later screens and, with log.carplay.data, a file.
-    val carPlayData = CarPlayDataFeed(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
+    // CarPlay: the iPhone's sound and screens, its route, song, call and battery messages, its GPS, and the connection.
+    val sessions = SessionListener(active, ui, window, title, theme, ::sessionChanged)
+    val carPlay = CarPlayProtocol(dir, config, audio, appControls.textInput, driving, sessions::carButton)
     // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it. An incoming
     // call flashes the CarPlay window's taskbar button, and brings the window forward with window.front.on.call.
-    appControls.playing = { active.get() != null && carPlayData.bus.snapshot().nowPlaying?.playing == true }
-    watchPhoneData(carPlayData.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
-    altView.paint(carPlayData.bus, driving, config.accent)
-    val sessions = SessionListener(active, ui, window, title, theme, ::sessionChanged)
-    val bootstrap = WirelessBootstrap(config, sink, appControls.textInput.listener(carPlaySessions(sessions::carButton)), carPlayData)
-    bootstrap.newLocation = carPlayLocation(driving, ::log)
-    restartBootstrap.set(bootstrap::restart)
+    appControls.playing = { active.get() != null && carPlay.bus.snapshot().nowPlaying?.playing == true }
+    watchPhoneData(carPlay.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
+    altView.paint(carPlay.bus, driving, config.accent)
+    val connection = carPlay.connection
+    restartBootstrap.set(connection::restart)
     sessionDropped.set {
         if (active.getAndSet(null) != null) {
             sessionChanged()
@@ -238,19 +233,19 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         }
         window.clearPicture()
     }
-    startBootstrap.set(bootstrap::start)
+    startBootstrap.set(connection::start)
     // A retired stack's session ends unheard (onSessionEnded above stays quiet), so Disconnect clears it here.
     stopBootstrap.set {
-        bootstrap.stop()
+        connection.stop()
         if (active.getAndSet(null) != null) sessionChanged()
         window.clearPicture()
         title.notConnected()
     }
-    bootstrap.onStatus = ui::bringUp
-    bootstrap.onLink = sessions::linked
+    connection.onStatus = ui::bringUp
+    connection.onLink = sessions::linked
     // The screens saved since come with the next connection: the main window takes the new picture's shape and size,
     // and the AltScreen turns on or off, or takes its new size and the view it starts with.
-    bootstrap.onConnection = { now ->
+    carPlay.onConnection = { now ->
         val size = WindowSize(now.displayWidth, now.displayHeight)
         if (size != window.stream) {
             log("display ${size.width}x${size.height} px from this connection on")
@@ -262,15 +257,13 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     }
     Runtime.getRuntime().addShutdownHook(Thread {
         // The window is gone at once; the sound fades over the seconds the session takes to end.
-        sink.fadeOut()
+        audio.fadeOut()
         appControls.close()
         driving.close()
         almanac.close()
         ui.close()
         themeWatch.shutdownNow()
-        bootstrap.close()
-        carPlayData.close()
-        sink.close()
+        carPlay.close()
         touchSender.shutdownNow()
     })
     // A previous run that is still ending its session holds the iPhone's Bluetooth channel: wait for it first.
@@ -284,7 +277,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         lockReady.countDown()
         if (ui.connectsAtStart) {
             title.connecting()
-            bootstrap.start()
+            connection.start()
         } else {
             log(if (config.wifi == null) "no Wi-Fi network set; enter it on the start screen" else "waiting for Connect on the start screen")
             title.notConnected()

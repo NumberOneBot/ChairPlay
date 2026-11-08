@@ -43,9 +43,10 @@ class CarPlayMediaSink(
     private val echoCancellation: Boolean = false,
     /** audio.duck.*: how low a navigation prompt puts the music, read at each prompt. */
     private val duckSetting: () -> DuckSetting = { DuckSetting() },
+    /** Where the buffered music's state goes, for the Audio page. */
+    val bufferedAudio: BufferedAudioMonitor = BufferedAudioMonitor(),
 ) : MediaSink, AudioDuckSink, BufferedAudioStatusSink, SpatialAudioSink, Closeable {
     override val spatialAudio get() = audio.spatialAudio
-    val bufferedAudio = BufferedAudioMonitor()
     override fun bufferedAudioOpened(owner: Any) = bufferedAudio.bufferedAudioOpened(owner)
     override fun bufferedAudioUpdated(owner: Any, status: BufferedAudioStatus) = bufferedAudio.bufferedAudioUpdated(owner, status)
     override fun bufferedAudioClosed(owner: Any) = bufferedAudio.bufferedAudioClosed(owner)

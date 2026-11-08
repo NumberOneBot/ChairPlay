@@ -28,13 +28,14 @@ class CarPlayLink(val session: AirPlaySession, private val keyframes: (ScreenKin
  * The live link of a CarPlay connection, told to [report]: each session as it goes active, and null as that one ends.
  * A session that ends after another went active, or a /info probe or pairing retry, which never does, leaves the link
  * as it is: resetting for them would cut a drag on the live session short, and its release would never reach the iPhone.
+ * DiPlay reports a session active on every RECORD: the live one is reported again as the same link.
  */
 internal class CarPlayLinks(private val keyframes: (ScreenKind) -> Unit, private val report: (PhoneLink?) -> Unit) {
     private var live: CarPlayLink? = null
 
     @Synchronized
     fun active(session: AirPlaySession) {
-        val link = CarPlayLink(session, keyframes)
+        val link = live?.takeIf { it.session === session } ?: CarPlayLink(session, keyframes)
         live = link
         report(link)
     }

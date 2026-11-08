@@ -7,6 +7,7 @@ import io.github.numberonebot.chairplay.phone.PhoneLink
 import io.github.numberonebot.chairplay.phone.Protocol
 import io.github.numberonebot.chairplay.phone.ScreenKind
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -59,6 +60,21 @@ class CarPlayLinkTest {
         assertSame(session, (reported[0] as CarPlayLink).session)
         assertNull(reported[1])
         assertEquals(2, reported.size)
+    }
+
+    // DiPlay reports a session active on every RECORD: the same session stays the same link, so what is keyed by the
+    // link (knob owners, held keys, the AltScreen's stop) does not start over; another session is another link.
+    @Test
+    fun `a session reported active again stays the same link`() {
+        val session = idleSession()
+
+        links.active(session)
+        links.active(session)
+        links.active(idleSession())
+
+        assertEquals(3, reported.size)
+        assertSame(reported[0], reported[1])
+        assertNotSame(reported[1], reported[2])
     }
 
     // /info probes and pairing retries end without going active; the live session stays the link.

@@ -38,6 +38,17 @@ class ProtocolBoundaryTest {
         assertTrue("phone/ imports other ChairPlay packages: $offenders", offenders.isEmpty())
     }
 
+    // A class of a file's own package needs no import; one there reads as a dependency that is not.
+    @Test
+    fun `no file imports a class from its own package`() {
+        val offenders = kotlinFiles().flatMap { file ->
+            val lines = Files.readAllLines(file)
+            val own = lines.firstOrNull { it.startsWith("package ") }?.removePrefix("package ")?.trim() ?: return@flatMap emptyList()
+            lines.filter { Regex("""import ${Regex.escape(own)}\.[A-Z]\w*""").matches(it.trim()) }.map { "${relative(file)}: $it" }
+        }
+        assertTrue("Files import from their own package: $offenders", offenders.isEmpty())
+    }
+
     private fun kotlinFiles(): List<Path> = Files.walk(sourceRoot).use { stream ->
         stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }.toList()
     }

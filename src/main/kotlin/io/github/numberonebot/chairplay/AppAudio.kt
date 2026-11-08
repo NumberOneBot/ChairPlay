@@ -1,13 +1,14 @@
 package io.github.numberonebot.chairplay
 
 import io.github.numberonebot.chairplay.bridge.FrameOutput
-import io.github.numberonebot.chairplay.carplay.CarPlayMediaSink
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.VolumeStore
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.log.LogLevel
 import io.github.numberonebot.chairplay.media.AudioDevices
 import io.github.numberonebot.chairplay.media.AudioRenderer
+import io.github.numberonebot.chairplay.media.BufferedAudioMonitor
+import io.github.numberonebot.chairplay.media.DuckSetting
 import io.github.numberonebot.chairplay.media.ScreenDecoders
 import io.github.numberonebot.chairplay.media.StartFade
 import io.github.numberonebot.chairplay.media.VideoWindow
@@ -15,10 +16,11 @@ import io.github.numberonebot.chairplay.media.Volume
 import io.github.numberonebot.chairplay.phone.ScreenKind
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
+import javax.sound.sampled.Mixer
 
 /**
  * The app's sound: the devices it plays through and listens on, its own volume, how the music starts and how low a
- * prompt puts it, and the sink that plays the iPhone's streams and shows its pictures in [window] and [altscreen].
+ * prompt puts it, and the screens decoded into [window] and [altscreen], for a phone's sink to play and show.
  * [changed] tells the controls window's page that the volume changed.
  */
 internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, altscreen: VideoWindow, private val changed: () -> Unit) {
@@ -28,7 +30,7 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
     // How the music starts, silent and then rising (and how long the sound fades out over), and how low a prompt puts it;
     // the Audio page changes both at once.
     private val musicStart = AtomicReference(StartFade(config.musicStartSilenceMillis, config.musicStartFadeMillis))
-    private val duckSetting = AtomicReference(config.duckSetting)
+    private val duck = AtomicReference(config.duckSetting)
     // The picture shared with games (display.share), its safe area in the display's pixels; the sink closes it.
     private val display = AtomicReference(config.display)
     private val frameOutput = FrameOutput(
@@ -36,15 +38,25 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
     )
     /** The main screen and the AltScreen, decoded into [window] and [altscreen]; the sink closes them. */
     val screens: ScreenDecoders
-    val sink: CarPlayMediaSink
-    private val renderer: AudioRenderer
-    fun bufferedAudio(): Map<String, Any>? = sink.bufferedAudio.state()
-    fun updateBufferedAudio() { if (sink.bufferedAudio.poll()) changed() }
+    /** Decodes and plays the phone's sound; the sink closes it. */
+    val renderer: AudioRenderer
+    /** The microphone (audio.input), or null for the Windows default recording device. */
+    val microphone: Mixer.Info?
+    /** How low a navigation prompt puts the music, read at each prompt. */
+    val duckSetting: () -> DuckSetting = duck::get
+    /** The buffered music's state, which the sink reports and the Audio page shows. */
+    val bufferedStatus = BufferedAudioMonitor()
+    fun bufferedAudio(): Map<String, Any>? = bufferedStatus.state()
+    fun updateBufferedAudio() { if (bufferedStatus.poll()) changed() }
+
+    /** Fades the sound out as long as the music fades in, for a reconnect or a close. */
+    fun fadeOut() = renderer.fadeOut()
 
     init {
         // A device that is gone gives way to the Windows default, with a warning that lists the devices.
         val output = AudioDevices.output(config.audioOutput) { appLog.log(LogLevel.WARNING, it) }
         val input = AudioDevices.input(config.audioInput) { appLog.log(LogLevel.WARNING, it) }
+        microphone = input
         log("audio output: ${output?.name ?: "Windows default"}; microphone: ${input?.name ?: "Windows default"}")
         val volumeStore = VolumeStore(dir)
         volume = runCatching { volumeStore.load() }.getOrDefault(Volume.MAX to false).let { (level, muted) -> Volume(level, muted) }
@@ -61,7 +73,6 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
         screens = ScreenDecoders(mapOf(ScreenKind.MAIN to window, ScreenKind.CLUSTER to altscreen), frameOutput, ::log) {
             config.now().hardwareVideo
         }
-        sink = CarPlayMediaSink(screens, renderer, ::log, input, config.echoCancellation, duckSetting::get)
         frameOutput.enabled = config.display.share
     }
 
@@ -75,7 +86,7 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
         }
         if ("audio.duck.db" in saved || "audio.duck.iphone" in saved) {
             runCatching { config.now() }.onSuccess { now ->
-                duckSetting.set(now.duckSetting)
+                duck.set(now.duckSetting)
                 log("prompts duck the music to ${now.duckSetting.level}" + if (now.duckSetting.iPhoneFirst) ", or the iPhone's level" else "")
             }
         }
