@@ -12,17 +12,19 @@ interface BufferedAudioStatusSink {
 /** Available audio, including the unplayed portion already handed to the renderer; not buffer capacity. */
 data class BufferedAudioStatus(
     val phase: String, val samples: Long, val sampleRate: Int, val bytes: Long, val multichannelOutput: String? = null,
+    val spatial: Boolean = false,
 ) {
     fun toPage(): Map<String, Any> = mapOf(
         "state" to phase, "seconds" to (Math.round(samples * 10.0 / sampleRate) / 10.0),
         "bytes" to bytes,
-    ) + (multichannelOutput?.let { mapOf("multichannelOutput" to it) } ?: emptyMap())
+    ) + (multichannelOutput?.let { mapOf("multichannelOutput" to it) } ?: emptyMap()) +
+        (if (spatial) mapOf("spatial" to true) else emptyMap())
 
     companion object {
         fun snapshot(
             rate: Int, hasAnchor: Boolean, audible: Boolean, queuedFrames: Int,
             fedTimestamps: List<Long>, position: Long?, sampleRate: Int, bytes: Long,
-            multichannelOutput: String? = null,
+            multichannelOutput: String? = null, spatial: Boolean = false,
         ): BufferedAudioStatus {
             // RTP timestamps wrap at 32 bits. Count only samples not yet passed by upstream's audible clock.
             val samples = queuedFrames * 1024L + fedTimestamps.sumOf { timestamp ->
@@ -35,7 +37,7 @@ data class BufferedAudioStatus(
                 rate == 0 || !audible -> "loading"
                 else -> "playing"
             }
-            return BufferedAudioStatus(phase, samples, sampleRate, bytes, multichannelOutput)
+            return BufferedAudioStatus(phase, samples, sampleRate, bytes, multichannelOutput, spatial)
         }
     }
 }

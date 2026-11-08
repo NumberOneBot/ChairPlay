@@ -103,6 +103,7 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
             {' · '}
             {(state.bufferedAudio?.seconds ?? 0).toFixed(1)} s{' · '}
             {((state.bufferedAudio?.bytes ?? 0) / 1024).toFixed(1)} KB
+            {state.bufferedAudio?.spatial && ' · Spatial'}
             {state.bufferedAudio?.multichannelOutput === 'surround' && ' · 5.1'}
             {state.bufferedAudio?.multichannelOutput === 'downmix' && ' · 5.1 → stereo'}
           </span>

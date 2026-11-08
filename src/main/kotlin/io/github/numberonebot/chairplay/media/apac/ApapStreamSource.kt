@@ -24,6 +24,7 @@ internal class ApapStreamSource(
     val position get() = pendingPosition ?: worker.position
     val leadMillis get() = worker.leadMillis
     val multichannelOutput get() = worker.multichannelOutput
+    val spatial get() = worker.spatial
 
     fun read(input: DataInputStream): BufferedAudioStream.Frame {
         val inputReader = reader ?: ApapFrameReader(input, key).also { reader = it }

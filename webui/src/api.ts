@@ -107,6 +107,7 @@ export interface AppState {
   bufferedAudio: {
     state: 'loading' | 'playing' | 'paused' | 'empty'; seconds: number; bytes: number
     multichannelOutput?: 'surround' | 'downmix'
+    spatial?: true
   } | null
   version: number
   /** Moves on with each settings save; the page re-reads /api/settings when it changes, since the state omits them. */

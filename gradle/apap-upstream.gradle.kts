@@ -40,7 +40,7 @@ tasks.named<Sync>("upstreamCore") {
         patch("    private fun leadMillisLocked(): Long {", "    private fun leadMillisLocked(): Long {\n        if (apap != null) return apap.leadMillis")
         patch("    private fun positionLocked(): Long? {", "    private fun positionLocked(): Long? {\n        if (apap != null) return apap.position ?: anchorRtp")
         patch("positionLocked(), format.sampleRate, queuedBytes))",
-            "positionLocked(), format.sampleRate, queuedBytes, apap?.multichannelOutput))")
+            "positionLocked(), format.sampleRate, queuedBytes, apap?.multichannelOutput, apap?.spatial == true))")
         patch("    private fun anchorLocked(): Map<String, Any?>? {", """
             |    fun flushSpatial(range: ApapFlushRange) = synchronized(lock) {
             |        if (closed.get()) return@synchronized

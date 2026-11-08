@@ -31,7 +31,7 @@ internal class SpatialWorker(
     private val startDelayNs: Long = 400_000_000L,
 ) : Closeable {
     private data class Delivery(val generation: Long, val unit: ApapAccessUnit)
-    private data class Audible(val start: Long, val frames: Int, val time: Long, val multichannelOutput: String?)
+    private data class Audible(val start: Long, val frames: Int, val time: Long, val multichannelOutput: String?, val spatial: Boolean)
     private val lock = Object()
     private val queue = LinkedBlockingQueue<Delivery>(128)
     @Volatile private var generation = 0L
@@ -44,6 +44,9 @@ internal class SpatialWorker(
     @Volatile var position: Long? = null
         private set
     @Volatile var multichannelOutput: String? = null
+        private set
+    /** True while the audible block was decoded from an APAC cookie; AAC, including the AAC-LC fallback, is false. */
+    @Volatile var spatial = false
         private set
     @Volatile private var devicePending = 0L
     @Volatile var cleanupComplete = false
@@ -104,6 +107,7 @@ internal class SpatialWorker(
                 if (played <= block.start) break
                 val used = minOf(block.frames.toLong(), played - block.start)
                 multichannelOutput = block.multichannelOutput
+                spatial = block.spatial
                 position = (block.time + used) and 0xffffffffL
                 if (used < block.frames) break
                 audible.removeFirst()
@@ -120,6 +124,7 @@ internal class SpatialWorker(
                     written = 0
                     devicePending = 0
                     multichannelOutput = null
+                    spatial = false
                     epoch = generation
                     synchronized(lock) { acknowledged = epoch; lock.notifyAll() }
                 }
@@ -168,7 +173,8 @@ internal class SpatialWorker(
                 }
                 val multichannel = if (decoded.codec != SpatialCodec.APAC) null else
                     if (output.channels == 6) "surround" else "downmix"
-                audible.addLast(Audible(written, frames, (time + decoded.startTrimFrames + skip) and 0xffffffffL, multichannel))
+                audible.addLast(Audible(written, frames, (time + decoded.startTrimFrames + skip) and 0xffffffffL, multichannel,
+                    decoded.codec == SpatialCodec.APAC))
                 written += frames
                 rendered += frames
                 if (rendered >= nextReport) {
@@ -184,6 +190,7 @@ internal class SpatialWorker(
         } finally {
             active = false
             multichannelOutput = null
+            spatial = false
             synchronized(lock) { device = null }
             runCatching { opened?.close() }
             runCatching { decoder?.close() }

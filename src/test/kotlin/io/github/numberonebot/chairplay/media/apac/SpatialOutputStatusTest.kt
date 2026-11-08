@@ -21,17 +21,22 @@ class SpatialOutputStatusTest {
                     ApapMetadata(cookie = aacCookie()), byteArrayOf(1))) }
                 await { device.samples.size == 3 }
                 assertNull(worker.multichannelOutput)
+                assertFalse(worker.spatial)
                 device.position.set(512)
                 await { worker.position == 512L }
                 assertNull(worker.multichannelOutput)
+                assertFalse(worker.spatial)
                 device.position.set(1536)
                 await { worker.position == 1536L }
                 assertEquals(if (channels == 6) "surround" else "downmix", worker.multichannelOutput)
+                assertTrue(worker.spatial)
                 device.position.set(2560)
                 await { worker.position == 2560L }
                 assertNull(worker.multichannelOutput)
+                assertFalse(worker.spatial)
             } finally { worker.close() }
             assertNull(worker.multichannelOutput)
+            assertFalse(worker.spatial)
         }
     }
 

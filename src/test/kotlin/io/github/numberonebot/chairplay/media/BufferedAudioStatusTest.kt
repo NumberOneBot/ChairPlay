@@ -25,6 +25,12 @@ class BufferedAudioStatusTest : AudioRendererFixture() {
             assertEquals(output, monitor.state()?.get("multichannelOutput"))
             assertFalse(monitor.poll())
         }
+        assertFalse(monitor.state()!!.containsKey("spatial"))
+        for (spatial in listOf(true, false)) {
+            monitor.bufferedAudioUpdated(owner, plain.copy(spatial = spatial))
+            assertEquals(spatial, monitor.state()?.get("spatial") ?: false)
+            assertTrue(monitor.poll())
+        }
         monitor.bufferedAudioClosed(owner)
         assertNull(monitor.state())
     }
