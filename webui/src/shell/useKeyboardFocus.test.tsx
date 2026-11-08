@@ -3,7 +3,18 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { FakeBackend } from '../fakeBackend'
 import { useKeyboardFocus } from './useKeyboardFocus'
 
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers() })
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers() })
+
+// A phone or PC opening http://<this PC's address>:7529 is no secure context: crypto.randomUUID is not there.
+it('reports its focus where crypto.randomUUID is missing', () => {
+  vi.spyOn(document, 'hasFocus').mockImplementation(() => true)
+  vi.stubGlobal('crypto', { getRandomValues: (bytes: Uint8Array) => bytes.fill(7) })
+  const backend = new FakeBackend()
+  function Page() { useKeyboardFocus(backend); return null }
+  render(<Page />)
+
+  expect(backend.keyboardFocusCalls).toEqual([true])
+})
 
 it('renews a focused page lease and releases it on blur and unmount', () => {
   vi.useFakeTimers()
