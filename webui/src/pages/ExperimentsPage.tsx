@@ -61,7 +61,7 @@ export function ExperimentsPage({
   const { note } = parts(settings)
   const screenshotKey = state.controls?.keys.screenshot
   const sizes = useFolderSizes(backend)
-  // A game drives the GPS car only while the GPS is on.
+  // Another app drives the GPS car only while the GPS is on.
   const gpsOn = settings.value('gps.enabled') === 'true'
   return (
     <>
@@ -111,10 +111,10 @@ export function ExperimentsPage({
           {sizes.screenshots ? <span className="folder-size">{byteSize(sizes.screenshots)}</span> : null}
         </span>
       </Row>
-      <Group title="Integrations" note="With games and other apps on this PC" />
+      <Group title="Integrations" note="With other apps on this PC" />
       <Row
         label="CarPlay picture"
-        title="Let a game or another app on this PC show the CarPlay picture on its own screen"
+        title="Let another app on this PC show the CarPlay picture on its own screen"
       >
         <Switch
           label="Publish as a shared texture"
@@ -126,7 +126,7 @@ export function ExperimentsPage({
         label="GPS car"
         title={
           gpsOn
-            ? 'Move the GPS car by the position, heading, and speed a game or another app sends; the gamepad and keys drive it again when it stops sending'
+            ? 'Move the GPS car by the position, heading, and speed another app sends; the gamepad and keys drive it again when it stops sending'
             : 'Turn on the GPS on its page first'
         }
       >

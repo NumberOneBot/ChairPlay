@@ -67,7 +67,7 @@ internal class DisplaySettings(settings: Properties) {
     /** The screen less its insets, where the picture CarPlay keeps its controls inside lies; the whole screen without insets. */
     val safeRect: AreaRect = AreaRect(safe.left, safe.top, width - safe.left - safe.right, height - safe.top - safe.bottom)
 
-    /** Whether the CarPlay picture is published for games to show on a car's screen (display.share). */
+    /** Whether the CarPlay picture is published for other apps on this PC to show (display.share). */
     val share = settings.booleanSetting("display.share", false)
 
     /** /info's default is true too, so an older file that lacks it declares the same. */

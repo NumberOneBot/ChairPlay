@@ -166,7 +166,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "display.safe.draw.outside" to "true",
     ),
     SettingBlock(
-        "Whether the CarPlay picture is published as a shared texture for games and other apps on this PC to show,\n" +
+        "Whether the CarPlay picture is published as a shared texture for other apps on this PC to show,\n" +
             "'true' or 'false'.",
         "display.share" to "false",
     ),
@@ -185,7 +185,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "gps.enabled" to "false", "gps.wheel.speed" to "true", "gps.satellites" to "false",
     ),
     SettingBlock(
-        "Whether the position, heading, and speed a game or another app on this PC sends drive the GPS car instead\n" +
+        "Whether the position, heading, and speed another app on this PC sends drive the GPS car instead\n" +
             "of the gamepad and keys while they come, 'true' or 'false'.",
         "gps.external" to "false",
     ),

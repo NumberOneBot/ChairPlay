@@ -199,7 +199,7 @@ internal class FrameOutput(
 
     /** Logs [reason] and lets the native side go (state 0 for a game) until sharing is turned off and on; false. */
     private fun fail(reason: String): Boolean {
-        log("game bridge: $reason; the picture is no longer shared until sharing is turned off and on")
+        log("picture sharing: $reason; the picture is no longer shared until sharing is turned off and on")
         publishing = false
         lock.withLock { running = false }
         closeSink()
@@ -209,13 +209,13 @@ internal class FrameOutput(
     private fun closeSink() {
         if (!sinkOpen) return
         sinkOpen = false
-        runCatching { sink.close() }.onFailure { log("game bridge: cannot close: $it") }
+        runCatching { sink.close() }.onFailure { log("picture sharing: cannot close: $it") }
     }
 
     private fun start() {
         val error = runCatching { sink.open() }.getOrElse { it.toString() }
         if (error != null) {
-            log("game bridge: cannot share the picture: $error; turn sharing off and on to try again")
+            log("picture sharing: cannot share the picture: $error; turn sharing off and on to try again")
             return
         }
         sinkOpen = true
@@ -235,7 +235,7 @@ internal class FrameOutput(
             publishing = true
         }
         thread = worker(Runnable { while (pass()) Unit })
-        log("game bridge: sharing the picture")
+        log("picture sharing: sharing the picture")
     }
 
     private fun stop() {
@@ -248,7 +248,7 @@ internal class FrameOutput(
             converter = null
             lock.withLock { free.clear(); pending = null }
         }
-        if (sinkOpen) log("game bridge: picture no longer shared")
+        if (sinkOpen) log("picture sharing: picture no longer shared")
         closeSink()
     }
 
