@@ -44,4 +44,14 @@ class BufferedMusicConfigTest {
         assertTrue(configWith("audio.music.mode= Buffered ").airPlay.mainBufferedAudio)
         assertThrows(IllegalArgumentException::class.java) { configWith("audio.music.mode=unsupported") }
     }
+
+    @Test fun `spatial is not a music mode`() {
+        assertTrue("audio.music.mode" in EditableSettings.validate(mapOf("audio.music.mode" to "spatial"), emptyMap()))
+        assertThrows(IllegalArgumentException::class.java) { configWith("audio.music.mode=spatial") }
+    }
+
+    @Test fun `standard never offers spatial audio`() {
+        val properties = java.util.Properties().apply { setProperty("audio.music.mode", "standard") }
+        assertFalse(io.github.numberonebot.chairplay.media.apac.spatialConfigured(Files.createTempDirectory("standard-apac"), properties))
+    }
 }

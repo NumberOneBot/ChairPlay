@@ -93,7 +93,7 @@ object EditableSettings {
         *AreaGroup.entries.map { customKey(it) to Setting(Applies.RECONNECT, check = ::checkAreaRect) }.toTypedArray(),
         *AreaGroup.entries.flatMap { group -> SAFE_EDGES.map { safeKey(group, it) to Setting(Applies.RECONNECT, check = ::checkOptionalNonNegative) } }
             .toTypedArray(),
-        "audio.music.mode" to choice("standard", "buffered", "spatial", applies = Applies.RECONNECT),
+        "audio.music.mode" to choice("standard", "buffered", applies = Applies.RECONNECT),
         // "default" or a device's name; a name no device has stops the next start, as a typo in the file would.
         "audio.output" to Setting(Applies.RESTART) { null },
         "audio.input" to Setting(Applies.RESTART) { null },

@@ -22,8 +22,7 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
   const { value, save, data } = settings
   const pending = pendingOf(state)
   const { field, note } = parts(settings, pending)
-  const savedMode = value('audio.music.mode') || 'buffered'
-  const mode = savedMode === 'spatial' ? 'buffered' : savedMode
+  const mode = value('audio.music.mode') || 'buffered'
   const buffered = mode !== 'standard'
   const devices = data?.audio ?? { outputs: [], inputs: [] }
   // Under Windows default, the device it stands for now: a name of any length wraps there, where the list would cut it.

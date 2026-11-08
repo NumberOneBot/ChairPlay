@@ -44,8 +44,7 @@ internal object SpatialRuntime {
  * connection's configuration asks (DesktopConfig.now()): at the start, before any window, it took most of a second.
  */
 internal fun spatialConfigured(dir: Path, settings: Properties): Boolean {
-    // "spatial" is the old saved name for buffered playback with APAC enabled.
     val mode = settings.getProperty("audio.music.mode", "buffered").trim().lowercase().ifEmpty { "buffered" }
-    return mode in listOf("buffered", "spatial") &&
+    return mode == "buffered" &&
         SpatialRuntime.capability(dir, settings.getProperty("audio.output")).available
 }
