@@ -1,0 +1,659 @@
+## defaults
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 4ae05597031762f8
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## 800x480, safe insets, dock driver
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=800, heightPixels=480, widthPhysicalMm=200, heightPhysicalMm=120, fps=60, primaryInputDevice=3, viewArea=null, safeArea=AirPlayInsets(top=10, bottom=20, left=40, right=0), safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=[AirPlayViewArea(width=800, height=480, originX=0, originY=0, dockEdge=2, safeArea=null)], initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info b031035589e6ffe1
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 800
+    heightPixels: Int 480
+    widthPhysical: Int 200
+    heightPhysical: Int 120
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 800, heightPixels=Int 480, originXPixels=Int 0, originYPixels=Int 0, viewAreaStatusBarEdge=Int 2, safeArea={widthPixels=Int 760, heightPixels=Int 450, originXPixels=Int 40, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## rounded corners
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 8ef7a2dde39422c1
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+airPlayNow as airPlay
+## rounded corners, a safe area drawn inside
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=AirPlayInsets(top=0, bottom=0, left=60, right=0), safeAreaDrawOutside=false, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info ad75a38ee2906e7c
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1220, heightPixels=Int 720, originXPixels=Int 60, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean false}}
+    initialViewArea: Int 0
+airPlayNow as airPlay
+## square corners with a safe area
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=AirPlayInsets(top=30, bottom=0, left=0, right=12), safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 44709e438bf56f5a
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1268, heightPixels=Int 690, originXPixels=Int 0, originYPixels=Int 30, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## dock bottom, swipe, right-hand drive
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=1, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=10, viewAreas=[AirPlayViewArea(width=1280, height=720, originX=0, originY=0, dockEdge=1, safeArea=null)], initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=true, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info b866ba1f6475fbde
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 26
+    primaryInputDevice: Int 1
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, viewAreaStatusBarEdge=Int 1}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## tap
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=1, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=6, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 32f0245745e951f0
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 22
+    primaryInputDevice: Int 1
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## touch off, dock auto
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 4ae05597031762f8
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## size from ppi, 30 fps
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1920, heightPixels=1080, widthPhysicalMm=305, heightPhysicalMm=171, fps=30, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 28bf669613931d4e
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 30
+    widthPixels: Int 1920
+    heightPixels: Int 1080
+    widthPhysical: Int 305
+    heightPhysical: Int 171
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1920, heightPixels=Int 1080, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## physical size
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=250, heightPhysicalMm=120, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 0814d199d86a6318
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 250
+    heightPhysical: Int 120
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## physical width
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=300, heightPhysicalMm=169, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 5bb1d29c15e6fbf7
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 300
+    heightPhysical: Int 169
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## window apart
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 4ae05597031762f8
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## altscreen on
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=AirPlayDisplayConfig(widthPixels=1440, heightPixels=540, widthPhysicalMm=292, heightPhysicalMm=110, fps=30, primaryInputDevice=0, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=maps:/car/instrumentcluster?showETA=yes&maneuverLayout=topAligned, features=0, viewAreas=[AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=272, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=544, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=360, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=720, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=904, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null)], initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 50bbe019280b1e99
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+  display
+    uuid: "b7e6c5a0-2222-4000-8000-000000000002"
+    type: Int 111
+    maxFPS: Int 30
+    widthPixels: Int 1440
+    heightPixels: Int 540
+    widthPhysical: Int 292
+    heightPhysical: Int 110
+    features: Int 0
+    primaryInputDevice: Int 0
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    viewAreaTransitionControl: Boolean true
+    initialURL: "maps:/car/instrumentcluster?showETA=yes&maneuverLayout=topAligned"
+airPlayNow as airPlay
+## altscreen with two areas and margins
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=AirPlayDisplayConfig(widthPixels=1920, heightPixels=720, widthPhysicalMm=292, heightPhysicalMm=110, fps=30, primaryInputDevice=0, viewArea=null, safeArea=AirPlayInsets(top=20, bottom=0, left=0, right=400), safeAreaDrawOutside=true, initialUrl=maps:/car/instrumentcluster/instructioncard?showETA=yes&maneuverLayout=leftAligned, features=0, viewAreas=[AirPlayViewArea(width=1920, height=720, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1200, height=720, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1200, height=720, originX=360, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1200, height=720, originX=720, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=960, height=720, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=960, height=720, originX=480, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=960, height=720, originX=960, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=720, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=720, originX=600, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=720, originX=1200, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1200, height=720, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=616, height=468, originX=412, originY=36, dockEdge=null, safeArea=null), AirPlayViewArea(width=1920, height=720, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=20, right=0)), AirPlayViewArea(width=1200, height=720, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=20, right=720)), AirPlayViewArea(width=1200, height=720, originX=360, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=380, right=360)), AirPlayViewArea(width=1200, height=720, originX=720, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=740, right=0)), AirPlayViewArea(width=960, height=720, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=20, right=960)), AirPlayViewArea(width=960, height=720, originX=480, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=500, right=480)), AirPlayViewArea(width=960, height=720, originX=960, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=980, right=0)), AirPlayViewArea(width=720, height=720, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=20, right=1200)), AirPlayViewArea(width=720, height=720, originX=600, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=620, right=600)), AirPlayViewArea(width=720, height=720, originX=1200, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=10, bottom=0, left=1220, right=0)), AirPlayViewArea(width=616, height=468, originX=412, originY=36, dockEdge=null, safeArea=AirPlayInsets(top=46, bottom=216, left=432, right=892))], initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 51411e02cbcb1a2c
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+  display
+    uuid: "b7e6c5a0-2222-4000-8000-000000000002"
+    type: Int 111
+    maxFPS: Int 30
+    widthPixels: Int 1920
+    heightPixels: Int 720
+    widthPhysical: Int 292
+    heightPhysical: Int 110
+    features: Int 0
+    primaryInputDevice: Int 0
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1920, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1520, heightPixels=Int 700, originXPixels=Int 0, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1200, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1200, heightPixels=Int 700, originXPixels=Int 0, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1200, heightPixels=Int 720, originXPixels=Int 360, originYPixels=Int 0, safeArea={widthPixels=Int 1160, heightPixels=Int 700, originXPixels=Int 360, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1200, heightPixels=Int 720, originXPixels=Int 720, originYPixels=Int 0, safeArea={widthPixels=Int 800, heightPixels=Int 700, originXPixels=Int 720, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 960, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 960, heightPixels=Int 700, originXPixels=Int 0, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 960, heightPixels=Int 720, originXPixels=Int 480, originYPixels=Int 0, safeArea={widthPixels=Int 960, heightPixels=Int 700, originXPixels=Int 480, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 960, heightPixels=Int 720, originXPixels=Int 960, originYPixels=Int 0, safeArea={widthPixels=Int 560, heightPixels=Int 700, originXPixels=Int 960, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 700, originXPixels=Int 0, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 720, originXPixels=Int 600, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 700, originXPixels=Int 600, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 720, originXPixels=Int 1200, originYPixels=Int 0, safeArea={widthPixels=Int 320, heightPixels=Int 700, originXPixels=Int 1200, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1200, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1200, heightPixels=Int 700, originXPixels=Int 0, originYPixels=Int 20, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 616, heightPixels=Int 468, originXPixels=Int 412, originYPixels=Int 36, safeArea={widthPixels=Int 616, heightPixels=Int 468, originXPixels=Int 412, originYPixels=Int 36, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1920, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1900, heightPixels=Int 710, originXPixels=Int 20, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1200, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1180, heightPixels=Int 710, originXPixels=Int 20, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1200, heightPixels=Int 720, originXPixels=Int 360, originYPixels=Int 0, safeArea={widthPixels=Int 1180, heightPixels=Int 710, originXPixels=Int 380, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1200, heightPixels=Int 720, originXPixels=Int 720, originYPixels=Int 0, safeArea={widthPixels=Int 1180, heightPixels=Int 710, originXPixels=Int 740, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 960, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 940, heightPixels=Int 710, originXPixels=Int 20, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 960, heightPixels=Int 720, originXPixels=Int 480, originYPixels=Int 0, safeArea={widthPixels=Int 940, heightPixels=Int 710, originXPixels=Int 500, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 960, heightPixels=Int 720, originXPixels=Int 960, originYPixels=Int 0, safeArea={widthPixels=Int 940, heightPixels=Int 710, originXPixels=Int 980, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 700, heightPixels=Int 710, originXPixels=Int 20, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 720, originXPixels=Int 600, originYPixels=Int 0, safeArea={widthPixels=Int 700, heightPixels=Int 710, originXPixels=Int 620, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 720, originXPixels=Int 1200, originYPixels=Int 0, safeArea={widthPixels=Int 700, heightPixels=Int 710, originXPixels=Int 1220, originYPixels=Int 10, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 616, heightPixels=Int 468, originXPixels=Int 412, originYPixels=Int 36, safeArea={widthPixels=Int 596, heightPixels=Int 458, originXPixels=Int 432, originYPixels=Int 46, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    viewAreaTransitionControl: Boolean true
+    initialURL: "maps:/car/instrumentcluster/instructioncard?showETA=yes&maneuverLayout=leftAligned"
+airPlayNow as airPlay
+## altscreen hud, map margins
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=AirPlayDisplayConfig(widthPixels=1440, heightPixels=540, widthPhysicalMm=292, heightPhysicalMm=110, fps=30, primaryInputDevice=0, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=maps:/car/instrumentcluster/instructioncard, features=0, viewAreas=[AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=272, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=544, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=360, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=720, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=904, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=0, right=300)), AirPlayViewArea(width=896, height=540, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=0, right=844)), AirPlayViewArea(width=896, height=540, originX=272, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=272, right=572)), AirPlayViewArea(width=896, height=540, originX=544, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=544, right=300)), AirPlayViewArea(width=720, height=540, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=0, right=1020)), AirPlayViewArea(width=720, height=540, originX=360, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=360, right=660)), AirPlayViewArea(width=720, height=540, originX=720, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=720, right=300)), AirPlayViewArea(width=536, height=540, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=0, right=1204)), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=452, right=752)), AirPlayViewArea(width=536, height=540, originX=904, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=904, right=300)), AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=AirPlayInsets(top=0, bottom=40, left=0, right=300))], initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info b61a536e9d933a85
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+  display
+    uuid: "b7e6c5a0-2222-4000-8000-000000000002"
+    type: Int 111
+    maxFPS: Int 30
+    widthPixels: Int 1440
+    heightPixels: Int 540
+    widthPhysical: Int 292
+    heightPhysical: Int 110
+    features: Int 0
+    primaryInputDevice: Int 0
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1140, heightPixels=Int 500, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 596, heightPixels=Int 500, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, safeArea={widthPixels=Int 596, heightPixels=Int 500, originXPixels=Int 272, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, safeArea={widthPixels=Int 596, heightPixels=Int 500, originXPixels=Int 544, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 420, heightPixels=Int 500, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, safeArea={widthPixels=Int 420, heightPixels=Int 500, originXPixels=Int 360, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, safeArea={widthPixels=Int 420, heightPixels=Int 500, originXPixels=Int 720, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 236, heightPixels=Int 500, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 236, heightPixels=Int 500, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, safeArea={widthPixels=Int 236, heightPixels=Int 500, originXPixels=Int 904, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1140, heightPixels=Int 500, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    viewAreaTransitionControl: Boolean true
+    initialURL: "maps:/car/instrumentcluster/instructioncard"
+airPlayNow as airPlay
+## altscreen map, cards right, small
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=AirPlayDisplayConfig(widthPixels=1024, heightPixels=384, widthPhysicalMm=292, heightPhysicalMm=110, fps=30, primaryInputDevice=0, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=maps:/car/instrumentcluster/map?showETA=yes&maneuverLayout=rightAligned, features=0, viewAreas=[AirPlayViewArea(width=1024, height=384, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=640, height=384, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=640, height=384, originX=192, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=640, height=384, originX=384, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=512, height=384, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=512, height=384, originX=256, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=512, height=384, originX=512, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=384, height=384, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=384, height=384, originX=320, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=384, height=384, originX=640, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1024, height=384, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=512, height=384, originX=512, originY=0, dockEdge=null, safeArea=null)], initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info e34f68da8bf07fb4
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+  display
+    uuid: "b7e6c5a0-2222-4000-8000-000000000002"
+    type: Int 111
+    maxFPS: Int 30
+    widthPixels: Int 1024
+    heightPixels: Int 384
+    widthPhysical: Int 292
+    heightPhysical: Int 110
+    features: Int 0
+    primaryInputDevice: Int 0
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1024, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1024, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 640, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 640, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 640, heightPixels=Int 384, originXPixels=Int 192, originYPixels=Int 0, safeArea={widthPixels=Int 640, heightPixels=Int 384, originXPixels=Int 192, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 640, heightPixels=Int 384, originXPixels=Int 384, originYPixels=Int 0, safeArea={widthPixels=Int 640, heightPixels=Int 384, originXPixels=Int 384, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 256, originYPixels=Int 0, safeArea={widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 256, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 512, originYPixels=Int 0, safeArea={widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 512, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 384, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 384, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 384, heightPixels=Int 384, originXPixels=Int 320, originYPixels=Int 0, safeArea={widthPixels=Int 384, heightPixels=Int 384, originXPixels=Int 320, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 384, heightPixels=Int 384, originXPixels=Int 640, originYPixels=Int 0, safeArea={widthPixels=Int 384, heightPixels=Int 384, originXPixels=Int 640, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1024, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1024, heightPixels=Int 384, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 512, originYPixels=Int 0, safeArea={widthPixels=Int 512, heightPixels=Int 384, originXPixels=Int 512, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    viewAreaTransitionControl: Boolean true
+    initialURL: "maps:/car/instrumentcluster/map?showETA=yes&maneuverLayout=rightAligned"
+airPlayNow as airPlay
+## altscreen map-card, custom rect clamped
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=AirPlayDisplayConfig(widthPixels=1440, heightPixels=540, widthPhysicalMm=292, heightPhysicalMm=110, fps=30, primaryInputDevice=0, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=maps:/car/instrumentcluster?showETA=yes&maneuverLayout=topAligned, features=0, viewAreas=[AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=272, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=544, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=360, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=720, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=904, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=500, originX=544, originY=40, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null)], initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info fa98058658fc40d7
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+  display
+    uuid: "b7e6c5a0-2222-4000-8000-000000000002"
+    type: Int 111
+    maxFPS: Int 30
+    widthPixels: Int 1440
+    heightPixels: Int 540
+    widthPhysical: Int 292
+    heightPhysical: Int 110
+    features: Int 0
+    primaryInputDevice: Int 0
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 500, originXPixels=Int 544, originYPixels=Int 40, safeArea={widthPixels=Int 896, heightPixels=Int 500, originXPixels=Int 544, originYPixels=Int 40, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    viewAreaTransitionControl: Boolean true
+    initialURL: "maps:/car/instrumentcluster?showETA=yes&maneuverLayout=topAligned"
+airPlayNow as airPlay
+## altscreen off with its areas set
+airPlay AirPlayConfig(deviceName=ChairPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 4ae05597031762f8
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## codecs, audio, keyboard, names
+airPlay AirPlayConfig(deviceName=Гараж CarPlay, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1280, heightPixels=720, widthPhysicalMm=200, heightPhysicalMm=113, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=null, rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=false, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=Garage, icons=[], videoInCar=false, mainBufferedAudio=false, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=false)
+  icon 192x192 eec2878769ef38c7
+  /info b48c1c0fd73121e5
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1280
+    heightPixels: Int 720
+    widthPhysical: Int 200
+    heightPhysical: Int 113
+    features: Int 2
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1280, heightPixels=Int 720, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+airPlayNow as airPlay
+## the next connection, the file edited after the start
+airPlayNow AirPlayConfig(deviceName=First, deviceId=9E:72:EA:0C:F4:95, btMac=9E:72:EA:0C:F4:95, sourceVersion=950.7.1, main=AirPlayDisplayConfig(widthPixels=1024, heightPixels=600, widthPhysicalMm=200, heightPhysicalMm=117, fps=60, primaryInputDevice=3, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=null, features=2, viewAreas=null, initialViewArea=0, mainDisplayCornerMasks=true, useIphoneCornerMask=false, mainDisplayDisableSafeArea=true), cluster=AirPlayDisplayConfig(widthPixels=1440, heightPixels=540, widthPhysicalMm=292, heightPhysicalMm=110, fps=30, primaryInputDevice=0, viewArea=null, safeArea=null, safeAreaDrawOutside=true, initialUrl=maps:/car/instrumentcluster/instructioncard?showETA=yes&maneuverLayout=topAligned, features=0, viewAreas=[AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=272, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=896, height=540, originX=544, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=360, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=720, height=540, originX=720, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=904, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=1440, height=540, originX=0, originY=0, dockEdge=null, safeArea=null), AirPlayViewArea(width=536, height=540, originX=452, originY=0, dockEdge=null, safeArea=null)], initialViewArea=0, mainDisplayCornerMasks=null, useIphoneCornerMask=false, mainDisplayDisableSafeArea=false), rightHandDrive=false, port=7000, entertainmentSampleRate=48000, hevc=true, disableAudioOutput=false, microphone=true, microphoneOpus=true, manufacturer=xcertplay, model=xcertplay, oemLabel=ChairPlay, icons=[], videoInCar=false, mainBufferedAudio=true, spatialAudio=false, speechWithout8And16Khz=false, callAtCallRate=false, keyboardInput=true)
+  icon 192x192 eec2878769ef38c7
+  /info 59a39b9e3abebc81
+  display
+    uuid: "b7e6c5a0-1111-4000-8000-000000000001"
+    type: Int 110
+    maxFPS: Int 60
+    widthPixels: Int 1024
+    heightPixels: Int 600
+    widthPhysical: Int 200
+    heightPhysical: Int 117
+    features: Long 18
+    primaryInputDevice: Int 3
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1024, heightPixels=Int 600, originXPixels=Int 0, originYPixels=Int 0}
+    initialViewArea: Int 0
+    cornerMasks: Boolean true
+  display
+    uuid: "b7e6c5a0-2222-4000-8000-000000000002"
+    type: Int 111
+    maxFPS: Int 30
+    widthPixels: Int 1440
+    heightPixels: Int 540
+    widthPhysical: Int 292
+    heightPhysical: Int 110
+    features: Int 0
+    primaryInputDevice: Int 0
+    uiAppearanceMode: Int 0
+    uiAppearanceSetting: Int 0
+    mapAppearanceMode: Int 0
+    mapAppearanceSetting: Int 0
+    viewAreas:
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 272, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, safeArea={widthPixels=Int 896, heightPixels=Int 540, originXPixels=Int 544, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 360, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, safeArea={widthPixels=Int 720, heightPixels=Int 540, originXPixels=Int 720, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 904, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, safeArea={widthPixels=Int 1440, heightPixels=Int 540, originXPixels=Int 0, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+      {widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, safeArea={widthPixels=Int 536, heightPixels=Int 540, originXPixels=Int 452, originYPixels=Int 0, drawUIOutsideSafeArea=Boolean true}}
+    initialViewArea: Int 0
+    viewAreaTransitionControl: Boolean true
+    initialURL: "maps:/car/instrumentcluster/instructioncard?showETA=yes&maneuverLayout=topAligned"
