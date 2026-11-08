@@ -3,6 +3,9 @@ package io.github.numberonebot.chairplay.media.apac
 import java.io.Closeable
 import java.io.IOException
 import java.math.BigInteger
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Resolves authenticated metadata on receipt; queued access units never consult mutable cookie state.
@@ -11,33 +14,50 @@ import java.math.BigInteger
 internal class ApapSource(
     private val fallback: ByteArray? = null,
     private val log: (String) -> Unit = {},
+    private val cookieWaitMillis: Long = 2_000,
 ) : Closeable {
     private val cookies = ApapCookies()
     private var current: ByteArray? = null
     private var loudness: List<Float>? = null
     private var kind: Int? = null
     private var closed = false
+    private val lock = ReentrantLock()
+    private val remembered = lock.newCondition()
 
     /**
      * SETMAGICCOOKIE: [id]'s cookie, and the one a packet naming none takes from now on, until a packet names another.
      */
-    @Synchronized fun remember(id: Long, cookie: ByteArray) {
-        if (closed) return
-        if (cookies.remember(id, cookie, ::validateSpatialCookie)) current = cookie.copyOf()
+    fun remember(id: Long, cookie: ByteArray) {
+        lock.withLock {
+            if (closed) return
+            if (cookies.remember(id, cookie, ::validateSpatialCookie)) current = cookie.copyOf()
+            remembered.signalAll()
+        }
     }
 
-    @Synchronized fun resolve(unit: ApapAccessUnit): ApapAccessUnit {
+    fun resolve(unit: ApapAccessUnit): ApapAccessUnit = lock.withLock { resolveLocked(unit) }
+
+    private fun resolveLocked(unit: ApapAccessUnit): ApapAccessUnit {
         if (closed) throw IOException("APAP source is closed")
         unit.time.rtpTime() // Validate time before committing any metadata.
         if (unit.metadata.samplesPerFrame?.let { it != 1024 } == true) {
             throw IOException("Unsupported APAP packet geometry")
         }
+        if (unit.metadata.cookie == null) unit.metadata.cookieId?.let(::awaitCookie)
         val resolved = cookies.resolve(unit.metadata) ?: current ?: fallbackCookie()
         validateSpatialCookie(resolved)
         current = resolved
         loudness = unit.metadata.loudness ?: loudness
         kind = unit.metadata.mediaKind ?: kind
         return unit.copy(metadata = unit.metadata.copy(cookie = resolved.copyOf(), loudness = loudness, mediaKind = kind))
+    }
+
+    // A stream's first packets can come a moment before the SETMAGICCOOKIE naming their cookie (2 ms seen on a
+    // reconnect): wait for it, the lock released, rather than end the stream. One that never comes still fails.
+    private fun awaitCookie(id: Long) {
+        var left = TimeUnit.MILLISECONDS.toNanos(cookieWaitMillis)
+        while (!closed && !cookies.knows(id) && left > 0) left = remembered.awaitNanos(left)
+        if (closed) throw IOException("APAP source is closed")
     }
 
     // Once taken, the fallback is [current], so this runs, and logs, once per stream.
@@ -47,12 +67,15 @@ internal class ApapSource(
         return cookie.copyOf()
     }
 
-    @Synchronized override fun close() {
-        closed = true
-        current = null
-        loudness = null
-        kind = null
-        cookies.clear()
+    override fun close() {
+        lock.withLock {
+            closed = true
+            current = null
+            loudness = null
+            kind = null
+            cookies.clear()
+            remembered.signalAll()
+        }
     }
 }
 

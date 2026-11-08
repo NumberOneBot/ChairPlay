@@ -8,7 +8,7 @@ class ApapSourceTest {
     private val aac = byteArrayOf(3, 22, 0, 1, 0, 4, 17, 0x40, 0x15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 2, 0x11, 0x90.toByte())
 
     @Test fun `resolved cookies are fixed before queuing and invalid replacements cannot alter state`() {
-        val source = ApapSource()
+        val source = ApapSource(cookieWaitMillis = 0)
         source.remember(7, aac)
         val first = source.resolve(unit(ApapMetadata(cookieId = 7)))
         source.remember(7, byteArrayOf(0)) // First registration wins, including duplicate invalid payloads.
@@ -28,6 +28,25 @@ class ApapSourceTest {
         source.remember(7, aac)
 
         assertArrayEquals(aac, source.resolve(unit()).metadata.cookie)
+    }
+
+    // Seen on a reconnect with Apple Music: the stream's first packet came 2 ms before the SETMAGICCOOKIE naming its
+    // cookie, and the stream ended; the iPhone tore it down and the music stayed silent until stop and play.
+    @Test fun `a packet naming a cookie still on its way waits for it`() {
+        val source = ApapSource()
+        val late = Thread { Thread.sleep(50); source.remember(7, aac) }.apply { start() }
+
+        assertArrayEquals(aac, source.resolve(unit(ApapMetadata(cookieId = 7))).metadata.cookie)
+        late.join()
+    }
+
+    @Test fun `closing the stream ends a wait for its cookie`() {
+        val source = ApapSource()
+        Thread { Thread.sleep(50); source.close() }.start()
+        val started = System.nanoTime()
+
+        assertThrows(IOException::class.java) { source.resolve(unit(ApapMetadata(cookieId = 7))) }
+        assertTrue(System.nanoTime() - started < 1_000_000_000L)
     }
 
     @Test fun `state only packets retain cookie and loudness without manufacturing audio`() {

@@ -26,6 +26,8 @@ internal class ApapCookies {
         return values[id]?.copyOf() ?: throw IOException("Unknown APAP cookie ID")
     }
 
+    @Synchronized fun knows(id: Long) = values.containsKey(id)
+
     @Synchronized fun clear() { values.clear() }
 
     companion object {
