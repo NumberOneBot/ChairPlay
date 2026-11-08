@@ -35,7 +35,7 @@ class SpatialMusicConfigTest {
     }
 
     @Test fun `missing decoder keeps the buffered preference but offers buffered AAC`() {
-        val config = configWith("audio.music.mode=buffered","audio.spatial.output=stereo")
+        val config = configWith("audio.music.mode=buffered", "audio.spatial.output=stereo")
         assertTrue(config.airPlay.mainBufferedAudio)
         assertFalse(config.airPlay.spatialAudio)
         assertTrue(config.airPlayNow().mainBufferedAudio)
