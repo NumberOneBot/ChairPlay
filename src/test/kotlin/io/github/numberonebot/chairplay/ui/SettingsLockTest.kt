@@ -38,8 +38,36 @@ class SettingsLockTest {
         assertEquals(true, lock.view(WINDOW)["mine"])
         assertEquals("window", holder())
         cover()
-        assertFalse(lock.mayWrite(WINDOW))
         assertNull(holder())
+    }
+
+    // A field saves on blur, and CarPlay covering the page is what blurs it: that save must still land.
+    @Test
+    fun `the window may write while CarPlay covers it, unless a tab holds them or a hand-over is pending`() {
+        cover()
+        assertTrue(lock.mayWrite(WINDOW))
+        lock.open("a", true)
+        assertFalse(lock.mayWrite(WINDOW))
+        lock.leave("a")
+        assertTrue(lock.mayWrite(WINDOW))
+        lock.handOver()
+        assertFalse(lock.mayWrite(WINDOW))
+    }
+
+    @Test
+    fun `only the window holding them starts a hand-over`() {
+        lock.open("a", true)
+        cover()
+        assertNull(lock.startHandOver())
+        assertEquals(false, lock.view(WINDOW)["handOver"])
+        lock.leave("a")
+        assertNull("the window does not show, so it does not hold them", lock.startHandOver())
+        uncover()
+        val key = lock.startHandOver()
+        assertTrue(key != null)
+        assertEquals(true, lock.view(WINDOW)["handOver"])
+        lock.open("b", true, key)
+        assertTrue(lock.mayWrite("b"))
     }
 
     // Review Focus 2: the window holds by the app's state, never by a stream of its own.

@@ -28,11 +28,11 @@ internal fun pagePost(
             }
         }
     }
-    "open-in-browser" ->
-        if (page != SettingsLock.WINDOW || lock.view(page)["mine"] != true) {
+    "open-in-browser" -> {
+        val key = if (page == SettingsLock.WINDOW) lock.startHandOver() else null
+        if (key == null) {
             409 to mapOf("error" to "only the window holding the settings hands them over")
         } else {
-            val key = lock.handOver()
             runCatching { openHandOver(key) }.fold(
                 onSuccess = { 200 to mapOf("ok" to true) },
                 onFailure = {
@@ -41,5 +41,6 @@ internal fun pagePost(
                 },
             )
         }
+    }
     else -> 404 to mapOf("error" to "no such API")
 }

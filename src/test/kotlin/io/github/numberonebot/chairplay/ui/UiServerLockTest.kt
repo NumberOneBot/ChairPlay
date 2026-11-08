@@ -76,6 +76,17 @@ class UiServerLockTest {
     }
 
     @Test
+    fun `the window saves while CarPlay covers it, but not over a tab or a hand-over`() {
+        show(false)
+        assertEquals(200, post("settings", WINDOW, edit))
+        lock.open("tab-1", true)
+        assertEquals(409, post("settings", WINDOW, edit))
+        lock.leave("tab-1")
+        lock.handOver()
+        assertEquals(409, post("settings", WINDOW, edit))
+    }
+
+    @Test
     fun `every route that edits settings is refused to a page without them`() {
         for (route in LOCKED_ROUTES) assertEquals(route, 409, post(route, "tab-1"))
         assertEquals(emptyList<String>(), api.calls)

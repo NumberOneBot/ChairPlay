@@ -188,7 +188,7 @@ The page's sources are in `webui\src`. To work on them with Vite's dev server, w
    ```
 
    Its proxy sends `/api` to `127.0.0.1:7529`, the app's port, unless `CHAIRPLAY_UI_PORT` names another; set before `ChairPlay.exe` starts, the same variable moves the app to that port too, in place of `ui.port`.
-3. Open `http://localhost:5173/` in a browser.
+3. Open `http://localhost:5173/?shared` in a browser. Without `?shared` the page is a browser tab like any other, and while ChairPlay's window holds the settings its saves are refused.
 
 `npm test` (or `gradlew webuiTest`) runs the page's tests, and `gradlew webuiBuild` builds it as the app ships it. `CHAIRPLAY_UI_DEBUG=1` turns on the developer tools (F12) and the context menu inside the app's window.
 

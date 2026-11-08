@@ -72,13 +72,16 @@ internal class SettingsLock(
     }
 
     /** "Open in browser": the window lets go until the tab opened with the returned key takes them, or time runs out. */
-    fun handOver(): String {
+    fun handOver(): String = change { beginHandOver() }
+
+    /** [handOver], in one step with the check that the window holds them; null when it does not. */
+    fun startHandOver(): String? = change { if (holder == WINDOW) beginHandOver() else null }
+
+    private fun beginHandOver(): String {
         val key = UUID.randomUUID().toString()
-        change {
-            handOverKey = key
-            handOverStarted = now()
-            handOverTab = null
-        }
+        handOverKey = key
+        handOverStarted = now()
+        handOverTab = null
         return key
     }
 
@@ -92,7 +95,13 @@ internal class SettingsLock(
     /** The CarPlay car button shows the settings in the window only while no tab holds them; else it minimizes. */
     fun carButtonShowsSettings(embedded: Boolean): Boolean = embedded && !tabHolds
 
-    fun mayWrite(page: String?): Boolean = page == null || !isLocked(page) || synchronized(this) { holder == page }
+    /**
+     * Whether [page] may save. The window may also while nobody holds them (CarPlay covers it, it waits): a field
+     * saves on blur, and CarPlay covering the page is what blurs it. Not over a tab, nor during a hand-over.
+     */
+    fun mayWrite(page: String?): Boolean = page == null || !isLocked(page) || synchronized(this) {
+        holder == page || (page == WINDOW && holder == null && handOverKey == null)
+    }
 
     /** [page]'s view of the lock: whether it holds them, which kind of place does, whether it is shared, a hand-over. */
     fun view(page: String?): Map<String, Any?> = synchronized(this) {
