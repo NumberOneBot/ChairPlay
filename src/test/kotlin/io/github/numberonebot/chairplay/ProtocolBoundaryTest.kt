@@ -1,0 +1,113 @@
+package io.github.numberonebot.chairplay
+
+import java.nio.file.Files
+import java.nio.file.Path
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/** Ratchet: only the listed files may import DiPlay's types (`com.shilapi.`); the list only shrinks. */
+class ProtocolBoundaryTest {
+    private val sourceRoot: Path = findSourceRoot()
+
+    @Test
+    fun `only listed files import DiPlay`() {
+        val importers = kotlinFiles().filter { importsDiPlay(it) }.map { relative(it) }.toSortedSet()
+        val unlisted = importers - ALLOWED
+        val stale = ALLOWED - importers
+        assertTrue("Files import com.shilapi. but are not in ALLOWED: $unlisted", unlisted.isEmpty())
+        assertTrue("Entries in ALLOWED no longer import com.shilapi.; remove them: $stale", stale.isEmpty())
+        assertEquals(ALLOWED, importers)
+    }
+
+    @Test
+    fun `phone package never imports DiPlay`() {
+        val offenders = kotlinFiles().map { relative(it) }.filter { it.startsWith("phone/") }
+            .filter { importsDiPlay(sourceRoot.resolve(it)) }
+        assertTrue("Files under phone/ import com.shilapi.: $offenders", offenders.isEmpty())
+    }
+
+    private fun kotlinFiles(): List<Path> = Files.walk(sourceRoot).use { stream ->
+        stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }.toList()
+    }
+
+    private fun importsDiPlay(file: Path): Boolean =
+        Files.readAllLines(file).any { it.startsWith("import com.shilapi.") }
+
+    private fun relative(file: Path): String = sourceRoot.relativize(file).toString().replace('\\', '/')
+
+    private fun findSourceRoot(): Path {
+        var dir: Path? = Path.of(System.getProperty("user.dir")).toAbsolutePath()
+        while (dir != null) {
+            val candidate = dir.resolve(SOURCE_PATH)
+            if (Files.isDirectory(candidate)) return candidate
+            dir = dir.parent
+        }
+        error("Cannot find $SOURCE_PATH from ${System.getProperty("user.dir")}")
+    }
+
+    companion object {
+        private const val SOURCE_PATH = "src/main/kotlin/io/github/numberonebot/chairplay"
+
+        /** Paths relative to the chairplay source folder. */
+        val ALLOWED: Set<String> = sortedSetOf(
+            "AltscreenView.kt",
+            "AppControls.kt",
+            "CarPlayTheme.kt",
+            "Commands.kt",
+            "Main.kt",
+            "SessionListener.kt",
+            "bluetooth/WindowsBluetooth.kt",
+            "config/AltscreenAreas.kt",
+            "config/AltscreenSettings.kt",
+            "config/AreaRect.kt",
+            "config/ConfigFiles.kt",
+            "config/DesktopConfig.kt",
+            "config/DisplaySettings.kt",
+            "config/EditableSettings.kt",
+            "config/PairingFiles.kt",
+            "data/CarPlayData.kt",
+            "data/CarPlayDataBus.kt",
+            "data/CarPlayDataLog.kt",
+            "data/CarPlayDataMerges.kt",
+            "data/CarPlayDataMessages.kt",
+            "data/DataSubscriptions.kt",
+            "discovery/CarPlayTxt.kt",
+            "discovery/DesktopBonjour.kt",
+            "drive/Drive.kt",
+            "drive/DriveLocation.kt",
+            "drive/Driving.kt",
+            "input/CarPlayTextInput.kt",
+            "input/ControlPad.kt",
+            "input/GamepadControls.kt",
+            "input/HandwritingHid.kt",
+            "input/KeyControls.kt",
+            "input/KeyboardHid.kt",
+            "input/KnobOwners.kt",
+            "input/TouchMapper.kt",
+            "input/TouchQueue.kt",
+            "media/AudioRenderer.kt",
+            "media/BufferedMusicOutput.kt",
+            "media/DesktopMediaSink.kt",
+            "media/MicrophoneSender.kt",
+            "media/PcmDecoders.kt",
+            "media/RealtimeAudioOutput.kt",
+            "media/VideoDecoder.kt",
+            "media/WindowTitle.kt",
+            "media/apac/ApapFrameReader.kt",
+            "media/apac/ApapStreamSource.kt",
+            "media/apac/SpatialAudioBridge.kt",
+            "media/apac/SpatialControls.kt",
+            "network/DesktopNetwork.kt",
+            "network/SameLanNetwork.kt",
+            "session/AirPlayListener.kt",
+            "session/AltscreenUi.kt",
+            "session/BringUpStack.kt",
+            "session/TraceRedaction.kt",
+            "session/WirelessBootstrap.kt",
+            "session/WirelessEndpoint.kt",
+            "session/WirelessParts.kt",
+            "ui/AltscreenFrameInsets.kt",
+        )
+    }
+}
