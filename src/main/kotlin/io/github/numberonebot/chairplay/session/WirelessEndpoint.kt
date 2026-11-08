@@ -22,11 +22,10 @@ internal fun desktopIdentification(
     gps: GpsSettings = GpsSettings(enabled = false),
 ) = Iap2IdentificationConfig(
     name = name,
-    // Model, manufacturer and serial keep their names from before ChairPlay: changing them likely makes the iPhone
-    // see a new accessory to forget and pair again, which waits for the owner's decision.
-    modelIdentifier = "DiPlayDesktop",
-    manufacturer = "DiPlay",
-    serialNumber = "DIPLAY-" + radio.replace(":", ""),
+    // ChairPlay's own since 1.0.9 (before, DiPlayDesktop, DiPlay and DIPLAY-<radio>): an iPhone may see a new accessory.
+    modelIdentifier = "ChairPlay",
+    manufacturer = "ChairPlay",
+    serialNumber = "CHAIRPLAY-" + radio.replace(":", ""),
     firmwareVersion = "0.1.0",
     hardwareVersion = "1.0",
     // Only the wired transport reads this; the value matches DiPlay's head-unit build.
