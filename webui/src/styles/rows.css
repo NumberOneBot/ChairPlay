@@ -193,6 +193,14 @@
   cursor: help;
 }
 
+/* The restart's power sign (PendingMark), as tall as the ⟳ of the next connection beside the same text */
+.shell .later svg,
+.shell .pending svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
 /* Buttons on a page as tall as a field; the toolbar's keep their own */
 .shell .page .btn {
   height: 24px;

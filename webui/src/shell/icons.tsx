@@ -261,7 +261,7 @@ export function InfoIcon() {
   )
 }
 
-/** A globe in outline, the web's sign, on Open in browser: its rim, a meridian, and the equator. */
+/** A globe in outline, the web's sign, on Open in Settings browser: its rim, a meridian, and the equator. */
 export function BrowserIcon() {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true">

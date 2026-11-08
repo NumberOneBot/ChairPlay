@@ -4,6 +4,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.net.InetAddress
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * ui.network: a phone opens the settings at this PC's LAN address. The servers here listen on loopback only (the bind
@@ -14,9 +15,11 @@ class UiServerNetworkTest {
     private val loopback = InetAddress.getLoopbackAddress()
     private val lan = { listOf(InetAddress.getByName("192.168.1.20")) }
     private val servers = mutableListOf<UiServer>()
+    private val opened = CopyOnWriteArrayList<String>()
 
     private fun server(network: Boolean) =
-        UiServer(FakeUiApi(), { null }, network = network, bind = loopback, lan = lan).also { it.start(); servers += it }
+        UiServer(FakeUiApi(), { null }, network = network, bind = loopback, lan = lan, openBrowser = { opened += it })
+            .also { it.start(); servers += it }
 
     @After
     fun close() = servers.forEach(UiServer::close)
@@ -34,7 +37,23 @@ class UiServerNetworkTest {
 
         val state = uiServer(server, host)
         assertEquals(true, state["network"])
-        assertEquals(listOf("http://192.168.1.20:${server.port}/"), state["urls"])
+        assertEquals(listOf("http://192.168.1.20:${server.port}"), state["urls"])
+    }
+
+    // The window's page opens a listed address in the browser; the browser is never handed anything else.
+    @Test
+    fun `Open in browser opens a listed address, and refuses any other`() {
+        val server = server(network = true)
+        val open = { body: String ->
+            rawRequest(server.port, "POST", "/api/open-in-browser", "127.0.0.1:${server.port}", mapOf("Content-Type" to "application/json"), body).first
+        }
+
+        assertEquals(200, open("""{"url":"http://192.168.1.20:${server.port}"}"""))
+        assertEquals(200, open("""{"url":"${server.url}"}"""))
+        assertEquals(400, open("""{"url":"http://192.168.1.21:${server.port}"}"""))
+        assertEquals(400, open("""{"url":"calc.exe"}"""))
+        assertEquals(400, open("""{"url":7}"""))
+        assertEquals(listOf("http://192.168.1.20:${server.port}", server.url), opened)
     }
 
     // Whoever is on the home Wi-Fi knows its password: the eye shows it on any device.

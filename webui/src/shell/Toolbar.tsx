@@ -4,6 +4,7 @@ import { keyLabel } from '../ControlsScreen'
 import type { Steps } from '../setup/steps'
 import { describe, type Status } from '../status'
 import { AltScreenIcon, CarPlayIcon, ControlsIcon, DisconnectIcon, ReconnectIcon } from './icons'
+import { PendingMark } from './PendingMark'
 import { SECTIONS, sectionsOf } from './sections'
 import { networkWaits } from '../pages/NetworkConnection'
 
@@ -47,14 +48,12 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
       {restart.length > 0 && (
         <>
           {/* The sign alone: at 640 px "Restart needed" and the connection's status never shared the bar whole */}
-          <span
+          <PendingMark
+            what="restart"
             className="pending"
-            role="img"
-            aria-label="Restart needed"
+            label="Restart needed"
             title={`Restart ChairPlay to apply: ${restart.join(', ')}`}
-          >
-            ⟳
-          </span>
+          />
           <span className="sep" />
         </>
       )}

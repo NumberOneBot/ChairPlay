@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { appState } from '../testing'
 import { FakeBackend } from '../fakeBackend'
@@ -116,6 +116,8 @@ describe('Shell toolbar', () => {
     render(<Shell state={state} backend={new FakeBackend()} />)
 
     expect(screen.getByRole('img', { name: 'Restart needed' })).toBeTruthy()
+    // The same sign as a setting's that waits for a restart, not the Reconnect button's.
+    expect(within(screen.getByRole('banner')).getByTestId('restart-mark')).toBeTruthy()
   })
 
   it('puts the settings shown on Experiments on Experiments, whatever their key starts with', () => {

@@ -106,18 +106,6 @@ export interface WindowState {
   visible: boolean
 }
 
-/**
- * The settings lock: whether this page holds the settings, which kind of place does (none while they are free),
- * whether this page is shared (?shared, the controls window: it neither takes them nor obeys), and whether the window
- * is handing them over to the browser (Open in browser).
- */
-export interface PageLock {
-  mine: boolean
-  holder: 'window' | 'tab' | null
-  shared: boolean
-  handOver: boolean
-}
-
 export interface AppState {
   bufferedAudio: {
     state: 'loading' | 'playing' | 'paused' | 'empty'; seconds: number; bytes: number
@@ -139,10 +127,8 @@ export interface AppState {
   demo: { playing: DemoKind | null; available: boolean } | null
   /** The GPS car (the GPS page); null without one. */
   gps: GpsState | null
-  /** This page is ChairPlay's window's own rather than a browser's; a tab never is. */
+  /** This page is in ChairPlay's window (WebView2) rather than a browser; a tab never is (App.tsx). */
   embedded: boolean
-  /** Who holds the settings, as this page sees it. */
-  lock: PageLock
   /**
    * The port the page is served on, and ui.port's, which another program had at start when the two differ; whether
    * this run listens on the network (ui.network at start), and then the addresses another device opens it at.
@@ -282,8 +268,9 @@ export interface Backend {
   keyBindings(): Promise<ControlsData | null>
   /** Saves controls.properties changes; the actions a key moved from are among those saved. */
   saveKeyBindings(changes: Record<string, string>): Promise<SaveOutcome>
-  /** A tab's heartbeat: whether it is visible, or that it goes ([closing]); it never fails. */
-  presence(visible: boolean, closing?: boolean): Promise<void>
-  /** The window hands the settings to a browser tab it opens; false when it does not hold them or none opened. */
-  openInBrowser(): Promise<boolean>
+  /**
+   * Opens the settings in the PC's default browser, at their address on this PC or at [url], one of uiServer.urls;
+   * false when none opened.
+   */
+  openInBrowser(url?: string): Promise<boolean>
 }

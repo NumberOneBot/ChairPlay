@@ -84,7 +84,10 @@ class WebView2(private val userData: Path, private val debug: Boolean) : WebView
         private const val VK_RBUTTON = 0x02
         private const val VK_MBUTTON = 0x04
 
-        /** The default browser, for when there is no web view in the window or for Open in browser; throws when none opened. */
+        /**
+         * The default browser, for when there is no web view in the window, or for Open and the local network's
+         * addresses on the Connection page; throws when none opened.
+         */
         fun openInBrowser(url: String) {
             val result = Shell32.INSTANCE.ShellExecute(null, "open", url, null, null, WinUser.SW_SHOWNORMAL)
             // ShellExecute answers a number above 32 when it started something, an error code otherwise.

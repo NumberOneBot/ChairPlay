@@ -44,10 +44,8 @@ class EmbeddedUiTest {
         }
     }
 
-    // The window's page names itself in its address; the browser it falls back to gets the plain one, as a tab.
     private fun ui(make: () -> WebViewBackend = { backend }) =
-        EmbeddedUi("http://127.0.0.1:1/?window", { shows }, make, { opened += it }, { logged += it }, { embedded = it },
-            browserUrl = "http://127.0.0.1:1/")
+        EmbeddedUi("http://127.0.0.1:1/", { shows }, make, { opened += it }, { logged += it }, { embedded = it })
 
     @Test
     fun `the page opens hidden in the window and shows on the first layout`() {
@@ -56,7 +54,7 @@ class EmbeddedUiTest {
         ui.attach(42)
         ui.layout(1280, 720)
 
-        assertEquals(listOf("create 42", "navigate http://127.0.0.1:1/?window", "bounds 1280x720", "show", "focus view"), calls)
+        assertEquals(listOf("create 42", "navigate http://127.0.0.1:1/", "bounds 1280x720", "show", "focus view"), calls)
         assertEquals(true, embedded)
     }
 
@@ -161,7 +159,7 @@ class EmbeddedUiTest {
     }
 
     @Test
-    fun `without WebView2 the page opens in the browser at the plain address`() {
+    fun `without WebView2 the page opens in the browser`() {
         val ui = ui { throw WebViewUnavailable("WebView2 is unavailable") }
 
         ui.attach(42)

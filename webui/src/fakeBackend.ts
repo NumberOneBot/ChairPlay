@@ -204,17 +204,11 @@ export class FakeBackend implements Backend {
     return true
   }
 
-  /** A tab's reports, as 'visible', 'hidden' or 'closing'. */
-  presences: string[] = []
+  /** The local network addresses asked to open in the browser. */
+  browserOpened: string[] = []
 
-  async presence(visible: boolean, closing = false) {
-    this.presences.push(closing ? 'closing' : visible ? 'visible' : 'hidden')
-  }
-
-  browserOpens = 0
-
-  async openInBrowser() {
-    this.browserOpens++
+  async openInBrowser(url?: string) {
+    if (url !== undefined) this.browserOpened.push(url)
     return true
   }
 

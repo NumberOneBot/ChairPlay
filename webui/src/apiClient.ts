@@ -19,29 +19,12 @@ import type {
 
 export class ApiError extends Error {}
 
-/**
- * Every request names [page] (page.ts) for the settings lock; [handOver], the key Open in browser gave this tab, goes
- * with its first event stream only.
- */
 export class Api implements Backend {
-  constructor(
-    readonly page: string,
-    private handOver: string | null = null,
-  ) {}
-
-  private async request(
-    method: 'GET' | 'POST',
-    path: string,
-    body?: unknown,
-    keepalive = false,
-  ): Promise<{ status: number; data: any }> {
-    const headers: Record<string, string> = { 'X-ChairPlay-Page': this.page }
-    if (body !== undefined) headers['Content-Type'] = 'application/json'
+  private async request(method: 'GET' | 'POST', path: string, body?: unknown): Promise<{ status: number; data: any }> {
     const response = await fetch(`/api/${path}`, {
       method,
-      headers,
+      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
-      ...(keepalive ? { keepalive } : {}),
     })
     const data = await response.json().catch(() => ({}))
     return { status: response.status, data }
@@ -159,23 +142,8 @@ export class Api implements Backend {
     return (await this.request('POST', 'window-size', { actual: true, window })).status === 200
   }
 
-  /** The page going away does not wait for the answer: keepalive lets the request outlive it. */
-  async presence(visible: boolean, closing = false): Promise<void> {
-    const sent = this.request('POST', 'page', closing ? { visible, closing } : { visible }, closing).catch(() => {})
-    if (!closing) await sent
-  }
-
-  async openInBrowser(): Promise<boolean> {
-    return (await this.request('POST', 'open-in-browser', {})).status === 200
-  }
-
-  /** The event stream's address, as the page is at this open: its id, its visibility, and a hand-over key once. */
-  private eventsUrl(): string {
-    const visible = document.visibilityState === 'hidden' ? 0 : 1
-    let url = `/api/events?page=${encodeURIComponent(this.page)}&visible=${visible}`
-    if (this.handOver !== null) url += `&handover=${encodeURIComponent(this.handOver)}`
-    this.handOver = null
-    return url
+  async openInBrowser(url?: string): Promise<boolean> {
+    return (await this.request('POST', 'open-in-browser', url === undefined ? {} : { url })).status === 200
   }
 
   /**
@@ -187,7 +155,7 @@ export class Api implements Backend {
     let poll: number | undefined
     let stopped = false
     const open = () => {
-      source = new EventSource(this.eventsUrl())
+      source = new EventSource('/api/events')
       source.onmessage = (event) => {
         onLost(false)
         onState(JSON.parse(event.data) as AppState)
@@ -207,7 +175,7 @@ export class Api implements Backend {
         if (!stopped) poll = window.setTimeout(retry, 2000)
       }
     }
-    // Back from the back/forward cache, the tab's stream was closed while it was kept, with no error to say so.
+    // Back from the back/forward cache, the page's stream was closed while it was kept, with no error to say so.
     const back = (event: PageTransitionEvent) => {
       if (!event.persisted || stopped) return
       source?.close()

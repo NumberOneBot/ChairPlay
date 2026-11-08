@@ -10,25 +10,13 @@ internal class FakeUiApi : UiApi {
     var connectError: String? = null
     val calls = mutableListOf<String>()
 
-    /** The app's page is in its window, and waits there, black; the server tells each page its own of these. */
-    @Volatile var embedded = false
-    @Volatile var waiting = false
-
     fun change(newPhase: String) = synchronized(lock) {
         phase = newPhase
         version++
         lock.notifyAll()
     }
 
-    /** Moves the version on, as the app does when who holds the settings changes, so the streams send the state. */
-    fun bump() = synchronized(lock) {
-        version++
-        lock.notifyAll()
-    }
-
-    override fun state(): Map<String, Any?> = synchronized(lock) {
-        linkedMapOf("version" to version, "phase" to phase, "embedded" to embedded, "waiting" to waiting)
-    }
+    override fun state(): Map<String, Any?> = synchronized(lock) { linkedMapOf("version" to version, "phase" to phase) }
     override fun settings(): Map<String, Any?> = mapOf("values" to emptyMap<String, String>())
     override fun saveSettings(changes: Map<String, String>): SaveResult {
         if (changes["window.width"] == "x") return SaveResult(mapOf("window.width" to "bad"), emptyMap())

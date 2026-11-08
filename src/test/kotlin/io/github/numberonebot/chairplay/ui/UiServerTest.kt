@@ -144,6 +144,23 @@ class UiServerTest {
         assertEquals(404, get("/api/nothing").statusCode())
     }
 
+    // Open in browser, from the window's page: the default browser opens at the settings' address.
+    @Test
+    fun `Open in browser opens the settings' address, or says it did not`() {
+        val opened = mutableListOf<String>()
+        var fails = false
+        val opener = UiServer(api, { null }, openBrowser = { if (fails) error("no browser") else opened += it }).also { it.start() }
+        try {
+            val open = { rawRequest(opener.port, "POST", "/api/open-in-browser", "127.0.0.1:${opener.port}", mapOf("Content-Type" to "application/json"), "{}").first }
+            assertEquals(200, open())
+            assertEquals(listOf(opener.url), opened)
+            fails = true
+            assertEquals(500, open())
+        } finally {
+            opener.close()
+        }
+    }
+
     @Test
     fun `actions reach the app`() {
         assertEquals(200, post("/api/connect", "{}").statusCode())

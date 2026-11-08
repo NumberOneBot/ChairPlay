@@ -17,11 +17,7 @@ const uiServer = (overrides: Partial<AppState['uiServer']>): AppState['uiServer'
 const browserAccess = (overrides: Partial<AppState['uiServer']>) =>
   render(<BrowserAccess state={appState({ uiServer: uiServer(overrides) })} backend={new FakeBackend()} settings={settings} />)
 
-const openInBrowser = () => screen.getByRole('button', { name: 'Open in browser' }) as HTMLButtonElement
-const lock = (lock: Partial<AppState['lock']>): AppState['lock'] =>
-  ({ mine: false, holder: null, shared: false, handOver: false, ...lock })
-
-describe('Settings in a browser', () => {
+describe('Settings browser', () => {
   it('says when the port in the settings was taken', () => {
     browserAccess({ port: 51234, configuredPort: 7529 })
     expect(screen.getByRole('alert')).toBeTruthy()
@@ -74,41 +70,40 @@ describe('Settings in a browser', () => {
     expect(port.value).toBe('70000')
   })
 
-  it('hands the settings from the window over to the browser', () => {
+  it('lists the addresses while the network is on', () => {
+    browserAccess({ network: true, urls: ['http://192.168.1.20:7529'] })
+    expect(screen.getByText('http://192.168.1.20:7529')).toBeTruthy()
+  })
+
+  // A link in the window would take its own page away: the app opens the default browser there instead.
+  it("opens a local network address in the default browser from the window", () => {
     const backend = new FakeBackend()
-    const state = appState({ embedded: true, lock: lock({ mine: true, holder: 'window' }) })
+    const state = appState({ embedded: true, uiServer: uiServer({ network: true, urls: ['http://192.168.1.20:7529'] }) })
     render(<BrowserAccess state={state} backend={backend} settings={settings} />)
 
-    fireEvent.click(openInBrowser())
+    const link = screen.getByRole('link', { name: 'http://192.168.1.20:7529' })
+    expect(fireEvent.click(link)).toBe(false)
 
-    expect(backend.browserOpens).toBe(1)
+    expect(backend.browserOpened).toEqual(['http://192.168.1.20:7529'])
   })
 
-  // A tab is in a browser already, and a window without the settings has none to hand over.
-  // A tab is in a browser already: it has no such button at all.
-  it('has no Open in browser in a tab', () => {
-    render(<BrowserAccess state={appState({ embedded: false, lock: lock({ mine: true, holder: 'tab' }) })} backend={new FakeBackend()} settings={settings} />)
-
-    expect(screen.queryByRole('button', { name: 'Open in browser' })).toBeNull()
-  })
-
-  it('cannot open the browser from a window without the settings', () => {
+  // A tab is in a browser: the address is a plain link to a new tab.
+  it('links a local network address from a browser tab', () => {
     const backend = new FakeBackend()
-    render(<BrowserAccess state={appState({ embedded: true, lock: lock({ holder: 'tab' }) })} backend={backend} settings={settings} />)
+    const state = appState({ embedded: false, uiServer: uiServer({ network: true, urls: ['http://192.168.1.20:7529'] }) })
+    render(<BrowserAccess state={state} backend={backend} settings={settings} />)
 
-    expect(openInBrowser().disabled).toBe(true)
-    fireEvent.click(openInBrowser())
-    expect(backend.browserOpens).toBe(0)
-  })
+    const link = screen.getByRole('link', { name: 'http://192.168.1.20:7529' }) as HTMLAnchorElement
+    fireEvent.click(link)
 
-  it('lists the addresses while the network is on', () => {
-    browserAccess({ network: true, urls: ['http://192.168.1.20:7529/'] })
-    expect(screen.getByText('http://192.168.1.20:7529/')).toBeTruthy()
+    expect(link.href).toBe('http://192.168.1.20:7529/')
+    expect(link.target).toBe('_blank')
+    expect(backend.browserOpened).toEqual([])
   })
 
   // The switch applies at the next start: the addresses follow what this run listens on, not the saved value.
   it('lists no address while this run listens on this PC only', () => {
-    browserAccess({ network: false, urls: ['http://192.168.1.20:7529/'] })
-    expect(screen.queryByText('http://192.168.1.20:7529/')).toBeNull()
+    browserAccess({ network: false, urls: ['http://192.168.1.20:7529'] })
+    expect(screen.queryByText('http://192.168.1.20:7529')).toBeNull()
   })
 })

@@ -106,6 +106,18 @@ describe('Connection page, iPhone', () => {
     expect(screen.queryAllByTitle(/^Changed;/)).toHaveLength(2)
   })
 
+  // A restart is not a reconnection: its mark is the app's restart sign, never the one Reconnect is mistaken for.
+  it('marks a setting waiting for a restart apart from one waiting for the next connection', async () => {
+    const rowOf = (name: string) => screen.getByRole('switch', { name }).closest('.row') as HTMLElement
+    await connection(appState({ ...live, restartPending: ['ui.autoconnect'], reconnectPending: ['wifi.ssid'] }))
+    const network = textbox('Network').closest('.row') as HTMLElement
+
+    expect(within(rowOf('Connect on startup')).getByTestId('restart-mark')).toBeTruthy()
+    expect(within(rowOf('Connect on startup')).queryByTestId('reconnect-mark')).toBeNull()
+    expect(within(network).getByTestId('reconnect-mark')).toBeTruthy()
+    expect(within(network).queryByTestId('restart-mark')).toBeNull()
+  })
+
   it('saves the name, the address, and the time to join', async () => {
     const backend = await connection()
 

@@ -1,0 +1,41 @@
+/* A field with a fixed start (PrefixField): one box in the fields' look, its start gray, the value typed after it */
+
+.shell .pre {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px 0 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: rgb(118 118 128 / 24%);
+  color: var(--muted);
+  font: 12px var(--ui);
+  white-space: nowrap;
+  cursor: text;
+}
+
+.shell .pre:hover {
+  background-color: rgb(118 118 128 / 32%);
+}
+
+.shell .pre:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.shell .pre:has(input.err) {
+  border-color: var(--red);
+}
+
+/* The value itself: no box of its own, as wide as five digits, straight after the start */
+.shell .pre input.t,
+.shell .pre input.t:hover:not(:disabled),
+.shell .pre input.t:focus {
+  width: 5ch;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}

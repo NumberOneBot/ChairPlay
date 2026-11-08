@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config'
 import { devApi } from './devApi.ts'
 
 // The dev server (npm run dev) sends the API to a running ChairPlay, on ui.port's default 7529 or, when set, on
-// CHAIRPLAY_UI_PORT, which the app takes too; open http://localhost:5173/?shared.
+// CHAIRPLAY_UI_PORT, which the app takes too; open http://localhost:5173/.
 const appPort = process.env.CHAIRPLAY_UI_PORT ?? '7529'
 
 // The app's font files, which the HUD (HudStyle.kt) draws with and the stylesheet takes as @fonts/<file>: the build

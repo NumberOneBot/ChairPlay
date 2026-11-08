@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import type { AppState, Backend, PictureWindow, WindowSizes } from '../api'
 import { Row, Segmented, type Choice } from '../shell/controls'
 import { Field } from '../shell/fields'
+import { PendingMark } from '../shell/PendingMark'
 import type { Settings } from '../shell/useSettings'
 
 /** The settings changed but not yet in effect: the state's restartPending and reconnectPending. */
@@ -23,14 +24,9 @@ const NOTHING_PENDING: Pending = { restart: [], reconnect: [] }
 export function Changed({ keys, pending }: { keys: readonly string[]; pending: Pending }) {
   const waits = (list: readonly string[]) => keys.some((key) => list.includes(key))
   if (!waits(pending.restart) && !waits(pending.reconnect)) return null
-  return (
-    <span
-      className="later"
-      title={waits(pending.restart) ? 'Changed; applies after restart' : 'Changed; applies at the next connection'}
-    >
-      ⟳
-    </span>
-  )
+  return waits(pending.restart)
+    ? <PendingMark what="restart" className="later" label="Changed; applies after restart" />
+    : <PendingMark what="reconnect" className="later" label="Changed; applies at the next connection" />
 }
 
 /** A choice changed and waiting for a restart or a connection ([pending]) is marked beside it. */

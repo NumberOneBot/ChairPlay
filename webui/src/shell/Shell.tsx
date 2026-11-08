@@ -11,7 +11,6 @@ import { KeyboardPage } from '../pages/KeyboardPage'
 import { GetStarted } from '../setup/GetStarted'
 import { setupSteps } from '../setup/steps'
 import { Message } from './controls'
-import { Elsewhere } from './Elsewhere'
 import { SECTIONS, type Section } from './sections'
 import { Toolbar } from './Toolbar'
 import { useKeysToApp } from './useKeysToApp'
@@ -61,18 +60,8 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
     return () => window.removeEventListener('keydown', onKey)
   }, [backend, showable])
 
-  // Another place holds the settings: the window's page while a tab has them or is being handed them, a tab's while
-  // any other place has them. A shared page never yields; behind CarPlay, held by nobody, the window keeps its own.
-  const elsewhere = state.embedded
-    ? state.lock.holder === 'tab' || state.lock.handOver
-    : !state.lock.mine && !state.lock.shared
-  // Connecting on its own the app waits, black, instead of showing the settings, until CarPlay covers it; the window
-  // waits so too, with a notice, while a browser has them. Its keys, Esc among them, still work behind it.
-  // A tab (never waiting: PageState.kt) without the settings shows only where they are, as the lock refuses its saves.
-  if (state.embedded && (state.waiting || elsewhere)) {
-    return <Waiting state={state} backend={backend} notice={elsewhere} />
-  }
-  if (elsewhere) return <Elsewhere state={state} />
+  // Connecting on its own the app waits, black, instead of showing the settings, until CarPlay covers it.
+  if (state.waiting) return <Waiting state={state} backend={backend} />
 
   // CarPlay is to show: the window hides the page a fade's time later (Fade.kt), so it fades to black meanwhile.
   const away = state.embedded && state.screen === 'carplay'
