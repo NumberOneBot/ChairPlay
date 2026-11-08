@@ -44,7 +44,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "ui.port" to "7529",
     ),
     SettingBlock(
-        "'true' lets phones and other PCs on the home network open the settings at this PC's address; 'false' keeps\n" +
+        "'true' lets phones and other PCs on the local network open the settings at this PC's address; 'false' keeps\n" +
             "them to this PC. Applies at the next start.",
         "ui.network" to "false",
     ),

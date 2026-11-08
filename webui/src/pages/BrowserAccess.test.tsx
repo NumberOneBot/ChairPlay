@@ -38,12 +38,12 @@ describe('Browser access', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
-  it('saves the home network switch', async () => {
+  it('saves the local network switch', async () => {
     const backend = new FakeBackend()
     render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={backend} />)
     await screen.findByRole('textbox', { name: 'Network' })
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Allow access from the home network' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Allow access from the local network' }))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'ui.network': 'true' }]))
   })
@@ -59,19 +59,20 @@ describe('Browser access', () => {
   })
 
   // A tab is in a browser already, and a window without the settings has none to hand over.
-  it('cannot open the browser from a tab, or from a window without the settings', () => {
-    for (const state of [
-      appState({ embedded: false, lock: lock({ mine: true, holder: 'tab' }) }),
-      appState({ embedded: true, lock: lock({ holder: 'tab' }) }),
-    ]) {
-      const backend = new FakeBackend()
-      render(<BrowserAccess state={state} backend={backend} settings={settings} />)
+  // A tab is in a browser already: it has no such button at all.
+  it('has no Open in browser in a tab', () => {
+    render(<BrowserAccess state={appState({ embedded: false, lock: lock({ mine: true, holder: 'tab' }) })} backend={new FakeBackend()} settings={settings} />)
 
-      expect(openInBrowser().disabled).toBe(true)
-      fireEvent.click(openInBrowser())
-      expect(backend.browserOpens).toBe(0)
-      cleanup()
-    }
+    expect(screen.queryByRole('button', { name: 'Open in browser' })).toBeNull()
+  })
+
+  it('cannot open the browser from a window without the settings', () => {
+    const backend = new FakeBackend()
+    render(<BrowserAccess state={appState({ embedded: true, lock: lock({ holder: 'tab' }) })} backend={backend} settings={settings} />)
+
+    expect(openInBrowser().disabled).toBe(true)
+    fireEvent.click(openInBrowser())
+    expect(backend.browserOpens).toBe(0)
   })
 
   it('lists the addresses while the network is on', () => {

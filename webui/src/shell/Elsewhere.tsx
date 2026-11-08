@@ -9,7 +9,7 @@ export function Elsewhere({ state }: { state: AppState }) {
   if (holder === null) return <p className="app-message">Loading…</p>
   const [title, detail] =
     holder === 'window'
-      ? ["The settings are open in ChairPlay's window", 'They open here once CarPlay covers the window.']
+      ? ["The settings are open in ChairPlay's window", 'To use them here, show CarPlay in that window or click Open in browser on its Connection page.']
       : ['The settings are open in another browser tab', 'Close that tab or switch away from it to use them here.']
   return (
     <div className="app-message elsewhere" role="status">

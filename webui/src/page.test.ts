@@ -9,7 +9,7 @@ describe('page', () => {
     expect(pageIdFrom({ pathname: '/', search: '' }, () => 'abc')).toBe('abc')
   })
 
-  // A phone on the home network opens http://<address>/, no secure context: crypto.randomUUID is not there.
+  // A phone on the local network opens http://<address>/, no secure context: crypto.randomUUID is not there.
   it('makes an id the app takes, with or without a secure context', () => {
     const ids = [pageIdFrom({ pathname: '/', search: '' })]
     const random = globalThis.crypto

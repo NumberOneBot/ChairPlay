@@ -1,6 +1,6 @@
 // The Connection page's "Browser access" group: the address the settings open at in a browser on this PC, a word
 // when ui.port was taken at start and this run serves them on another port, Open in browser, which hands the window's
-// settings to a tab, and ui.network, which opens them to the home network at this PC's addresses (listed while this
+// settings to a tab, and ui.network, which opens them to the local network at this PC's addresses (listed while this
 // run listens on them).
 import type { AppState, Backend } from '../api'
 import { Group, Message, Row, Switch } from '../shell/controls'
@@ -27,39 +27,40 @@ export function BrowserAccess({ state, backend, settings }: { state: AppState; b
         {/* Text to select and copy, not a link: a link would take the window's own page away. */}
         <code>{`http://127.0.0.1:${port}/`}</code>
       </Row>
-      <Row>
-        <button
-          type="button"
-          className="btn small"
-          disabled={!canHandOver}
-          title={
-            canHandOver
-              ? 'Open the settings in the default browser'
-              : state.embedded
-                ? 'Close the settings in the browser first'
-                : "Use this in ChairPlay's window"
-          }
-          onClick={() => void backend.openInBrowser()}
-        >
-          <BrowserIcon />
-          Open in browser
-        </button>
-      </Row>
+      {state.embedded && (
+        <Row>
+          <button
+            type="button"
+            className="btn small"
+            disabled={!canHandOver}
+            title={canHandOver ? 'Open the settings in the default browser' : 'Close the settings in the browser first'}
+            onClick={() => void backend.openInBrowser()}
+          >
+            <BrowserIcon />
+            Open in browser
+          </button>
+        </Row>
+      )}
       <Row title="Let phones and other PCs on this network open the settings at this PC's address">
         <Switch
-          label="Allow access from the home network"
+          label="Allow access from the local network"
           checked={settings.value('ui.network') === 'true'}
           onChange={(checked) => settings.save({ 'ui.network': String(checked) })}
         />
         <Changed keys={['ui.network']} pending={pendingOf(state)} />
       </Row>
+      {!network && (
+        <Row>
+          <span className="hint">Only this PC can open the settings</span>
+        </Row>
+      )}
       {network && urls.length === 0 && (
-        <Row label="Home network">
-          <span className="hint">No home network address found</span>
+        <Row label="Local network">
+          <span className="hint">No local network address found. Connect this PC to the network</span>
         </Row>
       )}
       {network && urls.map((url, index) => (
-        <Row key={url} label={index === 0 ? 'Home network' : undefined}>
+        <Row key={url} label={index === 0 ? 'Local network' : undefined}>
           <code>{url}</code>
         </Row>
       ))}

@@ -130,6 +130,7 @@ class UiController(
 
     /** Tells the GPS page that the car or the iPhone's listening changed. */
     fun gpsChanged() = changed()
+
     /** Tells the pages that who holds the settings, or a hand-over, changed. */
     fun pagesChanged() = changed()
 

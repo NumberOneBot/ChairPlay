@@ -4,7 +4,7 @@ import java.util.Properties
 
 /**
  * ui.port: the port of the settings' address in a browser, `http://127.0.0.1:7529/`. When another program has it at
- * start, the app takes a free one for that run (ui/UiBinding.kt). ui.network: the home network may open them too, at
+ * start, the app takes a free one for that run (ui/UiBinding.kt). ui.network: the local network may open them too, at
  * this PC's address; read at the start only.
  */
 data class UiServerSettings(val port: Int = DEFAULT_PORT, val network: Boolean = false) {
