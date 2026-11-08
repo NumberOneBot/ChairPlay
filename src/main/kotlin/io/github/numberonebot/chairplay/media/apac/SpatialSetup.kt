@@ -4,7 +4,7 @@ import java.io.IOException
 import kotlin.math.floor
 import kotlin.math.pow
 
-internal data class SpatialSetup(val index: Int, val soundCheckTargets: Map<Int, Float>)
+internal data class SpatialSetup(val index: Int, val soundCheckTargets: Map<Int, Float>, val audioFormat: Long = 0)
 
 /** Validate the complete APAP offer before the core retires a working buffered owner. */
 internal fun spatialSetup(stream: Map<String, Any?>): SpatialSetup {
@@ -23,7 +23,7 @@ internal fun spatialSetup(stream: Map<String, Any?>): SpatialSetup {
         val target = (value as? Number)?.toFloat()?.takeIf { it.isFinite() && it in -100f..0f } ?: invalid()
         kind to target
     }.orEmpty()
-    return SpatialSetup(index, targets)
+    return SpatialSetup(index, targets, apapInteger(stream["audioFormat"]))
 }
 
 /** Pioneer MainLoudnessParameters contract; no inferred RMS normalization. */

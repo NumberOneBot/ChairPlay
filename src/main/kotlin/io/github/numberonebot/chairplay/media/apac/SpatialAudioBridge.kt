@@ -24,7 +24,7 @@ class SpatialAudioBridge internal constructor(
         val worker = SpatialWorker({ open(selected) },
             { SpatialDecoder(selected.library, it) }, volume, duck, log, setup.soundCheckTargets)
         workers.add(worker)
-        return ApapStreamSource(key, worker, log) { workers.remove(worker) }
+        return ApapStreamSource(key, worker, log, setup.audioFormat) { workers.remove(worker) }
     }
     internal fun fadeOut(start: Long, duration: Long) { workers.forEach { it.fadeOut(start, duration) } }
     override fun close() { workers.toList().forEach { it.close() }; workers.clear() }

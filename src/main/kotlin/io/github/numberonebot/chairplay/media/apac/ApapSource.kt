@@ -4,8 +4,14 @@ import java.io.Closeable
 import java.io.IOException
 import java.math.BigInteger
 
-/** Resolves authenticated metadata on receipt; queued access units never consult mutable cookie state. */
-internal class ApapSource : Closeable {
+/**
+ * Resolves authenticated metadata on receipt; queued access units never consult mutable cookie state.
+ * [fallback] is the cookie a stream that never gets one plays with; any real cookie replaces it.
+ */
+internal class ApapSource(
+    private val fallback: ByteArray? = null,
+    private val log: (String) -> Unit = {},
+) : Closeable {
     private val cookies = ApapCookies()
     private var current: ByteArray? = null
     private var loudness: List<Float>? = null
@@ -27,12 +33,19 @@ internal class ApapSource : Closeable {
         if (unit.metadata.samplesPerFrame?.let { it != 1024 } == true) {
             throw IOException("Unsupported APAP packet geometry")
         }
-        val resolved = cookies.resolve(unit.metadata) ?: current ?: throw IOException("APAP cookie missing")
+        val resolved = cookies.resolve(unit.metadata) ?: current ?: fallbackCookie()
         validateSpatialCookie(resolved)
         current = resolved
         loudness = unit.metadata.loudness ?: loudness
         kind = unit.metadata.mediaKind ?: kind
         return unit.copy(metadata = unit.metadata.copy(cookie = resolved.copyOf(), loudness = loudness, mediaKind = kind))
+    }
+
+    // Once taken, the fallback is [current], so this runs, and logs, once per stream.
+    private fun fallbackCookie(): ByteArray {
+        val cookie = fallback ?: throw IOException("APAP cookie missing")
+        log("Buffered audio: no cookie from the iPhone; using AAC-LC 48 kHz stereo")
+        return cookie.copyOf()
     }
 
     @Synchronized override fun close() {

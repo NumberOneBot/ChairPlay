@@ -10,10 +10,11 @@ internal class ApapStreamSource(
     key: ByteArray,
     private val worker: SpatialWorker,
     private val log: (String) -> Unit = {},
+    audioFormat: Long = 0,
     private val onClosed: () -> Unit = {},
 ) : Closeable {
     private val key = key.copyOf()
-    private val metadata = ApapSource()
+    private val metadata = ApapSource(apapFallbackCookie(audioFormat), log)
     @Volatile private var reader: ApapFrameReader? = null
     private var from: Long? = null
     private var pendingPosition: Long? = null
