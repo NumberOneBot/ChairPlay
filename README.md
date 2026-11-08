@@ -45,7 +45,7 @@ A newer installer updates ChairPlay and keeps your settings, pairing and MFi fil
 
 **Portable.** `ChairPlay-…-portable.zip` runs without installing: unpack it to a folder you can write to and open `ChairPlay.exe`. Its settings, pairing and logs stay in that folder. To update, close ChairPlay, delete the `app` and `runtime` folders, and unpack the new zip over the old one. After moving the folder, Get started asks for the firewall rule again. The iPhone sees the installed copy and a portable one as two different cars and pairs with each, and only one copy runs at a time.
 
-See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.8 release notes](docs/RELEASE-NOTES-1.0.8.md) for this update.
+See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.9 release notes](docs/RELEASE-NOTES-1.0.9.md) for this update.
 
 ## Features
 
@@ -55,9 +55,9 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.8 re
 - **Audio:** music, calls, and Siri through your chosen speakers and microphone, with independent volume and buffered music playback.
 - **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
 - **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation. See the [GPS guide](docs/GPS.md).
-- **Integrations** (experimental): another app on the PC, such as a game mod, can show the CarPlay picture from a shared texture and drive the GPS car with its own position and speed. See [Integrations](docs/INTEGRATIONS.md).
+- **Integrations** (experimental): another app on this PC can show the CarPlay picture from a shared texture and drive the GPS car with its own position and speed. See [Integrations](docs/INTEGRATIONS.md).
 
-Settings are in the app and save as you change them. Tested on Windows 11 with an iPhone 15 on iOS 18.6 and iOS 27.2.
+Settings are in the app and in any browser on the PC at http://localhost:7529 (or from the local network when allowed), and save as you change them. Tested on Windows 11 with an iPhone 15 on iOS 18.6 and iOS 27.2.
 
 ## Controls
 

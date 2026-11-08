@@ -2,6 +2,28 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.0.9 - 2026-11-09
+
+### Added
+
+- The settings open in any browser on this PC at http://localhost:7529 (7529 spells PLAY on a phone keypad), alongside ChairPlay's window. **Settings > Connection > Settings browser** changes the port, opens the browser, and with **Allow access from the local network** opens the settings to a phone or another PC at the addresses it lists.
+- **Experiments > Integrations**, for other apps on this PC: **CarPlay picture** publishes the CarPlay screen as a shared texture another app can show, and **GPS car** lets another app drive the GPS car with its position, heading, and speed, its rpm, gear, and red line shown on the gauges. The interface is described in [Integrations](docs/INTEGRATIONS.md).
+- When the iPhone stops answering, both windows' titles say **iPhone not responding** after 5 seconds, until it answers again or ChairPlay reconnects. The picture used to stand still with no sign, while buffered music played on.
+- **Settings > Audio** shows **Spatial** in the Buffer row while music plays as spatial audio.
+
+### Changed
+
+- The settings page's address no longer carries a key.
+- The connection, the screens, the controls, and the iPhone's data are restructured into shared parts, ahead of support for Android Auto phones in a later version.
+
+### Fixed
+
+- No sound in Buffered mode from apps that send no audio cookie at all, such as YouTube on recent iOS.
+- Music that was playing as ChairPlay connected stayed silent until stop and play.
+- After a reconnect, music sometimes stayed silent until stop and play.
+
+[Release notes](docs/RELEASE-NOTES-1.0.9.md) · [Changes since v1.0.8](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.8...v1.0.9)
+
 ## 1.0.8 - 2026-11-06
 
 ### Added
