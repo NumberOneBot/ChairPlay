@@ -49,11 +49,11 @@ class UiServerNetworkTest {
         }
 
         assertEquals(200, open("""{"url":"http://192.168.1.20:${server.port}"}"""))
-        assertEquals(200, open("""{"url":"${server.url}"}"""))
+        assertEquals(200, open("""{"url":"http://localhost:${server.port}"}"""))
         assertEquals(400, open("""{"url":"http://192.168.1.21:${server.port}"}"""))
         assertEquals(400, open("""{"url":"calc.exe"}"""))
         assertEquals(400, open("""{"url":7}"""))
-        assertEquals(listOf("http://192.168.1.20:${server.port}", server.url), opened)
+        assertEquals(listOf("http://192.168.1.20:${server.port}", "http://localhost:${server.port}"), opened)
     }
 
     // Whoever is on the home Wi-Fi knows its password: the eye shows it on any device.

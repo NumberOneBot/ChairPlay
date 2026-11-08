@@ -39,7 +39,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "ui.accent" to DEFAULT_ACCENT,
     ),
     SettingBlock(
-        "The port of the settings' address in a browser, http://127.0.0.1:7529/ (7529 spells PLAY on a phone keypad).\n" +
+        "The port of the settings' address in a browser, http://localhost:7529 (7529 spells PLAY on a phone keypad).\n" +
             "When another program has it, the app takes a free port for that run and says so on the Connection page.",
         "ui.port" to "7529",
     ),

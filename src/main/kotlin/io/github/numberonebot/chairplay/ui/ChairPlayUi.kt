@@ -177,7 +177,7 @@ class ChairPlayUi(
 
     init {
         server.start()
-        log("UI at ${server.url}")
+        log("UI at ${server.browserUrl}")
         // WebView2's profile (its cache) stays with the app's other data, so a copied or moved folder takes it along.
         val userData = dir.resolve("webview2")
         val debug = System.getenv("CHAIRPLAY_UI_DEBUG") == "1"

@@ -25,7 +25,7 @@ export function BrowserAccess({ state, backend, settings }: { state: AppState; b
       <Row label="This PC" title="The address that opens the settings in a browser on this PC; a new port applies after restart">
         {/* A field, not a link: a link would take the window's own page away. */}
         <PrefixField
-          prefix="http://127.0.0.1:"
+          prefix="http://localhost:"
           label="Port"
           value={settings.value('ui.port')}
           placeholder="7529"

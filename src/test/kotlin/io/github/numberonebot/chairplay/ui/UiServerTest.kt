@@ -153,7 +153,7 @@ class UiServerTest {
         try {
             val open = { rawRequest(opener.port, "POST", "/api/open-in-browser", "127.0.0.1:${opener.port}", mapOf("Content-Type" to "application/json"), "{}").first }
             assertEquals(200, open())
-            assertEquals(listOf(opener.url), opened)
+            assertEquals(listOf("http://localhost:${opener.port}"), opened)
             fails = true
             assertEquals(500, open())
         } finally {

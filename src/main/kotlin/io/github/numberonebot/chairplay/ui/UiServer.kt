@@ -47,6 +47,9 @@ class UiServer(
     /** The page's address. */
     val url: String get() = "http://127.0.0.1:$port/"
 
+    /** The address people see and a browser opens: localhost, as the Connection page shows it. */
+    val browserUrl: String get() = "http://localhost:$port"
+
     fun start() {
         server.executor = executor
         server.createContext("/") { exchange ->
@@ -123,12 +126,13 @@ class UiServer(
     }
 
     /**
-     * Opens [url], or the address `url` names ({"url": "http://192.168.1.20:7529"}), in the default browser. The
-     * browser gets only an address of these settings: [url] or one [lanUrls] lists, never a string from the request.
+     * Opens [browserUrl], or the address `url` names ({"url": "http://192.168.1.20:7529"}), in the default browser. The
+     * browser gets only an address of these settings: [browserUrl], [url] or one [lanUrls] lists, never a string from
+     * the request.
      */
     private fun openInBrowser(body: Map<*, *>): Pair<Int, Map<String, Any?>> {
-        val asked = body["url"] ?: url
-        val address = (listOf(url) + lanUrls()).firstOrNull { it == asked }
+        val asked = body["url"] ?: browserUrl
+        val address = (listOf(browserUrl, url) + lanUrls()).firstOrNull { it == asked }
             ?: return 400 to mapOf("error" to "not an address of these settings")
         return runCatching { openBrowser(address) }.fold(
             onSuccess = { 200 to mapOf("ok" to true) },
