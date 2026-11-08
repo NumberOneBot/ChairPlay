@@ -52,7 +52,8 @@ internal object WindowsFirewallApi {
                     profiles = rule.int("Profiles"),
                     program = stored?.let(Kernel32Util::expandEnvironmentStrings),
                     storedProgram = stored,
-                    protocol = rule.int("Protocol"),
+                    // A rule that will not say its protocol counts as any, rather than failing the whole read.
+                    protocol = runCatching { rule.int("Protocol") }.getOrDefault(ANY_PROTOCOL),
                     localPorts = rule.string("LocalPorts") ?: "*",
                 )
             }
