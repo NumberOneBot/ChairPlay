@@ -27,4 +27,7 @@ interface PhoneLink {
 
     /** Asks the phone for a keyframe of [screen], at most once a second. */
     fun keyframe(screen: ScreenKind)
+
+    /** The System.nanoTime() of the phone's last sign of life on this link, its start the first. */
+    val heardNanos: Long
 }

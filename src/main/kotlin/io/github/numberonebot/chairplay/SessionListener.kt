@@ -33,6 +33,7 @@ internal class SessionListener(
             sessionChanged()
             ui.sessionEnded()
             window.clearPicture()
+            title.reconnecting.set(true)
             title.connecting()
         }
     }

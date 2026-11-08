@@ -21,14 +21,20 @@ internal class WindowTitle {
 
     fun codec(codec: VideoCodecKind?) = selectedCodec.set(codec)
 
+    /** A notice after all the title says, as the phone gone quiet, until null clears it; safe from any thread. */
+    fun notice(text: String?) = notice.set(text)
+
+    private val notice = AtomicReference<String?>()
+
     fun next(framebuffer: Size, picture: Size): String? {
         val base = wanted.get() ?: return null
         val codec = selectedCodec.get()?.let { if (it == VideoCodecKind.H265) "H.265" else "H.264" }
         val suffix = listOfNotNull(codec, scale(framebuffer, picture)).joinToString(" · ").takeIf { it.isNotEmpty() }
-        val title = suffix?.let { scale ->
+        val scaled = suffix?.let { scale ->
             // Right after the resolution ("1280×720"), or last when the title has none.
             RESOLUTION.find(base)?.let { base.replaceRange(it.range, "${it.value} · $scale") } ?: "$base · $scale"
         } ?: base
+        val title = notice.get()?.let { "$scaled · $it" } ?: scaled
         if (title == shown) return null
         shown = title
         return title
@@ -44,4 +50,10 @@ internal class WindowTitle {
     private companion object {
         val RESOLUTION = Regex("""\d+×\d+""")
     }
+}
+
+/** A [WindowTitle.notice] on this window's title, or null to clear it; safe from any thread. */
+internal fun VideoWindow.titleNotice(text: String?) {
+    titles.notice(text)
+    repaint()
 }

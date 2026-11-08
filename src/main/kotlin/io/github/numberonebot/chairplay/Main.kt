@@ -19,6 +19,7 @@ import io.github.numberonebot.chairplay.media.runWindows
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.AlmanacCache
 import io.github.numberonebot.chairplay.media.saveScreenshot
+import io.github.numberonebot.chairplay.media.titleNotice
 import io.github.numberonebot.chairplay.phone.PhoneLink
 import io.github.numberonebot.chairplay.ui.BuildInfo
 import io.github.numberonebot.chairplay.ui.ChairPlayUi
@@ -212,9 +213,14 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     val gpsShown = AtomicReference<Map<String, Any?>>()
     driving.onSent = { driving.state().let { now -> if (gpsShown.getAndSet(now) != now) ui.gpsChanged() } }
     driving.saveTo { place -> ui.saveSettings(place) }
+    // A session the iPhone went quiet on says so in both windows' titles until it speaks or ends.
+    val silence = LinkSilence(active::get) { silent ->
+        listOf(window, altscreen).forEach { it.titleNotice(if (silent) "iPhone not responding" else null) }
+    }
     themeWatch.scheduleWithFixedDelay({
         if (driving.state()["listening"] != true) driving.onSent()
         audio.updateBufferedAudio()
+        silence.check()
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
     // CarPlay: the iPhone's sound and screens, its route, song, call and battery messages, its GPS, and the connection.
     val sessions = SessionListener(active, ui, window, title, theme, ::sessionChanged)

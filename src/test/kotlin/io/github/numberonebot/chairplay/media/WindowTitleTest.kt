@@ -64,4 +64,20 @@ class WindowTitleTest {
         title.base("AltScreen · 1920×720 · hud")
         assertEquals("AltScreen · 1920×720 · hud", title.next(Size(1280, 720), picture))
     }
+
+    // A notice, the phone gone quiet, stands after whatever the title says until it is cleared, the title's owner
+    // changing it meanwhile.
+    @Test
+    fun `a notice stays after the title until it is cleared`() {
+        val title = WindowTitle()
+        title.base("A")
+        title.next(picture, picture)
+
+        title.notice("N")
+        assertEquals("A · N", title.next(picture, picture))
+        title.base("B")
+        assertEquals("B · N", title.next(picture, picture))
+        title.notice(null)
+        assertEquals("B", title.next(picture, picture))
+    }
 }

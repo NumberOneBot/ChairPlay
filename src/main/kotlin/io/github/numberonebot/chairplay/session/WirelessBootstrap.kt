@@ -8,6 +8,7 @@ import io.github.numberonebot.chairplay.carplay.CarPlayLinks
 import io.github.numberonebot.chairplay.carplay.CarPlayMediaSink
 import io.github.numberonebot.chairplay.carplay.DataLink
 import io.github.numberonebot.chairplay.carplay.PhoneDataTap
+import io.github.numberonebot.chairplay.carplay.reportingFeedback
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.drive.PacedLocation
@@ -149,7 +150,7 @@ class WirelessBootstrap internal constructor(
             val info = network.start(NETWORK_TIMEOUT_MILLIS)
             val host = HotspotAddressPolicy.select(info.hostAddresses) ?: info.hostAddress
                 ?: throw IOException("Wi-Fi adapter has no usable address")
-            val media = parts.media(sink, microphoneEnabled = CarPlayConfig.airPlay(config).microphone)
+            val media = parts.media(sink, microphoneEnabled = CarPlayConfig.airPlay(config).microphone).reportingFeedback(links::heard)
             val radio = parts.radioAddress()
             val now = config.now()
             val sessionConfig = CarPlayConfig.airPlayNow(config, now).copy(btMac = radio)

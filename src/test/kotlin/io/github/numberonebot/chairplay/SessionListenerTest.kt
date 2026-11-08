@@ -44,6 +44,7 @@ class SessionListenerTest {
         override val cluster: ClusterControl? = null
         override fun nightMode(on: Boolean) = nights.add(on)
         override fun keyframe(screen: ScreenKind) {}
+        override val heardNanos = 0L
     }
 
     private val calls = CopyOnWriteArrayList<String>()
@@ -71,7 +72,8 @@ class SessionListenerTest {
     private val theme = CarPlayTheme(Theme.DARK, watch, touchSender, active::get)
     private val window = VideoWindow(320, 240)
     private val config = Files.createTempDirectory("chairplay-sessions").let { writeTestSettings(it); DesktopConfig(it) }
-    private val sessions = SessionListener(active, ui, window, MainTitle(window, config), theme) { calls += "changed" }
+    private val title = MainTitle(window, config)
+    private val sessions = SessionListener(active, ui, window, title, theme) { calls += "changed" }
 
     @After
     fun stop() {
@@ -114,6 +116,17 @@ class SessionListenerTest {
 
         assertEquals(null, active.get())
         assertEquals(listOf("changed", "active", "changed", "ended"), calls)
+    }
+
+    // A lost session is connected again: the title says it reconnects until the next one is up.
+    @Test
+    fun `a session's end reconnects`() {
+        sessions.linked(FakeLink())
+
+        sessions.linked(null)
+        assertEquals(true, title.reconnecting.get())
+        sessions.linked(FakeLink())
+        assertEquals(false, title.reconnecting.get())
     }
 
     // Disconnect and Reconnect clear the link themselves; its end heard after that changes nothing more.

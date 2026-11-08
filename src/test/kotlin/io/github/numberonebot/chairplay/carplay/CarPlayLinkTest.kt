@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.carplay
 
+import com.shilapi.xcertplay.airplay.AirPlayMediaHandler
+import com.shilapi.xcertplay.airplay.AirPlaySession
 import io.github.numberonebot.chairplay.media.AudioRenderer
 import io.github.numberonebot.chairplay.media.ScreenDecoders
 import io.github.numberonebot.chairplay.media.VideoWindow
@@ -100,5 +102,37 @@ class CarPlayLinkTest {
         assertEquals(2, reported.size)
         assertTrue(reported.all { it != null })
         assertSame(second, (reported.last() as CarPlayLink).session)
+    }
+
+    // The iPhone's feedback, every two seconds while it is there, is the live link's sign of life; another session's
+    // is not.
+    @Test
+    fun `the live session's feedback marks its link heard`() {
+        var now = 1_000L
+        val links = CarPlayLinks({}, { now }) { reported += it }
+        val session = idleSession()
+        links.active(session)
+
+        now = 9_000L
+        links.heard(idleSession())
+        assertEquals(1_000L, reported.single()!!.heardNanos)
+        links.heard(session)
+        assertEquals(9_000L, reported.single()!!.heardNanos)
+    }
+
+    // The media handler DiPlay asks at each feedback still answers it, and the link hears it first.
+    @Test
+    fun `feedback reaches the link and DiPlay's engine alike`() {
+        val heard = mutableListOf<AirPlaySession>()
+        val answer = mapOf<String, Any?>("streams" to emptyList<Any>())
+        val engine = object : AirPlayMediaHandler {
+            override fun onFeedback(session: AirPlaySession) = answer
+        }
+        val session = idleSession()
+
+        val media = engine.reportingFeedback { heard += it }
+
+        assertSame(answer, media.onFeedback(session))
+        assertEquals(listOf(session), heard)
     }
 }
