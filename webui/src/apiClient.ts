@@ -19,12 +19,29 @@ import type {
 
 export class ApiError extends Error {}
 
+/**
+ * Every request names [page] (page.ts) for the settings lock; [handOver], the key Open in browser gave this tab, goes
+ * with its first event stream only.
+ */
 export class Api implements Backend {
-  private async request(method: 'GET' | 'POST', path: string, body?: unknown): Promise<{ status: number; data: any }> {
+  constructor(
+    readonly page: string,
+    private handOver: string | null = null,
+  ) {}
+
+  private async request(
+    method: 'GET' | 'POST',
+    path: string,
+    body?: unknown,
+    keepalive = false,
+  ): Promise<{ status: number; data: any }> {
+    const headers: Record<string, string> = { 'X-ChairPlay-Page': this.page }
+    if (body !== undefined) headers['Content-Type'] = 'application/json'
     const response = await fetch(`/api/${path}`, {
       method,
-      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      ...(keepalive ? { keepalive } : {}),
     })
     const data = await response.json().catch(() => ({}))
     return { status: response.status, data }
@@ -142,6 +159,25 @@ export class Api implements Backend {
     return (await this.request('POST', 'window-size', { actual: true, window })).status === 200
   }
 
+  /** The page going away does not wait for the answer: keepalive lets the request outlive it. */
+  async presence(visible: boolean, closing = false): Promise<void> {
+    const sent = this.request('POST', 'page', closing ? { visible, closing } : { visible }, closing).catch(() => {})
+    if (!closing) await sent
+  }
+
+  async openInBrowser(): Promise<boolean> {
+    return (await this.request('POST', 'open-in-browser', {})).status === 200
+  }
+
+  /** The event stream's address, as the page is at this open: its id, its visibility, and a hand-over key once. */
+  private eventsUrl(): string {
+    const visible = document.visibilityState === 'hidden' ? 0 : 1
+    let url = `/api/events?page=${encodeURIComponent(this.page)}&visible=${visible}`
+    if (this.handOver !== null) url += `&handover=${encodeURIComponent(this.handOver)}`
+    this.handOver = null
+    return url
+  }
+
   /**
    * Calls [onState] with the state now and on every change, over server-sent events; while those fail (the app is
    * gone or restarting) it polls instead. Returns a function that stops it.
@@ -151,7 +187,7 @@ export class Api implements Backend {
     let poll: number | undefined
     let stopped = false
     const open = () => {
-      source = new EventSource('/api/events')
+      source = new EventSource(this.eventsUrl())
       source.onmessage = (event) => {
         onLost(false)
         onState(JSON.parse(event.data) as AppState)

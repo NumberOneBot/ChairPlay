@@ -204,6 +204,20 @@ export class FakeBackend implements Backend {
     return true
   }
 
+  /** A tab's reports, as 'visible', 'hidden' or 'closing'. */
+  presences: string[] = []
+
+  async presence(visible: boolean, closing = false) {
+    this.presences.push(closing ? 'closing' : visible ? 'visible' : 'hidden')
+  }
+
+  browserOpens = 0
+
+  async openInBrowser() {
+    this.browserOpens++
+    return true
+  }
+
   bindings: ControlsData | null = controlsData()
   controlsSaved: Record<string, string>[] = []
   nextControlsOutcome: SaveOutcome | null = null

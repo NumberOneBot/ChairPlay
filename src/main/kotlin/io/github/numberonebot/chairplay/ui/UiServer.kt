@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer
 import java.io.Closeable
 import java.io.IOException
 import java.net.InetAddress
+import java.net.URLDecoder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -17,19 +18,26 @@ import java.util.concurrent.Executors
  * [network], any client that reaches the port is served. A POST must be JSON, which another site's page cannot send
  * without a CORS preflight, and this server answers none.
  *
+ * Each page names itself ([SettingsLock]) in the X-ChairPlay-Page header, and its event stream in its `page` query
+ * (with `visible` and the hand-over key); it hears the state as its own ([pageState]), and a POST that edits settings
+ * ([SettingsLock.LOCKED_ROUTES]) from a page that does not hold them is refused (409). Open in browser hands the
+ * settings over to the tab [openBrowser] opens.
+ *
  * API: GET state and settings, POST settings ({"changes": {key: value}}), connect, reconnect, screen
  * ({"screen": "start" | "settings" | "carplay"}), window ({"name": "altscreen" | "controls", "visible": bool}), control
  * ({"action": "knob.select", "down": bool}, a button of the controls window), altscreen ({"content": "hud"}) and open
  * ({"place": "bluetooth"}, a Windows page by a name the app knows), and GET events, a stream of the state on every
  * change.
  */
-class UiServer(
+class UiServer internal constructor(
     private val api: UiApi,
     private val assets: (String) -> ByteArray?,
     private val requestedPort: Int = 0,
     private val network: Boolean = false,
     bind: InetAddress = uiBindAddress(network),
     private val lan: () -> List<InetAddress> = LanAddresses()::current,
+    private val lock: SettingsLock = SettingsLock({ false }, {}),
+    private val openBrowser: (String) -> Unit = {},
     private val log: (String) -> Unit = {},
 ) : Closeable {
     private val executor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "ui-http").apply { isDaemon = true } }
@@ -84,27 +92,37 @@ class UiServer(
 
     private fun api(exchange: HttpExchange, route: String) {
         val method = exchange.requestMethod
-        val posts = setOf("settings", "controls", "connect", "reconnect", "disconnect", "screen", "window", "control", "key", "keyboard-focus", "altscreen", "open", "window-size", "firewall-rule", "forget", "altscreen-frame", "demo", "volume", "windows-location", "gps-drive", "screenshot", "drive-mode", "check-updates")
+        val posts = setOf("settings", "controls", "connect", "reconnect", "disconnect", "screen", "window", "control", "key", "keyboard-focus", "altscreen", "open", "window-size", "firewall-rule", "forget", "altscreen-frame", "demo", "volume", "windows-location", "gps-drive", "screenshot", "drive-mode", "check-updates", "page", "open-in-browser")
         val gets = setOf("state", "settings", "passphrase", "controls", "folder-sizes", "events")
+        val query = if (route == "events") query(exchange) else emptyMap()
+        val page = if (route == "events") query["page"] else exchange.requestHeaders.getFirst("X-ChairPlay-Page")
+        if (page != null && !SettingsLock.validPage(page)) {
+            json(exchange, 400, mapOf("error" to "malformed page id"))
+            return
+        }
         when {
             method == "GET" && route in gets -> when (route) {
-                "state" -> json(exchange, 200, state())
+                "state" -> json(exchange, 200, state(page))
                 "settings" -> json(exchange, 200, api.settings())
                 "passphrase" -> json(exchange, 200, mapOf("passphrase" to api.savedPassphrase()))
                 "folder-sizes" -> json(exchange, 200, api.folderSizes())
                 "controls" -> api.controls()?.let { json(exchange, 200, it) } ?: json(exchange, 404, mapOf("error" to "no key bindings"))
-                else -> events(exchange)
+                else -> events(exchange, page, query["visible"] == "1", query["handover"])
             }
-            method == "POST" && route in posts -> post(exchange, route)
+            method == "POST" && route in posts -> post(exchange, route, page)
             route in posts || route in gets -> json(exchange, 405, mapOf("error" to "method not allowed"))
             else -> json(exchange, 404, mapOf("error" to "no such API"))
         }
     }
 
-    private fun post(exchange: HttpExchange, route: String) {
+    private fun post(exchange: HttpExchange, route: String, page: String?) {
         val type = exchange.requestHeaders.getFirst("Content-Type").orEmpty()
         if (!type.startsWith("application/json")) {
             json(exchange, 415, mapOf("error" to "send application/json"))
+            return
+        }
+        if (route in SettingsLock.LOCKED_ROUTES && !lock.mayWrite(page)) {
+            json(exchange, 409, mapOf("error" to "The settings are open in ChairPlay's window or another browser tab"))
             return
         }
         val bytes = exchange.requestBody.readNBytes(MAX_BODY + 1)
@@ -117,21 +135,29 @@ class UiServer(
             json(exchange, 400, mapOf("error" to "the body is not a JSON object"))
             return
         }
-        val (status, answer) = postRoute(api, route, body)
+        val (status, answer) = when (route) {
+            "page", "open-in-browser" -> pagePost(lock, route, page, body) { key -> openBrowser("$url?handover=$key") }
+            else -> postRoute(api, route, body)
+        }
         json(exchange, status, answer)
     }
 
     /**
-     * The app's state, which port this server took (the Connection page says when it is not ui.port's), and with
-     * ui.network on, the addresses another device opens it at.
+     * The app's state as [page] sees it, which port this server took (the Connection page says when it is not
+     * ui.port's), and with ui.network on, the addresses another device opens it at.
      */
-    private fun state(): Map<String, Any?> {
+    private fun state(page: String?): Map<String, Any?> {
         val urls = if (network) lan().map { "http://${it.hostAddress}:$port/" } else emptyList()
-        return api.state() + ("uiServer" to mapOf("port" to port, "configuredPort" to configuredPort, "network" to network, "urls" to urls))
+        val server = mapOf("port" to port, "configuredPort" to configuredPort, "network" to network, "urls" to urls)
+        return pageState(api.state(), page, lock, server)
     }
 
-    /** Server-sent events: the state now, then again on every change, with a comment now and then to keep it open. */
-    private fun events(exchange: HttpExchange) {
+    /**
+     * Server-sent events: the state now, then again on every change, with a comment now and then to keep it open. The
+     * stream keeps [page] present for the lock while it is open; each tick lets the lock apply its rules (a heartbeat
+     * run out), and a page gone is noticed at the next write.
+     */
+    private fun events(exchange: HttpExchange, page: String?, visible: Boolean, handOver: String?) {
         exchange.responseHeaders.apply {
             add("Content-Type", "text/event-stream; charset=utf-8")
             add("Cache-Control", "no-store")
@@ -139,21 +165,32 @@ class UiServer(
         exchange.sendResponseHeaders(200, 0)
         val out = exchange.responseBody
         var seen = -1L
+        val stream = lock.open(page ?: SettingsLock.SHARED, visible, handOver)
         try {
             while (!closing) {
                 val version = api.awaitChange(seen, KEEP_ALIVE_MILLIS)
+                lock.update()
                 if (version == seen) {
                     out.write(": keep-alive\n\n".toByteArray())
                 } else {
                     seen = version
-                    out.write("data: ${Json.write(state())}\n\n".toByteArray(Charsets.UTF_8))
+                    out.write("data: ${Json.write(state(page))}\n\n".toByteArray(Charsets.UTF_8))
                 }
                 out.flush()
             }
         } catch (_: InterruptedException) {
             // The server is closing.
+        } finally {
+            stream.close()
         }
     }
+
+    /** The request's query parameters, decoded; the first of a name counts, and a broken escape reads as a space. */
+    private fun query(exchange: HttpExchange): Map<String, String> =
+        exchange.requestURI.rawQuery.orEmpty().split('&').filter { it.isNotEmpty() }.map { part ->
+            val decode = { text: String -> runCatching { URLDecoder.decode(text, Charsets.UTF_8) }.getOrDefault(" ") }
+            decode(part.substringBefore('=')) to decode(part.substringAfter('=', ""))
+        }.reversed().toMap()
 
     private fun page(exchange: HttpExchange, path: String) {
         if (exchange.requestMethod != "GET" && exchange.requestMethod != "HEAD") {
@@ -207,7 +244,7 @@ class UiServer(
     companion object {
         private const val INDEX = "index.html"
         private const val MAX_BODY = 64 * 1024
-        private const val KEEP_ALIVE_MILLIS = 15_000L
+        private const val KEEP_ALIVE_MILLIS = 2_000L
         private const val CSP = "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; " +
             "object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
 

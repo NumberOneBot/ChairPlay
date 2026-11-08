@@ -38,7 +38,7 @@ class WebViewUnavailable(message: String) : Exception(message)
  * The web UI as the main window's [WindowChild]: it covers the window, and has the keyboard, while [showsUi] says
  * so ([covers]), and hides otherwise, so that CarPlay's picture shows and takes the keys; the window shows and hides
  * it through a fade. [backend] is made in [attach], on the
- * window's thread; when it cannot be (no WebView2 runtime, no DLL), [url] opens in the default browser instead and
+ * window's thread; when it cannot be (no WebView2 runtime, no DLL), [browserUrl] opens in the default browser instead and
  * the log says why. [onEmbedded] hears which of the two it is.
  *
  * Without [takesKeyboard] (the controls window) the window keeps the keyboard, so its keys stay CarPlay's: a click on
@@ -54,6 +54,8 @@ class EmbeddedUi(
     private val log: (String) -> Unit,
     private val onEmbedded: (Boolean) -> Unit,
     private val takesKeyboard: Boolean = true,
+    /** The address the browser opens in the window's stead: [url] without the window's own key, so it is a tab. */
+    private val browserUrl: String = url,
 ) : WindowChild {
     private var web: WebViewBackend? = null
     private var parent = 0L
@@ -79,8 +81,8 @@ class EmbeddedUi(
                 log("the page cannot show in the window ($reason)")
                 return
             }
-            log("the UI cannot show in the window ($reason); opening it in the default browser: $url")
-            runCatching { browser(url) }.onFailure { log("could not open the browser: $it") }
+            log("the UI cannot show in the window ($reason); opening it in the default browser: $browserUrl")
+            runCatching { browser(browserUrl) }.onFailure { log("could not open the browser: $it") }
             return
         }
         onEmbedded(true)

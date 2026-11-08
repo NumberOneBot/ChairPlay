@@ -108,11 +108,11 @@ internal class SettingsLock(
 
     /** Applies [mutation] and the rules under the lock, then tells the pages, outside it, if anything they show changed. */
     private fun <T> change(mutation: () -> T): T {
-        val shows = windowShows()
         val (result, different) = synchronized(this) {
             val before = holder to handOverKey
             val result = mutation()
-            evaluate(shows, now())
+            // Read under the lock: a read taken before it could undo a newer update's for a tick.
+            evaluate(windowShows(), now())
             result to (before != (holder to handOverKey))
         }
         if (different) changed()

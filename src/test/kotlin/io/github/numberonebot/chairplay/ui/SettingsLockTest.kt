@@ -237,6 +237,28 @@ class SettingsLockTest {
         assertFalse("a reader waited for the lock", other!!.isAlive)
     }
 
+    // The window's state is read under the lock: an update that read it before a newer one ran must not undo it.
+    @Test(timeout = 10_000)
+    fun `an update that read the window's state early does not undo a newer one`() {
+        var shown = false
+        var other: Thread? = null
+        lateinit var probe: SettingsLock
+        probe = SettingsLock({
+            val read = shown
+            if (other == null) {
+                shown = true
+                val thread = Thread { probe.update() }
+                other = thread
+                thread.start()
+                thread.join(500)
+            }
+            read
+        }, {}, { now })
+        probe.update()
+        other!!.join()
+        assertEquals(WINDOW, probe.view(WINDOW)["holder"])
+    }
+
     @Test
     fun `page ids are letters, digits and hyphens`() {
         assertTrue(SettingsLock.validPage("3f2a9c4e-7b1d-4e8a-9f60-2c5d8e1b7a43"))

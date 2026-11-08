@@ -36,7 +36,10 @@ interface UiSessions {
 
     fun sessionEnded()
 
-    /** The settings screen covers the phone's; false when the page is not in the window but in a browser. */
+    /**
+     * The settings screen covers the phone's; false when the page is not in the window but in a browser, or a browser
+     * tab holds the settings: the window then gives the screen back to Windows.
+     */
     fun carButton(): Boolean
 }
 
@@ -157,11 +160,19 @@ class ChairPlayUi(
 
     private val api = AppUiApi(controller, { updates.check() }) { driving }
 
+    // After controller (it reads it) and before server (which takes it).
+    private val lock = SettingsLock(
+        windowShows = { controller.embedded && model.state.let { it.screen != Screen.CARPLAY && !it.waiting } },
+        changed = controller::pagesChanged,
+    )
+
     private val server = UiServer(
         api,
         pageAssets(),
         System.getenv("CHAIRPLAY_UI_PORT")?.toIntOrNull() ?: config.uiServer.port,
         network = config.uiServer.network,
+        lock = lock,
+        openBrowser = WebView2::openInBrowser,
         log = log,
     )
 
@@ -180,16 +191,19 @@ class ChairPlayUi(
         // WebView2's profile (its cache) stays with the app's other data, so a copied or moved folder takes it along.
         val userData = dir.resolve("webview2")
         val debug = System.getenv("CHAIRPLAY_UI_DEBUG") == "1"
+        // The window's page names itself by ?window; the browser in its stead gets the plain address, as a tab.
         view = EmbeddedUi(
-            server.url,
+            "${server.url}?window",
             showsUi = { model.state.showsUi },
             backend = { WebView2(userData, debug) },
             openBrowser = WebView2::openInBrowser,
             log = log,
             onEmbedded = { embedded ->
                 controller.embedded = embedded
+                lock.update()
                 if (embedded) log("UI in the main window (WebView2)")
             },
+            browserUrl = server.url,
         )
         controlsView = controls?.let {
             EmbeddedUi(
@@ -203,6 +217,9 @@ class ChairPlayUi(
             )
         }
         model.addListener { wake() }
+        model.addListener { lock.update() }
+        // The lock holds nothing until its first update.
+        lock.update()
     }
 
     /** The page covers the window, so keys and the wheel are its, not CarPlay's. */
@@ -219,11 +236,11 @@ class ChairPlayUi(
 
     /**
      * The car button on the CarPlay home screen: the settings screen covers CarPlay. Returns false when the page is
-     * not in the window, where the browser shows the settings instead.
+     * not in the window, or a browser tab holds the settings, where the browser shows them instead.
      */
     override fun carButton(): Boolean {
         model.carButton()
-        return controller.embedded
+        return lock.carButtonShowsSettings(controller.embedded)
     }
 
     override fun close() {
