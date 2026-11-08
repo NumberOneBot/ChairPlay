@@ -55,6 +55,7 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.8 re
 - **Audio:** music, calls, and Siri through your chosen speakers and microphone, with independent volume and buffered music playback.
 - **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
 - **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation. See the [GPS guide](docs/GPS.md).
+- **Integrations** (experimental): another app on the PC, such as a game mod, can show the CarPlay picture from a shared texture and drive the GPS car with its own position and speed. See [Integrations](docs/INTEGRATIONS.md).
 
 Settings are in the app and save as you change them. Tested on Windows 11 with an iPhone 15 on iOS 18.6 and iOS 27.2.
 
