@@ -9,11 +9,13 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * The UI's bridge to the app: an HTTP server on 127.0.0.1 that serves the built page from [assets] and the JSON API
- * of [api], on the port asked for or, when it is taken or 0, a free one ([port]), at a plain address ([url]) with no
- * secret in it. [HostCheck] stands in for one: a request naming another host than this PC's loopback names with this
- * port is refused, so a web page cannot reach the API through a name of its own that resolves to 127.0.0.1. A POST
- * must be JSON, which another site's page cannot send without a CORS preflight, and this server answers none.
+ * The UI's bridge to the app: an HTTP server on 127.0.0.1, or with [network] (ui.network) on every address ([bind]),
+ * that serves the built page from [assets] and the JSON API of [api], on the port asked for or, when it is taken or 0,
+ * a free one ([port]), at a plain address ([url]) with no secret in it. [HostCheck] stands in for one: a request
+ * naming another host than this PC's loopback names, or with [network] its addresses on the network ([lan]), with this
+ * port is refused, so a web page cannot reach the API through a name of its own that resolves to this PC. With
+ * [network], any client that reaches the port is served. A POST must be JSON, which another site's page cannot send
+ * without a CORS preflight, and this server answers none.
  *
  * API: GET state and settings, POST settings ({"changes": {key: value}}), connect, reconnect, screen
  * ({"screen": "start" | "settings" | "carplay"}), window ({"name": "altscreen" | "controls", "visible": bool}), control
@@ -25,11 +27,14 @@ class UiServer(
     private val api: UiApi,
     private val assets: (String) -> ByteArray?,
     private val requestedPort: Int = 0,
+    private val network: Boolean = false,
+    bind: InetAddress = uiBindAddress(network),
+    private val lan: () -> List<InetAddress> = LanAddresses()::current,
     private val log: (String) -> Unit = {},
 ) : Closeable {
     private val executor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "ui-http").apply { isDaemon = true } }
-    private val server: HttpServer = openHttpServer(requestedPort, InetAddress.getLoopbackAddress(), log)
-    private val hostCheck = HostCheck(server.address.port)
+    private val server: HttpServer = openHttpServer(requestedPort, bind, log)
+    private val hostCheck = HostCheck(server.address.port, if (network) lan else ({ emptyList() }))
     @Volatile private var closing = false
 
     /** The port in use: [configuredPort], or a free one when that was taken. */
@@ -116,9 +121,14 @@ class UiServer(
         json(exchange, status, answer)
     }
 
-    /** The app's state, and which port this server took (the Connection page says when it is not ui.port's). */
-    private fun state(): Map<String, Any?> =
-        api.state() + ("uiServer" to mapOf("port" to port, "configuredPort" to configuredPort))
+    /**
+     * The app's state, which port this server took (the Connection page says when it is not ui.port's), and with
+     * ui.network on, the addresses another device opens it at.
+     */
+    private fun state(): Map<String, Any?> {
+        val urls = if (network) lan().map { "http://${it.hostAddress}:$port/" } else emptyList()
+        return api.state() + ("uiServer" to mapOf("port" to port, "configuredPort" to configuredPort, "network" to network, "urls" to urls))
+    }
 
     /** Server-sent events: the state now, then again on every change, with a comment now and then to keep it open. */
     private fun events(exchange: HttpExchange) {

@@ -73,11 +73,14 @@ class AirPlayListener(
  * Windows Firewall drops unsolicited inbound connections, so the iPhone would see the receiver but
  * never reach it. The control port is the listener's, and AirPlayPortSelector falls back to the ten
  * ports above it when 7000 is taken; the event, data and media streams bind ephemeral ports, which
- * Windows takes from its dynamic range 49152-65535. JmDNS answers the iPhone's mDNS queries on UDP 5353.
+ * Windows takes from its dynamic range 49152-65535. JmDNS answers the iPhone's mDNS queries on UDP 5353. With
+ * [uiPort] (ui.network on), a fourth line opens the settings' port; a free port taken for a run instead of it lands in
+ * 49152-65535, open already.
  */
-fun firewallHint(port: Int, programPath: String): String {
+fun firewallHint(port: Int, programPath: String, uiPort: Int? = null): String {
     val rule = "netsh advfirewall firewall add rule name=\"$FIREWALL_RULE\" dir=in action=allow program=\"$programPath\""
     return "$rule protocol=TCP localport=$port-${port + 10},49152-65535\n" +
         "$rule protocol=UDP localport=49152-65535\n" +
-        "$rule protocol=UDP localport=5353"
+        "$rule protocol=UDP localport=5353" +
+        (uiPort?.let { "\n$rule protocol=TCP localport=$it" } ?: "")
 }

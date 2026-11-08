@@ -46,6 +46,7 @@ object EditableSettings {
         "updates.check.on.start" to switch(Applies.NOW),
         "ui.autoshow" to switch(Applies.NOW),
         "ui.controls.keys" to switch(Applies.NOW),
+        "ui.network" to switch(Applies.RESTART),
         "keyboard.text.input" to switch(Applies.RECONNECT),
         "device.name" to Setting(Applies.RESTART, check = ::checkDeviceName),
         "iphone.address" to Setting(Applies.RESTART, check = ::checkAddress),

@@ -52,6 +52,8 @@ internal object WindowsFirewallApi {
                     profiles = rule.int("Profiles"),
                     program = stored?.let(Kernel32Util::expandEnvironmentStrings),
                     storedProgram = stored,
+                    protocol = rule.int("Protocol"),
+                    localPorts = rule.string("LocalPorts") ?: "*",
                 )
             }
             return found

@@ -11,16 +11,18 @@ import io.github.numberonebot.chairplay.ui.FirewallStatus
 /**
  * Says what keeps the iPhone out, if anything, in [log]: as warnings, which a release's log level keeps, with the commands
  * that add the rule. A block rule wins over any allow rule, so one left by Windows' first-run prompt is reported even when
- * ours exists. The start screen shows the same. [read] reads the rules for [program].
+ * ours exists. The start screen shows the same. [read] reads the rules for [program]; [uiPort], ui.network's port, is one
+ * more the rule must open.
  */
 internal fun checkFirewall(
     port: Int,
     program: String = ProcessHandle.current().info().command().orElse("java.exe"),
-    read: (String) -> FirewallState? = ::readFirewall,
+    uiPort: Int? = null,
+    read: (String) -> FirewallState? = { readFirewall(it, uiPort) },
     log: AppLog = appLog,
 ): FirewallStatus {
     fun warn(message: String) = log.log(LogLevel.WARNING, message)
-    val hint = "from an administrator prompt:\n" + firewallHint(port, program)
+    val hint = "from an administrator prompt:\n" + firewallHint(port, program, uiPort)
     val state = read(program)
     if (state == null) {
         warn("could not read the Windows Firewall rules; if the iPhone cannot connect, add these $hint")
@@ -43,8 +45,9 @@ internal fun checkFirewall(
 }
 
 /** The firewall read again for the live setup checks, without the start's log lines. */
-internal fun readFirewallStatus(): FirewallStatus =
-    readFirewall(ProcessHandle.current().info().command().orElse("java.exe"))?.let(::firewallStatus) ?: FirewallStatus.UNKNOWN
+internal fun readFirewallStatus(uiPort: Int? = null): FirewallStatus =
+    readFirewall(ProcessHandle.current().info().command().orElse("java.exe"), uiPort)?.let(::firewallStatus)
+        ?: FirewallStatus.UNKNOWN
 
 private fun firewallStatus(state: FirewallState): FirewallStatus = when {
     state.off -> FirewallStatus.OFF

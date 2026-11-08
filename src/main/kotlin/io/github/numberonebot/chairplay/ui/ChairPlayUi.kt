@@ -105,7 +105,11 @@ class ChairPlayUi(
         SetupInfo(
             mfiDirectory = config.mfiDirectory().toPath(),
             firewall = FirewallStatus.UNKNOWN,
-            firewallCommands = firewallHint(CarPlayConfig.PORT,ProcessHandle.current().info().command().orElse("java.exe")),
+            firewallCommands = firewallHint(
+                CarPlayConfig.PORT,
+                ProcessHandle.current().info().command().orElse("java.exe"),
+                config.uiServer.firewallPort,
+            ),
             settingsFile = dir.resolve(DesktopConfig.SETTINGS_FILE),
             displayWidth = config.displayWidth,
             displayHeight = config.displayHeight,
@@ -153,7 +157,13 @@ class ChairPlayUi(
 
     private val api = AppUiApi(controller, { updates.check() }) { driving }
 
-    private val server = UiServer(api, pageAssets(), System.getenv("CHAIRPLAY_UI_PORT")?.toIntOrNull() ?: config.uiServer.port, log = log)
+    private val server = UiServer(
+        api,
+        pageAssets(),
+        System.getenv("CHAIRPLAY_UI_PORT")?.toIntOrNull() ?: config.uiServer.port,
+        network = config.uiServer.network,
+        log = log,
+    )
 
     /** The page in the main window; give it to the window before it opens. */
     val view: EmbeddedUi

@@ -18,10 +18,44 @@ class FirewallTest {
         profiles: Int = ALL_PROFILES,
         enabled: Boolean = true,
         inbound: Boolean = true,
-    ) = FirewallRule(name, enabled, inbound, allow, profiles, app)
+        protocol: Int = ANY_PROTOCOL,
+        ports: String = "*",
+    ) = FirewallRule(name, enabled, inbound, allow, profiles, app, protocol = protocol, localPorts = ports)
 
-    private fun state(vararg rules: FirewallRule, enabled: Int = everyProfile, connected: Int = PRIVATE) =
-        firewallState(rules.toList(), program, enabled, connected)
+    private fun state(vararg rules: FirewallRule, enabled: Int = everyProfile, connected: Int = PRIVATE, uiPort: Int? = null) =
+        firewallState(rules.toList(), program, enabled, connected, uiPort)
+
+    @Test
+    fun `a rule's ports cover a port by number, range, or any`() {
+        for (ports in listOf("7529", "7000-7010,7529", "7500-7600", "*", " 7000-7010, 7529 "))
+            assertTrue(ports, portsCover(ports, 7529))
+        for (ports in listOf("7000-7010,49152-65535", "RPC", "", "75290", "7530-7600"))
+            assertFalse(ports, portsCover(ports, 7529))
+    }
+
+    // With ui.network on, a rule added before the switch must not hide the UI's port missing from it.
+    @Test
+    fun `with the network on, our rule counts once one of ours opens the UI's port over TCP`() {
+        val carplay = rule(FIREWALL_RULE, allow = true, protocol = TCP, ports = "7000-7010,49152-65535")
+
+        assertFalse(state(carplay, uiPort = 7529).allowRule)
+        assertTrue(state(carplay).allowRule)
+        assertTrue(state(carplay, rule(FIREWALL_RULE, allow = true, protocol = TCP, ports = "7529"), uiPort = 7529).allowRule)
+        assertFalse(state(carplay, rule(FIREWALL_RULE, allow = true, protocol = 17, ports = "7529"), uiPort = 7529).allowRule)
+        assertTrue(state(carplay, rule(FIREWALL_RULE, allow = true), uiPort = 7529).allowRule)
+        assertFalse(state(carplay, rule("Someone else's", allow = true, protocol = TCP, ports = "7529"), uiPort = 7529).allowRule)
+        assertFalse(state(carplay, rule(FIREWALL_RULE, allow = true, protocol = TCP, ports = "7529", enabled = false), uiPort = 7529).allowRule)
+    }
+
+    @Test
+    fun `the hint opens the UI's port while the network is on`() {
+        val lines = firewallHint(7000, program, uiPort = 7529).lines()
+
+        assertEquals(4, lines.size)
+        assertTrue(lines.last(), lines.last().endsWith("protocol=TCP localport=7529"))
+        assertEquals(3, firewallHint(7000, program).lines().size)
+        assertEquals(4, netshScript(firewallHint(7000, program, uiPort = 7529)).lines().size)
+    }
 
     @Test
     fun `our rule and a block rule from the first-run prompt`() {

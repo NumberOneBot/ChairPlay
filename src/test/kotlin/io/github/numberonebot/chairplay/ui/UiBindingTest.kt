@@ -22,6 +22,12 @@ class UiBindingTest {
         }
     }
 
+    // Checked without binding: a socket on every address could bring up Windows Firewall's prompt.
+    @Test fun `the server listens on this PC only, or on every address with the network on`() {
+        assertTrue(uiBindAddress(network = false).isLoopbackAddress)
+        assertTrue(uiBindAddress(network = true).isAnyLocalAddress)
+    }
+
     @Test fun `a busy port gives way to a free one, and the log says so`() {
         ServerSocket(0, 50, InetAddress.getLoopbackAddress()).use { busy ->
             val server = openHttpServer(busy.localPort, InetAddress.getLoopbackAddress()) { logged += it }

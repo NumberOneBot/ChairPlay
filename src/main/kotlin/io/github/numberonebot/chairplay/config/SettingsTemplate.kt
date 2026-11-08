@@ -43,6 +43,11 @@ internal val SETTINGS_TEMPLATE = listOf(
             "When another program has it, the app takes a free port for that run and says so on the Connection page.",
         "ui.port" to "7529",
     ),
+    SettingBlock(
+        "'true' lets phones and other PCs on the home network open the settings at this PC's address; 'false' keeps\n" +
+            "them to this PC. Applies at the next start.",
+        "ui.network" to "false",
+    ),
     SettingBlock("The car's name on the iPhone (CarPlay settings, the network); blank is 'ChairPlay'.", "device.name" to ""),
     SettingBlock(
         "The car button on the CarPlay home screen: its label, and a square image in this folder\n" +

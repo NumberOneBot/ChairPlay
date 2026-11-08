@@ -124,7 +124,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // Looks at the Windows theme for CarPlay's look, and at the GPS car for its page.
     val themeWatch = Executors.newSingleThreadScheduledExecutor { Thread(it, "theme-watch").apply { isDaemon = true } }
     val theme = CarPlayTheme(config.theme, themeWatch, touchSender, active::get)
-    val ui = ChairPlayUi(dir, config, { checkFirewall(CarPlayConfig.PORT) }, object : UiActions {
+    val ui = ChairPlayUi(dir, config, { checkFirewall(CarPlayConfig.PORT, uiPort = config.uiServer.firewallPort) }, object : UiActions {
         override fun connect() = Thread({
             lockReady.await()
             title.connecting()
@@ -144,7 +144,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         bindings.set(saved)
         window.repaint()
         log(saved.summary())
-    }, readFirewall = ::readFirewallStatus, altscreenWindow = altscreen.asUiMainWindow { altView.on },
+    }, readFirewall = { readFirewallStatus(config.uiServer.firewallPort) }, altscreenWindow = altscreen.asUiMainWindow { altView.on },
         altscreenFrame = UiSafeAreaFrame { top, bottom, left, right, width, height ->
             altView.bring()
             altscreen.showFrame(top, bottom, left, right, of = Size(width, height))

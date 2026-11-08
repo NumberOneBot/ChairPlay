@@ -5,6 +5,10 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketException
 
+/** Where the UI's server listens: 127.0.0.1, or with ui.network on, every address (0.0.0.0). */
+internal fun uiBindAddress(network: Boolean): InetAddress =
+    if (network) InetAddress.getByName("0.0.0.0") else InetAddress.getLoopbackAddress()
+
 /**
  * The UI's HTTP server on [address] and [port] (ui.port), not started. When another program has the port, or Windows
  * keeps it for itself (an excluded port range refuses the bind without anyone listening), it takes a free one for this

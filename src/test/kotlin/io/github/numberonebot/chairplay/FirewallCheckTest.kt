@@ -18,10 +18,10 @@ class FirewallCheckTest {
     private val program = "C:\\Apps\\ChairPlay\\ChairPlay.exe"
 
     // A release logs at warning: what keeps the iPhone out must still reach its log.
-    private fun loggedAtWarning(state: FirewallState?): Pair<FirewallStatus, String> {
+    private fun loggedAtWarning(state: FirewallState?, uiPort: Int? = null): Pair<FirewallStatus, String> {
         val log = AppLog(clock = { LocalDateTime.of(2026, 10, 25, 12, 0, 0) }).apply { level = LogLevel.WARNING }
         log.open(dir)
-        val status = checkFirewall(7000, program, { state }, log)
+        val status = checkFirewall(7000, program, uiPort = uiPort, read = { state }, log = log)
         log.close()
         return status to dir.listDirectoryEntries("chairplay-*.log").single().readText()
     }
@@ -48,5 +48,12 @@ class FirewallCheckTest {
 
         assertEquals(FirewallStatus.UNKNOWN, status)
         assertTrue(text, "netsh advfirewall firewall add rule" in text)
+    }
+
+    @Test
+    fun `with the network on, the logged commands open the UI's port`() {
+        val (_, text) = loggedAtWarning(FirewallState(allowRule = false, blocking = emptyList()), uiPort = 7529)
+
+        assertTrue(text, "protocol=TCP localport=7529" in text)
     }
 }

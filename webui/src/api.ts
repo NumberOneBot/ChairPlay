@@ -126,8 +126,11 @@ export interface AppState {
   gps: GpsState | null
   /** The page is inside ChairPlay's window rather than a browser. */
   embedded: boolean
-  /** The port the page is served on, and ui.port's, which another program had at start when the two differ. */
-  uiServer: { port: number; configuredPort: number }
+  /**
+   * The port the page is served on, and ui.port's, which another program had at start when the two differ; whether
+   * this run listens on the network (ui.network at start), and then the addresses another device opens it at.
+   */
+  uiServer: { port: number; configuredPort: number; network: boolean; urls: string[] }
   wifi: { ssid: string; security: string; passphraseSet: boolean }
   reconnectPending: string[]
   restartPending: string[]
