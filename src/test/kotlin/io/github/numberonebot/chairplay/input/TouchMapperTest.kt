@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.input
 
-import com.shilapi.xcertplay.airplay.AirPlayContact
+import io.github.numberonebot.chairplay.phone.TouchPoint
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -32,7 +32,7 @@ class TouchMapperTest {
     @Test
     fun `release keeps down false and id 0`() {
         val contact = mapTouch(PointerEvent(800.0, 360.0, false), bars, video)!!
-        assertEquals(AirPlayContact(0, 0.5, 0.5, false), contact)
+        assertEquals(TouchPoint(0, 0.5, 0.5, false), contact)
     }
 
     @Test
@@ -72,9 +72,9 @@ class TouchMapperTest {
     fun `press move release sends a drag and ignores hover`() {
         val tracker = TouchTracker()
         assertNull(tracker.handle(PointerEvent(800.0, 360.0, false), bars, video))
-        assertEquals(AirPlayContact(0, 0.5, 0.5, true), tracker.handle(PointerEvent(800.0, 360.0, true), bars, video))
-        assertEquals(AirPlayContact(0, 0.75, 0.5, true), tracker.handle(PointerEvent(1120.0, 360.0, true), bars, video))
-        assertEquals(AirPlayContact(0, 0.75, 0.5, false), tracker.handle(PointerEvent(1120.0, 360.0, false), bars, video))
+        assertEquals(TouchPoint(0, 0.5, 0.5, true), tracker.handle(PointerEvent(800.0, 360.0, true), bars, video))
+        assertEquals(TouchPoint(0, 0.75, 0.5, true), tracker.handle(PointerEvent(1120.0, 360.0, true), bars, video))
+        assertEquals(TouchPoint(0, 0.75, 0.5, false), tracker.handle(PointerEvent(1120.0, 360.0, false), bars, video))
         assertNull(tracker.handle(PointerEvent(900.0, 360.0, false), bars, video))
     }
 
@@ -90,8 +90,8 @@ class TouchMapperTest {
     fun `drag leaving the video clamps to the edge and release stays there`() {
         val tracker = TouchTracker()
         tracker.handle(PointerEvent(800.0, 360.0, true), bars, video)
-        assertEquals(AirPlayContact(0, 1.0, 0.5, true), tracker.handle(PointerEvent(1590.0, 360.0, true), bars, video))
-        assertEquals(AirPlayContact(0, 1.0, 0.5, false), tracker.handle(PointerEvent(1590.0, 360.0, false), bars, video))
+        assertEquals(TouchPoint(0, 1.0, 0.5, true), tracker.handle(PointerEvent(1590.0, 360.0, true), bars, video))
+        assertEquals(TouchPoint(0, 1.0, 0.5, false), tracker.handle(PointerEvent(1590.0, 360.0, false), bars, video))
     }
 
     @Test
@@ -106,8 +106,8 @@ class TouchMapperTest {
         tracker.handle(PointerEvent(1000.0, 360.0, true), bars, video)
         tracker.reset()
         assertNull(tracker.handle(PointerEvent(1000.0, 360.0, false), bars, video))
-        assertEquals(AirPlayContact(0, 0.5, 0.5, true), tracker.handle(PointerEvent(800.0, 360.0, true), bars, video))
-        assertEquals(AirPlayContact(0, 0.5, 0.5, false), tracker.handle(PointerEvent(800.0, 360.0, false), bars, video))
+        assertEquals(TouchPoint(0, 0.5, 0.5, true), tracker.handle(PointerEvent(800.0, 360.0, true), bars, video))
+        assertEquals(TouchPoint(0, 0.5, 0.5, false), tracker.handle(PointerEvent(800.0, 360.0, false), bars, video))
     }
 
     @Test
@@ -116,7 +116,7 @@ class TouchMapperTest {
         assertNull(tracker.handle(PointerEvent(100.0, 360.0, true), bars, video))
         tracker.reset()
         assertNull(tracker.handle(PointerEvent(100.0, 360.0, false), bars, video))
-        assertEquals(AirPlayContact(0, 0.5, 0.5, true), tracker.handle(PointerEvent(800.0, 360.0, true), bars, video))
+        assertEquals(TouchPoint(0, 0.5, 0.5, true), tracker.handle(PointerEvent(800.0, 360.0, true), bars, video))
     }
 
     @Test
@@ -132,21 +132,21 @@ class TouchMapperTest {
     @Test
     fun `queue keeps press, the latest move and release in order`() {
         val queue = TouchQueue()
-        queue.offer(AirPlayContact(0, 0.1, 0.1, true))
-        for (i in 1..1000) queue.offer(AirPlayContact(0, 0.1 + i / 10000.0, 0.1, true))
-        queue.offer(AirPlayContact(0, 0.2, 0.1, false))
-        assertEquals(AirPlayContact(0, 0.1, 0.1, true), queue.poll())
+        queue.offer(TouchPoint(0, 0.1, 0.1, true))
+        for (i in 1..1000) queue.offer(TouchPoint(0, 0.1 + i / 10000.0, 0.1, true))
+        queue.offer(TouchPoint(0, 0.2, 0.1, false))
+        assertEquals(TouchPoint(0, 0.1, 0.1, true), queue.poll())
         assertEquals(0.2, queue.poll()!!.x, 1e-9)
-        assertEquals(AirPlayContact(0, 0.2, 0.1, false), queue.poll())
+        assertEquals(TouchPoint(0, 0.2, 0.1, false), queue.poll())
         assertNull(queue.poll())
     }
 
     @Test
     fun `queue never merges a press into a previous release or move`() {
         val queue = TouchQueue()
-        queue.offer(AirPlayContact(0, 0.1, 0.1, true))
-        queue.offer(AirPlayContact(0, 0.1, 0.1, false))
-        queue.offer(AirPlayContact(0, 0.3, 0.3, true))
+        queue.offer(TouchPoint(0, 0.1, 0.1, true))
+        queue.offer(TouchPoint(0, 0.1, 0.1, false))
+        queue.offer(TouchPoint(0, 0.3, 0.3, true))
         assertEquals(listOf(true, false, true), generateSequence { queue.poll() }.map { it.down }.toList())
     }
 }

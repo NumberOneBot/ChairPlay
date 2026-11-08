@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay
 
 import com.shilapi.xcertplay.airplay.AirPlaySession
+import io.github.numberonebot.chairplay.carplay.CarPlayControl
 import io.github.numberonebot.chairplay.config.AltscreenContent
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.input.Control
@@ -13,6 +14,7 @@ import io.github.numberonebot.chairplay.input.PageKeys
 import io.github.numberonebot.chairplay.input.CarPlayTextInput
 import io.github.numberonebot.chairplay.media.Volume
 import io.github.numberonebot.chairplay.media.VideoWindow
+import io.github.numberonebot.chairplay.phone.PhoneControl
 import io.github.numberonebot.chairplay.ui.UiControls
 import org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_ALT
 import org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_ALT
@@ -20,7 +22,6 @@ import org.lwjgl.glfw.GLFW.GLFW_RELEASE
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.math.abs
 
 /**
  * What the car's controls do: the keys and the wheel of the app's windows, the controls window's buttons and a page's
@@ -45,6 +46,7 @@ internal class AppControls(
     val textInput = CarPlayTextInput(active, touchSender, ::log)
     private val knobOwners = KnobOwners()
     private var knobSession: AirPlaySession? = null
+    private var phone: PhoneControl? = null
     val global = AppGlobalKeys(bindings::get, active, { key, control, session ->
         send(control, owner = "global:$key", expectedSession = session as AirPlaySession?)
     }, driving.control::key, changed)
@@ -119,15 +121,14 @@ internal class AppControls(
         val session = expectedSession ?: return
         touchSender.execute {
             if (active() !== session) return@execute
-            if (knobSession !== session) { knobOwners.clear(); knobSession = session }
+            if (knobSession !== session) { knobOwners.clear(); knobSession = session; phone = CarPlayControl(session) }
+            val target: PhoneControl = phone ?: return@execute
             when (control) {
-                is Control.Knob -> knobOwners.apply(owner, control).forEach { session.sendKnob(it.state, it.momentary) }
-                is Control.Media -> session.sendMedia(control.index)
-                is Control.Telephony -> session.sendTelephony(control.index)
-                Control.Siri -> session.invokeSiri()
-                is Control.MapZoom -> repeat(abs(control.steps)) {
-                    session.changeMapZoomLevel(zoomIn = control.steps > 0)
-                }
+                is Control.Knob -> knobOwners.apply(owner, control).forEach { target.knob(it.input, it.momentary) }
+                is Control.Media -> target.media(control.key)
+                is Control.Telephony -> target.call(control.key)
+                Control.Siri -> target.voiceAssistant()
+                is Control.MapZoom -> target.mapZoom(control.steps)
                 Control.NextAltscreenContent, Control.NextAltscreenCards, is Control.ShowAltscreenContent ->
                     altView.step(control, session)
                 Control.Fullscreen, Control.Screenshot, Control.Reconnect, is Control.VolumeStep, Control.MuteToggle, Control.DriveMode, Control.GaugeSize -> Unit

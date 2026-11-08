@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.input
 
-import com.shilapi.xcertplay.airplay.AirPlayKnobState
+import io.github.numberonebot.chairplay.phone.KnobInput
 
 /**
  * The on-screen controls window's buttons as a car's controls: pressing and releasing a button makes the Controls a
@@ -9,8 +9,8 @@ import com.shilapi.xcertplay.airplay.AirPlayKnobState
  */
 class ControlPad {
     fun press(action: ControlAction): Control? = when (action) {
-        ControlAction.KNOB_NEXT -> Control.Knob(AirPlayKnobState(wheel = 1), true)
-        ControlAction.KNOB_PREVIOUS -> Control.Knob(AirPlayKnobState(wheel = -1), true)
+        ControlAction.KNOB_NEXT -> Control.Knob(KnobInput(wheel = 1), true)
+        ControlAction.KNOB_PREVIOUS -> Control.Knob(KnobInput(wheel = -1), true)
         ControlAction.ALTSCREEN_ZOOM_IN -> Control.MapZoom(1)
         ControlAction.ALTSCREEN_ZOOM_OUT -> Control.MapZoom(-1)
         ControlAction.VOLUME_UP -> Control.VolumeStep(1)
@@ -19,5 +19,5 @@ class ControlPad {
     }
 
     fun release(action: ControlAction): Control? =
-        if (knobHold(action) != null) Control.Knob(AirPlayKnobState(), false) else null
+        if (knobHold(action) != null) Control.Knob(KnobInput(), false) else null
 }

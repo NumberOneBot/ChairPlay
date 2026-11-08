@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.input
 
-import com.shilapi.xcertplay.airplay.AirPlayKnobState
+import io.github.numberonebot.chairplay.phone.KnobInput
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -100,11 +100,11 @@ class ControlsConfigTest {
     @Test
     fun `the wheel can be inverted, slowed or turned off`() {
         val inverted = KeyControls(ControlsConfig.load(dirWith("wheel.invert = true")))
-        assertEquals(Control.Knob(AirPlayKnobState(wheel = 1), true), inverted.scroll(1.0))
+        assertEquals(Control.Knob(KnobInput(wheel = 1), true), inverted.scroll(1.0))
 
         val slow = KeyControls(ControlsConfig.load(dirWith("wheel.notches.per.step = 2")))
         assertNull(slow.scroll(-1.0))
-        assertEquals(Control.Knob(AirPlayKnobState(wheel = 1), true), slow.scroll(-1.0))
+        assertEquals(Control.Knob(KnobInput(wheel = 1), true), slow.scroll(-1.0))
 
         val off = KeyControls(ControlsConfig.load(dirWith("wheel.action = none")))
         assertNull(off.scroll(-3.0))
@@ -115,8 +115,8 @@ class ControlsConfigTest {
     fun `a key released after its modifier still releases`() {
         val controls = KeyControls(ControlsConfig.load(dirWith("key.home = Shift+H")))
 
-        assertEquals(Control.Knob(AirPlayKnobState(home = true), false), controls.key(GLFW_KEY_H, GLFW_PRESS, GLFW_MOD_SHIFT))
-        assertEquals(Control.Knob(AirPlayKnobState(), false), controls.key(GLFW_KEY_H, GLFW_RELEASE, 0))
+        assertEquals(Control.Knob(KnobInput(home = true), false), controls.key(GLFW_KEY_H, GLFW_PRESS, GLFW_MOD_SHIFT))
+        assertEquals(Control.Knob(KnobInput(), false), controls.key(GLFW_KEY_H, GLFW_RELEASE, 0))
         assertNull(controls.key(GLFW_KEY_H, GLFW_PRESS, 0))
     }
 

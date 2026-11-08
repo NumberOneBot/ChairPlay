@@ -28,12 +28,12 @@ class AppGlobalKeysTest {
         app.pass()
         key(GLFW_KEY_ENTER, GLFW_PRESS)
         app.pass()
-        assertTrue((sent.single() as Control.Knob).state.select)
+        assertTrue((sent.single() as Control.Knob).input.select)
         key(GLFW_KEY_ENTER, GLFW_REPEAT, GLFW_MOD_SHIFT, false)
         key(GLFW_KEY_ENTER, GLFW_RELEASE, 0, false)
         app.pass()
         assertEquals(2, sent.size)
-        assertFalse((sent.last() as Control.Knob).state.select)
+        assertFalse((sent.last() as Control.Knob).input.select)
     }
 
     @Test fun `switch off releases a hold and unregisters without another action`() {
@@ -44,7 +44,7 @@ class AppGlobalKeysTest {
         assertNull(app.pass())
         assertEquals(1, starts)
         assertEquals(1, closes)
-        assertFalse((sent.last() as Control.Knob).state.select)
+        assertFalse((sent.last() as Control.Knob).input.select)
         key(GLFW_KEY_F8, GLFW_PRESS)
         app.pass()
         assertEquals(2, sent.size)
@@ -121,7 +121,7 @@ class AppGlobalKeysTest {
         app.pass()
         repeat(2000) { key(GLFW_KEY_ENTER, GLFW_REPEAT) }
         app.pass()
-        assertFalse((sent.last() as Control.Knob).state.select)
+        assertFalse((sent.last() as Control.Knob).input.select)
         assertEquals(1, closes)
         assertNotNull(app.state()["error"])
         assertEquals(false, app.state()["enabled"])

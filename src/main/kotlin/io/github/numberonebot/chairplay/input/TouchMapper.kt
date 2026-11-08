@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.input
 
-import com.shilapi.xcertplay.airplay.AirPlayContact
+import io.github.numberonebot.chairplay.phone.TouchPoint
 
 data class Size(val width: Int, val height: Int)
 
@@ -18,9 +18,9 @@ fun PointerEvent.toFramebuffer(window: Size, framebuffer: Size): PointerEvent =
 /**
  * Maps a pixel position in [window] to a 0..1 point of the [video] picture, which is letterboxed the way
  * VideoWindow draws it (same integer rounding). Null on the bars, or clamped to the nearest edge when [clamp].
- * AirPlaySession.sendTouch scales to the screen size itself, so no pixel size is applied here.
+ * The phone scales to the screen size itself, so no pixel size is applied here.
  */
-fun mapTouch(event: PointerEvent, window: Size, video: Size, clamp: Boolean = false): AirPlayContact? {
+fun mapTouch(event: PointerEvent, window: Size, video: Size, clamp: Boolean = false): TouchPoint? {
     if (video.width == 0 || video.height == 0 || window.width == 0 || window.height == 0) return null
     val scale = minOf(window.width.toDouble() / video.width, window.height.toDouble() / video.height)
     val width = (video.width * scale).toInt()
@@ -29,7 +29,7 @@ fun mapTouch(event: PointerEvent, window: Size, video: Size, clamp: Boolean = fa
     val x = (event.x - (window.width - width) / 2) / width
     val y = (event.y - (window.height - height) / 2) / height
     if (!clamp && (x !in 0.0..1.0 || y !in 0.0..1.0)) return null
-    return AirPlayContact(0, x.coerceIn(0.0, 1.0), y.coerceIn(0.0, 1.0), event.down)
+    return TouchPoint(0, x.coerceIn(0.0, 1.0), y.coerceIn(0.0, 1.0), event.down)
 }
 
 /**
@@ -41,12 +41,12 @@ fun mapTouch(event: PointerEvent, window: Size, video: Size, clamp: Boolean = fa
  * session's.
  */
 class TouchTracker {
-    private var last: AirPlayContact? = null
+    private var last: TouchPoint? = null
     private var ignoring = false
     private var buttonDown = false
 
     @Synchronized
-    fun handle(event: PointerEvent, window: Size, video: Size): AirPlayContact? {
+    fun handle(event: PointerEvent, window: Size, video: Size): TouchPoint? {
         buttonDown = event.down
         val held = last
         if (!event.down) {

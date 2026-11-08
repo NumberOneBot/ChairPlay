@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.input
 
-import com.shilapi.xcertplay.airplay.AirPlayContact
+import io.github.numberonebot.chairplay.phone.TouchPoint
 
 /**
  * Contacts waiting for the socket. A mouse reports far more often than a slow socket drains, so a move that
@@ -8,13 +8,13 @@ import com.shilapi.xcertplay.airplay.AirPlayContact
  * (the first down of a gesture) and a release is never dropped, so their order around the moves is kept.
  */
 class TouchQueue {
-    private class Entry(val contact: AirPlayContact, val move: Boolean)
+    private class Entry(val contact: TouchPoint, val move: Boolean)
 
     private val entries = ArrayDeque<Entry>()
     private var inGesture = false
 
     @Synchronized
-    fun offer(contact: AirPlayContact) {
+    fun offer(contact: TouchPoint) {
         val move = contact.down && inGesture
         inGesture = contact.down
         if (move && entries.lastOrNull()?.move == true) entries.removeLast()
@@ -22,7 +22,7 @@ class TouchQueue {
     }
 
     @Synchronized
-    fun poll(): AirPlayContact? = entries.removeFirstOrNull()?.contact
+    fun poll(): TouchPoint? = entries.removeFirstOrNull()?.contact
 
     /** Drops what has not been sent; the next gesture starts clean. */
     @Synchronized

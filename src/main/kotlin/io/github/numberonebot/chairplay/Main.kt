@@ -12,6 +12,7 @@ import io.github.numberonebot.chairplay.data.CarPlayDataLog
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.Size
+import io.github.numberonebot.chairplay.carplay.CarPlayControl
 import io.github.numberonebot.chairplay.input.TouchQueue
 import io.github.numberonebot.chairplay.input.TouchTracker
 import io.github.numberonebot.chairplay.log.AppLog
@@ -100,10 +101,9 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     val pending = TouchQueue()
     // Every sample goes through the tracker so it never misses a button change; only the send needs a session.
     window.setInputHandler { event ->
-        val contact = tracker.handle(event, window.framebufferSize, window.pictureSize) ?: return@setInputHandler
-        if (active.get() == null) return@setInputHandler
+        val contact = tracker.handle(event, window.framebufferSize, window.pictureSize)?.takeIf { active.get() != null } ?: return@setInputHandler
         pending.offer(contact)
-        touchSender.execute { pending.poll()?.let { active.get()?.sendTouch(listOf(it)) } }
+        touchSender.execute { pending.poll()?.let { point -> active.get()?.let { CarPlayControl(it).touch(listOf(point)) } } }
     }
     // The key bindings in force, which the Keyboard page's saves replace.
     val bindings = AtomicReference(controlsConfig)

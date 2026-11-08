@@ -1,28 +1,29 @@
 package io.github.numberonebot.chairplay.input
 
-import com.shilapi.xcertplay.airplay.AirPlayKnobState
-import com.shilapi.xcertplay.airplay.CarPlayMediaButton
 import io.github.numberonebot.chairplay.config.AltscreenContent
+import io.github.numberonebot.chairplay.phone.CallKey
+import io.github.numberonebot.chairplay.phone.KnobInput
+import io.github.numberonebot.chairplay.phone.MediaKey
 import org.lwjgl.glfw.GLFW.*
 
 /**
- * What a key or the mouse wheel asks of the iPhone, sent through AirPlaySession's HID and command calls, or,
+ * What a key or the mouse wheel asks of the iPhone, sent to the phone through PhoneControl, or,
  * for [Screenshot], of this PC.
  */
 sealed interface Control {
-    /** AirPlaySession.sendKnob: [momentary] releases at once, as a wheel step does. */
-    data class Knob(val state: AirPlayKnobState, val momentary: Boolean) : Control
-    data class Media(val index: Int) : Control
-    data class Telephony(val index: Int) : Control
+    /** PhoneControl.knob: [momentary] releases at once, as a wheel step does. */
+    data class Knob(val input: KnobInput, val momentary: Boolean) : Control
+    data class Media(val key: MediaKey) : Control
+    data class Telephony(val key: CallKey) : Control
     data object Siri : Control
     /** Saves what is on the CarPlay screen; nothing goes to the iPhone. */
     data object Screenshot : Control
     data object Fullscreen : Control
     /** Ends the session as closing the window does and starts the connection over. */
     data object Reconnect : Control
-    /** Zooms the altscreen's map [steps] times, in when positive (AirPlaySession.changeMapZoomLevel). */
+    /** Zooms the altscreen's map [steps] times, in when positive (PhoneControl.mapZoom). */
     data class MapZoom(val steps: Int) : Control
-    /** Asks the iPhone for the altscreen's next content (AirPlaySession.setClusterUrl). */
+    /** Asks the iPhone for the altscreen's next content (the cluster URL). */
     data object NextAltscreenContent : Control
     /** Asks the iPhone for the altscreen's next card layout, through the cluster URL. */
     data object NextAltscreenCards : Control
@@ -78,7 +79,7 @@ class KeyControls(private val source: () -> ControlsConfig) {
             else -> knobHold(bound)?.let { state ->
                 when (action) {
                     GLFW_PRESS -> Control.Knob(state, false)
-                    GLFW_RELEASE -> Control.Knob(AirPlayKnobState(), false)
+                    GLFW_RELEASE -> Control.Knob(KnobInput(), false)
                     else -> null
                 }
             } ?: if (action == GLFW_PRESS) pressControl(bound) else null
@@ -92,7 +93,7 @@ class KeyControls(private val source: () -> ControlsConfig) {
         val steps = (scrolled / config.notchesPerStep).toInt()
         if (steps == 0) return null
         scrolled -= steps * config.notchesPerStep
-        return Control.Knob(AirPlayKnobState(wheel = steps), true)
+        return Control.Knob(KnobInput(wheel = steps), true)
     }
 
     /** [dy] over the altscreen window: a zoom step of its map per notch, up zooming in, as a car's zoom control. */
@@ -105,7 +106,7 @@ class KeyControls(private val source: () -> ControlsConfig) {
     }
 
     private fun turn(key: Int, action: Int, step: Int): Control? =
-        if (steps(key, action)) Control.Knob(AirPlayKnobState(wheel = step), true) else null
+        if (steps(key, action)) Control.Knob(KnobInput(wheel = step), true) else null
 
     /** A step on the press and on every [every]-th repeat of a held key (none when 0); none on release. */
     private fun steps(key: Int, action: Int, every: Int = config.repeatEvery): Boolean =
@@ -121,39 +122,31 @@ class KeyControls(private val source: () -> ControlsConfig) {
                 false
             }
         }
-
-
-
-    companion object {
-        /** Upstream CarPlayController's TELEPHONY_HOOK_SWITCH and TELEPHONY_DROP. */
-        const val TELEPHONY_ANSWER = 1
-        const val TELEPHONY_HANG_UP = 3
-    }
 }
 
 /** Full deflection of the knob descriptor's X/Y axes (logical -127..127). */
 private const val KNOB_NUDGE = 127
 
 /** The knob state [action] holds while its key or button is down; null for actions that are no knob hold. */
-internal fun knobHold(action: ControlAction): AirPlayKnobState? = when (action) {
-    ControlAction.KNOB_LEFT -> AirPlayKnobState(x = -KNOB_NUDGE)
-    ControlAction.KNOB_RIGHT -> AirPlayKnobState(x = KNOB_NUDGE)
-    ControlAction.KNOB_UP -> AirPlayKnobState(y = -KNOB_NUDGE)
-    ControlAction.KNOB_DOWN -> AirPlayKnobState(y = KNOB_NUDGE)
-    ControlAction.SELECT -> AirPlayKnobState(select = true)
-    ControlAction.BACK -> AirPlayKnobState(back = true)
-    ControlAction.HOME -> AirPlayKnobState(home = true)
+internal fun knobHold(action: ControlAction): KnobInput? = when (action) {
+    ControlAction.KNOB_LEFT -> KnobInput(x = -KNOB_NUDGE)
+    ControlAction.KNOB_RIGHT -> KnobInput(x = KNOB_NUDGE)
+    ControlAction.KNOB_UP -> KnobInput(y = -KNOB_NUDGE)
+    ControlAction.KNOB_DOWN -> KnobInput(y = KNOB_NUDGE)
+    ControlAction.SELECT -> KnobInput(select = true)
+    ControlAction.BACK -> KnobInput(back = true)
+    ControlAction.HOME -> KnobInput(home = true)
     else -> null
 }
 
 /** What [action] asks for at once, on its press alone; null for knob holds and turns. */
 internal fun pressControl(action: ControlAction): Control? = when (action) {
     ControlAction.FULLSCREEN -> Control.Fullscreen
-    ControlAction.MEDIA_PREVIOUS -> Control.Media(CarPlayMediaButton.PREVIOUS)
-    ControlAction.MEDIA_PLAY_PAUSE -> Control.Media(CarPlayMediaButton.PLAY_PAUSE)
-    ControlAction.MEDIA_NEXT -> Control.Media(CarPlayMediaButton.NEXT)
-    ControlAction.CALL_ANSWER -> Control.Telephony(KeyControls.TELEPHONY_ANSWER)
-    ControlAction.CALL_END -> Control.Telephony(KeyControls.TELEPHONY_HANG_UP)
+    ControlAction.MEDIA_PREVIOUS -> Control.Media(MediaKey.PREVIOUS)
+    ControlAction.MEDIA_PLAY_PAUSE -> Control.Media(MediaKey.PLAY_PAUSE)
+    ControlAction.MEDIA_NEXT -> Control.Media(MediaKey.NEXT)
+    ControlAction.CALL_ANSWER -> Control.Telephony(CallKey.ANSWER)
+    ControlAction.CALL_END -> Control.Telephony(CallKey.HANG_UP)
     ControlAction.SIRI -> Control.Siri
     ControlAction.SCREENSHOT -> Control.Screenshot
     ControlAction.RECONNECT -> Control.Reconnect

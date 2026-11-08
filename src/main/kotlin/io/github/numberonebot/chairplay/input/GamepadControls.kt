@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.input
 
-import com.shilapi.xcertplay.airplay.AirPlayKnobState
+import io.github.numberonebot.chairplay.phone.KnobInput
 import org.lwjgl.glfw.GLFW.GLFW_GAMEPAD_BUTTON_A
 import org.lwjgl.glfw.GLFW.GLFW_GAMEPAD_BUTTON_B
 import org.lwjgl.glfw.GLFW.GLFW_GAMEPAD_BUTTON_DPAD_DOWN
@@ -27,7 +27,7 @@ class GamepadControls {
             val pressed = now.getOrElse(button) { false }
             if (pressed && !was) press(button)?.let(controls::add)
             // One neutral report lets go of the whole knob, as a key's release does.
-            if (!pressed && was && button in KNOB) controls += Control.Knob(AirPlayKnobState(), false)
+            if (!pressed && was && button in KNOB) controls += Control.Knob(KnobInput(), false)
         }
         down = now.copyOf()
         return controls
