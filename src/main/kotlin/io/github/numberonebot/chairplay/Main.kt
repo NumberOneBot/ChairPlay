@@ -231,7 +231,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     watchPhoneData(carPlayData.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
     altView.paint(carPlayData.bus, driving, config.accent)
     val bootstrap = WirelessBootstrap(config, sink, appControls.textInput.listener(sessionListener(active, ui, window, title, theme, ::sessionChanged)), carPlayData)
-    bootstrap.newLocation = driving::location
+    bootstrap.newLocation = carPlayLocation(driving, ::log)
     restartBootstrap.set(bootstrap::restart)
     sessionDropped.set {
         if (active.getAndSet(null) != null) {

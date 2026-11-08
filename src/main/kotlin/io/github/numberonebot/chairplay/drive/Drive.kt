@@ -1,15 +1,14 @@
 package io.github.numberonebot.chairplay.drive
 
-import com.shilapi.xcertplay.transport.VehicleSpeedSample
 import kotlin.math.abs
 import kotlin.math.min
 
-/** What the car is doing at one moment: for the gauges, the GPS page, and the position sent to the iPhone. */
+/** What the car is doing at one moment: for the gauges, the GPS page, and the position sent to the phone. */
 data class DriveSnapshot(val position: GeoPoint, val car: CarState, val input: CarInput)
 
 /**
  * The spoofed car: a [CarModel] placed on the earth. The window loop calls [advance] on each pass while driving and
- * sets [input] from the gamepad or the keys; the iAP2 thread reads [snapshot] and [drainSpeed] for its sentences.
+ * sets [input] from the gamepad or the keys; the phone's location reads [snapshot] and [drainSpeed] for its sentences.
  */
 class Drive(
     spec: CarSpec,
@@ -25,7 +24,7 @@ class Drive(
     private var position = start
     private var lastNanos: Long? = null
     private var lastSampleNanos: Long? = null
-    private val samples = ArrayDeque<VehicleSpeedSample>()
+    private val samples = ArrayDeque<SpeedSample>()
 
     /** The pedals and the wheel as the controls hold them now. */
     @Volatile var input = CarInput()
@@ -55,7 +54,7 @@ class Drive(
     fun snapshot(): DriveSnapshot = synchronized(lock) { DriveSnapshot(position, car.state, input) }
 
     /** The wheel speeds sampled since the last call, oldest first. */
-    fun drainSpeed(): List<VehicleSpeedSample> = synchronized(lock) { samples.toList().also { samples.clear() } }
+    fun drainSpeed(): List<SpeedSample> = synchronized(lock) { samples.toList().also { samples.clear() } }
 
     /** Puts the car at [start] facing [headingDegrees], parked: a new start from the settings. */
     fun place(start: GeoPoint, headingDegrees: Double): Unit = synchronized(lock) {
@@ -99,7 +98,7 @@ class Drive(
         val last = lastSampleNanos
         if (last != null && now - last < SAMPLE_NANOS) return
         lastSampleNanos = now
-        samples.addLast(VehicleSpeedSample(now / 1_000_000, abs(car.state.speed)))
+        samples.addLast(SpeedSample(now / 1_000_000, abs(car.state.speed)))
         while (samples.size > MAX_SAMPLES) samples.removeFirst()
     }
 

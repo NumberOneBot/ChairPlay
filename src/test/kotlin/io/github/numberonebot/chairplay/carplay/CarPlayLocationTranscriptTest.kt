@@ -1,8 +1,20 @@
-package io.github.numberonebot.chairplay.drive
+package io.github.numberonebot.chairplay.carplay
 
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import io.github.numberonebot.chairplay.bridge.TelemetryRecord
 import io.github.numberonebot.chairplay.bridge.TelemetrySource
+import io.github.numberonebot.chairplay.drive.CarSpec
+import io.github.numberonebot.chairplay.drive.Driving
+import io.github.numberonebot.chairplay.drive.GeoPoint
+import io.github.numberonebot.chairplay.drive.GpsAlmanac
+import io.github.numberonebot.chairplay.drive.GpsSettings
+import io.github.numberonebot.chairplay.drive.LocationStatus
+import io.github.numberonebot.chairplay.drive.NmeaDialect
+import io.github.numberonebot.chairplay.drive.NmeaFraming
+import io.github.numberonebot.chairplay.drive.SatelliteGeometry
+import io.github.numberonebot.chairplay.drive.WindowsLocation
+import io.github.numberonebot.chairplay.drive.almanacFixture
+import io.github.numberonebot.chairplay.drive.almanacTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.nio.ByteBuffer
@@ -11,9 +23,10 @@ import java.nio.ByteBuffer
  * Characterization: one scripted drive of the GPS car, nowhere and then placed, by the gamepad through park, drive and
  * reverse, then by a game's telemetry forward, backing up and paused, and what its location sends the iPhone: each
  * update's NMEA parameters on the tunnel as framed, the once-a-second answer unattached, its status, and the log. The
- * expected transcript (iap2/location-transcript.txt) was recorded from DriveLocation before it moved into carplay/.
+ * expected transcript (iap2/location-transcript.txt) was recorded from DriveLocation, built as Driving.location built
+ * it, before it moved here as CarPlayLocation: the move changed nothing the iPhone is sent.
  */
-class DriveLocationTranscriptTest {
+class CarPlayLocationTranscriptTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
     private val paris = GeoPoint(48.85, 2.29)
     private val frame = 16_666_667L
@@ -64,10 +77,8 @@ class DriveLocationTranscriptTest {
         }
     }
 
-    // The location as Driving.location made it, with the wall clock and the schedule the script's.
-    private fun location() = DriveLocation(driving.drive, true, log, nanoTime = { now }, wallMillis = { wall },
-        placed = { driving.placed }, settings = { driving.settings }, schedule = schedule::start, onSent = { driving.onSent() },
-        satelliteSentences = sky)
+    // The location as the app makes it from the car, with the wall clock and the schedule the script's.
+    private fun location() = CarPlayLocation(driving, true, log, wallMillis = { wall }, schedule = schedule::start)
 
     private fun record(speed: Double, gear: Int?, paused: Boolean = false) = TelemetryRecord(
         counter = 0, paused = paused, gear = gear, speed = speed, headingDegrees = 135.0,
@@ -153,7 +164,7 @@ class DriveLocationTranscriptTest {
         lines += "  told $told"
     }
 
-    private fun status(name: String, status: DriveLocation.Status) {
+    private fun status(name: String, status: LocationStatus) {
         lines += "  status $name listening=${status.listening} requested=${status.requested} sent=${status.sent}"
     }
 

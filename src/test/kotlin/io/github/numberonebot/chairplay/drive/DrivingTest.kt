@@ -27,19 +27,14 @@ class DrivingTest {
         assertEquals(90.0, start.car.headingDegrees, 0.0)
     }
 
-    // Without a start, the car is nowhere: the iPhone gets no position, only the wheel speed.
+    // Without a start, the car is nowhere until a start is saved.
     @Test
-    fun `a car with no start sends no position`() {
+    fun `a car with no start is placed by a saved start`() {
         val driving = driving(GpsSettings(true))
         assertFalse(driving.placed)
-        val location = driving.location(GpsSettings(true))
-        location.onRequested(setOf(1, 2))
-        location.start()
-        assertNull(location.latestNmea())
-
         driving.saved(GpsSettings(true, start = kyiv), setOf("gps.start"))
         assertTrue(driving.placed)
-        assertTrue(location.latestNmea()!!.startsWith("\$GPGGA"))
+        assertEquals(kyiv, driving.drive.snapshot().position)
     }
 
     // The GPS turned on with no start: the car goes where Windows locates the PC, and that place is saved as the start.
@@ -184,10 +179,7 @@ class DrivingTest {
         assertEquals(0, idle["speed"])
         assertEquals("P", idle["gear"])
 
-        val location = driving.location(GpsSettings(true))
-        location.onRequested(setOf(1, 2, 4))
-        location.start()
-        location.latestNmea()
+        driving.location = LocationLink { LocationStatus(listening = true, requested = setOf(1, 2, 4), sent = 1) }
         val state = driving.state()
         assertEquals(true, state["listening"])
         assertEquals(listOf("GGA", "RMC", "PASCD"), state["sentences"])

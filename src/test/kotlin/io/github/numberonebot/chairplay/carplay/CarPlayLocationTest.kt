@@ -1,11 +1,21 @@
-package io.github.numberonebot.chairplay.drive
+package io.github.numberonebot.chairplay.carplay
 
+import io.github.numberonebot.chairplay.drive.CarInput
+import io.github.numberonebot.chairplay.drive.CarSpec
+import io.github.numberonebot.chairplay.drive.Drive
+import io.github.numberonebot.chairplay.drive.GeoPoint
+import io.github.numberonebot.chairplay.drive.GpsSettings
+import io.github.numberonebot.chairplay.drive.LocationStatus
+import io.github.numberonebot.chairplay.drive.NmeaDialect
+import io.github.numberonebot.chairplay.drive.NmeaFraming
+import io.github.numberonebot.chairplay.drive.SatelliteGeometry
+import io.github.numberonebot.chairplay.drive.VisibleSatellite
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class DriveLocationTest {
+class CarPlayLocationTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
     private var now = 1_000_000_000L
     private val frame = 16_666_667L
@@ -14,7 +24,7 @@ class DriveLocationTest {
     private fun drive(heading: Double = 0.0) = Drive(CarSpec(), kyiv, heading) { now }
 
     private fun location(drive: Drive, satellites: Boolean = false) =
-        DriveLocation(drive, satellites, nanoTime = { now }, wallMillis = { wallClock }, satelliteSentences = { _, _ -> sky() })
+        CarPlayLocation(drive, satellites, nanoTime = { now }, wallMillis = { wallClock }, satelliteSentences = { _, _ -> sky() })
 
     private fun sky() = SatelliteGeometry.gsv((1..10).map { VisibleSatellite(it, 45, it * 30) })
 
@@ -66,7 +76,7 @@ class DriveLocationTest {
         val drive = drive(heading = 90.0)
         drive.input = CarInput(throttle = 1.0)
         drive.tick(5.0)
-        val location = DriveLocation(drive, satellites = false, nanoTime = { now }, wallMillis = { wallClock },
+        val location = CarPlayLocation(drive, satellites = false, nanoTime = { now }, wallMillis = { wallClock },
             settings = { GpsSettings(true, sendHeading = false) })
         location.onRequested(setOf(1, 2))
         location.start()
@@ -153,7 +163,7 @@ class DriveLocationTest {
         var settings = GpsSettings(true, satellites = true, rate = 4)
         val schedule = FakeSchedule()
         val drive = drive(heading = 90.0)
-        val location = DriveLocation(drive, satellites = true, nanoTime = { now }, wallMillis = { wall },
+        val location = CarPlayLocation(drive, satellites = true, nanoTime = { now }, wallMillis = { wall },
             settings = { settings }, schedule = schedule::start, satelliteSentences = { _, _ -> sky() })
         val sent = mutableListOf<String>()
         location.attach { parameters -> sent += parameters.joinToString("") }
@@ -189,7 +199,7 @@ class DriveLocationTest {
     fun `each fix sent is told as it goes`() {
         val schedule = FakeSchedule()
         var told = 0
-        val location = DriveLocation(drive(), satellites = false, nanoTime = { now }, wallMillis = { wallClock },
+        val location = CarPlayLocation(drive(), satellites = false, nanoTime = { now }, wallMillis = { wallClock },
             settings = { GpsSettings(true, rate = 4) }, schedule = schedule::start, onSent = { told++ })
         location.attach {}
         location.onRequested(setOf(1))
@@ -204,7 +214,7 @@ class DriveLocationTest {
     fun `an update's sentences go joined, a message each, or a parameter each`() {
         var settings = GpsSettings(true, rate = 4, framing = NmeaFraming.JOINED)
         val schedule = FakeSchedule()
-        val location = DriveLocation(drive(), satellites = false, nanoTime = { now }, wallMillis = { wallClock },
+        val location = CarPlayLocation(drive(), satellites = false, nanoTime = { now }, wallMillis = { wallClock },
             settings = { settings }, schedule = schedule::start)
         val messages = mutableListOf<List<String>>()
         location.attach { messages += it }
@@ -233,7 +243,7 @@ class DriveLocationTest {
     @Test
     fun `a failed send stops the sending`() {
         val schedule = FakeSchedule()
-        val location = DriveLocation(drive(), satellites = false, nanoTime = { now }, wallMillis = { wallClock },
+        val location = CarPlayLocation(drive(), satellites = false, nanoTime = { now }, wallMillis = { wallClock },
             schedule = schedule::start)
         location.attach { throw java.io.IOException("link ended") }
         location.onRequested(setOf(1, 2))
@@ -251,7 +261,7 @@ class DriveLocationTest {
         location.start()
         location.latestNmea()
         location.latestNmea()
-        assertEquals(DriveLocation.Status(listening = true, requested = setOf(1, 2, 4), sent = 2), location.status())
+        assertEquals(LocationStatus(listening = true, requested = setOf(1, 2, 4), sent = 2), location.status())
         location.stop()
         assertEquals(false, location.status().listening)
     }

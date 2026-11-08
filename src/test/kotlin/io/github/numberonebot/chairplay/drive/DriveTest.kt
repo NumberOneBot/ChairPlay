@@ -55,9 +55,9 @@ class DriveTest {
         drive.input = CarInput(throttle = 1.0)
         drive.tick(1.0)
 
-        val samples = drive.drainSpeed()
+        val samples: List<SpeedSample> = drive.drainSpeed()
         assertTrue("samples ${samples.size}", samples.size in 9..11)
-        assertTrue(samples.zipWithNext().all { (a, b) -> b.elapsedMillis - a.elapsedMillis in 95..120 })
+        assertTrue(samples.zipWithNext().all { (a, b) -> b.timeMillis - a.timeMillis in 95..120 })
         assertTrue(samples.zipWithNext().all { (a, b) -> b.metersPerSecond >= a.metersPerSecond })
         assertTrue(drive.drainSpeed().isEmpty())
     }

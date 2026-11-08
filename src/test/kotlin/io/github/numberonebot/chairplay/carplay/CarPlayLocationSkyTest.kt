@@ -1,9 +1,17 @@
-package io.github.numberonebot.chairplay.drive
+package io.github.numberonebot.chairplay.carplay
 
+import io.github.numberonebot.chairplay.drive.CarSpec
+import io.github.numberonebot.chairplay.drive.Drive
+import io.github.numberonebot.chairplay.drive.GeoPoint
+import io.github.numberonebot.chairplay.drive.GpsAlmanac
+import io.github.numberonebot.chairplay.drive.GpsSettings
+import io.github.numberonebot.chairplay.drive.SatelliteGeometry
+import io.github.numberonebot.chairplay.drive.almanacFixture
+import io.github.numberonebot.chairplay.drive.almanacTime
 import org.junit.Assert.*
 import org.junit.Test
 
-class DriveSkyTest {
+class CarPlayLocationSkyTest {
     private val home = GeoPoint(50.3855, 30.368)
     private val far = GeoPoint(50.3467, 6.9688)
 
@@ -13,7 +21,7 @@ class DriveSkyTest {
         val drive = Drive(CarSpec(), home, 270.0) { now }
         val requested = mutableListOf<Pair<GeoPoint, Long>>()
         val almanac = GpsAlmanac.parse(almanacFixture())
-        val location = DriveLocation(drive, true, nanoTime = { now }, wallMillis = { wall },
+        val location = CarPlayLocation(drive, true, nanoTime = { now }, wallMillis = { wall },
             satelliteSentences = { point, millis ->
                 requested += point to millis
                 SatelliteGeometry.gsv(SatelliteGeometry.visible(almanac, point, millis))
@@ -36,7 +44,7 @@ class DriveSkyTest {
     @Test fun `no sky work when disabled not requested or position unavailable`() {
         for ((enabled, asked, placed) in listOf(Triple(false, true, true), Triple(true, false, true), Triple(true, true, false))) {
             var called = false
-            val location = DriveLocation(Drive(CarSpec(), home, 0.0), enabled, placed = { placed },
+            val location = CarPlayLocation(Drive(CarSpec(), home, 0.0), enabled, placed = { placed },
                 satelliteSentences = { _, _ -> called = true; null })
             location.onRequested(if (asked) setOf(1, 2, 3, 4) else setOf(1, 2, 4))
             location.start()
@@ -46,7 +54,7 @@ class DriveSkyTest {
     }
 
     @Test fun `missing almanac does not interrupt location or wheel speed`() {
-        val location = DriveLocation(Drive(CarSpec(), home, 0.0), true, satelliteSentences = { _, _ -> null })
+        val location = CarPlayLocation(Drive(CarSpec(), home, 0.0), true, satelliteSentences = { _, _ -> null })
         location.onRequested(setOf(1, 2, 3, 4))
         location.start()
         val text = location.latestNmea()!!
@@ -58,7 +66,7 @@ class DriveSkyTest {
         var now = 0L
         var enabled = true
         var calls = 0
-        val location = DriveLocation(Drive(CarSpec(), home, 0.0), true, nanoTime = { now },
+        val location = CarPlayLocation(Drive(CarSpec(), home, 0.0), true, nanoTime = { now },
             settings = { GpsSettings(true, satellites = enabled) },
             satelliteSentences = { _, _ -> calls++; SatelliteGeometry.gsv(emptyList()) })
         location.onRequested(setOf(1, 2, 3))

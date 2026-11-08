@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.drive
+package io.github.numberonebot.chairplay.carplay
 
 import com.shilapi.xcertplay.transport.Iap2LocationMessages
 import com.shilapi.xcertplay.transport.Iap2LocationProvider
@@ -6,17 +6,20 @@ import com.shilapi.xcertplay.transport.PascdEncoder
 import com.shilapi.xcertplay.transport.VehicleGear
 import com.shilapi.xcertplay.transport.VehicleSpeedReading
 import com.shilapi.xcertplay.transport.VehicleSpeedSample
+import io.github.numberonebot.chairplay.drive.CarInput
+import io.github.numberonebot.chairplay.drive.Drive
+import io.github.numberonebot.chairplay.drive.DriveSnapshot
+import io.github.numberonebot.chairplay.drive.Driving
+import io.github.numberonebot.chairplay.drive.GeoPoint
+import io.github.numberonebot.chairplay.drive.GpsSettings
+import io.github.numberonebot.chairplay.drive.LocationLink
+import io.github.numberonebot.chairplay.drive.LocationStatus
+import io.github.numberonebot.chairplay.drive.NmeaFix
+import io.github.numberonebot.chairplay.drive.NmeaFraming
+import io.github.numberonebot.chairplay.drive.NmeaSentences
+import io.github.numberonebot.chairplay.drive.PacedLocation
 import java.util.Locale
 import kotlin.math.abs
-
-/** A location source that sends at its own pace on the link it is [attach]ed to, rather than DiPlay's once a second. */
-interface PacedLocation {
-    /**
-     * [send] puts one LocationInformation on the link, with each given NMEA text as an NMEA parameter of its own; it
-     * throws once the link is gone.
-     */
-    fun attach(send: (List<String>) -> Unit)
-}
 
 /**
  * The spoofed car as the iPhone's GPS, for iAP2 LocationInformation: its place, speed and course in the sentences
@@ -27,7 +30,7 @@ interface PacedLocation {
  * [attach]ed to the tunnel, it sends on its own at gps.rate fixes a second (the iPhone asks for one every 250 ms), each
  * with its own time, and DiPlay's once-a-second update sends nothing; unattached, it answers that update.
  */
-class DriveLocation(
+class CarPlayLocation(
     private val drive: Drive,
     private val satellites: Boolean,
     private val log: (String) -> Unit = {},
@@ -41,9 +44,22 @@ class DriveLocation(
     private val onSent: () -> Unit = {},
     /** Calculated from the same position and UTC as the fix; null while fresh orbital data is unavailable. */
     private val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
-) : Iap2LocationProvider, PacedLocation {
-    /** What the GPS page shows: whether the iPhone listens, the sentence types it asked for, and the updates sent. */
-    data class Status(val listening: Boolean, val requested: Set<Int>, val sent: Long)
+) : Iap2LocationProvider, PacedLocation, LocationLink {
+    /**
+     * The app's car for a connection that identified with the GPS on: its clock, place, settings and sky, each update
+     * told to its listener; it becomes the link [driving]'s GPS page reads.
+     */
+    constructor(
+        driving: Driving,
+        satellites: Boolean,
+        log: (String) -> Unit,
+        wallMillis: () -> Long = System::currentTimeMillis,
+        schedule: (period: () -> Long, action: () -> Unit) -> AutoCloseable = ::repeatEvery,
+    ) : this(driving.drive, satellites, log, driving.nanoTime, wallMillis, placed = { driving.placed },
+        settings = { driving.settings }, schedule = schedule, onSent = { driving.onSent() },
+        satelliteSentences = driving.satelliteSentences) {
+        driving.location = this
+    }
 
     @Volatile private var listening = false
     @Volatile private var requested: Set<Int> = emptySet()
@@ -90,7 +106,7 @@ class DriveLocation(
     /** DiPlay's once-a-second update: nothing while this sends on its own. */
     override fun latestNmea(): String? = if (sending()) null else compose()?.also { sent++; runCatching(onSent) }
 
-    fun status() = Status(listening, requested, sent)
+    override fun status() = LocationStatus(listening, requested, sent)
 
     private fun sending() = synchronized(lock) { sender != null }
 
@@ -145,7 +161,8 @@ class DriveLocation(
 
     // Parked with the loop idle, nothing was sampled: one sample at the standstill keeps the wheel speed going.
     private fun wheelSpeed(car: DriveSnapshot): VehicleSpeedReading {
-        val samples = drive.drainSpeed().ifEmpty { listOf(VehicleSpeedSample(nanoTime() / 1_000_000, abs(car.car.speed))) }
+        val samples = drive.drainSpeed().map { VehicleSpeedSample(it.timeMillis, it.metersPerSecond) }
+            .ifEmpty { listOf(VehicleSpeedSample(nanoTime() / 1_000_000, abs(car.car.speed))) }
         val gear = when {
             car.car.gear < 0 -> VehicleGear.REVERSE
             car.car.speed == 0.0 && car.input == CarInput() -> VehicleGear.PARK

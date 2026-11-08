@@ -1,9 +1,11 @@
 package io.github.numberonebot.chairplay
 
+import io.github.numberonebot.chairplay.carplay.CarPlayLocation
 import io.github.numberonebot.chairplay.drive.CarInput
 import io.github.numberonebot.chairplay.drive.DriveControl
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.GlfwGamepad
+import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.input.GamepadControls
 import io.github.numberonebot.chairplay.media.VideoWindow
 import io.github.numberonebot.chairplay.ui.UiDriving
@@ -33,6 +35,10 @@ internal fun uiDriving(driving: Driving, window: VideoWindow, screenshots: () ->
 
     override fun screenshot(): Boolean = true.also { screenshots() }
 }
+
+/** The iPhone's GPS for each connection that identifies with the GPS on, as the settings have it then: the car. */
+internal fun carPlayLocation(driving: Driving, log: (String) -> Unit) =
+    { gps: GpsSettings -> CarPlayLocation(driving, gps.satellites, log) }
 
 /**
  * The window loop's pass, on the main thread: the GPS car's, then a gamepad's buttons as the knob and the AltScreen's

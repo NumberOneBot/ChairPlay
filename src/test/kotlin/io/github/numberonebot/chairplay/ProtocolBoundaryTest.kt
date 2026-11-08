@@ -21,10 +21,10 @@ class ProtocolBoundaryTest {
     }
 
     @Test
-    fun `phone and data packages never import DiPlay`() {
-        val offenders = kotlinFiles().map { relative(it) }.filter { it.startsWith("phone/") || it.startsWith("data/") }
+    fun `phone, data and drive packages never import DiPlay`() {
+        val offenders = kotlinFiles().map { relative(it) }.filter { path -> NEUTRAL.any { path.startsWith(it) } }
             .filter { importsDiPlay(sourceRoot.resolve(it)) }
-        assertTrue("Files under phone/ or data/ import com.shilapi.: $offenders", offenders.isEmpty())
+        assertTrue("Files under ${NEUTRAL.joinToString()} import com.shilapi.: $offenders", offenders.isEmpty())
     }
 
     private fun kotlinFiles(): List<Path> = Files.walk(sourceRoot).use { stream ->
@@ -49,6 +49,9 @@ class ProtocolBoundaryTest {
     companion object {
         private const val SOURCE_PATH = "src/main/kotlin/io/github/numberonebot/chairplay"
 
+        /** The protocol-neutral folders, which never import DiPlay's types. */
+        private val NEUTRAL = listOf("phone/", "data/", "drive/")
+
         /** Paths relative to the chairplay source folder. */
         val ALLOWED: Set<String> = sortedSetOf(
             "AltscreenView.kt",
@@ -62,6 +65,7 @@ class ProtocolBoundaryTest {
             "carplay/CarPlayDataFeed.kt",
             "carplay/CarPlayDataLog.kt",
             "carplay/CarPlayDataMessages.kt",
+            "carplay/CarPlayLocation.kt",
             "carplay/CarPlayMediaSink.kt",
             "carplay/DataSubscriptions.kt",
             "carplay/Iap2DataDecoder.kt",
@@ -75,9 +79,6 @@ class ProtocolBoundaryTest {
             "config/PairingFiles.kt",
             "discovery/CarPlayTxt.kt",
             "discovery/DesktopBonjour.kt",
-            "drive/Drive.kt",
-            "drive/DriveLocation.kt",
-            "drive/Driving.kt",
             "input/CarPlayTextInput.kt",
             "input/HandwritingHid.kt",
             "input/KeyboardHid.kt",

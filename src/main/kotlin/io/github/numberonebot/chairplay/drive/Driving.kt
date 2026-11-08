@@ -1,6 +1,5 @@
 package io.github.numberonebot.chairplay.drive
 
-import com.shilapi.xcertplay.transport.Iap2LocationProvider
 import io.github.numberonebot.chairplay.bridge.External
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import java.util.Locale
@@ -10,7 +9,8 @@ import kotlin.math.roundToInt
 
 /**
  * The spoofed GPS's car for the app: placed at gps.start facing gps.heading, driven by [control] from the window loop,
- * sent to the iPhone by the [location] each connection makes, and shown on the GPS page by [state], as each update goes.
+ * sent to the phone by the [location] each connection makes from it (its [drive], [placed], [settings], [nanoTime] and
+ * [satelliteSentences], telling [onSent]), and shown on the GPS page by [state], as each update goes.
  * Its place goes back into gps.start and gps.heading ([savePlace]) as it stops and as the app closes, so the settings
  * always say where the car is and the next start begins there. A GPS on with no start starts where Windows locates the
  * PC ([locate], run by [lookup]), as the app opens and as the GPS is turned on.
@@ -19,8 +19,9 @@ class Driving(
     settings: GpsSettings,
     private val log: (String) -> Unit = {},
     gamepad: () -> FloatArray? = GlfwGamepad::axes,
-    private val nanoTime: () -> Long = System::nanoTime,
-    private val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
+    val nanoTime: () -> Long = System::nanoTime,
+    /** The $GPGSV at a place and UTC, as the fix goes; null while fresh orbital data is unavailable. */
+    val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
     private val locate: () -> WindowsLocation.Result = WindowsLocation::read,
     private val lookup: (Runnable) -> Unit = { Thread(it, "gps-start").apply { isDaemon = true }.start() },
     /** A fresh reader of a game's telemetry, made each time gps.external comes into force. */
@@ -59,7 +60,8 @@ class Driving(
 
     val control = DriveControl(drive, gamepad, onStopped = ::remember, nanoTime = nanoTime)
 
-    @Volatile private var link: DriveLocation? = null
+    /** The location the last connection made from the car, which puts itself here for the GPS page. */
+    @Volatile var location: LocationLink? = null
 
     // The game's telemetry, read and closed on the window loop's thread only, while the GPS and gps.external are on.
     private var reader: TelemetryInput? = null
@@ -137,11 +139,6 @@ class Driving(
         return true
     }
 
-    /** The iPhone's GPS for a connection that identified with it. */
-    fun location(gps: GpsSettings): Iap2LocationProvider =
-        DriveLocation(drive, gps.satellites, log, nanoTime = nanoTime, placed = { placed }, settings = { settings },
-            onSent = { onSent() }, satelliteSentences = satelliteSentences).also { link = it }
-
     /**
      * The gps.* settings saved as [now], [keys] among them: a place puts the car there facing the heading, a heading
      * alone turns it where it is, and a power, mass or handling remakes it. The place the car saved itself is where it
@@ -199,7 +196,7 @@ class Driving(
     fun state(): Map<String, Any?> {
         val snapshot = drive.snapshot()
         val car = snapshot.car
-        val status = link?.status()
+        val status = location?.status()
         return linkedMapOf(
             "position" to if (placed) listOf(snapshot.position.latitude, snapshot.position.longitude) else null,
             "heading" to car.headingDegrees.roundToInt() % 360,
