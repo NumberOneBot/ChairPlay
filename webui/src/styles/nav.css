@@ -30,7 +30,6 @@
 }
 
 .shell .nav button {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -74,16 +73,10 @@
   color: var(--text);
 }
 
-.shell .nav .badge {
-  margin-left: auto;
-  color: var(--orange);
-  font-size: 12px;
-}
-
 /*
  * In a window as narrow as the toolbar's icons-only form (above), the section list too shows the icons alone, each
  * named when hovered: 30 px squares 1 px apart in 2 px of padding, so that all six fit the 192 px a window of 240 px
- * leaves under the bar (190 px); the icons smaller to keep clear of the squares' edges, and the ⟳ in a corner.
+ * leaves under the bar (190 px); the icons smaller to keep clear of the squares' edges.
  */
 @container shell (max-width: 529px) {
   .shell .body {
@@ -109,13 +102,5 @@
   .shell .nav svg {
     width: 24px;
     height: 15px;
-  }
-
-  .shell .nav .badge {
-    position: absolute;
-    top: 0;
-    right: 1px;
-    margin: 0;
-    font-size: 10px;
   }
 }

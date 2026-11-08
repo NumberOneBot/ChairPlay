@@ -111,13 +111,11 @@ describe('Shell toolbar', () => {
     expect(button('AltScreen').disabled).toBe(true)
   })
 
-  it('marks the pages whose changes wait for a restart', () => {
+  it('says in the toolbar when changes wait for a restart', () => {
     const state = appState({ ...live, restartPending: ['altscreen.enabled', 'display.width', 'display.height'] })
     render(<Shell state={state} backend={new FakeBackend()} />)
 
     expect(screen.getByText('Restart needed')).toBeTruthy()
-    expect(screen.getByRole('tab', { name: /CarPlay/ }).querySelector('[title="Applies after restart"]')).toBeTruthy()
-    expect(screen.getByRole('tab', { name: /Audio/ }).querySelector('[title="Applies after restart"]')).toBeNull()
   })
 
   it('puts the settings shown on Experiments on Experiments, whatever their key starts with', () => {

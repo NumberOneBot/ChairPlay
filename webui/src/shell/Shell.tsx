@@ -12,7 +12,7 @@ import { GetStarted } from '../setup/GetStarted'
 import { setupSteps } from '../setup/steps'
 import { Message } from './controls'
 import { Elsewhere } from './Elsewhere'
-import { SECTIONS, sectionsOf, type Section } from './sections'
+import { SECTIONS, type Section } from './sections'
 import { Toolbar } from './Toolbar'
 import { useKeysToApp } from './useKeysToApp'
 import { useSettings } from './useSettings'
@@ -35,7 +35,6 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
   const [joinFailureSeen, setJoinFailureSeen] = useState<string | null>(null)
   const ids = useId()
   const showable = state.canShowCarPlay && state.embedded
-  const restart = new Set(sectionsOf(state.restartPending))
   const settings = useSettings(backend, state.settingsVersion)
   const guiding = guide === 'shown' || (guide === 'auto' && !state.setupDone)
   const steps = guiding ? setupSteps(state, joinFailureSeen) : null
@@ -112,11 +111,6 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
               >
                 {icon}
                 <span className="label">{title}</span>
-                {restart.has(id) && (
-                  <span className="badge" title="Applies after restart">
-                    ⟳
-                  </span>
-                )}
               </button>
             ))}
           </nav>
