@@ -13,7 +13,6 @@ New features and fixed bugs in ChairPlay.
 
 ### Changed
 
-- The settings page's address no longer carries a key.
 - The connection, the screens, the controls, and the iPhone's data are restructured into shared parts, ahead of support for Android Auto phones in a later version.
 
 ### Fixed
