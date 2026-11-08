@@ -67,6 +67,8 @@ class Driving(
     private var reader: TelemetryInput? = null
     // Whether the last poll had a game there, driving or halted.
     private var following = false
+    // The red line the game last gave while driving, for the tachometer until it is gone; null for the GPS car's own.
+    @Volatile private var gameRedline: Double? = null
 
     /**
      * [DriveControl.pass] while the GPS is on, after a game's telemetry with gps.external on ([external]); off, the
@@ -90,10 +92,13 @@ class Driving(
      */
     private fun external(): Double {
         val current = reader ?: telemetry().also { reader = it }
+        // The GPS page's drive mode switch shows or hides the gauges while the game drives, too.
+        control.takeKeyboardRequest()
         when (val said = current.poll()) {
             is External.Drives -> {
                 val record = said.record
                 drive.follow(GeoPoint(record.latitude, record.longitude), record.headingDegrees, record.speed, record.rpm, record.gear)
+                gameRedline = record.redline
                 placed = true
                 following = true
                 return DriveControl.FRAME_SECONDS
@@ -122,6 +127,7 @@ class Driving(
     private fun handBack() {
         if (!following) return
         following = false
+        gameRedline = null
         drive.stop()
         remember(drive.snapshot())
     }
@@ -226,7 +232,7 @@ class Driving(
             brake = snapshot.input.brake,
             headingDegrees = car.headingDegrees,
             speedometer = GaugeScale.speedometer(settings.units),
-            tachometer = GaugeScale.tachometer(drive.spec),
+            tachometer = GaugeScale.tachometer(gameRedline ?: drive.spec.redlineRpm),
             position = snapshot.position,
             size = settings.gauges,
             steer = snapshot.input.steer,

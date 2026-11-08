@@ -16,6 +16,7 @@
 #define CPB_TELEMETRY_RPM 1u
 #define CPB_TELEMETRY_GEAR 2u
 #define CPB_TELEMETRY_PAUSED 4u
+#define CPB_TELEMETRY_REDLINE 8u
 
 struct cpb_status {
     uint32_t magic;             /*   0 */
@@ -53,7 +54,7 @@ struct cpb_telemetry {
     double latitude;            /*  40 */
     double longitude;           /*  48 */
     float rpm;                  /*  56 */
-    uint32_t reserved0;         /*  60 */
+    float redline;              /*  60: rpm where the red zone starts */
     char source[32];            /*  64 */
     uint8_t reserved[160];      /*  96 */
 };
@@ -93,7 +94,7 @@ static_assert(offsetof(struct cpb_telemetry, heading) == 32, "heading");
 static_assert(offsetof(struct cpb_telemetry, latitude) == 40, "latitude");
 static_assert(offsetof(struct cpb_telemetry, longitude) == 48, "longitude");
 static_assert(offsetof(struct cpb_telemetry, rpm) == 56, "rpm");
-static_assert(offsetof(struct cpb_telemetry, reserved0) == 60, "reserved0");
+static_assert(offsetof(struct cpb_telemetry, redline) == 60, "redline");
 static_assert(offsetof(struct cpb_telemetry, source) == 64, "source");
 static_assert(offsetof(struct cpb_telemetry, reserved) == 96, "telemetry reserved");
 

@@ -2,12 +2,10 @@ package io.github.numberonebot.chairplay.drive
 
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import io.github.numberonebot.chairplay.bridge.TelemetryRecord
-import io.github.numberonebot.chairplay.bridge.TelemetrySource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.nio.ByteBuffer
 
 /** A game's telemetry driving the GPS car while gps.external is on (DrivingTest covers the gamepad and keys). */
 class DrivingExternalTest {
@@ -15,27 +13,10 @@ class DrivingExternalTest {
     private val paris = GeoPoint(48.85, 2.29)
     private var now = 0L
     private val placeSaved = mutableListOf<Map<String, String>>()
-    private val source = FakeSource()
+    private val source = FakeTelemetrySource()
     private var inputs = 0
     // The gamepad's right trigger, -1 let go.
     private var throttle = -1f
-
-    private class FakeSource : TelemetrySource {
-        var record: TelemetryRecord? = null
-        var opens = 0
-        var reads = 0
-        var closes = 0
-
-        override fun open(): String? { opens++; return null }
-
-        override fun read(into: ByteBuffer): Boolean {
-            reads++
-            TelemetryRecord.write(record ?: return false, into)
-            return true
-        }
-
-        override fun close() { closes++ }
-    }
 
     private fun record(counter: Int, speed: Double = 20.0, paused: Boolean = false, gear: Int? = 3) = TelemetryRecord(
         counter = counter, paused = paused, gear = gear, speed = speed, headingDegrees = 135.0,

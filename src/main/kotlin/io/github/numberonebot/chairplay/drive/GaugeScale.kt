@@ -47,12 +47,14 @@ data class GaugeScale(val numbers: List<Double>, val redFrom: Double? = null, va
             else listOf(0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 180.0, 220.0, 260.0, 300.0),
         )
 
+        fun tachometer(spec: CarSpec): GaugeScale = tachometer(spec.redlineRpm)
+
         /**
-         * Thousands of rpm, half a thousand past the red line and up to the next whole, the red zone from the red line,
-         * dashed half a thousand before it.
+         * The tachometer of an engine red from [redlineRpm], the GPS car's or a game's: thousands of rpm, half a thousand
+         * past the red line and up to the next whole, the red zone from the red line, dashed half a thousand before it.
          */
-        fun tachometer(spec: CarSpec): GaugeScale {
-            val redline = spec.redlineRpm / 1000
+        fun tachometer(redlineRpm: Double): GaugeScale {
+            val redline = redlineRpm / 1000
             return GaugeScale((0..ceil(redline + 0.5).toInt()).map { it.toDouble() }, redFrom = redline, warnFrom = redline - 0.5)
         }
     }

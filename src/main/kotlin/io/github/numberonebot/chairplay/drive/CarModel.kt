@@ -62,7 +62,8 @@ data class CarState(
  * backs the car up, when the car has reverse ([CarSpec.reverse]).
  */
 class CarModel(val spec: CarSpec, initial: CarState = CarState()) {
-    var state: CarState = initial.copy(rpm = if (initial.parked) 0.0 else initial.rpm.coerceIn(spec.idleRpm, spec.redlineRpm))
+    // A running engine idles at least; a game's may rev past this car's red line, and its tachometer shows it so.
+    var state: CarState = initial.copy(rpm = if (initial.parked) 0.0 else initial.rpm.coerceAtLeast(spec.idleRpm))
         private set
 
     /** Metres covered by the last step, negative backing up. */

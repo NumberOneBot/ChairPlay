@@ -144,7 +144,7 @@ class BridgeNativeTest {
     }
 
     @Test fun `a telemetry record written by a game is read back whole`() {
-        val sent = TelemetryRecord(7, false, 3, 12.5, 270.0, 48.85, 2.29, 3000.0, "Test")
+        val sent = TelemetryRecord(7, false, 3, 12.5, 270.0, 48.85, 2.29, 3000.0, "Test", redline = 7500.0)
         val bytes = ByteBuffer.allocateDirect(BridgeLayout.SIZE)
         TelemetryRecord.write(sent, bytes)
         assertEquals(lib.cpb_last_error(), 0, lib.cpb_telemetry_open())

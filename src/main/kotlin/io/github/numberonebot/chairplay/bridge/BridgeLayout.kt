@@ -97,6 +97,8 @@ data class TelemetryRecord(
     val longitude: Double,
     val rpm: Double?,
     val source: String,
+    /** Where the tachometer's red zone starts, in rpm; null when not given or not an engine's. */
+    val redline: Double? = null,
 ) {
     companion object {
         private const val MAGIC = 0
@@ -110,11 +112,16 @@ data class TelemetryRecord(
         private const val LATITUDE = 40
         private const val LONGITUDE = 48
         private const val RPM = 56
+        private const val REDLINE = 60
         private const val SOURCE = 64
         private const val SOURCE_MAX = 32
         private const val FLAG_RPM = 1
         private const val FLAG_GEAR = 2
         private const val FLAG_PAUSED = 4
+        private const val FLAG_REDLINE = 8
+        /** A red line at or below 1000 rpm or above 20000 is no engine's (and would number a dial past reading). */
+        private const val LOWEST_REDLINE = 1000.0
+        private const val HIGHEST_REDLINE = 20000.0
 
         /** Null when the magic or version differ, or a required value is not finite or out of range. */
         fun parse(bytes: ByteBuffer): TelemetryRecord? {
@@ -130,6 +137,7 @@ data class TelemetryRecord(
             if (!longitude.isFinite() || longitude !in -180.0..180.0) return null
             val flags = b.getInt(FLAGS)
             val rpm = b.getFloat(RPM).toDouble()
+            val redline = b.getFloat(REDLINE).toDouble()
             return TelemetryRecord(
                 counter = b.getInt(COUNTER),
                 paused = flags and FLAG_PAUSED != 0,
@@ -140,6 +148,8 @@ data class TelemetryRecord(
                 longitude = longitude,
                 rpm = if (flags and FLAG_RPM != 0 && rpm.isFinite()) rpm else null,
                 source = BridgeLayout.readText(b, SOURCE, SOURCE_MAX),
+                // NaN fails both comparisons, infinity the second.
+                redline = if (flags and FLAG_REDLINE != 0 && redline > LOWEST_REDLINE && redline <= HIGHEST_REDLINE) redline else null,
             )
         }
 
@@ -155,6 +165,7 @@ data class TelemetryRecord(
             if (record.rpm != null) flags = flags or FLAG_RPM
             if (record.gear != null) flags = flags or FLAG_GEAR
             if (record.paused) flags = flags or FLAG_PAUSED
+            if (record.redline != null) flags = flags or FLAG_REDLINE
             b.putInt(FLAGS, flags)
             b.putInt(GEAR, record.gear ?: 0)
             b.putDouble(SPEED, record.speed)
@@ -162,6 +173,7 @@ data class TelemetryRecord(
             b.putDouble(LATITUDE, record.latitude)
             b.putDouble(LONGITUDE, record.longitude)
             b.putFloat(RPM, (record.rpm ?: 0.0).toFloat())
+            b.putFloat(REDLINE, (record.redline ?: 0.0).toFloat())
             BridgeLayout.writeText(b, SOURCE, SOURCE_MAX, record.source)
         }
     }

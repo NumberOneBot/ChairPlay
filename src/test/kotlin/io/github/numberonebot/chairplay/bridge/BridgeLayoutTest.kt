@@ -49,6 +49,7 @@ class BridgeLayoutTest {
         b.putDouble(40, 50.45)
         b.putDouble(48, 30.52)
         b.putFloat(56, 2500f)
+        b.putFloat(60, 7500f)
         text(b, 64, "SimHub")
         return b
     }
@@ -95,6 +96,25 @@ class BridgeLayoutTest {
         val t = TelemetryRecord.parse(telemetry(0))!!
         assertNull(t.rpm)
         assertNull(t.gear)
+        assertNull(t.redline)
+    }
+
+    @Test
+    fun `telemetry gives the redline at 60 with flag bit 3`() {
+        assertEquals(7500.0, TelemetryRecord.parse(telemetry(0b1000))!!.redline!!, 0.0)
+        assertNull(TelemetryRecord.parse(telemetry(0b0011))!!.redline)
+    }
+
+    // A redline no engine has is not given: the record still drives, only the gauges keep the GPS car's.
+    @Test
+    fun `telemetry ignores a redline no engine has`() {
+        for (bad in listOf(Float.NaN, Float.POSITIVE_INFINITY, -7000f, 0f, 500f, 1000f, 20001f)) {
+            val t = TelemetryRecord.parse(telemetry(0b1000).also { it.putFloat(60, bad) })
+            assertNotNull("$bad", t)
+            assertNull("$bad", t!!.redline)
+        }
+        assertEquals(1001.0, TelemetryRecord.parse(telemetry(0b1000).also { it.putFloat(60, 1001f) })!!.redline!!, 0.0)
+        assertEquals(20000.0, TelemetryRecord.parse(telemetry(0b1000).also { it.putFloat(60, 20000f) })!!.redline!!, 0.0)
     }
 
     @Test
@@ -115,12 +135,14 @@ class BridgeLayoutTest {
 
     @Test
     fun `write then parse gives the record back`() {
-        val r = TelemetryRecord(9, true, -1, -2.5, 90.0, -33.9, 151.2, 800.0, "Assetto Corsa")
+        val r = TelemetryRecord(9, true, -1, -2.5, 90.0, -33.9, 151.2, 800.0, "Assetto Corsa", redline = 8250.0)
         val b = buffer()
         TelemetryRecord.write(r, b)
         assertNotNull(TelemetryRecord.parse(b))
         assertEquals(r, TelemetryRecord.parse(b))
-        val bare = r.copy(gear = null, rpm = null, paused = false)
+        assertEquals(8, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16) and 8)
+        assertEquals(8250f, b.getFloat(60), 0f)
+        val bare = r.copy(gear = null, rpm = null, paused = false, redline = null)
         TelemetryRecord.write(bare, b)
         assertEquals(bare, TelemetryRecord.parse(b))
     }

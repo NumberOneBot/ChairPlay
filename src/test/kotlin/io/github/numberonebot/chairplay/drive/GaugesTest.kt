@@ -42,6 +42,25 @@ class GaugesTest {
         assertEquals(64, tach.ticks().count { it.size == GaugeScale.TickSize.FINE })
     }
 
+    // A game's redline: red from it, dashed half a thousand before, and numbered to the next whole thousand at least
+    // half a thousand past it.
+    @Test
+    fun `the tachometer fits any redline`() {
+        fun check(redline: Double, max: Double) {
+            val tach = GaugeScale.tachometer(redline)
+            assertEquals("$redline", max, tach.max, 0.0)
+            assertEquals((0..max.toInt()).map { it.toDouble() }, tach.numbers)
+            assertEquals(redline / 1000, tach.redFrom!!, 0.0)
+            assertEquals(redline / 1000 - 0.5, tach.warnFrom!!, 0.0)
+        }
+        check(9000.0, 10.0)
+        check(7500.0, 8.0)
+        check(7600.0, 9.0)
+        check(2500.0, 3.0)
+        check(18500.0, 19.0)
+        assertEquals(GaugeScale.tachometer(CarSpec()), GaugeScale.tachometer(CarSpec().redlineRpm))
+    }
+
     // The gauges are drive mode's: on with it (F10 or the GPS page), gone with it, and never while the GPS is off.
     @Test
     fun `the gauges show exactly while drive mode is on`() {

@@ -138,6 +138,11 @@ class DriveControl(
     /** Asks for drive mode [on] or off from any thread; the next [pass] puts it in force. */
     fun requestKeyboard(on: Boolean) = keyboardRequest.set(on)
 
+    /** Puts the drive mode last asked for in force: each [pass] does, and a game's telemetry driving instead of it. */
+    fun takeKeyboardRequest() {
+        keyboardRequest.getAndSet(null)?.let { on -> if (on != keyboard) toggleKeyboard() }
+    }
+
     /** Takes a key in drive mode when it is a plain arrow; false leaves it to the app. */
     fun key(key: Int, action: Int, mods: Int = 0): Boolean = keyboard && keys.key(key, action, mods)
 
@@ -146,7 +151,7 @@ class DriveControl(
      * due: at frame pace then, now and then to look at a gamepad, else null to wait for the next event.
      */
     fun pass(): Double? {
-        keyboardRequest.getAndSet(null)?.let { on -> if (on != keyboard) toggleKeyboard() }
+        takeKeyboardRequest()
         val axes = readGamepad()
         gamepad = axes != null
         val input = combined(combined(if (keyboard) keys.input() else CarInput(), axes?.let(::gamepadInput) ?: CarInput()), scripted)
