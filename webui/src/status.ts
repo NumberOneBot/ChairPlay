@@ -16,7 +16,7 @@ export function describe(state: Pick<AppState, 'phase' | 'knownIphone'>): Status
     case 'idle':
       return { title: 'Not connected', detail: 'Press Connect when the iPhone is nearby.', tone: 'idle' }
     case 'starting':
-      return { title: 'Starting…', detail: 'Preparing the Wi-Fi and the CarPlay service.', tone: 'busy' }
+      return { title: 'Connecting…', detail: "Preparing this PC's Wi-Fi and the CarPlay service.", tone: 'busy' }
     case 'calling':
       return {
         title: 'Waiting for the iPhone…',
@@ -26,7 +26,10 @@ export function describe(state: Pick<AppState, 'phase' | 'knownIphone'>): Status
     case 'joining':
       return {
         title: 'Connecting…',
-        detail: state.knownIphone ? 'The iPhone is joining the Wi-Fi.' : 'Accept CarPlay on the iPhone if it asks.',
+        // The Bluetooth half is done by now: the iPhone answered and took the Wi-Fi network.
+        detail: state.knownIphone
+          ? 'Paired over Bluetooth. The iPhone is joining the Wi-Fi.'
+          : 'Paired over Bluetooth. Accept CarPlay on the iPhone if it asks.',
         tone: 'busy',
       }
     case 'active':
