@@ -30,6 +30,16 @@ interface UiDriving {
     fun screenshot(): Boolean
 }
 
+/** What the start screen hears of the phone's sessions: one going active, one ending, and the car button. */
+interface UiSessions {
+    fun sessionActive()
+
+    fun sessionEnded()
+
+    /** The settings screen covers the phone's; false when the page is not in the window but in a browser. */
+    fun carButton(): Boolean
+}
+
 /**
  * The start and settings screens as the app runs them: the state machine, the settings file, the HTTP bridge on
  * 127.0.0.1, and the page in the main window ([view]), or in the default browser without WebView2. [wake] makes
@@ -69,7 +79,7 @@ class ChairPlayUi(
     /** The GPS car's calls: drive mode, the car driven by a script, and the CarPlay screens saved. */
     private val driving: UiDriving? = null,
     bufferedAudio: () -> Map<String, Any>? = { null },
-) : Closeable {
+) : Closeable, UiSessions {
     val model = UiModel(config.wifi != null, config.autoconnect, config.autoshow, setupDone = SetupStore(dir).done())
     private val settingsFile = SettingsFile(dir.resolve(DesktopConfig.SETTINGS_FILE))
     private val updates = UpdateChecks(BuildInfo.load().version, log = log)
@@ -193,15 +203,15 @@ class ChairPlayUi(
 
     fun bringUp(status: BringUpStatus) = model.bringUp(status)
 
-    fun sessionActive() = model.sessionActive()
+    override fun sessionActive() = model.sessionActive()
 
-    fun sessionEnded() = model.sessionEnded()
+    override fun sessionEnded() = model.sessionEnded()
 
     /**
      * The car button on the CarPlay home screen: the settings screen covers CarPlay. Returns false when the page is
      * not in the window, where the browser shows the settings instead.
      */
-    fun carButton(): Boolean {
+    override fun carButton(): Boolean {
         model.carButton()
         return controller.embedded
     }

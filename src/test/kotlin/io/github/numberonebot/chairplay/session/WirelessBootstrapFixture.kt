@@ -53,6 +53,10 @@ abstract class WirelessBootstrapFixture {
         settings: String = "",
         sink: MediaSink = object : MediaSink {},
         location: Iap2LocationProvider? = null,
+        /** Hears the sessions after the fixture's own log; the default hears nothing. */
+        sessions: AirPlaySessionListener = object : AirPlaySessionListener {},
+        /** Hears each status as it is queued in [statuses]. */
+        onStatus: (BringUpStatus) -> Unit = {},
     ) : Closeable {
         val loopback: InetAddress = InetAddress.getByName("127.0.0.1")
         val logs = CopyOnWriteArrayList<String>()
@@ -73,9 +77,10 @@ abstract class WirelessBootstrapFixture {
             // An AirPlay pairing record, as the first session with this iPhone leaves: its 32-byte key in hex. A shorter
             // one is damaged, moved out of pairings/, and leaves the iPhone unknown.
             if (knownIphone) Files.createDirectories(dir.resolve("pairings")).resolve("6970686f6e65").let { Files.writeString(it, "00".repeat(32)) }
-            val listener = object : AirPlaySessionListener {
+            val listener = object : AirPlaySessionListener by sessions {
                 override fun onDebugLog(message: String) {
                     logs += message
+                    sessions.onDebugLog(message)
                 }
             }
             WirelessBootstrap(DesktopConfig(dir), sink, listener, tap) {
@@ -87,7 +92,10 @@ abstract class WirelessBootstrapFixture {
                 }.also(parts::add)
             }.also {
                 it.newLocation = { location }
-                it.onStatus = statuses::add
+                it.onStatus = { status ->
+                    statuses.add(status)
+                    onStatus(status)
+                }
                 it.onConnection = { now ->
                     displays.add(WindowSize(now.displayWidth, now.displayHeight))
                     altscreens.add(Holder(now.altscreen?.size))

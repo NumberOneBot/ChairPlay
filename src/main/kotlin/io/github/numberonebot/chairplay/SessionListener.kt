@@ -3,7 +3,7 @@ package io.github.numberonebot.chairplay
 import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import io.github.numberonebot.chairplay.media.VideoWindow
-import io.github.numberonebot.chairplay.ui.ChairPlayUi
+import io.github.numberonebot.chairplay.ui.UiSessions
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference
  */
 internal fun sessionListener(
     active: AtomicReference<AirPlaySession?>,
-    ui: ChairPlayUi,
+    ui: UiSessions,
     window: VideoWindow,
     title: MainTitle,
     theme: CarPlayTheme,
