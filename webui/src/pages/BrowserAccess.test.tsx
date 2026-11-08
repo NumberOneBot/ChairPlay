@@ -15,7 +15,11 @@ const uiServer = (overrides: Partial<AppState['uiServer']>): AppState['uiServer'
   ({ port: 7529, configuredPort: 7529, network: false, urls: [], ...overrides })
 
 const browserAccess = (overrides: Partial<AppState['uiServer']>) =>
-  render(<BrowserAccess state={appState({ uiServer: uiServer(overrides) })} settings={settings} />)
+  render(<BrowserAccess state={appState({ uiServer: uiServer(overrides) })} backend={new FakeBackend()} settings={settings} />)
+
+const openInBrowser = () => screen.getByRole('button', { name: 'Open in browser' }) as HTMLButtonElement
+const lock = (lock: Partial<AppState['lock']>): AppState['lock'] =>
+  ({ mine: false, holder: null, shared: false, handOver: false, ...lock })
 
 describe('Browser access', () => {
   it('says when the port in the settings was taken', () => {
@@ -42,6 +46,32 @@ describe('Browser access', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'Allow access from the home network' }))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'ui.network': 'true' }]))
+  })
+
+  it('hands the settings from the window over to the browser', () => {
+    const backend = new FakeBackend()
+    const state = appState({ embedded: true, lock: lock({ mine: true, holder: 'window' }) })
+    render(<BrowserAccess state={state} backend={backend} settings={settings} />)
+
+    fireEvent.click(openInBrowser())
+
+    expect(backend.browserOpens).toBe(1)
+  })
+
+  // A tab is in a browser already, and a window without the settings has none to hand over.
+  it('cannot open the browser from a tab, or from a window without the settings', () => {
+    for (const state of [
+      appState({ embedded: false, lock: lock({ mine: true, holder: 'tab' }) }),
+      appState({ embedded: true, lock: lock({ holder: 'tab' }) }),
+    ]) {
+      const backend = new FakeBackend()
+      render(<BrowserAccess state={state} backend={backend} settings={settings} />)
+
+      expect(openInBrowser().disabled).toBe(true)
+      fireEvent.click(openInBrowser())
+      expect(backend.browserOpens).toBe(0)
+      cleanup()
+    }
   })
 
   it('lists the addresses while the network is on', () => {

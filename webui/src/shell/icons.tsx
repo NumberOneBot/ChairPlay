@@ -261,6 +261,19 @@ export function InfoIcon() {
   )
 }
 
+/** A globe in outline, the web's sign, on Open in browser: its rim, a meridian, and the equator. */
+export function BrowserIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="1.3">
+        <circle cx="8" cy="8" r="6.6" />
+        <ellipse cx="8" cy="8" rx="2.8" ry="6.6" />
+        <path d="M1.4 8h13.2" />
+      </g>
+    </svg>
+  )
+}
+
 /** A small padlock after a key that cannot be moved or removed. */
 export function LockIcon() {
   return (

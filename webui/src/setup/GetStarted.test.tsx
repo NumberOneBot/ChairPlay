@@ -69,6 +69,14 @@ describe('Get started', () => {
     expect(stateOf('Pair the iPhone')).toBe('now')
   })
 
+  // A rule that lets the iPhone in but not other devices to the settings (ui.network on) holds no step back.
+  it('counts the firewall step done when only the settings port is closed', async () => {
+    await guide(firstStart({ mfiPresent: true, firewall: 'partial' }))
+
+    expect(stateOf('Firewall')).toBe('done')
+    expect(stateOf('Pair the iPhone')).toBe('now')
+  })
+
   it('opens the MFi folder', async () => {
     const backend = await guide(firstStart())
 

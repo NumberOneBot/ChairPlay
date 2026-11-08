@@ -207,11 +207,20 @@ export class Api implements Backend {
         if (!stopped) poll = window.setTimeout(retry, 2000)
       }
     }
+    // Back from the back/forward cache, the tab's stream was closed while it was kept, with no error to say so.
+    const back = (event: PageTransitionEvent) => {
+      if (!event.persisted || stopped) return
+      source?.close()
+      window.clearTimeout(poll)
+      open()
+    }
     open()
+    window.addEventListener('pageshow', back)
     return () => {
       stopped = true
       source?.close()
       window.clearTimeout(poll)
+      window.removeEventListener('pageshow', back)
     }
   }
 }

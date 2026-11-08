@@ -58,6 +58,15 @@ describe('usePresence', () => {
     expect(backend.presences).toEqual(['visible'])
   })
 
+  // Back from that cache, it reports itself again rather than wait for its next heartbeat.
+  it('a tab back from going back reports itself at once', () => {
+    const backend = new FakeBackend()
+    render(<Page backend={backend} page="abc" />)
+
+    act(() => void window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true })))
+    expect(backend.presences).toEqual(['visible', 'visible'])
+  })
+
   it('the window, the controls window and a shared page never report', async () => {
     for (const page of ['window', 'controls', 'shared']) {
       const backend = new FakeBackend()

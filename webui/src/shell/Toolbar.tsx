@@ -10,9 +10,10 @@ import { networkWaits } from '../pages/NetworkConnection'
 const DOT = { ok: 'ok', busy: 'busy', warn: 'warn', idle: '' } as const
 
 /**
- * The bar over every page: CarPlay and the app's other windows at the left; at the right what waits for a restart,
- * where the connection stands, and Connect, or Reconnect and Disconnect once connecting has begun. In a narrow window
- * the window buttons show their icons alone, and the status gives way before the buttons do.
+ * The bar over every page: CarPlay and the app's other windows at the left, which act on the app's own windows only
+ * (a tab never shows CarPlay itself); at the right what waits for a restart, where the connection stands, and Connect,
+ * or Reconnect and Disconnect once connecting has begun. In a narrow window the window buttons show their icons alone,
+ * and the status gives way before the buttons do.
  */
 export function Toolbar({ state, backend, guide }: { state: AppState; backend: Backend; guide?: Steps | null }) {
   const session = state.canShowCarPlay
@@ -33,14 +34,8 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
         type="button"
         className="btn"
         aria-label="CarPlay"
-        disabled={!session || !state.embedded}
-        title={
-          !session
-            ? 'Connect the iPhone first'
-            : state.embedded
-              ? 'Show CarPlay (Esc)'
-              : "CarPlay shows in ChairPlay's window"
-        }
+        disabled={!session}
+        title={!session ? 'Connect the iPhone first' : state.embedded ? 'Show CarPlay (Esc)' : "Show CarPlay in ChairPlay's window"}
         onClick={() => backend.show('carplay')}
       >
         <CarPlayIcon />

@@ -204,6 +204,15 @@ describe('Connection page, messages', () => {
     await waitFor(() => expect(message.querySelector('.errtext')).not.toBeNull())
   })
 
+  // With ui.network on, a rule added before the switch lets the iPhone in but not another device to the settings.
+  it("adds the rule again when it does not open the settings' port", async () => {
+    const backend = await connection(appState({ ...live, setup: setup({ firewall: 'partial' }) }))
+
+    fireEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Add the rule' }))
+
+    await waitFor(() => expect(backend.firewallRules).toBe(1))
+  })
+
   it('says nothing of the firewall while it is off', async () => {
     await connection(appState({ ...live, setup: setup({ firewall: 'off' }) }))
 

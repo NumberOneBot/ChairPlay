@@ -117,6 +117,24 @@ code {
   color: var(--muted);
 }
 
+/* A tab whose settings are open elsewhere: where they are, in the waiting screen's type, centered on the page */
+.app-message.elsewhere {
+  padding: 0 16px;
+  text-align: center;
+}
+
+.app-message.elsewhere p {
+  margin: 0;
+}
+
+.app-message.elsewhere .title {
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
 /* Lost contact with the app: a strip over the window's bottom edge until it answers again */
 .lost {
   position: fixed;

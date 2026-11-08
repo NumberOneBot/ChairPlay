@@ -47,6 +47,17 @@ class FirewallTest {
         assertFalse(state(carplay, rule(FIREWALL_RULE, allow = true, protocol = TCP, ports = "7529", enabled = false), uiPort = 7529).allowRule)
     }
 
+    // The iPhone gets in through it: what is missing is only the settings' port, which the messages must not misname.
+    @Test
+    fun `our rule without the UI's port is told apart from no rule at all`() {
+        val carplay = rule(FIREWALL_RULE, allow = true, protocol = TCP, ports = "7000-7010,49152-65535")
+
+        assertTrue(state(carplay, uiPort = 7529).uiPortMissing)
+        assertFalse(state(uiPort = 7529).uiPortMissing)
+        assertFalse(state(carplay).uiPortMissing)
+        assertFalse(state(carplay, rule(FIREWALL_RULE, allow = true, protocol = TCP, ports = "7529"), uiPort = 7529).uiPortMissing)
+    }
+
     @Test
     fun `the hint opens the UI's port while the network is on`() {
         val lines = firewallHint(7000, program, uiPort = 7529).lines()

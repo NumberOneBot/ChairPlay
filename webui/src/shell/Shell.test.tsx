@@ -77,11 +77,15 @@ describe('Shell toolbar', () => {
     expect(button('CarPlay').disabled).toBe(true)
   })
 
-  // In a browser CarPlay shows in ChairPlay's own window, which the page cannot bring up.
-  it('cannot show CarPlay from a browser', () => {
-    render(<Shell state={appState({ ...live, embedded: false })} backend={new FakeBackend()} />)
+  // A tab never shows CarPlay itself: the app shows it in ChairPlay's window.
+  it('shows CarPlay in the window from a browser tab', () => {
+    const backend = new FakeBackend()
+    render(<Shell state={appState({ ...live, embedded: false })} backend={backend} />)
 
-    expect(button('CarPlay').disabled).toBe(true)
+    expect(button('CarPlay').disabled).toBe(false)
+    fireEvent.click(button('CarPlay'))
+
+    expect(backend.shown).toEqual(['carplay'])
   })
 
   it('shows and hides the windows, pressed while shown', () => {

@@ -1,13 +1,17 @@
 // The Connection page's "Browser access" group: the address the settings open at in a browser on this PC, a word
-// when ui.port was taken at start and this run serves them on another port, and ui.network, which opens them to the
-// home network at this PC's addresses (listed while this run listens on them).
-import type { AppState } from '../api'
+// when ui.port was taken at start and this run serves them on another port, Open in browser, which hands the window's
+// settings to a tab, and ui.network, which opens them to the home network at this PC's addresses (listed while this
+// run listens on them).
+import type { AppState, Backend } from '../api'
 import { Group, Message, Row, Switch } from '../shell/controls'
+import { BrowserIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import { Changed, pendingOf } from './parts'
 
-export function BrowserAccess({ state, settings }: { state: AppState; settings: Settings }) {
+export function BrowserAccess({ state, backend, settings }: { state: AppState; backend: Backend; settings: Settings }) {
   const { port, configuredPort, network, urls } = state.uiServer
+  // Only the window holding the settings has them to hand over; a tab is in a browser already.
+  const canHandOver = state.embedded && state.lock.mine
   return (
     <>
       <Group title="Browser access" />
@@ -22,6 +26,24 @@ export function BrowserAccess({ state, settings }: { state: AppState; settings: 
       <Row label="This PC">
         {/* Text to select and copy, not a link: a link would take the window's own page away. */}
         <code>{`http://127.0.0.1:${port}/`}</code>
+      </Row>
+      <Row>
+        <button
+          type="button"
+          className="btn small"
+          disabled={!canHandOver}
+          title={
+            canHandOver
+              ? 'Open the settings in the default browser'
+              : state.embedded
+                ? 'Close the settings in the browser first'
+                : "Use this in ChairPlay's window"
+          }
+          onClick={() => void backend.openInBrowser()}
+        >
+          <BrowserIcon />
+          Open in browser
+        </button>
       </Row>
       <Row title="Let phones and other PCs on this network open the settings at this PC's address">
         <Switch

@@ -15,9 +15,15 @@ const val FIREWALL_RULE = "ChairPlay CarPlay inbound"
 
 /**
  * Whether our allow rule exists, the enabled inbound block rules for the program with their profiles, and whether the
- * firewall is off for the networks the PC is on, which lets the iPhone in without any rule.
+ * firewall is off for the networks the PC is on, which lets the iPhone in without any rule. [uiPortMissing]: ours
+ * exists and lets the iPhone in, but does not open ui.network's port, so [allowRule] is false for that alone.
  */
-internal data class FirewallState(val allowRule: Boolean, val blocking: List<String>, val off: Boolean = false)
+internal data class FirewallState(
+    val allowRule: Boolean,
+    val blocking: List<String>,
+    val off: Boolean = false,
+    val uiPortMissing: Boolean = false,
+)
 
 /** The firewall profiles as Windows Firewall's API numbers them (NET_FW_PROFILE_TYPE2), each a bit. */
 internal const val DOMAIN = 1
@@ -87,7 +93,7 @@ internal fun firewallState(
     val blocking = rules.filter { it.enabled && it.inbound && !it.allow && forProgram(it) }
         .map { "\"${it.name}\" (profiles ${profileNames(it.profiles)})" }
     val applying = (connectedProfiles and EVERY_PROFILE).takeIf { it != 0 } ?: EVERY_PROFILE
-    return FirewallState(allow, blocking, off = applying and enabledProfiles == 0)
+    return FirewallState(allow, blocking, off = applying and enabledProfiles == 0, uiPortMissing = ours.isNotEmpty() && !opensUi)
 }
 
 private fun profileNames(profiles: Int): String =

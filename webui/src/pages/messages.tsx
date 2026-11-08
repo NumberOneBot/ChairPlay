@@ -222,6 +222,19 @@ export function SetupMessages({
           </CodeLine>
         </Message>
       )}
+      {/* ui.network is on, and our rule, added before it, lets the iPhone in but not another device to the settings. */}
+      {setup.firewall === 'partial' && (
+        <Message
+          tone="warn"
+          head="ChairPlay's firewall rule doesn't open the settings' port."
+          text="To open the settings from another device, add the rule again."
+        >
+          <AddRule backend={backend} />
+          <CodeLine text={setup.firewallCommands}>
+            <CopyButton text={setup.firewallCommands} />
+          </CodeLine>
+        </Message>
+      )}
       {setup.firewall === 'unknown' && (
         <Message
           tone="warn"

@@ -118,6 +118,9 @@ enum class FirewallStatus {
 
     /** Off for the networks the PC is on: nothing to add, nothing to warn of. */
     OFF,
+
+    /** Ours lets the iPhone in, but not other devices to the settings: added before ui.network was turned on. */
+    PARTIAL,
 }
 
 /** What the start screen's setup steps refer to. */

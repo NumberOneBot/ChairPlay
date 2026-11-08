@@ -2,8 +2,11 @@
 
 export type Phase = 'setup' | 'idle' | 'starting' | 'calling' | 'joining' | 'active' | 'retrying'
 export type Screen = 'start' | 'settings' | 'carplay'
-/** Whether Windows Firewall lets the iPhone in; 'off' when it is off for the networks the PC is on. */
-export type Firewall = 'present' | 'missing' | 'blocked' | 'unknown' | 'off'
+/**
+ * Whether Windows Firewall lets the iPhone in; 'off' when it is off for the networks the PC is on; 'partial' when our
+ * rule lets the iPhone in but, with ui.network on, does not open the settings' port to other devices.
+ */
+export type Firewall = 'present' | 'missing' | 'partial' | 'blocked' | 'unknown' | 'off'
 export type Applies = 'now' | 'reconnect' | 'restart'
 /** The app's windows besides the main one: the AltScreen and the on-screen car controls. */
 export type WindowName = 'altscreen' | 'controls'

@@ -56,4 +56,13 @@ class FirewallCheckTest {
 
         assertTrue(text, "protocol=TCP localport=7529" in text)
     }
+
+    @Test
+    fun `our rule without the UI's port is reported apart, with the commands that add it again`() {
+        val state = FirewallState(allowRule = false, blocking = emptyList(), uiPortMissing = true)
+        val (status, text) = loggedAtWarning(state, uiPort = 7529)
+
+        assertEquals(FirewallStatus.PARTIAL, status)
+        assertTrue(text, "protocol=TCP localport=7529" in text)
+    }
 }

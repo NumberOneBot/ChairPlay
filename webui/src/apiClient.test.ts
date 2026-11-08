@@ -172,4 +172,32 @@ describe('Api.subscribe', () => {
     expect(sources[1].url).toBe('/api/events?page=p1&visible=0')
     stop()
   })
+
+  // A tab back from the back/forward cache had its stream closed while it was kept, and may get no error for it.
+  it('opens its stream again when the tab comes back from going back', () => {
+    const sources: { url: string; closed: boolean }[] = []
+    vi.stubGlobal('EventSource', class {
+      onmessage: ((event: MessageEvent) => void) | null = null
+      onerror: (() => void) | null = null
+      closed = false
+      constructor(readonly url: string) {
+        sources.push(this)
+      }
+      close() {
+        this.closed = true
+      }
+    })
+
+    const stop = new Api('p1').subscribe(() => {}, () => {})
+    window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: false }))
+    expect(sources).toHaveLength(1)
+    window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }))
+
+    expect(sources).toHaveLength(2)
+    expect(sources[0].closed).toBe(true)
+    expect(sources[1].url).toBe('/api/events?page=p1&visible=1')
+    stop()
+    window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }))
+    expect(sources).toHaveLength(2)
+  })
 })

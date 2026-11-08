@@ -26,13 +26,19 @@ export function usePresence(backend: Pick<Backend, 'presence'>, page: string): v
       window.clearInterval(heartbeat)
       void backend.presence(false, true)
     }
+    // Back from that cache, it reports itself at once rather than at its next heartbeat.
+    const back = (event: PageTransitionEvent) => {
+      if (event.persisted) report()
+    }
     report()
     document.addEventListener('visibilitychange', report)
     window.addEventListener('pagehide', leave)
+    window.addEventListener('pageshow', back)
     return () => {
       window.clearInterval(heartbeat)
       document.removeEventListener('visibilitychange', report)
       window.removeEventListener('pagehide', leave)
+      window.removeEventListener('pageshow', back)
     }
   }, [backend, page])
 }

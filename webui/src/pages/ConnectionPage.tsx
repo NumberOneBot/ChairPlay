@@ -145,7 +145,7 @@ export function ConnectionPage(props: {
         />
         {later('ui.autoshow')}
       </Row>
-      <BrowserAccess state={state} settings={settings} />
+      <BrowserAccess state={state} backend={backend} settings={settings} />
     </>
   )
 }

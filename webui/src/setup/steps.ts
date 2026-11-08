@@ -48,6 +48,8 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null): Ste
     present: 'Rule added',
     unknown: 'Not checked',
     missing: 'Rule missing',
+    // The iPhone gets in; only another device's way to the settings waits for the rule (the Connection page says so).
+    partial: 'Rule added',
     blocked: 'Blocked by a rule',
     off: 'Firewall off',
   }[setup.firewall]
