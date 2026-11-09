@@ -33,6 +33,9 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // Building jsdom took 70 % of the run when each file got a new worker; vmThreads builds it once per worker and
+    // still gives each file a fresh context.
+    pool: 'vmThreads',
     include: ['src/**/*.test.{ts,tsx}'],
   },
 })

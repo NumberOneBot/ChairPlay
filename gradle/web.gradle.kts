@@ -150,9 +150,9 @@ val webuiTest by tasks.registering(Exec::class) {
     outputs.file(report)
 }
 
-// The built page goes into the jar, and the UI's tests are part of the suite.
+// The built page goes into the jar. `test` runs the Kotlin tests alone; `check` runs them and the UI's.
 the<SourceSetContainer>()["main"].resources.srcDir(files(webuiResources).builtBy(webuiBuild))
-tasks.named("test") { dependsOn(webuiTest) }
+tasks.named("check") { dependsOn(webuiTest) }
 
 // The webview library (https://github.com/webview/webview, MIT) embeds WebView2 into an existing window; zig's
 // C++ compiler builds it with our few additions (src/native/webview) into chairplay_webview.dll. The headers

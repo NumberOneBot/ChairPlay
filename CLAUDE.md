@@ -18,6 +18,8 @@ Rules for coding agents, learned from mistakes made on this port. DiPlay itself 
 
 - JDK 17 only. From Git Bash: `export JAVA_HOME="/c/Program Files/Java/jdk-17.0.1"`, then `./gradlew …`. Never run DiPlay's own build in `upstream/`: it needs the Android SDK.
 - Run tests with a bound and a log, not through a pipe that can hide a hang: `timeout 900 ./gradlew test --console=plain > <scratchpad>/test.log 2>&1`, then read the log.
+- While working, run only the tests of what changed: `./gradlew test --tests '<package>.*'` for Kotlin, `npm test -- <files>` in `webui/` for the page. `test` runs the Kotlin tests alone; `./gradlew check` runs them and the page's. Run `check` once before a task's commit and once before a merge.
+- Only the session that started the builds stops the Gradle daemon: a subagent never runs `./gradlew --stop`, which breaks other builds.
 - Count results from `build/test-results/test/*.xml`, and check their time: a run that did not reach the tests leaves the previous run's reports behind.
 - Upstream's C code (SpeexDSP behind `SpeexEchoCanceller`) is built by `speexEchoDll` with a pinned zig that `installZig` downloads into the Gradle user home. The first build needs about 6 minutes and the network. To move zig, change `zigVersion` and `zigSha256` in `gradle/native.gradle.kts` together (the hash is in https://ziglang.org/download/index.json). The DLL ships in the image's root, next to the exe: jpackage's `app/` folder is not on `java.library.path`.
 - `gradlew.bat` is patched: it passes no `-classpath` (the empty one broke the Oracle `javapath` java.exe stub when `JAVA_HOME` is unset). Regenerating the wrapper (`gradle wrapper`) drops the patch; put it back.

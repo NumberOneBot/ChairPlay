@@ -72,7 +72,7 @@ jobs:
 
       - name: Test and build the app image
         shell: pwsh
-        run: ./gradlew.bat test jpackageImage "-Pchairplay.version=$env:VERSION" --console=plain
+        run: ./gradlew.bat check jpackageImage "-Pchairplay.version=$env:VERSION" --console=plain
 
       - name: Prepare optional MFi files
         if: env.BUNDLE_MFI == 'true'

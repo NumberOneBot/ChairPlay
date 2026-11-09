@@ -11,7 +11,7 @@
     {
       "label": "Test",
       "type": "shell",
-      "command": ".\\gradlew.bat test",
+      "command": ".\\gradlew.bat check",
       "group": "test",
       "problemMatcher": []
     },
