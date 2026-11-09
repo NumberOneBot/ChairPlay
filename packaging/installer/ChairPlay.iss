@@ -34,7 +34,8 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
-; Never close a running ChairPlay: a hard stop leaves the iPhone ignoring new sessions. [Code] asks the user instead.
+; Never let Windows close a running ChairPlay: a hard stop leaves the iPhone ignoring new sessions. [Code] closes it
+; gracefully instead, and asks the user when that does not work.
 CloseApplications=no
 RestartApplications=no
 SetupIconFile=..\chairplay.ico
@@ -79,6 +80,8 @@ const
   OPEN_EXISTING = 3;
   INVALID_HANDLE_VALUE = -1;
   ERROR_SHARING_VIOLATION = 32;
+  // Ending the CarPlay session takes seconds (about 8 here); past this the user is asked to close ChairPlay.
+  CloseWaitMillis = 15000;
   RunningMessage = 'ChairPlay is running. Close its window, then click Retry.';
   DeleteDataQuestion = 'Also delete your ChairPlay settings, iPhone pairings, and MFi files?' + #13#10#13#10 +
     'Keep them to install ChairPlay again later without setting it up again.';
@@ -124,6 +127,32 @@ begin
     Result := SuppressibleMsgBox(RunningMessage, mbError, MB_RETRYCANCEL, IDCANCEL) = IDRETRY;
 end;
 
+// Closes the ChairPlay running from {app} as its own exit does: taskkill without /F sends its window WM_CLOSE, and the
+// app ends the CarPlay session and lets go of ChairPlay.lock before it exits. Only one copy runs at a time, so the only
+// ChairPlay.exe is this one. Waits up to CloseWaitMillis for the lock on a progress page, which keeps the wizard
+// answering; a copy still running is left to WaitUntilClosed.
+procedure CloseRunning();
+var
+  Progress: TOutputProgressWizardPage;
+  ResultCode, Waited: Integer;
+begin
+  if not IsRunning() then
+    Exit;
+  Progress := CreateOutputProgressPage('Closing ChairPlay', 'ChairPlay is ending the CarPlay session.');
+  Progress.Show();
+  try
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM ChairPlay.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Waited := 0;
+    while IsRunning() and (Waited < CloseWaitMillis) do begin
+      Progress.SetProgress(Waited, CloseWaitMillis);
+      Sleep(250);
+      Waited := Waited + 250;
+    end;
+  finally
+    Progress.Hide();
+  end;
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
 #ifdef MfiSourceDir
@@ -134,6 +163,7 @@ begin
     not DirExists(ExpandConstant('{app}\offline-mfi\identity.pk8')) and
     not DirExists(ExpandConstant('{app}\offline-mfi\certificate.p7b'));
 #endif
+  CloseRunning();
   if WaitUntilClosed() then
     Result := ''
   else
