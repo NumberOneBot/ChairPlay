@@ -51,6 +51,10 @@ application {
 
 tasks.test {
     jvmArgs(socketHandleOpens)
+    // Four test JVMs take the Kotlin tests from 88 s to 46 s on 12 cores; more add little, as DesktopBonjourTest's
+    // mDNS waits hold one of them for 21 s. A class runs whole in one JVM, so a class's tests that share a fixed name
+    // (the bridge's status file, port 5353) never run beside each other.
+    maxParallelForks = minOf(4, Runtime.getRuntime().availableProcessors())
 }
 
 apply(from = "gradle/upstream.gradle.kts")
