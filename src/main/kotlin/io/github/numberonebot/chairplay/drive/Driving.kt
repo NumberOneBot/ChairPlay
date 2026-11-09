@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
 /**
  * The spoofed GPS's car for the app: placed at gps.start facing gps.heading, driven by [control] from the window loop,
  * sent to the phone by the [location] each connection makes from it (its [drive], [placed], [settings], [nanoTime] and
- * [satelliteSentences], telling [onSent]), and shown on the GPS page by [state], as each update goes.
+ * [satelliteSentences]), and shown on the GPS page by [state], which the status tick watches ([showPage]).
  * Its place goes back into gps.start and gps.heading ([savePlace]) as it stops and as the app closes, so the settings
  * always say where the car is and the next start begins there. A GPS on with no start starts where Windows locates the
  * PC ([locate], run by [lookup]), as the app opens and as the GPS is turned on.
@@ -40,9 +40,6 @@ class Driving(
         savePlace = save
         findStart()
     }
-
-    /** Hears each update sent to the iPhone; the app shows the GPS page the car then. */
-    @Volatile var onSent: () -> Unit = {}
 
     @Volatile var settings: GpsSettings = settings
         private set
@@ -217,6 +214,17 @@ class Driving(
             "sentences" to status?.requested?.map { SENTENCES[it] ?: "#$it" },
             "sent" to (status?.sent ?: 0L),
         )
+    }
+
+    // What the GPS page was last told it shows; the status tick's thread only.
+    private var shown: Map<String, Any?>? = null
+
+    /** The status tick, four times a second: tells [changed] when what the GPS page shows ([state]) changed since. */
+    fun showPage(changed: () -> Unit) {
+        val now = state()
+        if (now == shown) return
+        shown = now
+        changed()
     }
 
     /** What the gauges show while drive mode is on; null when they are gone. */

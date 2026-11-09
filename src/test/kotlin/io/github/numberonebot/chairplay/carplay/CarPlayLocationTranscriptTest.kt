@@ -42,7 +42,6 @@ class CarPlayLocationTranscriptTest {
     private var settings = GpsSettings(true, satellites = true, headingDegrees = 30.0, car = CarSpec(reverse = true))
     private val driving = Driving(settings, log, gamepad = { axes }, nanoTime = { now }, satelliteSentences = sky,
         locate = { WindowsLocation.Found(kyiv) }, lookup = { it.run() }, telemetry = { TelemetryInput(source, log) { now } })
-    private var told = 0
     private val schedule = FakeSchedule()
     private var failing = false
 
@@ -101,7 +100,6 @@ class CarPlayLocationTranscriptTest {
     }
 
     private fun script() {
-        driving.onSent = { told++ }
         val location = location()
         location.attach { parameters ->
             if (failing) throw java.io.IOException("link ended")
@@ -161,7 +159,6 @@ class CarPlayLocationTranscriptTest {
         location.stop()
         once.stop()
         status("unattached, stopped", once.status())
-        lines += "  told $told"
     }
 
     private fun status(name: String, status: LocationStatus) {

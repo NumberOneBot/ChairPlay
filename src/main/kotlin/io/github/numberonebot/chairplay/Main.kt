@@ -208,17 +208,15 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         if (altscreen.hud) altscreen.repaint()
         if (active.get() == null) altView.sessionGone()
     }
-    // The GPS page follows the car as each update goes to the iPhone, else four times a second, told only when what it
-    // shows changed; the car's place goes into gps.start and gps.heading as it stops.
-    val gpsShown = AtomicReference<Map<String, Any?>>()
-    driving.onSent = { driving.state().let { now -> if (gpsShown.getAndSet(now) != now) ui.gpsChanged() } }
+    // The GPS page follows the car four times a second, on the status tick below, told only when what it shows changed;
+    // the car's place goes into gps.start and gps.heading as it stops.
     driving.saveTo { place -> ui.saveSettings(place) }
     // A session the iPhone went quiet on says so in both windows' titles until it speaks or ends.
     val silence = LinkSilence(active::get) { silent ->
         listOf(window, altscreen).forEach { it.titleNotice(if (silent) "iPhone not responding" else null) }
     }
     themeWatch.scheduleWithFixedDelay({
-        if (driving.state()["listening"] != true) driving.onSent()
+        driving.showPage(ui::gpsChanged)
         audio.updateBufferedAudio()
         silence.check()
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)

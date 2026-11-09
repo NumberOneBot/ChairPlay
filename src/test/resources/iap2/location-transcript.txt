@@ -171,4 +171,3 @@
   closed true
   status attached listening=false requested=[1, 2, 3, 4] sent=68
   status unattached, stopped listening=false requested=[1, 2, 3, 4] sent=2
-  told 70

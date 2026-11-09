@@ -41,4 +41,26 @@ class CarPlayLocationDrivingTest {
         assertEquals(listOf("GGA", "RMC", "PASCD"), state["sentences"])
         assertEquals(1L, state["sent"])
     }
+
+    // The GPS page hears of the car on the status tick alone, and only when what it shows changed: the fixes sent at
+    // gps.rate tell it nothing.
+    @Test
+    fun `the GPS page is told on the status tick, only of a change`() {
+        val driving = driving(GpsSettings(true, start = kyiv, rate = 10))
+        var send: (() -> Unit)? = null
+        val location = CarPlayLocation(driving, false, {}, schedule = { _, action -> send = action; AutoCloseable {} })
+        location.attach {}
+        location.onRequested(setOf(1))
+        location.start()
+        var told = 0
+        driving.showPage { told++ }
+        assertEquals(1, told)
+
+        repeat(10) { send!!() }
+        assertEquals(1, told)
+        driving.showPage { told++ }
+        assertEquals(2, told)
+        driving.showPage { told++ }
+        assertEquals(2, told)
+    }
 }

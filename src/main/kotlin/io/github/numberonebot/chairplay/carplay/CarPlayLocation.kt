@@ -40,14 +40,12 @@ class CarPlayLocation(
     private val settings: () -> GpsSettings = { GpsSettings(enabled = true, satellites = satellites, rate = 1) },
     /** Runs the action every period, read again each time, until closed. */
     private val schedule: (period: () -> Long, action: () -> Unit) -> AutoCloseable = ::repeatEvery,
-    /** Hears each update as it goes, for the GPS page to show what the iPhone was just sent. */
-    private val onSent: () -> Unit = {},
     /** Calculated from the same position and UTC as the fix; null while fresh orbital data is unavailable. */
     private val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
 ) : Iap2LocationProvider, PacedLocation, LocationLink {
     /**
-     * The app's car for a connection that identified with the GPS on: its clock, place, settings and sky, each update
-     * told to its listener; it becomes the link [driving]'s GPS page reads.
+     * The app's car for a connection that identified with the GPS on: its clock, place, settings and sky; it becomes the
+     * link [driving]'s GPS page reads, the updates sent counted there.
      */
     constructor(
         driving: Driving,
@@ -56,8 +54,7 @@ class CarPlayLocation(
         wallMillis: () -> Long = System::currentTimeMillis,
         schedule: (period: () -> Long, action: () -> Unit) -> AutoCloseable = ::repeatEvery,
     ) : this(driving.drive, satellites, log, driving.nanoTime, wallMillis, placed = { driving.placed },
-        settings = { driving.settings }, schedule = schedule, onSent = { driving.onSent() },
-        satelliteSentences = driving.satelliteSentences) {
+        settings = { driving.settings }, schedule = schedule, satelliteSentences = driving.satelliteSentences) {
         driving.location = this
     }
 
@@ -104,7 +101,7 @@ class CarPlayLocation(
     }
 
     /** DiPlay's once-a-second update: nothing while this sends on its own. */
-    override fun latestNmea(): String? = if (sending()) null else compose()?.also { sent++; runCatching(onSent) }
+    override fun latestNmea(): String? = if (sending()) null else compose()?.also { sent++ }
 
     override fun status() = LocationStatus(listening, requested, sent)
 
@@ -121,7 +118,6 @@ class CarPlayLocation(
                 NmeaFraming.PARAMETERS -> link(sentences)
             }
             sent++
-            runCatching(onSent)
         } catch (error: Exception) {
             log("GPS: the tunnel took no more updates (${error.message}); sending stops")
             stop()

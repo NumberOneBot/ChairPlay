@@ -194,20 +194,6 @@ class CarPlayLocationTest {
         assertTrue(schedule.closed)
     }
 
-    // Each fix sent is told as it goes, so the GPS page shows the place the iPhone was just sent.
-    @Test
-    fun `each fix sent is told as it goes`() {
-        val schedule = FakeSchedule()
-        var told = 0
-        val location = CarPlayLocation(drive(), satellites = false, nanoTime = { now }, wallMillis = { wallClock },
-            settings = { GpsSettings(true, rate = 4) }, schedule = schedule::start, onSent = { told++ })
-        location.attach {}
-        location.onRequested(setOf(1))
-        location.start()
-        repeat(3) { schedule.tick!!() }
-        assertEquals(3, told)
-    }
-
     // gps.framing: all of an update's sentences as one string in one LocationInformation, as DiPlay sends them; each in
     // a message of its own; or each a parameter of one message.
     @Test
