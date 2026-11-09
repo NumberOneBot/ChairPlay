@@ -29,13 +29,16 @@ class UiServer(
     private val requestedPort: Int = 0,
     private val network: Boolean = false,
     bind: InetAddress = uiBindAddress(network),
-    private val lan: () -> List<InetAddress> = LanAddresses()::current,
+    lan: (() -> List<InetAddress>)? = null,
     private val openBrowser: (String) -> Unit = {},
     private val log: (String) -> Unit = {},
 ) : Closeable {
+    /** With [network] on and no [lan] given, this PC's addresses, walked on a timer of their own from [start] to [close]. */
+    private val ownLan: LanAddresses? = if (network && lan == null) LanAddresses(log = log) else null
+    private val addresses: () -> List<InetAddress> = lan ?: ownLan?.let { it::current } ?: { emptyList() }
     private val executor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "ui-http").apply { isDaemon = true } }
     private val server: HttpServer = openHttpServer(requestedPort, bind, log)
-    private val hostCheck = HostCheck(server.address.port, if (network) lan else ({ emptyList() }))
+    private val hostCheck = HostCheck(server.address.port, if (network) addresses else ({ emptyList() }))
     @Volatile private var closing = false
 
     /** The port in use: [configuredPort], or a free one when that was taken. */
@@ -64,11 +67,13 @@ class UiServer(
                 exchange.close()
             }
         }
+        ownLan?.start()
         server.start()
     }
 
     override fun close() {
         closing = true
+        ownLan?.close()
         server.stop(0)
         executor.shutdownNow()
     }
@@ -141,7 +146,7 @@ class UiServer(
     }
 
     /** With ui.network on, the addresses another device opens the settings at; none otherwise. */
-    private fun lanUrls(): List<String> = if (network) lan().map { "http://${it.hostAddress}:$port" } else emptyList()
+    private fun lanUrls(): List<String> = if (network) addresses().map { "http://${it.hostAddress}:$port" } else emptyList()
 
     /**
      * The app's state, which port this server took (the Connection page says when it is not ui.port's), and with
