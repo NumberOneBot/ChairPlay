@@ -29,13 +29,16 @@ class UiServer(
     private val requestedPort: Int = 0,
     private val network: Boolean = false,
     bind: InetAddress = uiBindAddress(network),
-    lan: (() -> List<InetAddress>)? = null,
+    lan: () -> List<InetAddress> = { lanAddresses() },
     private val openBrowser: (String) -> Unit = {},
     private val log: (String) -> Unit = {},
 ) : Closeable {
-    /** With [network] on and no [lan] given, this PC's addresses, walked on a timer of their own from [start] to [close]. */
-    private val ownLan: LanAddresses? = if (network && lan == null) LanAddresses(log = log) else null
-    private val addresses: () -> List<InetAddress> = lan ?: ownLan?.let { it::current } ?: { emptyList() }
+    /** With [network] on, this PC's addresses, read once here: walking the adapters is slow on a PC with many. */
+    private val lanList: List<InetAddress> = if (!network) emptyList() else runCatching(lan).getOrElse {
+        log("Could not list the network addresses: $it")
+        emptyList()
+    }
+    private val addresses: () -> List<InetAddress> = { lanList }
     private val executor: ExecutorService = Executors.newCachedThreadPool { Thread(it, "ui-http").apply { isDaemon = true } }
     private val server: HttpServer = openHttpServer(requestedPort, bind, log)
     private val hostCheck = HostCheck(server.address.port, if (network) addresses else ({ emptyList() }))
@@ -67,13 +70,11 @@ class UiServer(
                 exchange.close()
             }
         }
-        ownLan?.start()
         server.start()
     }
 
     override fun close() {
         closing = true
-        ownLan?.close()
         server.stop(0)
         executor.shutdownNow()
     }

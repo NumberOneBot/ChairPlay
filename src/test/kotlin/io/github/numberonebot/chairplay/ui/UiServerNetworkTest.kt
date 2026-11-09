@@ -40,6 +40,19 @@ class UiServerNetworkTest {
         assertEquals(listOf("http://192.168.1.20:${server.port}"), state["urls"])
     }
 
+    // Walking the adapters is slow on a PC with many; the addresses are read once, as the app starts with the network
+    // on (the switch itself applies at a restart), never per request or per state.
+    @Test
+    fun `the PC's addresses are read once, not per request`() {
+        var reads = 0
+        val server = UiServer(FakeUiApi(), { null }, network = true, bind = loopback, lan = { reads++; lan() })
+            .also { it.start(); servers += it }
+
+        repeat(3) { uiServer(server, "192.168.1.20:${server.port}") }
+
+        assertEquals(1, reads)
+    }
+
     // The window's page opens a listed address in the browser; the browser is never handed anything else.
     @Test
     fun `Open in browser opens a listed address, and refuses any other`() {
