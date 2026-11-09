@@ -28,9 +28,9 @@ internal class AppGlobalKeys(
 
     fun owns(key: Int) = enabled && ready && router.owns(key)
     fun state(): Map<String, Any?> = mapOf("enabled" to (enabled && ready), "error" to failure)
+    /** A page's renewals keep its lease without waking the loop: only the page taking the focus releases holds. */
     fun focus(client: String, focused: Boolean) {
-        leases.update(client, focused)
-        if (focused) reset()
+        if (leases.update(client, focused)) reset()
     }
     fun reset() { router.reset(); wake() }
 
@@ -88,7 +88,8 @@ internal class AppGlobalKeys(
             // An action such as reconnect can invalidate the rest of this batch.
             if (previousSession !== session()) { router.reset(); releaseHeld(false); break }
         }
-        return if (enabled) 0.05 else null
+        // Nothing here is due later: each key, reset and failure wakes the loop, and a saved binding repaints the window.
+        return null
     }
 
     private fun releaseHeld(deliver: Boolean) {

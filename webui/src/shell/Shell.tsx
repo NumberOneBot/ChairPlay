@@ -13,6 +13,7 @@ import { setupSteps } from '../setup/steps'
 import { Message } from './controls'
 import { SECTIONS, type Section } from './sections'
 import { Toolbar } from './Toolbar'
+import { useKeyboardFocus } from './useKeyboardFocus'
 import { useKeysToApp } from './useKeysToApp'
 import { useSettings } from './useSettings'
 import { Waiting } from './Waiting'
@@ -50,6 +51,7 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
 
   // F11, F12 and the app's other keys work over the settings as over CarPlay.
   useKeysToApp(backend, false)
+  useKeyboardFocus(backend, state.controls?.globalKeyboard?.enabled === true)
 
   useEffect(() => {
     if (!showable) return

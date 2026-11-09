@@ -73,7 +73,8 @@ class GlobalKeyRouterTest {
         assertTrue(lease.active())
         time = 2_100_000_000L
         assertFalse(lease.active())
-        lease.update("page", true)
+        assertTrue(lease.update("page", true))
+        assertFalse(lease.update("page", true))
         lease.update("page", false)
         assertFalse(lease.active())
     }

@@ -92,6 +92,27 @@ class AppGlobalKeysTest {
         assertEquals(2, sent.size)
     }
 
+    // Each key and reset wakes the loop itself: a pass never asks for another on a timer.
+    @Test fun `global shortcuts on ask for no periodic pass`() {
+        assertNull(app.pass())
+        key(GLFW_KEY_F8, GLFW_PRESS)
+        assertNull(app.pass())
+        assertEquals(1, sent.size)
+    }
+
+    @Test fun `a renewed focus lease does not wake the loop again`() {
+        var wakes = 0
+        app.wake = { wakes++ }
+        app.pass()
+        app.focus("browser", true)
+        assertEquals(1, wakes)
+        repeat(3) { app.focus("browser", true) }
+        assertEquals(1, wakes)
+        app.focus("browser", false)
+        app.focus("browser", true)
+        assertEquals(2, wakes)
+    }
+
     @Test fun `global drive arrows release on suspend and close`() {
         driveMode = true
         app.pass()

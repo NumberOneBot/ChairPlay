@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import type { Backend, KeyPhase } from '../api'
 import { bindingName, isModifier } from '../pages/keyNames'
-import { useKeyboardFocus } from './useKeyboardFocus'
 
 /** Whether [target] takes what is typed: a field, a list or editable text. */
 function typesHere(target: EventTarget | null): boolean {
@@ -16,7 +15,6 @@ function typesHere(target: EventTarget | null): boolean {
  * so is a character typed in a field.
  */
 export function useKeysToApp(backend: Backend, everything: boolean) {
-  useKeyboardFocus(backend)
   useEffect(() => {
     const held = new Map<string, string>()
     const release = () => {

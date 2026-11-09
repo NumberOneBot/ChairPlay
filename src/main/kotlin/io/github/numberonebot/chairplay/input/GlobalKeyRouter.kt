@@ -47,13 +47,15 @@ class GlobalKeyRouter {
 /** Browser pages renew only while focused; a crashed/closed page cannot disable keys permanently. */
 class KeyboardFocusLease(private val nanoTime: () -> Long = System::nanoTime) {
     private val clients = LinkedHashMap<String, Long>()
-    @Synchronized fun update(client: String, focused: Boolean) {
+
+    /** Whether [client] has just taken the focus: it held no lease, or its lease had run out. */
+    @Synchronized fun update(client: String, focused: Boolean): Boolean {
         active()
-        if (!focused) clients.remove(client)
-        else {
-            if (client !in clients && clients.size >= 32) clients.remove(clients.keys.first())
-            clients[client] = nanoTime() + 2_000_000_000L
-        }
+        if (!focused) { clients.remove(client); return false }
+        val taken = client !in clients
+        if (taken && clients.size >= 32) clients.remove(clients.keys.first())
+        clients[client] = nanoTime() + 2_000_000_000L
+        return taken
     }
     @Synchronized fun active(): Boolean {
         val now = nanoTime()
