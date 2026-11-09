@@ -8,6 +8,7 @@ import io.github.numberonebot.chairplay.platform.LocationSource
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
 import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
+import io.github.numberonebot.chairplay.platform.SystemAudio
 
 /** Windows, through today's adapters; each is made the first time it is asked for, so none loads its DLLs before. */
 internal class WindowsPlatform : Platform {
@@ -18,4 +19,5 @@ internal class WindowsPlatform : Platform {
     override val firewall: Firewall by lazy { WindowsFirewall() }
     override val network: PcNetwork by lazy { WindowsNetwork() }
     override val bluetooth: Bluetooth by lazy { WindowsBluetooth }
+    override val audio: SystemAudio by lazy { WindowsAudio() }
 }

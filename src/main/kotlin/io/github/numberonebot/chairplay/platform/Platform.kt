@@ -25,4 +25,7 @@ internal interface Platform {
 
     /** The PC's Bluetooth radio, its paired devices, and RFCOMM to them. */
     val bluetooth: Bluetooth
+
+    /** The PC's default sound devices and its multichannel outputs. */
+    val audio: SystemAudio
 }

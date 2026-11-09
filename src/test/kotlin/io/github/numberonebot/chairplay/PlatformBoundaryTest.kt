@@ -103,13 +103,10 @@ class PlatformBoundaryTest {
             "${APP_DIR}media/ClientDrag.kt",
             "${APP_DIR}media/CloseSource.kt",
             "${APP_DIR}media/D3D11Video.kt",
-            "${APP_DIR}media/DefaultAudioDevices.kt",
             "${APP_DIR}media/TitleBar.kt",
             "${APP_DIR}media/VideoDecoder.kt",
             "${APP_DIR}media/VideoWindow.kt",
             "${APP_DIR}media/WindowCommands.kt",
-            "${APP_DIR}media/apac/SpatialRuntime.kt",
-            "${APP_DIR}media/apac/WasapiOutput.kt",
             "${APP_DIR}ui/WebView2.kt",
             "${APP_DIR}update/WindowsUpdateDialog.kt",
         )
@@ -119,7 +116,6 @@ class PlatformBoundaryTest {
          * the task that moves it there; the list only shrinks.
          */
         val IMPORTERS_LEFT: Set<String> = sortedSetOf(
-            "${APP_DIR}media/DefaultAudioDevices.kt",
         )
     }
 }

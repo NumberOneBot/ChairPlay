@@ -4,6 +4,7 @@ import com.shilapi.xcertplay.airplay.AirPlaySession
 import com.shilapi.xcertplay.airplay.MediaSink
 import java.io.Closeable
 import java.io.IOException
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.util.concurrent.ConcurrentHashMap
 
 /** Typed desktop seam: APAP access units never enter MediaSink.onAudioRtp. */
@@ -15,7 +16,7 @@ class SpatialAudioBridge internal constructor(
     private val duck: (Long) -> Float,
     private val resetDuck: () -> Unit,
     private val log: (String) -> Unit,
-    private val open: (SpatialPlan) -> SpatialDevice = { WasapiOutput.open(it.device, it.channels) },
+    private val open: (SpatialPlan) -> SpatialDevice = { Platforms.current.audio.spatial.open(it.device, it.channels) },
 ) : Closeable {
     private val workers = ConcurrentHashMap.newKeySet<SpatialWorker>()
     internal fun source(key: ByteArray, setup: SpatialSetup): ApapStreamSource {

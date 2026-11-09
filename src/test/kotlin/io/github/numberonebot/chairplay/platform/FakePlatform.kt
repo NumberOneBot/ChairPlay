@@ -1,6 +1,8 @@
 package io.github.numberonebot.chairplay.platform
 
 import io.github.numberonebot.chairplay.log.AppLog
+import io.github.numberonebot.chairplay.media.DefaultAudioDevices
+import io.github.numberonebot.chairplay.media.apac.SpatialDevice
 import io.github.numberonebot.chairplay.network.EthernetAdapter
 import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.ui.FirewallStatus
@@ -24,6 +26,7 @@ internal class FakePlatform(
     override val firewall: FakeFirewall = FakeFirewall(),
     override val network: FakeNetwork = FakeNetwork(),
     override val bluetooth: FakeBluetooth = FakeBluetooth(),
+    override val audio: FakeAudio = FakeAudio(),
 ) : Platform
 
 /** Bluetooth with the [radio] and [paired] devices the test set; each RFCOMM connection it records gets [link]. */
@@ -134,4 +137,21 @@ internal class FakeNetwork(
     override fun ethernetAdapters(): List<EthernetAdapter> = adapters
 
     override fun physicalAddresses(): List<InetAddress> = addresses
+}
+
+/** Sound devices the test set: the defaults and the outputs spatial audio can open (none can be opened). */
+internal class FakeAudio(
+    var defaults: DefaultAudioDevices = DefaultAudioDevices(null, null),
+    override val spatial: SpatialOutputs = FakeSpatialOutputs(),
+) : SystemAudio {
+    override fun defaultDevices(): DefaultAudioDevices = defaults
+}
+
+/** Spatial outputs listing [devices], the first being the default; opening one fails as a missing library does. */
+internal class FakeSpatialOutputs(var devices: List<OutputDevice> = emptyList()) : SpatialOutputs {
+    override fun devices(): List<OutputDevice> = devices
+
+    override fun defaultDevice(): OutputDevice = devices.firstOrNull() ?: throw java.io.IOException("No default output")
+
+    override fun open(deviceId: String?, channels: Int): SpatialDevice = throw UnsatisfiedLinkError("fake outputs open nothing")
 }

@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.hud.maneuver
 
 import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.log.LogLevel
+import io.github.numberonebot.chairplay.platform.NativeLibraries
 import java.nio.ByteBuffer
 
 /**
@@ -16,7 +17,7 @@ internal object ManeuverNative {
             System.loadLibrary("chairplay_maneuver")
             null
         } catch (e: UnsatisfiedLinkError) {
-            e.message ?: "chairplay_maneuver.dll not found"
+            e.message ?: "${NativeLibraries.fileName("chairplay_maneuver")} not found"
         }
     }
 

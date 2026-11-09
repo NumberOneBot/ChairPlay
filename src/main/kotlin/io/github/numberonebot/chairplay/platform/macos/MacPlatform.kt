@@ -15,6 +15,11 @@ import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
 import io.github.numberonebot.chairplay.platform.RfcommLink
 import io.github.numberonebot.chairplay.platform.SystemPage
+import io.github.numberonebot.chairplay.platform.SpatialOutputs
+import io.github.numberonebot.chairplay.platform.SystemAudio
+import io.github.numberonebot.chairplay.platform.OutputDevice
+import io.github.numberonebot.chairplay.media.DefaultAudioDevices
+import io.github.numberonebot.chairplay.media.apac.SpatialDevice
 import io.github.numberonebot.chairplay.ui.FirewallStatus
 import java.io.Closeable
 import java.net.InetAddress
@@ -31,6 +36,13 @@ internal class MacPlatform : Platform {
     override val firewall: Firewall = MacFirewall
     override val network: PcNetwork = MacNetwork
     override val bluetooth: Bluetooth = MacBluetooth
+    override val audio: SystemAudio = MacAudio
+}
+
+private object MacAudio : SystemAudio {
+    override fun defaultDevices(): DefaultAudioDevices = notReady()
+
+    override val spatial: SpatialOutputs get() = notReady()
 }
 
 private object MacBluetooth : Bluetooth {

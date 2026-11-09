@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.media.apac
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Memory
 import com.sun.jna.NativeLibrary
@@ -6,12 +6,13 @@ import com.sun.jna.Pointer
 import com.sun.jna.WString
 import com.sun.jna.ptr.LongByReference
 import com.sun.jna.ptr.PointerByReference
+import io.github.numberonebot.chairplay.media.apac.SpatialDevice
+import io.github.numberonebot.chairplay.platform.NativeLibraries
+import io.github.numberonebot.chairplay.platform.OutputDevice
 import java.io.Closeable
-import java.io.File
 import java.io.IOException
 
 internal data class WasapiFormat(val sampleRate: Int, val channels: Int, val mask: Int, val bits: Int)
-internal data class WasapiDevice(val id: String, val name: String, val sampleRate: Int, val channels: Int, val mask: Int)
 
 /** COM calls run on the creating worker; cancellation alone may come from another thread. */
 internal class WasapiOutput private constructor(private val handle: Pointer, val format: WasapiFormat) : SpatialDevice {
@@ -51,24 +52,24 @@ internal class WasapiOutput private constructor(private val handle: Pointer, val
 
     companion object {
         private val native by lazy {
-            System.getProperty("java.library.path").split(File.pathSeparator).forEach {
-                NativeLibrary.addSearchPath("chairplay_audio", it)
+            NativeLibraries.searchDirs(appPath = null).forEach {
+                NativeLibrary.addSearchPath("chairplay_audio", it.path)
             }
             NativeLibrary.getInstance("chairplay_audio")
         }
 
-        fun devices(): List<WasapiDevice> = buildList {
+        fun devices(): List<OutputDevice> = buildList {
             var index = 0
             while (true) add(device(index++) ?: break)
         }
         fun defaultDevice() = device(-1) ?: throw IOException("No Windows default output")
 
-        private fun device(index: Int): WasapiDevice? {
+        private fun device(index: Int): OutputDevice? {
             Memory(2048).use { id -> Memory(512).use { name -> Memory(16).use { format ->
                 val result = native.getFunction("cp_audio_device").invokeInt(arrayOf(index, id, 1024, name, 256, format))
                 if (result == 1) return null
                 checkResult(result)
-                return WasapiDevice(id.getWideString(0), name.getWideString(0), format.getInt(0), format.getInt(4), format.getInt(8))
+                return OutputDevice(id.getWideString(0), name.getWideString(0), format.getInt(0), format.getInt(4), format.getInt(8))
             } } }
         }
 

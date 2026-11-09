@@ -1,6 +1,10 @@
 package io.github.numberonebot.chairplay.media.apac
 
 import io.github.numberonebot.chairplay.media.matchDeviceOrDefault
+import io.github.numberonebot.chairplay.platform.NativeLibraries
+import io.github.numberonebot.chairplay.platform.OutputDevice
+import io.github.numberonebot.chairplay.platform.Platforms
+import io.github.numberonebot.chairplay.platform.SpatialOutputs
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -14,19 +18,17 @@ internal object SpatialRuntime {
     private val libraries = HashMap<Path, ApacNativeLibrary>()
     private val cache = HashMap<String, Pair<Long, SpatialCapability>>()
 
-    @Synchronized fun capability(dir: Path, output: String?, fresh: Boolean = false): SpatialCapability {
-        val path = dir.resolve("apac/chairplay_apac.dll").toAbsolutePath().normalize()
+    @Synchronized fun capability(dir: Path, output: String?, fresh: Boolean = false,
+        outputs: SpatialOutputs = Platforms.current.audio.spatial): SpatialCapability {
+        val path = dir.resolve("apac").resolve(NativeLibraries.fileName("chairplay_apac")).toAbsolutePath().normalize()
         val key = "$path|$output"
         val now = System.nanoTime()
         cache[key]?.takeIf { !fresh && now - it.first < 3_000_000_000L }?.let { return it.second }
         val result = try {
             if (!Files.isRegularFile(path)) throw IOException("Spatial audio decoder is unavailable")
             val library = libraries.getOrPut(path) { ApacNativeLibrary.load(path) }
-            val all = WasapiOutput.devices()
-            // As the rest of the sound: a device that is gone gives way to the Windows default (AppAudio warns once).
-            val name = matchDeviceOrDefault("audio.output", output, all.map { it.name }) {}
-            val device = if (name == null) WasapiOutput.defaultDevice() else all.single { it.name == name }
-            val channels = WasapiOutput.open(device.id, 0).use { it.channels }
+            val device = spatialDevice(outputs, output)
+            val channels = outputs.open(device.id, 0).use { it.channels }
             SpatialCapability(true, plan = SpatialPlan(library, device.id, channels))
         } catch (error: Exception) {
             SpatialCapability(false, error.message ?: "Spatial audio is unavailable")
@@ -47,4 +49,12 @@ internal fun spatialConfigured(dir: Path, settings: Properties): Boolean {
     val mode = settings.getProperty("audio.music.mode", "buffered").trim().lowercase().ifEmpty { "buffered" }
     return mode == "buffered" &&
         SpatialRuntime.capability(dir, settings.getProperty("audio.output")).available
+}
+
+/** The output [setting] (audio.output) picks; a device that is gone or named by several gives way to the default. */
+internal fun spatialDevice(outputs: SpatialOutputs, setting: String?): OutputDevice {
+    val all = outputs.devices()
+    // As the rest of the sound: a device that is gone gives way to the Windows default (AppAudio warns once).
+    val name = matchDeviceOrDefault("audio.output", setting, all.map { it.name }) {}
+    return if (name == null) outputs.defaultDevice() else all.single { it.name == name }
 }
