@@ -4,6 +4,7 @@ import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.media.DecodedFrame
 import io.github.numberonebot.chairplay.phone.ScreenKind
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.io.Closeable
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
@@ -35,7 +36,7 @@ interface FrameTap {
  * native side. The safe rect ([safe], in the pixels of [screen]) is scaled to a picture of another size.
  */
 internal class FrameOutput(
-    private val sink: FrameSink = io.github.numberonebot.chairplay.platform.Platforms.current.bridge.frames,
+    private val sink: FrameSink = Platforms.current.bridge.frames,
     private val screen: () -> WindowSize,
     private val safe: () -> AreaRect,
     private val log: (String) -> Unit,

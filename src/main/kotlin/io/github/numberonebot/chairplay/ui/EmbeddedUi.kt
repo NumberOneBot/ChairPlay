@@ -4,7 +4,7 @@ import io.github.numberonebot.chairplay.media.WindowChild
 
 /**
  * A system web view inside a window, as the UI needs it. Every call comes on the window's thread, whose message loop
- * also runs the view's. Windows has [WebView2]; a macOS WKWebView in an NSWindow fits behind the same calls.
+ * also runs the view's. Windows has WebView2; a macOS WKWebView in an NSWindow fits behind the same calls.
  */
 interface WebViewBackend {
     /** Creates the view, hidden, as a child of [parent]; throws with the reason when there is no web view to have. */

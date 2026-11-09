@@ -9,7 +9,4 @@ internal interface KeepAliveTuning {
      * [deadlineSeconds] without an answer. Throws when the system refuses or the socket cannot be reached.
      */
     fun tune(socket: Socket, idleSeconds: Int, intervalSeconds: Int, count: Int, deadlineSeconds: Int)
-
-    /** Idle, interval, count and deadline as the system reports them back; for tests. Throws on failure. */
-    fun timing(socket: Socket): List<Int>
 }

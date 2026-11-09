@@ -11,7 +11,7 @@ import kotlin.system.exitProcess
  * name in the user's session is held while a copy runs: one that finds it taken already knows another copy is running.
  */
 internal object OneCopy {
-    const val NAME = "Local\\ChairPlay"
+    const val NAME = "ChairPlay"
 
     /** How long a copy that is ending may still hold the name after letting go of its folder. */
     const val GOING_WAIT_MILLIS = 5_000L

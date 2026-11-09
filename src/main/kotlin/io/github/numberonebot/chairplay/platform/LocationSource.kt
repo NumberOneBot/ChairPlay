@@ -14,7 +14,7 @@ sealed interface LocationResult {
 }
 
 /** Where the system locates this PC. */
-fun interface LocationSource {
+internal fun interface LocationSource {
     /** Asks the system; blocks until it answers or gives up. */
     fun read(): LocationResult
 }

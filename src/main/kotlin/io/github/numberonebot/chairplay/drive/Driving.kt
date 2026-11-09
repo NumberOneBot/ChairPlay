@@ -12,7 +12,7 @@ import kotlin.math.*
  * sent to the phone by the [location] each connection makes from it (its [drive], [placed], [settings], [nanoTime] and
  * [satelliteSentences]), and shown on the GPS page by [state], which the status tick watches ([showPage]).
  * Its place goes back into gps.start and gps.heading ([savePlace]) as it stops and as the app closes, so the settings
- * always say where the car is and the next start begins there. A GPS on with no start starts where Windows locates the
+ * always say where the car is and the next start begins there. A GPS on with no start starts where the platform locates the
  * PC ([locate], run by [lookup]), as the app opens and as the GPS is turned on.
  */
 class Driving(
@@ -35,7 +35,7 @@ class Driving(
 
     private val looking = AtomicBoolean()
 
-    /** Saves the car's place with [save] from now on, and starts a GPS on with no start where Windows locates the PC. */
+    /** Saves the car's place with [save] from now on, and starts a GPS on with no start where the platform locates the PC. */
     fun saveTo(save: (Map<String, String>) -> Unit) {
         savePlace = save
         findStart()
@@ -192,7 +192,7 @@ class Driving(
     }
 
     /**
-     * For a GPS on with the car nowhere, asks Windows where the PC is, one ask at a time, and puts the car there facing
+     * For a GPS on with the car nowhere, asks the platform where the PC is, one ask at a time, and puts the car there facing
      * as it does, saving the place as its start. A start set meanwhile wins; no answer leaves the car nowhere.
      */
     private fun findStart() {

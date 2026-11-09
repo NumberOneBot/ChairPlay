@@ -40,7 +40,7 @@ internal fun connectionsOf(answers: List<AdapterWifi>): List<WlanConnection> {
  *   WCHAR[256] profile name); inside it DOT11_SSID {ULONG length, UCHAR[32]} is at 0 and the
  *   DOT11_MAC_ADDRESS at 40.
  */
-object WlanApi {
+internal object WlanApi {
     private interface Wlan : Library {
         fun WlanOpenHandle(clientVersion: Int, reserved: Pointer?, negotiated: IntByReference, handle: PointerByReference): Int
         fun WlanCloseHandle(handle: Pointer, reserved: Pointer?): Int

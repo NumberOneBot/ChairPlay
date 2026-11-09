@@ -13,7 +13,7 @@ import io.github.numberonebot.chairplay.media.DefaultAudioDevices
  * Windows' default devices from its device enumerator (mmdeviceapi.h), the console role that Java Sound's "Primary
  * Sound Driver" follows. Read when the settings are asked for, so a default changed in Windows shows on the next look.
  */
-object WindowsDefaultAudio {
+internal object WindowsDefaultAudio {
     private val CLSID_ENUMERATOR = Guid.CLSID("{BCDE0395-E52F-467C-8E3D-C4579291692E}")
     private val IID_ENUMERATOR = Guid.IID("{A95664D2-9614-4F35-A746-DE8DB63617E6}")
     /** PKEY_Device_FriendlyName: "Speakers (Realtek(R) Audio)". */

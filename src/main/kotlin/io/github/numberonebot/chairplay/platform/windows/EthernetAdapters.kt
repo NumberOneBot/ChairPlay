@@ -12,7 +12,7 @@ internal fun physicalEthernet(rows: List<InterfaceRow>): List<InterfaceRow> =
     physicalAdapters(rows).filter { it.type == ETHERNET }
 
 /** Windows owns the physical/virtual distinction. Do not guess from localized adapter names. */
-object EthernetAdapters {
+internal object EthernetAdapters {
     fun current(): List<EthernetAdapter> {
         val interfaces = NetworkInterface.networkInterfaces().toList().associateBy { it.index }
         return physicalEthernet(interfaces.keys.mapNotNull(::interfaceRow)).mapNotNull { adapter ->

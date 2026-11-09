@@ -23,7 +23,7 @@ import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_D3D11
 /** Windows, through today's adapters; each is made the first time it is asked for, so none loads its DLLs before. */
 internal class WindowsPlatform : Platform {
     override val shell: DesktopShell by lazy { WindowsShell() }
-    override val oneCopy: OneCopyClaim by lazy { OneCopyClaim { name, timeoutMillis -> NamedMutex.claim(name, timeoutMillis) } }
+    override val oneCopy: OneCopyClaim by lazy { OneCopyClaim { name, timeoutMillis -> NamedMutex.claim("Local\$name", timeoutMillis) } }
     override val keepAlive: KeepAliveTuning by lazy { WinsockKeepAlive() }
     override val location: LocationSource by lazy { WindowsLocation }
     override val firewall: Firewall by lazy { WindowsFirewall() }
@@ -33,7 +33,7 @@ internal class WindowsPlatform : Platform {
     override val video: HardwareVideo? by lazy {
         HardwareVideo(AV_HWDEVICE_TYPE_D3D11VA, AV_PIX_FMT_D3D11, "D3D11", "D3D11VA")
     }
-    override val windows: WindowHooks by lazy { WindowsWindowHooks() }
+    override val windowHooks: WindowHooks by lazy { WindowsWindowHooks() }
     override val bridge: GameBridge by lazy { WindowsGameBridge }
 
     override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource = WindowsRawKeyboard(callbacks)

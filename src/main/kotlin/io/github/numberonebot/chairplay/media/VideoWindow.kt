@@ -56,7 +56,7 @@ class VideoWindow(
     stream: WindowSize? = null,
     /** True moves the window by a press anywhere on it, as by its title bar; it then gets no left-button clicks. */
     private val dragAnywhere: Boolean = false,
-    private val hooks: WindowHooks = Platforms.current.windows,
+    private val hooks: WindowHooks = Platforms.current.windowHooks,
 ) : Closeable {
     /** The picture it shows, as it opened with it or took the shape and size of since ([setStream]), on the GL thread. */
     @Volatile

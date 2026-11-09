@@ -7,11 +7,11 @@ import java.net.URLEncoder
 import java.nio.file.Files
 
 /**
- * The Windows pages, folders and web pages the screens link to, by the name the page gives, opened through [launch]:
- * Bluetooth or Wi-Fi in Settings, the firewall in Windows Security or its console with the rules, location, the MFi,
+ * The system pages, folders and web pages the screens link to, by the name the page gives, opened through [launch]:
+ * Bluetooth or Wi-Fi in the system settings, the firewall in the system's security page or its console with the rules, location, the MFi,
  * logs, and screenshots folders (made first if they are missing), and the About page's: the project's pages on GitHub
  * (a new issue with [details] filled in), DiPlay's, xcertplay's, LIVI's, the HUD renderer's, and the third-party notices beside
- * the app ([setup]), in Notepad as the file has no extension. [about] and [systemVersion] name the build in a report.
+ * the app ([setup]), in the system's text editor as the file has no extension. [about] and [systemVersion] name the build in a report.
  */
 internal class UiPlaces(
     private val setup: SetupInfo,
@@ -22,9 +22,9 @@ internal class UiPlaces(
     private val shell: DesktopShell = Platforms.current.shell,
 ) {
     /**
-     * Opens [place]. Each but the notices goes through explorer.exe, which hands it to the shell: a Settings address
+     * Opens [place]. Each but the notices goes through the shell's command, which hands it on: a settings address
      * opens its page, a web address the browser, and the console asks for the administrator's consent it needs. False
-     * for a name the app does not know, or when Windows did not start it.
+     * for a name the app does not know, or when the system did not start it.
      */
     fun open(place: String): Boolean {
         if (place !in PLACES) return false

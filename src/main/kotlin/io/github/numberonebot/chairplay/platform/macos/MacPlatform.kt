@@ -1,9 +1,17 @@
 package io.github.numberonebot.chairplay.platform.macos
 
+import io.github.numberonebot.chairplay.bridge.FrameSink
+import io.github.numberonebot.chairplay.bridge.TelemetrySource
+import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
 import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.log.AppLog
+import io.github.numberonebot.chairplay.media.DefaultAudioDevices
+import io.github.numberonebot.chairplay.media.apac.SpatialDevice
+import io.github.numberonebot.chairplay.network.EthernetAdapter
+import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.platform.Bluetooth
+import io.github.numberonebot.chairplay.platform.CloseWatch
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.GameBridge
@@ -11,27 +19,23 @@ import io.github.numberonebot.chairplay.platform.HardwareVideo
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.platform.LocationSource
-import io.github.numberonebot.chairplay.network.EthernetAdapter
-import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
+import io.github.numberonebot.chairplay.platform.OutputDevice
 import io.github.numberonebot.chairplay.platform.PairedDevice
 import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
 import io.github.numberonebot.chairplay.platform.RfcommLink
-import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.platform.SpatialOutputs
 import io.github.numberonebot.chairplay.platform.SystemAudio
-import io.github.numberonebot.chairplay.platform.OutputDevice
-import io.github.numberonebot.chairplay.platform.CloseWatch
+import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.platform.WindowHooks
-import io.github.numberonebot.chairplay.media.DefaultAudioDevices
-import io.github.numberonebot.chairplay.media.apac.SpatialDevice
 import io.github.numberonebot.chairplay.ui.FirewallStatus
 import io.github.numberonebot.chairplay.ui.WebViewBackend
 import io.github.numberonebot.chairplay.update.UpdateResult
 import java.io.Closeable
 import java.net.InetAddress
 import java.net.Socket
+import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.util.UUID
 
@@ -46,8 +50,8 @@ internal class MacPlatform : Platform {
     override val bluetooth: Bluetooth = MacBluetooth
     override val audio: SystemAudio = MacAudio
     override val video: HardwareVideo? get() = notReady()
-    override val windows: WindowHooks = MacWindows
-    override val bridge: GameBridge get() = notReady()
+    override val windowHooks: WindowHooks = MacWindows
+    override val bridge: GameBridge = MacBridge
 
     override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource = notReady()
 
@@ -68,10 +72,41 @@ private object MacWindows : WindowHooks {
     override fun flash(window: Long, on: Boolean) = notReady()
 }
 
+private object MacBridge : GameBridge {
+    override val frames: FrameSink = MacFrames
+    override val telemetry: TelemetrySource = MacTelemetry
+}
+
+private object MacFrames : FrameSink {
+    override fun open(): String? = notReady()
+
+    override fun publish(bgra: ByteBuffer, width: Int, height: Int, safe: AreaRect): String? = notReady()
+
+    override fun state(state: Int) = notReady()
+
+    override fun close() = notReady()
+}
+
+private object MacTelemetry : TelemetrySource {
+    override fun open(): String? = notReady()
+
+    override fun read(into: ByteBuffer): Boolean = notReady()
+
+    override fun close() = notReady()
+}
+
+private object MacSpatial : SpatialOutputs {
+    override fun devices(): List<OutputDevice> = notReady()
+
+    override fun defaultDevice(): OutputDevice = notReady()
+
+    override fun open(deviceId: String?, channels: Int): SpatialDevice = notReady()
+}
+
 private object MacAudio : SystemAudio {
     override fun defaultDevices(): DefaultAudioDevices = notReady()
 
-    override val spatial: SpatialOutputs get() = notReady()
+    override val spatial: SpatialOutputs = MacSpatial
 }
 
 private object MacBluetooth : Bluetooth {
@@ -124,8 +159,6 @@ private object MacOneCopy : OneCopyClaim {
 
 private object MacKeepAlive : KeepAliveTuning {
     override fun tune(socket: Socket, idleSeconds: Int, intervalSeconds: Int, count: Int, deadlineSeconds: Int) = notReady()
-
-    override fun timing(socket: Socket): List<Int> = notReady()
 }
 
 private object MacLocation : LocationSource {

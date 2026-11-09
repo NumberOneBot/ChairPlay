@@ -37,7 +37,7 @@ internal class FakePlatform(
     override val bluetooth: FakeBluetooth = FakeBluetooth(),
     override val audio: FakeAudio = FakeAudio(),
     override val video: HardwareVideo? = null,
-    override val windows: FakeWindowHooks = FakeWindowHooks(),
+    override val windowHooks: FakeWindowHooks = FakeWindowHooks(),
     override val bridge: FakeGameBridge = FakeGameBridge(),
     var updateAnswer: Boolean = false,
 ) : Platform {
@@ -190,8 +190,6 @@ internal class FakeKeepAlive : KeepAliveTuning {
     override fun tune(socket: Socket, idleSeconds: Int, intervalSeconds: Int, count: Int, deadlineSeconds: Int) {
         tuned = listOf(idleSeconds, intervalSeconds, count, deadlineSeconds)
     }
-
-    override fun timing(socket: Socket): List<Int> = tuned
 }
 
 /** A PC network that answers what the test set. */

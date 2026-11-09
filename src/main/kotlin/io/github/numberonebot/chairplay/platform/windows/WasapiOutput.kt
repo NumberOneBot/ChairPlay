@@ -9,7 +9,6 @@ import com.sun.jna.ptr.PointerByReference
 import io.github.numberonebot.chairplay.media.apac.SpatialDevice
 import io.github.numberonebot.chairplay.platform.NativeLibraries
 import io.github.numberonebot.chairplay.platform.OutputDevice
-import java.io.Closeable
 import java.io.IOException
 
 internal data class WasapiFormat(val sampleRate: Int, val channels: Int, val mask: Int, val bits: Int)

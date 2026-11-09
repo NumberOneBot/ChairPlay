@@ -14,7 +14,6 @@ interface TelemetrySource {
     fun close()
 }
 
-
 /** What an outside source says about the car. */
 sealed interface External {
     /** A fresh, running record: the car follows it. */

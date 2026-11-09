@@ -8,7 +8,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /** DiPlay's iAP2 byte stream over this link; closing the stream closes the link, once. */
-fun RfcommLink.toDuplexStream(onDiagnostic: (String) -> Unit): BlockingDuplexByteStream =
+internal fun RfcommLink.toDuplexStream(onDiagnostic: (String) -> Unit): BlockingDuplexByteStream =
     BluetoothRfcommDuplexStream(
         object : BluetoothRfcommSocketAccess {
             override fun inputStream(): InputStream = input

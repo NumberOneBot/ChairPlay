@@ -20,7 +20,4 @@ object TcpLiveness {
             diagnostic("TCP peer health tuning unavailable: ${failure.javaClass.simpleName}: ${failure.message}")
         }
     }
-
-    /** Idle, interval, count and deadline as the system reports them back; for tests. */
-    internal fun timing(socket: Socket): List<Int> = Platforms.current.keepAlive.timing(socket)
 }

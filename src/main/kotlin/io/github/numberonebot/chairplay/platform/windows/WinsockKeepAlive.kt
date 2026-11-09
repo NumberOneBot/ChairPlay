@@ -34,7 +34,8 @@ internal class WinsockKeepAlive : KeepAliveTuning {
         set(handle, TCP_MAXRT, deadlineSeconds)
     }
 
-    override fun timing(socket: Socket): List<Int> {
+    /** Idle, interval, count and deadline as Winsock reports them back; for tests. Throws on failure. */
+    fun timing(socket: Socket): List<Int> {
         val handle = handle(socket)
         return listOf(TCP_KEEPIDLE, TCP_KEEPINTVL, TCP_KEEPCNT, TCP_MAXRT).map { name ->
             val value = IntByReference()

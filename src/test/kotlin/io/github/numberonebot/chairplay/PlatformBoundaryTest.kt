@@ -20,14 +20,11 @@ class PlatformBoundaryTest {
     }
 
     @Test
-    fun `only the selection imports the Windows adapters`() {
-        val importers = kotlinFiles().map { relative(it) }
+    fun `only the selection reaches the Windows adapters`() {
+        val users = kotlinFiles().map { relative(it) }
             .filter { !it.startsWith(WINDOWS_DIR) && it != SELECTION }
-            .filter { path -> Files.readAllLines(sourceRoot.resolve(path)).any { it.startsWith(ADAPTER_IMPORT) } }.toSortedSet()
-        val offenders = importers - IMPORTERS_LEFT
-        val stale = IMPORTERS_LEFT - importers
-        assertTrue("Files import the Windows adapters; only $SELECTION may: $offenders", offenders.isEmpty())
-        assertTrue("Entries in IMPORTERS_LEFT no longer import the Windows adapters; remove them: $stale", stale.isEmpty())
+            .filter { path -> Files.readAllLines(sourceRoot.resolve(path)).any { reachesAdapters(it) } }.toSortedSet()
+        assertTrue("Files reach the Windows adapters; only $SELECTION may: $users", users.isEmpty())
     }
 
     @Test
@@ -48,14 +45,20 @@ class PlatformBoundaryTest {
             "WinReg.HKEY_CURRENT_USER",
         )
         samples.forEach { assertTrue("No pattern matches: $it", matches(it)) }
+        assertTrue("An import of an adapter is caught", reachesAdapters("import $ADAPTERS.WindowsShell"))
+        assertTrue("A fully qualified use of an adapter is caught", reachesAdapters("val s = $ADAPTERS.WindowsShell()"))
+        assertTrue("A comment line is skipped", !reachesAdapters(" * see $ADAPTERS.WindowsShell"))
         assertTrue("A comment line is skipped", !matches(" * see user32.dll") && !matches("// \"x.exe\""))
     }
 
     private fun usesWindows(file: Path): Boolean = Files.readAllLines(file).any { matches(it) }
 
+    private fun reachesAdapters(line: String): Boolean = !isComment(line) && line.contains(ADAPTERS)
+
+    private fun isComment(line: String): Boolean = line.trim().let { it.startsWith("*") || it.startsWith("/*") || it.startsWith("//") }
+
     private fun matches(line: String): Boolean {
-        val trimmed = line.trim()
-        if (trimmed.startsWith("*") || trimmed.startsWith("/*") || trimmed.startsWith("//")) return false
+        if (isComment(line)) return false
         return WINDOWS_PATTERNS.any { it.containsMatchIn(line) }
     }
 
@@ -80,7 +83,7 @@ class PlatformBoundaryTest {
         private const val APP_DIR = "io/github/numberonebot/chairplay/"
         private const val WINDOWS_DIR = APP_DIR + "platform/windows/"
         private const val SELECTION = APP_DIR + "platform/Platforms.kt"
-        private const val ADAPTER_IMPORT = "import io.github.numberonebot.chairplay.platform.windows."
+        private const val ADAPTERS = "chairplay.platform.windows."
 
         private val WINDOWS_PATTERNS: List<Regex> = listOf(
             Regex("""^import com\.sun\.jna\.platform\.win32\."""),
@@ -97,11 +100,5 @@ class PlatformBoundaryTest {
 
         /** Paths relative to `src/main/kotlin/`. */
         val ALLOWED: Set<String> = emptySet()
-
-        /**
-         * Windows code outside `platform/windows/` that still imports its COM, elevation and file-lock helpers, until
-         * the task that moves it there; the list only shrinks.
-         */
-        val IMPORTERS_LEFT: Set<String> = emptySet()
     }
 }

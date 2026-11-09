@@ -10,6 +10,7 @@ import com.sun.jna.platform.win32.WinDef.HWND
 import com.sun.jna.platform.win32.WinDef.LPARAM
 import com.sun.jna.platform.win32.WinDef.RECT
 import com.sun.jna.platform.win32.WinDef.WPARAM
+import java.lang.ref.Reference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -22,11 +23,15 @@ import org.lwjgl.glfw.GLFW.*
 class WindowsWindowHooksTest {
     private val hooks = WindowsWindowHooks()
 
+    // The watch is the only reference to the CloseSource that holds the window procedure's native stub. If the
+    // collector took it before the window is destroyed, WM_DESTROY would go through a freed stub and end the JVM.
+    private val kept = mutableListOf<Any>()
+
     // The close button and Alt+F4 come as WM_SYSCOMMAND SC_CLOSE, which Windows then turns into WM_CLOSE; taskkill
     // without /F posts WM_CLOSE alone. The window only hides on the first and ends the app on the second.
     @Test
     fun `the close watch tells the close button from taskkill`() = withWindow { window ->
-        val watch = hooks.watchClose(window)
+        val watch = hooks.watchClose(window).also { kept += it }
 
         send(window, WM_SYSCOMMAND, CloseSource.SC_CLOSE.toLong(), 0)
         assertTrue(watch.userClosed())
@@ -89,6 +94,7 @@ class WindowsWindowHooksTest {
                 glfwFreeCallbacks(window)
                 glfwDestroyWindow(window)
             }
+            Reference.reachabilityFence(kept)
             glfwTerminate()
         }
     }
