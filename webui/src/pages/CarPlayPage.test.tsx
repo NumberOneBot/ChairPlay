@@ -222,6 +222,19 @@ describe('CarPlay page, system theme', () => {
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'display.theme': 'system' }]))
   })
+
+  // 1.0.x files say windows for the system theme, which the app reads as system; the file keeps it until a choice.
+  it('shows a theme saved as windows as the system theme', async () => {
+    const backend = new FakeBackend()
+    backend.data.values['display.theme'] = 'windows'
+    await carplay(backend)
+
+    expect(radio('Theme', 'System').getAttribute('aria-checked')).toBe('true')
+    expect(backend.saved).toEqual([])
+    fireEvent.click(radio('Theme', 'Light'))
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'display.theme': 'light' }]))
+  })
 })
 
 describe('CarPlay page, changes waiting for a restart', () => {
