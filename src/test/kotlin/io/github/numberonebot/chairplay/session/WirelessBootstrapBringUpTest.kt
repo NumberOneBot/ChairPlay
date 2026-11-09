@@ -83,34 +83,35 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
         }
     }
 
-    // The iPhone away (its Wi-Fi off, restarted): each failed bring-up starts the next one after 5 s, on and on.
+    // The iPhone away (its Wi-Fi off, restarted): each failed bring-up starts the next one after its wait, on and on.
+    // The app waits 5 s (the test above); here the wait is short, so the test does not sit through it.
     @Test(timeout = 30_000)
     fun `bring-up retries after a failure`() {
         val dir = Files.createTempDirectory("chairplay-bootstrap")
         writeTestSettings(dir)
         val statuses = LinkedBlockingQueue<LinkStatus>()
-        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE) {
+        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE, RETRY) {
             throw IOException("RFCOMM connect failed")
         }.use { bootstrap ->
             bootstrap.onStatus = statuses::add
             bootstrap.start()
             assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
-            assertEquals(LinkStatus.Failed("RFCOMM connect failed", 5_000L), statuses.poll(10, TimeUnit.SECONDS))
+            assertEquals(LinkStatus.Failed("RFCOMM connect failed", RETRY), statuses.poll(10, TimeUnit.SECONDS))
             val failedAt = System.nanoTime()
 
             assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
-            assertTrue("retried before its wait", System.nanoTime() - failedAt >= 4_500_000_000)
-            assertEquals(LinkStatus.Failed("RFCOMM connect failed", 5_000L), statuses.poll(10, TimeUnit.SECONDS))
+            assertTrue("retried before its wait", System.nanoTime() - failedAt >= TimeUnit.MILLISECONDS.toNanos(RETRY * 9 / 10))
+            assertEquals(LinkStatus.Failed("RFCOMM connect failed", RETRY), statuses.poll(10, TimeUnit.SECONDS))
         }
     }
 
-    // Disconnect: a failed bring-up retries after 5 s, but not once stopped; Connect starts it again.
+    // Disconnect: a failed bring-up retries after its wait, but not once stopped; Connect starts it again.
     @Test(timeout = 30_000)
     fun `a stopped bring-up stays stopped until it is started`() {
         val dir = Files.createTempDirectory("chairplay-bootstrap")
         writeTestSettings(dir)
         val statuses = LinkedBlockingQueue<LinkStatus>()
-        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE) {
+        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE, RETRY) {
             throw IllegalArgumentException("no MFi files")
         }.use { bootstrap ->
             bootstrap.onStatus = statuses::add
@@ -120,9 +121,14 @@ class WirelessBootstrapBringUpTest : WirelessBootstrapFixture() {
 
             bootstrap.stop()
 
-            assertNull("no retry after the stop", statuses.poll(7, TimeUnit.SECONDS))
+            assertNull("no retry after the stop", statuses.poll(RETRY * 3, TimeUnit.MILLISECONDS))
             bootstrap.start()
             assertEquals(LinkStatus.Starting, statuses.poll(10, TimeUnit.SECONDS))
         }
+    }
+
+    private companion object {
+        /** A failed bring-up's wait in the tests that sit through it. */
+        const val RETRY = 300L
     }
 }

@@ -7,8 +7,11 @@ import com.shilapi.xcertplay.airplay.AirPlayInfoPlist
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.MulticastSocket
@@ -84,35 +87,21 @@ class DesktopBonjourTest {
         assertTrue(isProbeTarget(loopback, loopback))
     }
 
-    // A peer that never ends its status line must not grow the read without bound.
+    // A peer that never ends its status line must not grow the read without bound. The probe reads its answer with
+    // readStatusLine (the test below has it read a real one), so the bound is checked on the read itself, with no mDNS.
     @Test
     fun `gives up on an endless status line`() {
-        val loopback = InetAddress.getLoopbackAddress()
-        val logged = CopyOnWriteArrayList<String>()
-        MulticastSocket(null).use { holder ->
-            holder.reuseAddress = true
-            holder.bind(InetSocketAddress(5353))
-            ServerSocket(0, 1, loopback).use { phone ->
-                phone.soTimeout = 20_000
-                JmDNS.create(loopback, "phone").use { phoneDns ->
-                    phoneDns.registerService(ServiceInfo.create(
-                        "${CarPlayTxt.CARPLAY_CONTROL_SERVICE_TYPE}.local.", "iPhone", phone.localPort, 0, 0, mapOf("id" to "x"),
-                    ))
-                    DesktopBonjour(config, identity, listOf(loopback), logged::add).use { bonjour ->
-                        bonjour.start()
-                        phone.accept().use { socket ->
-                            socket.getOutputStream().apply {
-                                write(ByteArray(4096) { 'A'.code.toByte() })
-                                flush()
-                            }
-                            val deadline = System.nanoTime() + 5_000_000_000L
-                            while (logged.none { "too long" in it } && System.nanoTime() < deadline) Thread.sleep(50)
-                        }
-                        assertTrue(logged.toString(), logged.any { "too long" in it })
-                    }
-                }
-            }
-        }
+        val endless = ByteArrayInputStream(ByteArray(4096) { 'A'.code.toByte() })
+
+        val error = assertThrows(IOException::class.java) { readStatusLine(endless) }
+        assertTrue(error.message, "too long" in error.message.orEmpty())
+    }
+
+    @Test
+    fun `reads a status line up to its line end`() {
+        val answer = ByteArrayInputStream("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n".toByteArray(Charsets.US_ASCII))
+
+        assertEquals("HTTP/1.1 200 OK", readStatusLine(answer))
     }
 
     // The iPhone publishes _carplay-ctrl._tcp after it joins Wi-Fi; the receiver must ask it to connect.

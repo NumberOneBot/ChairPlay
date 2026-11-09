@@ -28,7 +28,7 @@ internal fun isProbeTarget(address: InetAddress, local: InetAddress): Boolean =
         (!address.isLoopbackAddress || local.isLoopbackAddress)
 
 /** Reads one CRLF- or LF-terminated line of at most [MAX_STATUS_LINE_BYTES]. */
-private fun readStatusLine(input: InputStream): String {
+internal fun readStatusLine(input: InputStream): String {
     val line = ByteArrayOutputStream()
     while (true) {
         val byte = input.read()

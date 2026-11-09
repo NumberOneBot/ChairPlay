@@ -44,10 +44,12 @@ class WirelessBootstrap internal constructor(
     private val sink: MediaSink,
     private val listener: AirPlaySessionListener,
     private val data: PhoneDataTap = PhoneDataTap.NONE,
+    /** How long a failed bring-up waits before the next one; tests shorten it. */
+    private val retryMillis: Long = RETRY_DELAY_MILLIS,
     private val newParts: () -> WirelessParts,
 ) : PhoneConnection {
     constructor(config: DesktopConfig, sink: MediaSink, listener: AirPlaySessionListener, data: PhoneDataTap = PhoneDataTap.NONE) :
-        this(config, sink, listener, data, { DesktopParts(config, listener::onDebugLog) })
+        this(config, sink, listener, data, newParts = { DesktopParts(config, listener::onDebugLog) })
 
     @Volatile
     override var onStatus: (LinkStatus) -> Unit = {}
@@ -123,10 +125,10 @@ class WirelessBootstrap internal constructor(
             if (current !== stack) return
             log("wireless bring-up failed: ${error.javaClass.simpleName}: ${error.message}")
             retire(stack)
-            onStatus(LinkStatus.Failed(error.message ?: error.javaClass.simpleName, RETRY_DELAY_MILLIS))
+            onStatus(LinkStatus.Failed(error.message ?: error.javaClass.simpleName, retryMillis))
             stops
         }
-        Thread.sleep(RETRY_DELAY_MILLIS)
+        Thread.sleep(retryMillis)
         synchronized(lock) { if (current == null && stops == stopsBefore) start() }
     }
 

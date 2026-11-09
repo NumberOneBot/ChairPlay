@@ -123,7 +123,8 @@ class ConnectionTranscriptTest : WirelessBootstrapFixture() {
     fun `a failed bring-up retries after its wait`() {
         val dir = Files.createTempDirectory("chairplay-bootstrap")
         writeTestSettings(dir)
-        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE) {
+        // A short wait, so the test does not sit through the app's 5 s; the stop comes well before a third start.
+        WirelessBootstrap(DesktopConfig(dir), object : MediaSink {}, object : AirPlaySessionListener {}, PhoneDataTap.NONE, 300L) {
             throw IllegalArgumentException("no MFi files")
         }.use { bootstrap ->
             bootstrap.onStatus = ::status
@@ -197,11 +198,11 @@ class ConnectionTranscriptTest : WirelessBootstrapFixture() {
         )
         val FAILED = listOf(
             "status starting",
-            "status failed: no MFi files, retry in 5000 ms",
+            "status failed: no MFi files, retry in 300 ms",
             "  phase=retrying screen=start knownIphone=false waiting=false error=no MFi files",
             "status starting",
             "  phase=starting screen=start knownIphone=false waiting=false error=no MFi files",
-            "status failed: no MFi files, retry in 5000 ms",
+            "status failed: no MFi files, retry in 300 ms",
             "  phase=retrying screen=start knownIphone=false waiting=false error=no MFi files",
         )
     }
