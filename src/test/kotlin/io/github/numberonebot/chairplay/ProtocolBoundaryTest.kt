@@ -73,7 +73,7 @@ class ProtocolBoundaryTest {
         private const val APP_PACKAGE = "io.github.numberonebot.chairplay"
 
         /** The protocol-neutral folders, which never import DiPlay's types. */
-        private val NEUTRAL = listOf("phone/", "data/", "drive/")
+        private val NEUTRAL = listOf("phone/", "data/", "drive/", "platform/")
 
         /** Paths relative to the chairplay source folder. */
         val ALLOWED: Set<String> = sortedSetOf(
