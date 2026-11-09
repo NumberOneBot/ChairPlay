@@ -3,12 +3,10 @@ package io.github.numberonebot.chairplay.network
 import com.shilapi.xcertplay.network.HotspotAddressPolicy
 import com.shilapi.xcertplay.network.WirelessHotspotBackend
 import com.shilapi.xcertplay.network.WirelessHotspotInfo
-import com.shilapi.xcertplay.network.WirelessHotspotManager
 import com.shilapi.xcertplay.network.wifiBandLabel
 import com.shilapi.xcertplay.network.wifiChannelToFrequencyMhz
 import com.shilapi.xcertplay.transport.Iap2WirelessSecurity
 import java.net.InetAddress
-import java.net.NetworkInterface
 
 data class SavedWifi(val ssid: String, val passphrase: String, val security: Iap2WirelessSecurity)
 
@@ -60,29 +58,4 @@ fun hotspotInfoFor(
         hostAddresses = addresses,
         accessPointBssid = connection.bssid,
     )
-}
-
-/** Attaches to the Wi-Fi network the PC is on; it never changes the network. */
-class SameLanNetwork(private val saved: SavedWifi) : WirelessHotspotManager {
-    private var published: WirelessHotspotInfo? = null
-
-    override fun start(timeoutMillis: Long): WirelessHotspotInfo =
-        describe().also { published = it }
-
-    override fun validateReady() {
-        val before = checkNotNull(published) { "SameLanNetwork is not started" }
-        val now = describe()
-        check(now.hostAddresses == before.hostAddresses) {
-            "The Wi-Fi address changed: ${before.hostAddresses} -> ${now.hostAddresses}"
-        }
-    }
-
-    override fun close() {}
-
-    private fun describe(): WirelessHotspotInfo {
-        val nics = NetworkInterface.getNetworkInterfaces().toList().map {
-            NicSnapshot(it.displayName, it.name, it.inetAddresses.toList(), it.isUp)
-        }
-        return hotspotInfoFor(WlanApi.currentConnections(), nics, saved)
-    }
 }
