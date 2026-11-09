@@ -1,32 +1,30 @@
 package io.github.numberonebot.chairplay
 
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import io.github.numberonebot.chairplay.platform.OneCopyClaim
+import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.UUID
+import java.io.Closeable
 
 class OneCopyTest {
-    private val name = "Local\\ChairPlay-test-${UUID.randomUUID()}"
+    @Test fun `another copy running ends this one`() {
+        val shown = mutableListOf<String>()
+        val exits = mutableListOf<Int>()
 
-    // The installed copy and a portable one lock their own folders: the system-wide name keeps the second from
-    // running while the first does, and lets it once the first is gone.
-    @Test fun `a second copy cannot claim the name while the first holds it`() {
-        val first = OneCopy.claim(name, timeoutMillis = 0)
-        assertTrue(first != null)
-        assertTrue(OneCopy.claim(name, timeoutMillis = 300) == null)
-        first!!.close()
-        val second = OneCopy.claim(name, timeoutMillis = 0)
-        assertTrue(second != null)
-        second!!.close()
+        claimOneCopy(0, { shown += it }, { exits += it }, OneCopyClaim { _, _ -> null })
+
+        assertEquals(1, shown.size)
+        assertEquals(listOf(1), exits)
     }
 
-    // A copy of the same folder that is still closing lets go of the name within the wait: the new one runs.
-    @Test fun `the claim waits for a copy that is going`() {
-        val going = OneCopy.claim(name, timeoutMillis = 0)!!
-        Thread { Thread.sleep(200); going.close() }.start()
-        val next = OneCopy.claim(name, timeoutMillis = 3000)
-        assertTrue(next != null)
-        next!!.close()
-        assertFalse(OneCopy.claim(name, timeoutMillis = 0) == null)
+    @Test fun `the only copy asks for the name and its wait, and goes on`() {
+        val asked = mutableListOf<Pair<String, Long>>()
+        val shown = mutableListOf<String>()
+        val exits = mutableListOf<Int>()
+
+        claimOneCopy(250, { shown += it }, { exits += it }, OneCopyClaim { name, wait -> asked += name to wait; Closeable { } })
+
+        assertEquals(listOf(OneCopy.NAME to 250L), asked)
+        assertEquals(emptyList<String>(), shown)
+        assertEquals(emptyList<Int>(), exits)
     }
 }

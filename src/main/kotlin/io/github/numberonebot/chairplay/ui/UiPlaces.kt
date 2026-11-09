@@ -1,8 +1,10 @@
 package io.github.numberonebot.chairplay.ui
 
+import io.github.numberonebot.chairplay.platform.DesktopShell
+import io.github.numberonebot.chairplay.platform.Platforms
+import io.github.numberonebot.chairplay.platform.SystemPage
 import java.net.URLEncoder
 import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * The Windows pages, folders and web pages the screens link to, by the name the page gives, opened through [launch]:
@@ -17,6 +19,7 @@ internal class UiPlaces(
     private val log: (String) -> Unit,
     private val about: BuildInfo,
     private val systemVersion: () -> String,
+    private val shell: DesktopShell = Platforms.current.shell,
 ) {
     /**
      * Opens [place]. Each but the notices goes through explorer.exe, which hands it to the shell: a Settings address
@@ -26,19 +29,19 @@ internal class UiPlaces(
     fun open(place: String): Boolean {
         if (place !in PLACES) return false
         return runCatching {
-            if (place == "notices") launch(listOf("notepad.exe", setup.settingsFile.resolveSibling("THIRD_PARTY_NOTICES").toString()))
-            else launch(listOf("explorer.exe", target(place)))
+            if (place == "notices") launch(shell.textFileCommand(setup.settingsFile.resolveSibling("THIRD_PARTY_NOTICES")))
+            else launch(shell.openCommand(target(place)))
         }
             .onFailure { log("could not open $place: $it") }
             .isSuccess
     }
 
     private fun target(place: String): String = when (place) {
-        "bluetooth" -> "ms-settings:bluetooth"
-        "wifi" -> "ms-settings:network-wifi"
-        "firewall" -> "windowsdefender://network/"
-        "location" -> "ms-settings:privacy-location"
-        "firewall-rules" -> Path.of(System.getenv("SystemRoot") ?: "C:/Windows", "System32", "wf.msc").toString()
+        "bluetooth" -> shell.systemPage(SystemPage.BLUETOOTH)
+        "wifi" -> shell.systemPage(SystemPage.WIFI)
+        "firewall" -> shell.systemPage(SystemPage.FIREWALL)
+        "location" -> shell.systemPage(SystemPage.LOCATION)
+        "firewall-rules" -> shell.systemPage(SystemPage.FIREWALL_RULES)
         "issues" -> "$PROJECT/issues/new?body=" +
             URLEncoder.encode("What happened, and what you expected:\n\n\n---\n$details", Charsets.UTF_8).replace("+", "%20")
         "discussions" -> "$PROJECT/discussions"

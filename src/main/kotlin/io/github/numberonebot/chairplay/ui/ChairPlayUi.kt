@@ -10,6 +10,7 @@ import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
 import io.github.numberonebot.chairplay.phone.LinkStatus
+import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.session.addFirewallRules
 import io.github.numberonebot.chairplay.appLog
 import io.github.numberonebot.chairplay.log.LogLevel
@@ -160,7 +161,7 @@ class ChairPlayUi(
         pageAssets(),
         System.getenv("CHAIRPLAY_UI_PORT")?.toIntOrNull() ?: config.uiServer.port,
         network = config.uiServer.network,
-        openBrowser = WebView2::openInBrowser,
+        openBrowser = Platforms.current.shell::openInBrowser,
         log = log,
     )
 
@@ -184,7 +185,7 @@ class ChairPlayUi(
             "${server.url}?window",
             showsUi = { model.state.showsUi },
             backend = { WebView2(userData, debug) },
-            openBrowser = WebView2::openInBrowser,
+            openBrowser = Platforms.current.shell::openInBrowser,
             log = log,
             onEmbedded = { embedded ->
                 controller.embedded = embedded

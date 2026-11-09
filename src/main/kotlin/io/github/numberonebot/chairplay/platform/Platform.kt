@@ -5,6 +5,12 @@ package io.github.numberonebot.chairplay.platform
  * each adapter is made the first time it is asked for, so a system's libraries load only when they are used.
  */
 internal interface Platform {
-    /** The desktop's own facts: the system's name, its theme, and the app's data folder. */
+    /** The desktop's own facts: the system's name, its theme, and the app's data folder; its message box and pages. */
     val shell: DesktopShell
+
+    /** The claim that keeps a second copy from running on this PC. */
+    val oneCopy: OneCopyClaim
+
+    /** TCP keep-alive timing for the session's sockets. */
+    val keepAlive: KeepAliveTuning
 }

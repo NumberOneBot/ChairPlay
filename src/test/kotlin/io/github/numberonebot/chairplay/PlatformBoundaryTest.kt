@@ -97,10 +97,7 @@ class PlatformBoundaryTest {
 
         /** Paths relative to `src/main/kotlin/`. */
         val ALLOWED: Set<String> = sortedSetOf(
-            "com/shilapi/xcertplay/network/TcpLiveness.kt",
             "${APP_DIR}Firewall.kt",
-            "${APP_DIR}OneCopy.kt",
-            "${APP_DIR}StartFailure.kt",
             "${APP_DIR}bluetooth/WindowsBluetooth.kt",
             "${APP_DIR}bridge/BridgeNative.kt",
             "${APP_DIR}drive/LocationApi.kt",
@@ -122,9 +119,7 @@ class PlatformBoundaryTest {
             "${APP_DIR}session/Firewall.kt",
             "${APP_DIR}session/WindowsFirewallApi.kt",
             "${APP_DIR}ui/ChairPlayUi.kt",
-            "${APP_DIR}ui/UiPlaces.kt",
             "${APP_DIR}ui/WebView2.kt",
-            "${APP_DIR}update/UpdateChecks.kt",
             "${APP_DIR}update/WindowsUpdateDialog.kt",
         )
 

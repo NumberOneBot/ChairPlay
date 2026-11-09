@@ -1,10 +1,7 @@
 package io.github.numberonebot.chairplay
 
-import com.sun.jna.Library
-import com.sun.jna.Native
-import com.sun.jna.Pointer
-import com.sun.jna.WString
 import io.github.numberonebot.chairplay.log.AppLog
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.nio.file.Path
@@ -19,7 +16,7 @@ import kotlin.system.exitProcess
  */
 internal fun guardStart(
     log: AppLog,
-    show: (String) -> Unit = ::showStartFailure,
+    show: (String) -> Unit = { Platforms.current.shell.showError(it) },
     exit: (Int) -> Unit = { exitProcess(it) },
     start: (windowsOpen: () -> Unit) -> Unit,
 ) {
@@ -45,15 +42,3 @@ internal fun startFailureText(error: Throwable, logFile: Path?): String {
 }
 
 private const val ISSUES = "https://github.com/NumberOneBot/ChairPlay/issues"
-
-private interface MessageBoxes : Library {
-    fun MessageBoxW(window: Pointer?, text: WString, caption: WString, type: Int): Int
-}
-
-private const val MB_ICONERROR = 0x10
-private const val MB_SETFOREGROUND = 0x10000
-
-/** Windows' own message box, as no window of the app is open to show the failure in (or none to go on with). */
-internal fun showStartFailure(text: String) {
-    Native.load("user32", MessageBoxes::class.java).MessageBoxW(null, WString(text), WString("ChairPlay"), MB_ICONERROR or MB_SETFOREGROUND)
-}

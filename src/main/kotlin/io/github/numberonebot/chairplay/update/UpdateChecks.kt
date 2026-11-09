@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.update
 
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.io.Closeable
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
@@ -17,7 +18,7 @@ internal class UpdateChecks(
     private val lookup: () -> ReleaseVersion? = ReleaseClient()::latest,
     private val show: (UpdateResult) -> Boolean = WindowsUpdateDialog::show,
     private val openReleases: () -> Unit = {
-        ProcessBuilder("explorer.exe", "https://github.com/NumberOneBot/ChairPlay/releases").start()
+        ProcessBuilder(Platforms.current.shell.openCommand("https://github.com/NumberOneBot/ChairPlay/releases")).start()
     },
     private val log: (String) -> Unit,
 ) : Closeable {

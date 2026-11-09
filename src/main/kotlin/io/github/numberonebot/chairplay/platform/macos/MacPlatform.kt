@@ -1,12 +1,19 @@
 package io.github.numberonebot.chairplay.platform.macos
 
 import io.github.numberonebot.chairplay.platform.DesktopShell
+import io.github.numberonebot.chairplay.platform.KeepAliveTuning
+import io.github.numberonebot.chairplay.platform.OneCopyClaim
 import io.github.numberonebot.chairplay.platform.Platform
+import io.github.numberonebot.chairplay.platform.SystemPage
+import java.io.Closeable
+import java.net.Socket
 import java.nio.file.Path
 
 /** macOS, chosen for a Mac but not ready: every use of it throws [notReady]'s exception. */
 internal class MacPlatform : Platform {
     override val shell: DesktopShell = MacShell
+    override val oneCopy: OneCopyClaim = MacOneCopy
+    override val keepAlive: KeepAliveTuning = MacKeepAlive
 }
 
 private object MacShell : DesktopShell {
@@ -15,6 +22,26 @@ private object MacShell : DesktopShell {
     override fun appsDark(): Boolean? = notReady()
 
     override fun dataDirectory(): Path = notReady()
+
+    override fun showError(text: String) = notReady()
+
+    override fun openInBrowser(url: String) = notReady()
+
+    override fun openCommand(target: String): List<String> = notReady()
+
+    override fun textFileCommand(file: Path): List<String> = notReady()
+
+    override fun systemPage(page: SystemPage): String = notReady()
+}
+
+private object MacOneCopy : OneCopyClaim {
+    override fun claim(name: String, timeoutMillis: Long): Closeable? = notReady()
+}
+
+private object MacKeepAlive : KeepAliveTuning {
+    override fun tune(socket: Socket, idleSeconds: Int, intervalSeconds: Int, count: Int, deadlineSeconds: Int) = notReady()
+
+    override fun timing(socket: Socket): List<Int> = notReady()
 }
 
 /** Thrown by every member of [MacPlatform] until the Mac adapters exist. */
