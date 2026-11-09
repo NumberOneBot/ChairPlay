@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.media
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.CallbackReference
 import com.sun.jna.Pointer

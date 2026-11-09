@@ -28,7 +28,33 @@ internal class FakePlatform(
     override val bluetooth: FakeBluetooth = FakeBluetooth(),
     override val audio: FakeAudio = FakeAudio(),
     override val video: HardwareVideo? = null,
+    override val windows: FakeWindowHooks = FakeWindowHooks(),
 ) : Platform
+
+/** Window hooks that touch no window: each GLFW handle is its own native one, and each hook it is asked for is kept. */
+internal class FakeWindowHooks(var closedByUser: Boolean = false) : WindowHooks {
+    val calls = mutableListOf<String>()
+    val flashes = mutableListOf<Pair<Long, Boolean>>()
+
+    override fun nativeHandle(window: Long): Long = window
+
+    override fun paintTitleBar(window: Long, dialog: Boolean) {
+        calls += "paintTitleBar($window, $dialog)"
+    }
+
+    override fun watchClose(window: Long): CloseWatch {
+        calls += "watchClose($window)"
+        return CloseWatch { closedByUser }
+    }
+
+    override fun dragByPicture(window: Long) {
+        calls += "dragByPicture($window)"
+    }
+
+    override fun flash(window: Long, on: Boolean) {
+        flashes += window to on
+    }
+}
 
 /** Bluetooth with the [radio] and [paired] devices the test set; each RFCOMM connection it records gets [link]. */
 internal class FakeBluetooth(

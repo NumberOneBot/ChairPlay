@@ -7,8 +7,10 @@ import io.github.numberonebot.chairplay.config.isVisibleOn
 import io.github.numberonebot.chairplay.config.openingSize
 import io.github.numberonebot.chairplay.input.PointerEvent
 import io.github.numberonebot.chairplay.input.Size
+import io.github.numberonebot.chairplay.platform.CloseWatch
+import io.github.numberonebot.chairplay.platform.Platforms
+import io.github.numberonebot.chairplay.platform.WindowHooks
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWNativeWin32.glfwGetWin32Window
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GLCapabilities
 import org.lwjgl.opengl.GL33C.*
@@ -54,6 +56,7 @@ class VideoWindow(
     stream: WindowSize? = null,
     /** True moves the window by a press anywhere on it, as by its title bar; it then gets no left-button clicks. */
     private val dragAnywhere: Boolean = false,
+    private val hooks: WindowHooks = Platforms.current.windows,
 ) : Closeable {
     /** The picture it shows, as it opened with it or took the shape and size of since ([setStream]), on the GL thread. */
     @Volatile
@@ -64,7 +67,7 @@ class VideoWindow(
     private val latest = AtomicReference<DecodedFrame?>()
     private val closing = AtomicBoolean()
     private val minimizing = AtomicBoolean()
-    val commands = WindowCommands(::wake)
+    val commands = WindowCommands(::wake, hooks)
     fun toggleFullscreen() = commands.toggleFullscreen()
     private val screenshotRequest = AtomicReference<((BufferedImage) -> Unit)?>()
     internal val titles = WindowTitle()
@@ -96,10 +99,7 @@ class VideoWindow(
         frame = FrameRequest(top, bottom, left, right, System.nanoTime() + millis * 1_000_000, of)
         wake()
         // One more pass when it is due to go.
-        Thread({
-            Thread.sleep(millis + 20)
-            wake()
-        }, "frame-end").apply { isDaemon = true }.start()
+        Thread({ Thread.sleep(millis + 20); wake() }, "frame-end").apply { isDaemon = true }.start()
     }
 
     /**
@@ -186,7 +186,7 @@ class VideoWindow(
      */
     @Volatile
     var onOutsideClose: () -> Unit = {}
-    private val closeSource = CloseSource()
+    private var closeWatch: CloseWatch? = null
 
     /** Runs on the GL thread as the window closes, with its last place and restored size. */
     @Volatile
@@ -295,7 +295,7 @@ class VideoWindow(
         // Windows applies it to edge drags only, so a maximized window still fills the screen.
         aspect?.let { glfwSetWindowAspectRatio(window, it.width, it.height) }
         if (restore != null) glfwSetWindowPos(window, restore.x, restore.y)
-        TitleBar.paint(glfwGetWin32Window(window), dialog = !resizable)
+        hooks.paintTitleBar(window, dialog = !resizable)
         // A remembered or configured size below it grows to it here. It scales with the monitor, as the web view's
         // pages do, and follows the window to a monitor of another scale.
         // A window that keeps the picture's shape stops at the smallest size of that shape covering the minimum, so
@@ -305,14 +305,14 @@ class VideoWindow(
             glfwSetWindowContentScaleCallback(window) { handle, _, _ -> limitSize(handle) }
         }
         if (hideOnClose) {
-            closeSource.watch(glfwGetWin32Window(window))
+            closeWatch = hooks.watchClose(window)
             glfwSetWindowCloseCallback(window) { handle ->
                 glfwSetWindowShouldClose(handle, false)
                 // The close button hides the window; a close asked from outside (taskkill) ends the app.
-                if (closeSource.userClosed()) applyShown(handle, false) else onOutsideClose()
+                if (closeWatch?.userClosed() == true) applyShown(handle, false) else onOutsideClose()
             }
         }
-        if (dragAnywhere) ClientDrag.install(glfwGetWin32Window(window))
+        if (dragAnywhere) hooks.dragByPicture(window)
         WindowIcon.apply(window)
         tracker = PlacementTracker(window, restore?.maximized ?: false)
         if (visible) {
@@ -334,7 +334,7 @@ class VideoWindow(
         // by stays white until the mouse lets go.
         glfwSetWindowRefreshCallback(window) { _ -> step() }
         running.set(true)
-        child?.attach(glfwGetWin32Window(window))
+        child?.attach(hooks.nativeHandle(window))
     }
 
     private fun limitSize(window: Long) {

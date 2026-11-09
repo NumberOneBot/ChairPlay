@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.media
+package io.github.numberonebot.chairplay.platform.windows
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

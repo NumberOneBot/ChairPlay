@@ -19,6 +19,8 @@ import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.platform.SpatialOutputs
 import io.github.numberonebot.chairplay.platform.SystemAudio
 import io.github.numberonebot.chairplay.platform.OutputDevice
+import io.github.numberonebot.chairplay.platform.CloseWatch
+import io.github.numberonebot.chairplay.platform.WindowHooks
 import io.github.numberonebot.chairplay.media.DefaultAudioDevices
 import io.github.numberonebot.chairplay.media.apac.SpatialDevice
 import io.github.numberonebot.chairplay.ui.FirewallStatus
@@ -39,6 +41,19 @@ internal class MacPlatform : Platform {
     override val bluetooth: Bluetooth = MacBluetooth
     override val audio: SystemAudio = MacAudio
     override val video: HardwareVideo? get() = notReady()
+    override val windows: WindowHooks = MacWindows
+}
+
+private object MacWindows : WindowHooks {
+    override fun nativeHandle(window: Long): Long = notReady()
+
+    override fun paintTitleBar(window: Long, dialog: Boolean) = notReady()
+
+    override fun watchClose(window: Long): CloseWatch = notReady()
+
+    override fun dragByPicture(window: Long) = notReady()
+
+    override fun flash(window: Long, on: Boolean) = notReady()
 }
 
 private object MacAudio : SystemAudio {

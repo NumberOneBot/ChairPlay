@@ -31,4 +31,7 @@ internal interface Platform {
 
     /** The GPU video decoding FFmpeg can use here; null decodes in software only. */
     val video: HardwareVideo?
+
+    /** What the system adds to the app's windows: their title bar, their close and drag, their taskbar button. */
+    val windows: WindowHooks
 }
