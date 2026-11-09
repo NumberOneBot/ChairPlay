@@ -208,6 +208,17 @@ class UiControllerSettingsTest : UiControllerFixture() {
         assertEquals(null, audio["defaultInput"])
     }
 
+    // Listing the devices asks Java Sound and Windows: once per run, not on every page that reads the settings.
+    @Test
+    fun `the sound devices are listed once`() {
+        var lists = 0
+        val ui = controller(audio = { lists++; AudioDeviceNames(listOf("Speakers (Realtek)"), emptyList()) })
+
+        repeat(3) { ui.settings() }
+
+        assertEquals(1, lists)
+    }
+
     @Test
     fun `Disconnect ends the session and leaves the app idle`() {
         val ui = controller()

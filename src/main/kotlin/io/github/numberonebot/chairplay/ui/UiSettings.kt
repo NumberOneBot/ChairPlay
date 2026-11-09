@@ -58,15 +58,18 @@ internal class UiSettings(
             "passphraseSet" to !values[PASSPHRASE].isNullOrEmpty(),
             "applies" to EditableSettings.keys.associateWith { appliesName(EditableSettings.applies(it)) },
             "display" to mapOf("width" to setup.displayWidth, "height" to setup.displayHeight),
-            "audio" to runCatching { audioDevices() }.getOrElse { AudioDeviceNames(emptyList(), emptyList()) }
-                .let {
-                    mapOf(
-                        "outputs" to it.outputs,
-                        "inputs" to it.inputs,
-                        "defaultOutput" to it.defaultOutput,
-                        "defaultInput" to it.defaultInput,
-                    )
-                },
+            "audio" to audio,
+        )
+    }
+
+    /** The sound devices, listed once, as the first page reads the settings: Java Sound and Windows are slow to ask. */
+    private val audio: Map<String, Any?> by lazy {
+        val devices = runCatching { audioDevices() }.getOrElse { AudioDeviceNames(emptyList(), emptyList()) }
+        mapOf(
+            "outputs" to devices.outputs,
+            "inputs" to devices.inputs,
+            "defaultOutput" to devices.defaultOutput,
+            "defaultInput" to devices.defaultInput,
         )
     }
 
