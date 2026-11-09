@@ -14,7 +14,7 @@ class WindowsOneCopyTest {
         val held = WindowsPlatform().oneCopy.claim(name, 0)
         try {
             assertNotNull(held)
-            assertNull(NamedMutex.claim("Local\$name", 0))
+            assertNull(NamedMutex.claim("Local\\$name", 0))
         } finally {
             held?.close()
         }
