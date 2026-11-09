@@ -29,13 +29,14 @@ class DrivingExternalGaugesTest {
         )
         driving.toggleKeyboard()
         source.record = record()
-        driving.pass()
+        driving.lookForGame()
         return driving
     }
 
     private fun Driving.sent(record: TelemetryRecord): GaugeView {
         now += 16_666_667L
         source.record = record
+        lookForGame()
         pass()
         return gauges()!!
     }
@@ -84,6 +85,7 @@ class DrivingExternalGaugesTest {
         assertTrue(driving.driveMode(true))
         now += 16_666_667L
         source.record = record()
+        driving.lookForGame()
         driving.pass()
         assertNotNull(driving.gauges())
     }

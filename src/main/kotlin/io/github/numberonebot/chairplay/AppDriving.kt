@@ -14,7 +14,7 @@ import io.github.numberonebot.chairplay.ui.UiDriving
  */
 internal fun uiDriving(driving: Driving, window: VideoWindow, screenshots: () -> Unit, log: (String) -> Unit) = object : UiDriving {
     init {
-        // gps.external saved on: the repaint wakes a loop waiting for an event, whose next pass reads the telemetry.
+        // A game found, or gps.external saved off: the repaint wakes a loop waiting for an event, to follow or close it.
         driving.wake = window::repaint
     }
 

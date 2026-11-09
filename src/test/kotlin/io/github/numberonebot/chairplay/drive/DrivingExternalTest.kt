@@ -38,7 +38,13 @@ class DrivingExternalTest {
     /** A fresh input takes the record it first finds as the game's last before it, not as news: the next one drives. */
     private fun Driving.found(): Driving = also {
         source.record = record(0)
-        it.pass()
+        it.step()
+    }
+
+    /** The status tick's look for a game, then a pass of the window loop. */
+    private fun Driving.step(): Double? {
+        lookForGame()
+        return pass()
     }
 
     @Test
@@ -47,10 +53,10 @@ class DrivingExternalTest {
         throttle = 1f
         source.record = record(1)
 
-        assertEquals(DriveControl.FRAME_SECONDS, driving.pass()!!, 0.0)
+        assertEquals(DriveControl.FRAME_SECONDS, driving.step()!!, 0.0)
         at(0.1)
         source.record = record(2)
-        driving.pass()
+        driving.step()
 
         val snapshot = driving.drive.snapshot()
         assertEquals(paris, snapshot.position)
@@ -65,10 +71,10 @@ class DrivingExternalTest {
     fun `a halted game stops the car where it is`() {
         val driving = driving().found()
         source.record = record(1)
-        driving.pass()
+        driving.step()
         at(0.6)
 
-        assertEquals(DriveControl.GAMEPAD_POLL_SECONDS, driving.pass()!!, 0.0)
+        assertEquals(DriveControl.GAMEPAD_POLL_SECONDS, driving.step()!!, 0.0)
         val snapshot = driving.drive.snapshot()
         assertFalse(driving.drive.moving)
         assertEquals(paris, snapshot.position)
@@ -80,11 +86,11 @@ class DrivingExternalTest {
     fun `a paused game stops the car`() {
         val driving = driving().found()
         source.record = record(1)
-        driving.pass()
+        driving.step()
         at(0.1)
         source.record = record(2, paused = true)
 
-        driving.pass()
+        driving.step()
         assertFalse(driving.drive.moving)
     }
 
@@ -92,15 +98,15 @@ class DrivingExternalTest {
     fun `when the game goes the place is saved`() {
         val driving = driving().found()
         source.record = record(1)
-        driving.pass()
+        driving.step()
         at(0.6)
-        driving.pass()
+        driving.step()
         at(5.0)
 
-        driving.pass()
+        driving.step()
         assertEquals(mapOf("gps.start" to "48.85000, 2.29000", "gps.heading" to "135"), placeSaved.single())
         at(5.1)
-        driving.pass()
+        driving.step()
         assertEquals(1, placeSaved.size)
     }
 
@@ -108,11 +114,11 @@ class DrivingExternalTest {
     fun `the gamepad drives again once the game is gone`() {
         val driving = driving().found()
         source.record = record(1, speed = 0.0)
-        driving.pass()
+        driving.step()
         at(5.0)
-        driving.pass()
+        driving.step()
         throttle = 1f
-        repeat(60) { now += 16_666_667L; driving.pass() }
+        repeat(60) { now += 16_666_667L; driving.step() }
 
         assertTrue(driving.drive.moving)
         assertTrue(driving.drive.snapshot().position.latitude < paris.latitude)
@@ -123,13 +129,13 @@ class DrivingExternalTest {
     fun `a game gone in neutral hands the car back to the gamepad`() {
         val driving = driving().found()
         source.record = record(1, speed = 0.0, gear = 0)
-        driving.pass()
+        driving.step()
         at(0.6)
-        driving.pass()
+        driving.step()
         at(5.0)
-        driving.pass()
+        driving.step()
         throttle = 1f
-        repeat(60) { now += 16_666_667L; driving.pass() }
+        repeat(60) { now += 16_666_667L; driving.step() }
 
         assertTrue(driving.drive.moving)
     }
@@ -139,11 +145,11 @@ class DrivingExternalTest {
     fun `a game gone in a gear the car does not have hands the car back`() {
         val driving = driving().found()
         source.record = record(1, gear = 12)
-        driving.pass()
+        driving.step()
         at(6.0)
-        driving.pass()
+        driving.step()
         throttle = 1f
-        repeat(60) { now += 16_666_667L; driving.pass() }
+        repeat(60) { now += 16_666_667L; driving.step() }
 
         assertTrue(driving.drive.moving)
         assertTrue(driving.drive.snapshot().car.gear in 1..CarSpec().gearRatios.size)
@@ -153,30 +159,20 @@ class DrivingExternalTest {
     fun `a game's gear shows while it drives`() {
         val driving = driving().found()
         source.record = record(1, gear = 12)
-        driving.pass()
+        driving.step()
         at(0.1)
         source.record = record(2, gear = 12)
-        driving.pass()
+        driving.step()
 
         assertEquals(12, driving.drive.snapshot().car.gear)
-    }
-
-    @Test
-    fun `an idle loop keeps polling while external driving is on`() {
-        val driving = Driving(on, gamepad = { null }, nanoTime = { now }, lookup = { it.run() },
-            telemetry = { TelemetryInput(source, {}, { now }) })
-
-        val due = driving.pass()
-        assertTrue("due $due", due != null && due <= DriveControl.GAMEPAD_POLL_SECONDS)
-        assertEquals(1, source.reads)
     }
 
     @Test
     fun `without the switch no telemetry is read`() {
         val driving = driving(on.copy(external = false))
         source.record = record(1)
-        driving.pass()
-        driving.pass()
+        driving.step()
+        driving.step()
 
         assertEquals(0, inputs)
         assertEquals(0, source.opens)
@@ -187,7 +183,7 @@ class DrivingExternalTest {
     fun `the GPS off reads no telemetry`() {
         val driving = driving(on.copy(enabled = false))
         source.record = record(1)
-        driving.pass()
+        driving.step()
 
         assertEquals(0, inputs)
         assertEquals(0, source.opens)
@@ -199,10 +195,10 @@ class DrivingExternalTest {
     fun `the switch off closes the telemetry and on again starts afresh`() {
         val driving = driving().found()
         source.record = record(1)
-        driving.pass()
+        driving.step()
 
         driving.saved(on.copy(external = false), setOf("gps.external"))
-        driving.pass()
+        driving.step()
         assertEquals(1, source.closes)
         assertFalse(driving.drive.moving)
         assertEquals("48.85000, 2.29000", placeSaved.single()["gps.start"])
@@ -210,14 +206,14 @@ class DrivingExternalTest {
         driving.saved(on.copy(external = false, start = kyiv), setOf("gps.start"))
         at(10.0)
         driving.saved(on.copy(start = kyiv), setOf("gps.external"))
-        driving.pass()
+        driving.step()
         assertEquals(2, inputs)
         assertEquals(kyiv.latitude, driving.drive.snapshot().position.latitude, 1e-9)
         assertFalse(driving.drive.moving)
         assertEquals(1, placeSaved.size)
 
         source.record = record(2)
-        assertEquals(DriveControl.FRAME_SECONDS, driving.pass()!!, 0.0)
+        assertEquals(DriveControl.FRAME_SECONDS, driving.step()!!, 0.0)
         assertEquals(paris, driving.drive.snapshot().position)
     }
 
@@ -225,24 +221,27 @@ class DrivingExternalTest {
     fun `the GPS off closes the telemetry`() {
         val driving = driving().found()
         source.record = record(1)
-        driving.pass()
+        driving.step()
 
         driving.saved(on.copy(enabled = false), setOf("gps.enabled"))
-        driving.pass()
+        driving.step()
         assertEquals(1, source.closes)
         assertFalse(driving.drive.moving)
     }
 
-    // A switch saved on the settings thread wakes the window loop, which may be waiting for an event.
+    // The switch turned off on the settings thread wakes the window loop, which may be waiting for an event, to close
+    // the telemetry; turned on, the status tick looks for a game.
     @Test
-    fun `turning external driving on wakes the window loop`() {
+    fun `turning external driving off wakes the window loop`() {
         val driving = driving(on.copy(external = false))
         var woken = 0
         driving.wake = { woken++ }
 
         driving.saved(on, setOf("gps.external"))
-        assertEquals(1, woken)
+        assertEquals(0, woken)
         driving.saved(on.copy(headingDegrees = 90.0), setOf("gps.heading"))
+        assertEquals(0, woken)
+        driving.saved(on.copy(external = false), setOf("gps.external"))
         assertEquals(1, woken)
     }
 }

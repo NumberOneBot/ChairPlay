@@ -121,7 +121,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     val lockReady = CountDownLatch(1)
     val startBootstrap = AtomicReference<() -> Unit> {}
     val stopBootstrap = AtomicReference<() -> Unit> {}
-    // Looks at the Windows theme for CarPlay's look, and at the GPS car for its page.
+    // Looks at the Windows theme for CarPlay's look, at the GPS car for its page, and for a game's telemetry.
     val themeWatch = Executors.newSingleThreadScheduledExecutor { Thread(it, "theme-watch").apply { isDaemon = true } }
     val theme = CarPlayTheme(config.theme, themeWatch, touchSender, active::get)
     val ui = ChairPlayUi(dir, config, { checkFirewall(CarPlayConfig.PORT, uiPort = config.uiServer.firewallPort) }, object : UiActions {
@@ -217,6 +217,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     }
     themeWatch.scheduleWithFixedDelay({
         driving.showPage(ui::gpsChanged)
+        driving.lookForGame()
         audio.updateBufferedAudio()
         silence.check()
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)

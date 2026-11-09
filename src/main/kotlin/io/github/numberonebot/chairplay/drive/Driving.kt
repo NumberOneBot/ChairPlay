@@ -60,9 +60,12 @@ class Driving(
     /** The location the last connection made from the car, which puts itself here for the GPS page. */
     @Volatile var location: LocationLink? = null
 
-    // The game's telemetry, read and closed on the window loop's thread only, while the GPS and gps.external are on.
+    // The game's telemetry while the GPS and gps.external are on: read on the status tick while no game is there
+    // ([lookForGame]), on the window loop while one is ([gameThere]), and closed there; the lock keeps the two apart.
+    private val telemetryLock = Any()
     private var reader: TelemetryInput? = null
-    // Whether the last poll had a game there, driving or halted.
+    @Volatile private var gameThere = false
+    // Whether the last poll had a game there, driving or halted; the window loop's thread only.
     private var following = false
     // The red line the game last gave while driving, for the tachometer until it is gone; null for the GPS car's own.
     @Volatile private var gameRedline: Double? = null
@@ -85,13 +88,13 @@ class Driving(
 
     /**
      * A pass with gps.external on: a game sending puts the car where it says, one paused or quiet stops it there, and
-     * with none the gamepad and keys drive, the place the game left saved first. It polls at least 20 times a second.
+     * with none the gamepad and keys drive, the place the game left saved first. It polls at least 20 times a second
+     * while a game is there, and not at all while none is: the status tick looks for one.
      */
-    private fun external(): Double {
-        val current = reader ?: telemetry().also { reader = it }
+    private fun external(): Double? {
         // The GPS page's drive mode switch shows or hides the gauges while the game drives, too.
         control.takeKeyboardRequest()
-        when (val said = current.poll()) {
+        if (gameThere) when (val said = poll()) {
             is External.Drives -> {
                 val record = said.record
                 drive.follow(GeoPoint(record.latitude, record.longitude), record.headingDegrees, record.speed, record.rpm, record.gear)
@@ -105,17 +108,34 @@ class Driving(
                 following = true
                 return DriveControl.GAMEPAD_POLL_SECONDS
             }
-            External.Absent -> {
-                handBack()
-                return minOf(control.pass() ?: DriveControl.GAMEPAD_POLL_SECONDS, DriveControl.GAMEPAD_POLL_SECONDS)
-            }
+            External.Absent -> gameThere = false
         }
+        handBack()
+        return control.pass()
     }
+
+    /**
+     * The status tick's look for a game, four times a second while the GPS and gps.external are on and none is there:
+     * one sending or paused wakes the window loop, which follows it from its next pass until it is gone.
+     */
+    fun lookForGame() {
+        synchronized(telemetryLock) {
+            val settings = settings
+            if (!settings.enabled || !settings.external || gameThere || poll() == External.Absent) return
+            gameThere = true
+        }
+        wake()
+    }
+
+    private fun poll(): External = synchronized(telemetryLock) { (reader ?: telemetry().also { reader = it }).poll() }
 
     // gps.external or the GPS gone off: the file closes, and a car the game had is handed back.
     private fun unfollow() {
-        reader?.close()
-        reader = null
+        synchronized(telemetryLock) {
+            reader?.close()
+            reader = null
+            gameThere = false
+        }
         handBack()
     }
 
@@ -150,8 +170,8 @@ class Driving(
     fun saved(now: GpsSettings, keys: Set<String>) {
         val was = settings
         settings = now
-        // The window loop reads the telemetry from its next pass, or closes it there.
-        if (now.enabled && now.external && !(was.enabled && was.external)) wake()
+        // On, the status tick looks for a game; off, the window loop closes the telemetry on its next pass.
+        if (was.enabled && was.external && !(now.enabled && now.external)) wake()
         val here = drive.snapshot()
         val own = now.start?.let { abs(it.latitude - here.position.latitude) < SAME && abs(it.longitude - here.position.longitude) < SAME }
         if ("gps.start" in keys && own != true) {

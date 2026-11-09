@@ -24,7 +24,8 @@ import java.nio.ByteBuffer
  * reverse, then by a game's telemetry forward, backing up and paused, and what its location sends the iPhone: each
  * update's NMEA parameters on the tunnel as framed, the once-a-second answer unattached, its status, and the log. The
  * expected transcript (iap2/location-transcript.txt) was recorded from DriveLocation, built as Driving.location built
- * it, before it moved here as CarPlayLocation: the move changed nothing the iPhone is sent.
+ * it, before it moved here as CarPlayLocation: the move changed nothing the iPhone is sent. From "a game drives" on it
+ * was recorded again once the status tick, not the window loop, looked for a game: the car follows it a tick later.
  */
 class CarPlayLocationTranscriptTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
@@ -89,10 +90,14 @@ class CarPlayLocationTranscriptTest {
         driving.saved(now, keys.toSet())
     }
 
-    /** A quarter second of the window loop at 60 passes a second, then one update of the GPS sender, [times] over. */
+    /**
+     * The status tick's look for a game, a quarter second of the window loop at 60 passes a second, then one update of
+     * the GPS sender, [times] over.
+     */
     private fun ticks(name: String, times: Int = 1) {
         lines += "> $name"
         repeat(times) {
+            driving.lookForGame()
             repeat(15) { now += frame; driving.pass() }
             schedule.tick!!()
             lines += "  car ${driving.drive.snapshot().car}"
