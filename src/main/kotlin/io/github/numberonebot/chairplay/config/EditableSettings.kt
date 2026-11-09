@@ -61,7 +61,7 @@ object EditableSettings {
         "display.physical.height.mm" to Setting(Applies.RECONNECT, check = ::checkOptionalPositive),
         "display.ppi" to Setting(Applies.RECONNECT, check = ::checkOptionalPositive),
         // CarPlay turns dark or light while it runs, as a car's headlights tell it to.
-        "display.theme" to choice("windows", "light", "dark", "phone", applies = Applies.NOW),
+        "display.theme" to choice("system", "light", "dark", "phone", applies = Applies.NOW),
         "display.dock" to choice("auto", "driver", "bottom", applies = Applies.RECONNECT),
         "display.right.hand.drive" to switch(Applies.RECONNECT),
         "display.safe.draw.outside" to switch(Applies.RECONNECT),

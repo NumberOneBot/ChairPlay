@@ -1,21 +1,7 @@
 package io.github.numberonebot.chairplay.ui
 
-import com.sun.jna.platform.win32.Advapi32Util
-import com.sun.jna.platform.win32.WinReg
 import java.io.StringReader
 import java.util.Properties
-
-/**
- * "Windows 11 24H2 (build 26300)", from the registry: its ProductName says Windows 10 on Windows 11 too, so the name
- * comes from the build number (22000 and later are Windows 11).
- */
-fun windowsVersion(): String {
-    val key = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"
-    fun value(name: String) = runCatching { Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, key, name) }.getOrNull()
-    val build = value("CurrentBuildNumber") ?: return System.getProperty("os.name")
-    val name = if ((build.toIntOrNull() ?: 0) >= 22000) "Windows 11" else "Windows 10"
-    return listOfNotNull(name, value("DisplayVersion")).joinToString(" ") + " (build $build)"
-}
 
 /** A commit by its short id and the day it was made. */
 data class Commit(val id: String, val date: String)

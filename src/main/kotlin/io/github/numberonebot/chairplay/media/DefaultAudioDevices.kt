@@ -7,9 +7,9 @@ import com.sun.jna.platform.win32.Guid
 import com.sun.jna.platform.win32.Ole32
 import com.sun.jna.platform.win32.WTypes
 import com.sun.jna.ptr.PointerByReference
-import io.github.numberonebot.chairplay.windows.RELEASE
-import io.github.numberonebot.chairplay.windows.comCall
-import io.github.numberonebot.chairplay.windows.onComThread
+import io.github.numberonebot.chairplay.platform.windows.RELEASE
+import io.github.numberonebot.chairplay.platform.windows.comCall
+import io.github.numberonebot.chairplay.platform.windows.onComThread
 
 /** The names of the devices Windows plays and records with by default, as Sound settings shows them; null for none. */
 data class DefaultAudioDevices(val output: String?, val input: String?)

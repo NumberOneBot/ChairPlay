@@ -1,0 +1,10 @@
+package io.github.numberonebot.chairplay.platform
+
+/**
+ * What the app asks of the operating system, one contract per concern. [Platforms.current] is the one the app runs on;
+ * each adapter is made the first time it is asked for, so a system's libraries load only when they are used.
+ */
+internal interface Platform {
+    /** The desktop's own facts: the system's name, its theme, and the app's data folder. */
+    val shell: DesktopShell
+}

@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.drive
 
-import io.github.numberonebot.chairplay.windows.onComThread
+import io.github.numberonebot.chairplay.platform.windows.onComThread
 
 /**
  * Where Windows locates this PC, through its Location API (the one .NET's GeoCoordinateWatcher uses), for putting the

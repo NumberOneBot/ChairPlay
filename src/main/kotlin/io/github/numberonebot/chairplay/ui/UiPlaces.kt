@@ -9,14 +9,14 @@ import java.nio.file.Path
  * Bluetooth or Wi-Fi in Settings, the firewall in Windows Security or its console with the rules, location, the MFi,
  * logs, and screenshots folders (made first if they are missing), and the About page's: the project's pages on GitHub
  * (a new issue with [details] filled in), DiPlay's, xcertplay's, LIVI's, the HUD renderer's, and the third-party notices beside
- * the app ([setup]), in Notepad as the file has no extension. [about] and [windowsVersion] name the build in a report.
+ * the app ([setup]), in Notepad as the file has no extension. [about] and [systemVersion] name the build in a report.
  */
 internal class UiPlaces(
     private val setup: SetupInfo,
     private val launch: (List<String>) -> Unit,
     private val log: (String) -> Unit,
     private val about: BuildInfo,
-    private val windowsVersion: () -> String,
+    private val systemVersion: () -> String,
 ) {
     /**
      * Opens [place]. Each but the notices goes through explorer.exe, which hands it to the shell: a Settings address
@@ -75,7 +75,7 @@ internal class UiPlaces(
      */
     val details: String by lazy {
         val core = "DiPlay core ${about.core?.let { "${it.id} (${it.date})" } ?: "not recorded"}"
-        val windows = runCatching(windowsVersion).getOrDefault("Windows")
+        val windows = runCatching(systemVersion).getOrDefault("Windows")
         "${about.startLine()}\n$core\n$windows"
     }
 

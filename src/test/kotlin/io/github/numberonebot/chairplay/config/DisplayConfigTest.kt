@@ -78,7 +78,7 @@ class DisplayConfigTest {
         val config = configWith()
         val main = config.airPlay.main
 
-        assertEquals(Theme.WINDOWS, config.theme)
+        assertEquals(Theme.SYSTEM, config.theme)
         assertEquals(false, config.airPlay.rightHandDrive)
         assertNull(main.viewAreas)
         assertNull(main.safeArea)
@@ -132,9 +132,16 @@ class DisplayConfigTest {
         assertEquals(false, main.safeAreaDrawOutside)
         assertEquals(true, main.mainDisplayCornerMasks)
         assertEquals(AirPlayInfoPlist.DOCK_EDGE_DRIVER_SIDE, configWith("display.dock=driver").airPlay.main.viewAreas!!.single().dockEdge)
-        for ((value, theme) in listOf("light" to Theme.LIGHT, "phone" to Theme.PHONE, "windows" to Theme.WINDOWS)) {
+        for ((value, theme) in listOf("light" to Theme.LIGHT, "phone" to Theme.PHONE, "system" to Theme.SYSTEM)) {
             assertEquals(theme, configWith("display.theme=$value").theme)
         }
+    }
+
+    // The value was called windows before system; a file that still says so follows the system theme as it did.
+    @Test
+    fun `an old windows theme reads as system`() {
+        assertEquals(Theme.SYSTEM, configWith("display.theme=windows").theme)
+        assertEquals(configWith("display.theme=system").theme, configWith("display.theme=windows").theme)
     }
 
     @Test

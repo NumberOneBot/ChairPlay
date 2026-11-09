@@ -23,9 +23,10 @@ internal fun Properties.booleanSetting(key: String, default: Boolean): Boolean =
         else -> throw IllegalArgumentException("$key must be true or false, not $raw")
     }
 
-/** One of [choices] by its (lower-case) name; blank means [default]. */
-internal fun <T> Properties.choiceSetting(key: String, default: T, choices: Map<String, T>): T {
+/** One of [choices] by its (lower-case) name, or by an old name in [aliases], which the refusal does not offer; blank means [default]. */
+internal fun <T> Properties.choiceSetting(key: String, default: T, choices: Map<String, T>, aliases: Map<String, T> = emptyMap()): T {
     val raw = getProperty(key)?.trim()?.lowercase()?.ifEmpty { null } ?: return default
+    if (raw in aliases) return aliases.getValue(raw)
     require(raw in choices) { "$key must be one of ${choices.keys.joinToString()}, not $raw" }
     @Suppress("UNCHECKED_CAST")
     return choices[raw] as T

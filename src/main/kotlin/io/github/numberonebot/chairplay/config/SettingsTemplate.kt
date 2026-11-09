@@ -167,7 +167,7 @@ internal val SETTINGS_TEMPLATE = listOf(
                 SAFE_EDGES.map { edge -> safeKey(group, edge) to "" }
         }.toTypedArray(),
     ),
-    SettingBlock("'windows' (follow the Windows theme), 'light', 'dark', or 'phone' (the iPhone decides).", "display.theme" to "windows"),
+    SettingBlock("'system' (follow the system theme), 'light', 'dark', or 'phone' (the iPhone decides).", "display.theme" to "system"),
     SettingBlock("'true' puts CarPlay's dock and controls on the right, 'false' on the left.", "display.right.hand.drive" to "false"),
     SettingBlock("Where the dock goes: 'auto' (the iPhone decides), 'driver' (the driver's side) or 'bottom'.", "display.dock" to "auto"),
     SettingBlock(

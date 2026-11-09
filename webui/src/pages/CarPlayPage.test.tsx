@@ -183,7 +183,7 @@ describe('CarPlay page, look', () => {
   it("shows the app's defaults while nothing is set", async () => {
     await carplay()
 
-    expect(chosen('Theme')).toEqual(['Windows'])
+    expect(chosen('Theme')).toEqual(['System'])
     expect(chosen('Dock')).toEqual(['Auto'])
     expect(chosen('Driver side')).toEqual(['Left'])
     expect(chosen('Outside safe area')).toEqual(['Wallpaper'])
@@ -208,6 +208,19 @@ describe('CarPlay page, look', () => {
         { 'display.corners': 'rounded' },
       ]),
     )
+  })
+})
+
+describe('CarPlay page, system theme', () => {
+  // Following the system's theme is saved as system.
+  it('saves the system theme as system', async () => {
+    const backend = new FakeBackend()
+    backend.data.values['display.theme'] = 'dark'
+    await carplay(backend)
+
+    fireEvent.click(radio('Theme', 'System'))
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'display.theme': 'system' }]))
   })
 })
 

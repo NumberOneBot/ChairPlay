@@ -46,7 +46,7 @@ abstract class UiControllerFixture {
         demo: UiDemo? = null,
         gps: (() -> Map<String, Any?>)? = null,
         locate: () -> WindowsLocation.Result = { WindowsLocation.Unknown },
-        windowsVersion: () -> String = { "Windows 11 24H2 (build 26300)" },
+        systemVersion: () -> String = { "Windows 11 24H2 (build 26300)" },
     ): UiController {
         Files.writeString(file, settings)
         val values = SettingsFile(file).read()
@@ -65,7 +65,7 @@ abstract class UiControllerFixture {
                 reconnects.incrementAndGet()
             }
         }, logged::add, autoconnect, windows, controls, launch, audio, mainWindow, bindings, applied::add, checks, elevate, setupStore,
-            about, windowsVersion = windowsVersion, altscreenWindow = altscreenWindow, altscreenFrame = altscreenFrame,
+            about, systemVersion = systemVersion, altscreenWindow = altscreenWindow, altscreenFrame = altscreenFrame,
             onSaved = onSaved, demo = demo, gps = gps, locate = locate)
     }
 

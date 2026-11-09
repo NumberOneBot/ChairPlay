@@ -178,6 +178,15 @@ class UiControllerSettingsTest : UiControllerFixture() {
         }
     }
 
+    // Following the system's theme is saved as system, the value the app reads for it.
+    @Test
+    fun `the system theme is saved as system`() {
+        val result = controller().saveSettings(mapOf("display.theme" to "System"))
+
+        assertTrue(result.errors.toString(), result.errors.isEmpty())
+        assertTrue("display.theme=system\n" in Files.readString(file))
+    }
+
     // A custom rectangle off the grid is saved on it, as the app would read it.
     @Test
     fun `a custom rectangle is saved snapped`() {

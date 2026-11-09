@@ -1,7 +1,7 @@
 package io.github.numberonebot.chairplay.session
 
-import io.github.numberonebot.chairplay.windows.runElevated
-import io.github.numberonebot.chairplay.windows.withLockedFile
+import io.github.numberonebot.chairplay.platform.windows.runElevated
+import io.github.numberonebot.chairplay.platform.windows.withLockedFile
 import java.io.File
 import java.util.concurrent.TimeUnit
 

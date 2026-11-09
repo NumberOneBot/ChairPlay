@@ -24,7 +24,7 @@ import kotlin.io.path.writeText
 
 data class WindowSize(val width: Int, val height: Int)
 
-enum class Theme { WINDOWS, LIGHT, DARK, PHONE }
+enum class Theme { SYSTEM, LIGHT, DARK, PHONE }
 
 /** The main window's title, with the size the iPhone draws the CarPlay screen at and, without a session, [status]. */
 fun mainWindowTitle(stream: WindowSize, status: String? = null): String =
@@ -188,8 +188,8 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     /** log.level: how much the app's log, in the console and logs\chairplay-<time>.log, tells. */
     val logLevel: LogLevel = settings.choiceSetting("log.level", LogLevel.INFO, LogLevel.entries.associateBy { it.key })
 
-    /** windows follows the Windows dark mode; phone sends nothing and leaves it to the iPhone. */
-    val theme: Theme = settings.choiceSetting("display.theme", Theme.WINDOWS, Theme.entries.associateBy { it.name.lowercase() })
+    /** system follows the system's dark mode, as windows, its old name, does; phone sends nothing and leaves it to the iPhone. */
+    val theme: Theme = settings.choiceSetting("display.theme", Theme.SYSTEM, Theme.entries.associateBy { it.name.lowercase() }, mapOf("windows" to Theme.SYSTEM))
 
     /**
      * ui.accent: the accent colour of the screens, the controls window, and the HUD, written #rrggbb; every lighter or

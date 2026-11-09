@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.windows
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Function
 import com.sun.jna.Native

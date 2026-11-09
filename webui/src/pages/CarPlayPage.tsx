@@ -109,8 +109,8 @@ export function CarPlayPage({ state, backend, settings }: { state: AppState; bac
       </Row>
       <Group title="Appearance" note={note(LOOK_KEYS)} />
       <Row label="Theme">
-        {choice('display.theme', 'Theme', 'windows', [
-          ['windows', 'Windows'],
+        {choice('display.theme', 'Theme', 'system', [
+          ['system', 'System'],
           ['phone', 'Phone'],
           ['light', 'Light'],
           ['dark', 'Dark'],

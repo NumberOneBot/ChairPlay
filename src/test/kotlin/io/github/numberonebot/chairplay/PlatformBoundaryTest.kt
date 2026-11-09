@@ -21,10 +21,13 @@ class PlatformBoundaryTest {
 
     @Test
     fun `only the selection imports the Windows adapters`() {
-        val offenders = kotlinFiles().map { relative(it) }
+        val importers = kotlinFiles().map { relative(it) }
             .filter { !it.startsWith(WINDOWS_DIR) && it != SELECTION }
-            .filter { path -> Files.readAllLines(sourceRoot.resolve(path)).any { it.startsWith(ADAPTER_IMPORT) } }
+            .filter { path -> Files.readAllLines(sourceRoot.resolve(path)).any { it.startsWith(ADAPTER_IMPORT) } }.toSortedSet()
+        val offenders = importers - IMPORTERS_LEFT
+        val stale = IMPORTERS_LEFT - importers
         assertTrue("Files import the Windows adapters; only $SELECTION may: $offenders", offenders.isEmpty())
+        assertTrue("Entries in IMPORTERS_LEFT no longer import the Windows adapters; remove them: $stale", stale.isEmpty())
     }
 
     @Test
@@ -107,7 +110,6 @@ class PlatformBoundaryTest {
             "${APP_DIR}media/CloseSource.kt",
             "${APP_DIR}media/D3D11Video.kt",
             "${APP_DIR}media/DefaultAudioDevices.kt",
-            "${APP_DIR}media/NightMode.kt",
             "${APP_DIR}media/TitleBar.kt",
             "${APP_DIR}media/VideoDecoder.kt",
             "${APP_DIR}media/VideoWindow.kt",
@@ -119,16 +121,23 @@ class PlatformBoundaryTest {
             "${APP_DIR}session/AirPlayListener.kt",
             "${APP_DIR}session/Firewall.kt",
             "${APP_DIR}session/WindowsFirewallApi.kt",
-            "${APP_DIR}ui/BuildInfo.kt",
             "${APP_DIR}ui/ChairPlayUi.kt",
             "${APP_DIR}ui/UiPlaces.kt",
             "${APP_DIR}ui/WebView2.kt",
             "${APP_DIR}update/UpdateChecks.kt",
             "${APP_DIR}update/WindowsUpdateDialog.kt",
-            "${APP_DIR}windows/Automation.kt",
-            "${APP_DIR}windows/ComThread.kt",
-            "${APP_DIR}windows/Elevated.kt",
-            "${APP_DIR}windows/LockedFile.kt",
+        )
+
+        /**
+         * Windows code outside `platform/windows/` that still imports its COM, elevation and file-lock helpers, until
+         * the task that moves it there; the list only shrinks.
+         */
+        val IMPORTERS_LEFT: Set<String> = sortedSetOf(
+            "${APP_DIR}drive/LocationApi.kt",
+            "${APP_DIR}drive/WindowsLocation.kt",
+            "${APP_DIR}media/DefaultAudioDevices.kt",
+            "${APP_DIR}session/Firewall.kt",
+            "${APP_DIR}session/WindowsFirewallApi.kt",
         )
     }
 }

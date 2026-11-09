@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.windows
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.platform.win32.COM.COMLateBindingObject
 import com.sun.jna.platform.win32.COM.EnumVariant

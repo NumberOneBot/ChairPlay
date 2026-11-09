@@ -32,7 +32,7 @@ class UiControllerStateTest : UiControllerFixture() {
     @Test
     fun `the Windows version is read once`() {
         var reads = 0
-        val ui = controller(windowsVersion = { reads++; "Windows 11 24H2 (build 26300)" })
+        val ui = controller(systemVersion = { reads++; "Windows 11 24H2 (build 26300)" })
 
         repeat(3) { ui.state() }
         ui.open("issues")

@@ -11,8 +11,8 @@ import com.sun.jna.platform.win32.WTypes
 import com.sun.jna.ptr.DoubleByReference
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
-import io.github.numberonebot.chairplay.windows.RELEASE
-import io.github.numberonebot.chairplay.windows.comCall
+import io.github.numberonebot.chairplay.platform.windows.RELEASE
+import io.github.numberonebot.chairplay.platform.windows.comCall
 import java.lang.ref.Reference
 
 /**

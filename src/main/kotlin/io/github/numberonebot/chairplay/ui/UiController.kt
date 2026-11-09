@@ -6,6 +6,7 @@ import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.time.format.DateTimeFormatter
 
 /**
@@ -42,8 +43,8 @@ class UiController(
     private val setupStore: SetupStore? = null,
     /** Which build this is, for the About page. */
     private val about: BuildInfo = BuildInfo.load(),
-    /** The Windows version, for the details of a report. */
-    private val windowsVersion: () -> String = ::windowsVersion,
+    /** The system's name and version, for the details of a report. */
+    private val systemVersion: () -> String = Platforms.current.shell::systemName,
     /** The AltScreen's window, for the AltScreen page's Actual size; null without an AltScreen. */
     private val altscreenWindow: UiMainWindow? = null,
     /** The AltScreen's window drawing a safe area, for the AltScreen page's Show frame; null without an AltScreen. */
@@ -57,7 +58,7 @@ class UiController(
     private val locate: () -> WindowsLocation.Result = WindowsLocation::read,
     private val bufferedAudio: () -> Map<String, Any>? = { null },
 ) : UiApi {
-    private val places = UiPlaces(setup, launch, log, about, windowsVersion)
+    private val places = UiPlaces(setup, launch, log, about, systemVersion)
 
     private val settingsApi = UiSettings(
         settings, model, setup, log, audioDevices, bindings, onBindings, onSaved,
@@ -73,7 +74,6 @@ class UiController(
         }
 
     private val lock = Object()
-
     @Volatile
     override var version = 0L
         private set

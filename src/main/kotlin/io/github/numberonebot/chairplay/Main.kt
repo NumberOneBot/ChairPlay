@@ -21,6 +21,7 @@ import io.github.numberonebot.chairplay.drive.AlmanacCache
 import io.github.numberonebot.chairplay.media.saveScreenshot
 import io.github.numberonebot.chairplay.media.titleNotice
 import io.github.numberonebot.chairplay.phone.PhoneLink
+import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.ui.BuildInfo
 import io.github.numberonebot.chairplay.ui.ChairPlayUi
 import io.github.numberonebot.chairplay.ui.startLine
@@ -50,11 +51,7 @@ private val instanceLock = AtomicReference<InstanceLock?>()
 private const val STATUS_PAGE_MILLIS = 250L
 
 /** The app folder, where the settings, keys and pairings live. */
-internal fun dataDirectory(): Path {
-    val dir = DesktopConfig.appDirectory()
-    log("settings and keys: $dir")
-    return dir
-}
+internal fun dataDirectory(): Path = Platforms.current.shell.dataDirectory().also { log("settings and keys: $it") }
 
 /**
  * Wireless CarPlay with the screen shown in a window and its sound played through Java Sound. Runs until the window
