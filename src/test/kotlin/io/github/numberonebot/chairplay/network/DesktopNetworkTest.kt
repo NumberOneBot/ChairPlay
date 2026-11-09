@@ -1,6 +1,8 @@
 package io.github.numberonebot.chairplay.network
 
 import com.shilapi.xcertplay.transport.Iap2WirelessSecurity
+import io.github.numberonebot.chairplay.platform.FakeNetwork
+import io.github.numberonebot.chairplay.platform.FakePlatform
 import java.net.InetAddress
 import org.junit.Assert.*
 import org.junit.Test
@@ -42,6 +44,24 @@ class DesktopNetworkTest {
         assertThrows(WifiHiddenException::class.java) { hidden.start(1000) }
         val cabled = DesktopNetwork(saved, "", { throw WifiHiddenException() }, { emptyList() }, { listOf(adapter("a", "192.168.1.20")) })
         assertEquals("192.168.1.20", cabled.start(1000).hostAddress?.hostAddress)
+    }
+
+    @Test fun `the platform's Wi-Fi wins over its cable`() {
+        val platform = FakePlatform(network = FakeNetwork(
+            wifi = { listOf(WlanConnection("Wi-Fi", "Router", byteArrayOf(1, 2, 3, 4, 5, 6), 36)) },
+            adapters = listOf(adapter("a", "192.168.1.20")),
+        ))
+        val nic = NicSnapshot("Wi-Fi", "wlan0", listOf(InetAddress.getByName("192.168.1.2")), true)
+        val info = DesktopNetwork(saved, "", platform.network::wifiConnections, { listOf(nic) },
+            platform.network::ethernetAdapters).start(1000)
+        assertEquals("wlan0", info.interfaceName)
+    }
+
+    @Test fun `the platform's hidden Wi-Fi without a cable fails as hidden`() {
+        val platform = FakePlatform(network = FakeNetwork(wifi = { throw WifiHiddenException() }))
+        val network = DesktopNetwork(saved, "", platform.network::wifiConnections, { emptyList() },
+            platform.network::ethernetAdapters)
+        assertThrows(WifiHiddenException::class.java) { network.start(1000) }
     }
 
     @Test fun `active Wi-Fi retains the existing path`() {

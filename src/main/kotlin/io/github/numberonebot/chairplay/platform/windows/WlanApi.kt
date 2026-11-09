@@ -1,23 +1,12 @@
-package io.github.numberonebot.chairplay.network
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
-
-class WlanConnection(
-    val interfaceDescription: String,
-    val ssid: String,
-    val bssid: ByteArray,
-    val channel: Int,
-)
-
-/**
- * Windows hides the network of a connected Wi-Fi adapter: on Windows 11 24H2 and later, desktop apps that may not use
- * location are refused it.
- */
-class WifiHiddenException : IllegalStateException("Windows does not share the PC's Wi-Fi network: location is off for desktop apps")
+import io.github.numberonebot.chairplay.network.WifiHiddenException
+import io.github.numberonebot.chairplay.network.WlanConnection
 
 /** What an adapter says of its network: connected to one, connected with the network hidden, or on none. */
 internal sealed interface AdapterWifi {

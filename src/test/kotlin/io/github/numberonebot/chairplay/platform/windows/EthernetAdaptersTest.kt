@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.network
+package io.github.numberonebot.chairplay.platform.windows
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

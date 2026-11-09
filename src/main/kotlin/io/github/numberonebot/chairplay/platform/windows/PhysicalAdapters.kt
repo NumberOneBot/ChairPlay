@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.network
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.platform.win32.IPHlpAPI
 import java.net.InetAddress

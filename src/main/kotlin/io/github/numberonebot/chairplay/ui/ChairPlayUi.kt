@@ -4,7 +4,6 @@ import io.github.numberonebot.chairplay.bluetooth.WindowsBluetooth
 import io.github.numberonebot.chairplay.bluetooth.pairedIphoneName
 import io.github.numberonebot.chairplay.carplay.CarPlayConfig
 import io.github.numberonebot.chairplay.config.DesktopConfig
-import io.github.numberonebot.chairplay.network.WlanApi
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.input.ControlsConfig
@@ -88,8 +87,8 @@ class ChairPlayUi(
 
     private val checks = SetupChecks(
         pairedIphone = { pairedIphoneName(WindowsBluetooth.pairedDevices(), config.iphoneAddress) },
-        pcWifi = { WlanApi.currentConnections().firstOrNull()?.ssid },
-        ethernet = io.github.numberonebot.chairplay.network.EthernetAdapters::current,
+        pcWifi = { Platforms.current.network.wifiConnections().firstOrNull()?.ssid },
+        ethernet = Platforms.current.network::ethernetAdapters,
         firewall = readFirewall,
         startFirewall = FirewallStatus.UNKNOWN,
         mfiPresent = { mfiFilesPresent(config.mfiDirectory().toPath()) },

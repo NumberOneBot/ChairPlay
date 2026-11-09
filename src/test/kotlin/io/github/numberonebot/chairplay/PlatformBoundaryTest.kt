@@ -111,8 +111,6 @@ class PlatformBoundaryTest {
             "${APP_DIR}media/WindowCommands.kt",
             "${APP_DIR}media/apac/SpatialRuntime.kt",
             "${APP_DIR}media/apac/WasapiOutput.kt",
-            "${APP_DIR}network/PhysicalAdapters.kt",
-            "${APP_DIR}network/WlanApi.kt",
             "${APP_DIR}ui/WebView2.kt",
             "${APP_DIR}update/WindowsUpdateDialog.kt",
         )

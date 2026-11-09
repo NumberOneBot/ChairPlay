@@ -1,5 +1,7 @@
-package io.github.numberonebot.chairplay.network
+package io.github.numberonebot.chairplay.platform.windows
 
+import io.github.numberonebot.chairplay.network.WifiHiddenException
+import io.github.numberonebot.chairplay.network.WlanConnection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test

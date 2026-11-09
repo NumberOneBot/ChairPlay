@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
-import io.github.numberonebot.chairplay.network.physicalInterfaceAddresses
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.net.Inet4Address
 import java.net.InetAddress
 
@@ -10,5 +10,5 @@ import java.net.InetAddress
  * browser takes an IPv6 link-local address only with a zone id, so the page lists IPv4 ones only). UiServer reads them
  * once, as the app starts: an address from a network joined later counts after a restart, as the switch itself does.
  */
-internal fun lanAddresses(read: () -> List<InetAddress> = ::physicalInterfaceAddresses): List<InetAddress> =
+internal fun lanAddresses(read: () -> List<InetAddress> = Platforms.current.network::physicalAddresses): List<InetAddress> =
     read().filter { it is Inet4Address && !it.isLoopbackAddress }

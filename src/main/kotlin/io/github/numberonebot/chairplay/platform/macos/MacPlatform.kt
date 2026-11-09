@@ -6,11 +6,15 @@ import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.platform.LocationSource
+import io.github.numberonebot.chairplay.network.EthernetAdapter
+import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
+import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
 import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.ui.FirewallStatus
 import java.io.Closeable
+import java.net.InetAddress
 import java.net.Socket
 import java.nio.file.Path
 
@@ -21,6 +25,7 @@ internal class MacPlatform : Platform {
     override val keepAlive: KeepAliveTuning = MacKeepAlive
     override val location: LocationSource = MacLocation
     override val firewall: Firewall = MacFirewall
+    override val network: PcNetwork = MacNetwork
 }
 
 private object MacFirewall : Firewall {
@@ -31,6 +36,14 @@ private object MacFirewall : Firewall {
     override fun hint(port: Int, uiPort: Int?): String = notReady()
 
     override fun addRules(commands: String): Boolean = notReady()
+}
+
+private object MacNetwork : PcNetwork {
+    override fun wifiConnections(): List<WlanConnection> = notReady()
+
+    override fun ethernetAdapters(): List<EthernetAdapter> = notReady()
+
+    override fun physicalAddresses(): List<InetAddress> = notReady()
 }
 
 private object MacShell : DesktopShell {

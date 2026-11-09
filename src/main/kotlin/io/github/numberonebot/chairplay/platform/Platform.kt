@@ -19,4 +19,7 @@ internal interface Platform {
 
     /** The system firewall: whether the iPhone can get in, and adding the rule that lets it. */
     val firewall: Firewall
+
+    /** The PC's Wi-Fi, its wired adapters and the addresses of its physical adapters. */
+    val network: PcNetwork
 }

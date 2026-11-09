@@ -1,8 +1,11 @@
 package io.github.numberonebot.chairplay.platform
 
 import io.github.numberonebot.chairplay.log.AppLog
+import io.github.numberonebot.chairplay.network.EthernetAdapter
+import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.ui.FirewallStatus
 import java.io.Closeable
+import java.net.InetAddress
 import java.net.Socket
 import java.nio.file.Path
 
@@ -13,6 +16,7 @@ internal class FakePlatform(
     override val keepAlive: KeepAliveTuning = FakeKeepAlive(),
     override val location: LocationSource = LocationSource { LocationResult.Unknown },
     override val firewall: FakeFirewall = FakeFirewall(),
+    override val network: FakeNetwork = FakeNetwork(),
 ) : Platform
 
 /** A firewall that answers [state] and records the rules it was asked to add. */
@@ -70,4 +74,17 @@ internal class FakeKeepAlive : KeepAliveTuning {
     }
 
     override fun timing(socket: Socket): List<Int> = tuned
+}
+
+/** A PC network that answers what the test set. */
+internal class FakeNetwork(
+    var wifi: () -> List<WlanConnection> = { emptyList() },
+    var adapters: List<EthernetAdapter> = emptyList(),
+    var addresses: List<InetAddress> = emptyList(),
+) : PcNetwork {
+    override fun wifiConnections(): List<WlanConnection> = wifi()
+
+    override fun ethernetAdapters(): List<EthernetAdapter> = adapters
+
+    override fun physicalAddresses(): List<InetAddress> = addresses
 }

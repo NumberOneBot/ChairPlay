@@ -5,6 +5,7 @@ import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationSource
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
+import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
 
 /** Windows, through today's adapters; each is made the first time it is asked for, so none loads its DLLs before. */
@@ -14,4 +15,5 @@ internal class WindowsPlatform : Platform {
     override val keepAlive: KeepAliveTuning by lazy { WinsockKeepAlive() }
     override val location: LocationSource by lazy { WindowsLocation }
     override val firewall: Firewall by lazy { WindowsFirewall() }
+    override val network: PcNetwork by lazy { WindowsNetwork() }
 }

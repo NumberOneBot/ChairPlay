@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.network
 import com.shilapi.xcertplay.network.WirelessHotspotBackend
 import com.shilapi.xcertplay.network.WirelessHotspotInfo
 import com.shilapi.xcertplay.network.WirelessHotspotManager
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.net.InetAddress
 import java.net.NetworkInterface
 
@@ -13,13 +14,13 @@ import java.net.NetworkInterface
 class DesktopNetwork(
     private val saved: SavedWifi,
     private val selected: String,
-    private val wlan: () -> List<WlanConnection> = WlanApi::currentConnections,
+    private val wlan: () -> List<WlanConnection> = Platforms.current.network::wifiConnections,
     private val nics: () -> List<NicSnapshot> = {
         NetworkInterface.getNetworkInterfaces().toList().map {
             NicSnapshot(it.displayName, it.name, it.inetAddresses.toList(), it.isUp)
         }
     },
-    private val ethernet: () -> List<EthernetAdapter> = EthernetAdapters::current,
+    private val ethernet: () -> List<EthernetAdapter> = Platforms.current.network::ethernetAdapters,
 ) : WirelessHotspotManager {
     private var published: WirelessHotspotInfo? = null
     private var closed = false
