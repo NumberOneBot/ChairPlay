@@ -1,10 +1,7 @@
 package io.github.numberonebot.chairplay.ui
 
-import java.io.Closeable
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import io.github.numberonebot.chairplay.network.EthernetAdapter
 import io.github.numberonebot.chairplay.network.WifiHiddenException
 
@@ -35,19 +32,18 @@ internal fun networkSetupFields(snapshot: SetupSnapshot?, selected: String): Arr
 )
 
 /**
- * The setup as it is now, read again every few seconds so the steps tick themselves as the PC changes: an iPhone
- * paired, the PC on a network, a firewall rule added, the MFi files put in place. Nothing is read while the page is not
- * shown ([active]). The firewall's rules take about a second to walk, so they are read again only while they are wrong (not
- * while the firewall is off), and at most every [FIREWALL_EVERY_SECONDS]. A reader that fails reads as nothing found.
+ * The setup as it is now, read when Get started or the Connection page asks ([check]): as it opens, and as the window
+ * has the focus back, so the steps tick as the user comes back from pairing an iPhone, joining a network, adding a
+ * firewall rule, or putting the MFi files in place. Nothing is read on its own. The firewall's rules take about a second
+ * to walk, so they are read only while they are wrong (not while the firewall is off), and not while the start's own
+ * read is under way. A reader that fails reads as nothing found.
  */
 class SetupChecks(
     private val pairedIphone: () -> String?,
     private val pcWifi: () -> String?,
     private val firewall: () -> FirewallStatus,
-    /** The firewall as the start read it. */
+    /** The firewall as the start read it; [FirewallStatus.UNKNOWN] while that read is under way ([firewallChecked]). */
     startFirewall: FirewallStatus,
-    private val active: () -> Boolean,
-    private val now: () -> Long = System::nanoTime,
     private val mfiPresent: () -> Boolean = { false },
     private val ethernet: () -> List<EthernetAdapter> = { emptyList() },
     private val log: (String) -> Unit = {},
@@ -56,20 +52,14 @@ class SetupChecks(
     var snapshot = SetupSnapshot(null, null, startFirewall)
         private set
 
-    private var firewallRead = now()
+    private var startReading = startFirewall == FirewallStatus.UNKNOWN
 
-    /** One round of reading; true when something changed. */
+    /** Reads the setup now; true when something changed. */
     @Synchronized
     fun check(): Boolean {
-        if (!active()) return false
         val before = snapshot
-        var firewallNow = before.firewall
-        val time = now()
-        val settled = firewallNow == FirewallStatus.PRESENT || firewallNow == FirewallStatus.OFF
-        if (!settled && time - firewallRead >= TimeUnit.SECONDS.toNanos(FIREWALL_EVERY_SECONDS)) {
-            firewallRead = time
-            firewallNow = runCatching(firewall).getOrDefault(firewallNow)
-        }
+        val settled = before.firewall == FirewallStatus.PRESENT || before.firewall == FirewallStatus.OFF
+        val firewallNow = if (settled || startReading) before.firewall else runCatching(firewall).getOrDefault(before.firewall)
         val wifiRead = runCatching(pcWifi)
         val wifi = wifiRead.getOrNull()
         val hidden = wifiRead.exceptionOrNull() is WifiHiddenException
@@ -87,7 +77,7 @@ class SetupChecks(
     /** The firewall as a read elsewhere found it, as the start's, made after the windows open; true when it changed. */
     @Synchronized
     fun firewallChecked(status: FirewallStatus): Boolean {
-        firewallRead = now()
+        startReading = false
         val before = snapshot
         snapshot = before.copy(firewall = status)
         return snapshot != before
@@ -96,19 +86,6 @@ class SetupChecks(
     /** Reads the firewall now, as after Add the rule, whatever it was. */
     @Synchronized
     fun firewallNow() {
-        firewallRead = now()
         snapshot = snapshot.copy(firewall = runCatching(firewall).getOrDefault(snapshot.firewall))
-    }
-
-    /** Reads every [EVERY_SECONDS] on a thread of its own, calling [onChange] after a round that changed something. */
-    fun start(onChange: () -> Unit): Closeable {
-        val executor = Executors.newSingleThreadScheduledExecutor { Thread(it, "setup-checks").apply { isDaemon = true } }
-        executor.scheduleWithFixedDelay({ runCatching { if (check()) onChange() } }, 0, EVERY_SECONDS, TimeUnit.SECONDS)
-        return Closeable { executor.shutdownNow() }
-    }
-
-    companion object {
-        const val EVERY_SECONDS = 3L
-        const val FIREWALL_EVERY_SECONDS = 10L
     }
 }

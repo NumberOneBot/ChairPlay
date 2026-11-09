@@ -17,6 +17,25 @@ class AppUiApiTest : UiControllerFixture() {
         assertEquals(2, calls)
     }
 
+    // A page that opens, or has the focus back, asks for the setup to be read; the pages hear of what changed.
+    @Test
+    fun `a page's setup check reads the PC and tells the pages of a change`() {
+        var reads = 0
+        val checks = SetupChecks({ reads++; "Kate's iPhone" }, { null }, { FirewallStatus.MISSING }, FirewallStatus.MISSING)
+        val ui = controller(checks = checks)
+        val api = AppUiApi(ui, checks = checks) { null }
+        val before = ui.version
+
+        assertEquals(200, postRoute(api, "setup-check", emptyMap<String, Any>()).first)
+        assertEquals(1, reads)
+        assertEquals("Kate's iPhone", (ui.state()["setup"] as Map<*, *>)["pairedIphone"])
+        assertTrue(ui.version > before)
+
+        val after = ui.version
+        api.checkSetup()
+        assertEquals("nothing changed", after, ui.version)
+    }
+
     // The wrapper once lacked the forwarding method and answered the default, an empty map.
     @Test
     fun `the folder sizes come through the app's API from the real folders`() {

@@ -212,6 +212,11 @@ class UiServerTest {
         assertEquals(409, post("/api/firewall-rule", "{}").statusCode())
         api.calls.removeAll { it == "firewall rule" }
 
+        // Get started and Connection ask for the setup to be read as they open and as the window has the focus back.
+        assertEquals(200, post("/api/setup-check", "{}").statusCode())
+        assertTrue("setup check" in api.calls)
+        api.calls.removeAll { it == "setup check" }
+
         // The CarPlay and AltScreen pages' Actual size; a request without a window names the main one.
         assertEquals(200, post("/api/window-size", """{"actual":true}""").statusCode())
         assertEquals(200, post("/api/window-size", """{"actual":true,"window":"altscreen"}""").statusCode())

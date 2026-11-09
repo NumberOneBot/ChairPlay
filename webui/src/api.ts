@@ -259,6 +259,8 @@ export interface Backend {
   actualSize(window: PictureWindow): Promise<boolean>
   /** Adds the firewall rule with the consent Windows asks for; false when it was not given or the rule failed. */
   addFirewallRule(): Promise<boolean>
+  /** Asks the app to read the setup again: Bluetooth, the network, the firewall, and the MFi files. */
+  checkSetup(): Promise<void>
   /** Forget this iPhone: ChairPlay's pairing records go, and Get started opens. */
   forget(): Promise<boolean>
   /** Frames the AltScreen's saved safe area on its window for a moment; false without an AltScreen. */

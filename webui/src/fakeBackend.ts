@@ -165,6 +165,13 @@ export class FakeBackend implements Backend {
     return this.sizes
   }
 
+  /** How many times a page asked the app to read the setup again. */
+  setupChecks = 0
+
+  async checkSetup() {
+    this.setupChecks++
+  }
+
   async open(place: WindowsPlace) {
     this.opened.push(place)
     return true

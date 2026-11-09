@@ -215,6 +215,9 @@ interface UiApi {
     /** Adds the firewall rules with the administrator's consent; false when it was not given or they failed. */
     fun addFirewallRule(): Boolean
 
+    /** Reads the setup again ([SetupChecks.check]), for Get started and Connection as they open and get the focus back. */
+    fun checkSetup() {}
+
     /** Forget this iPhone: ChairPlay's pairing records go and Get started opens; false when there is nothing to forget. */
     fun forget(): Boolean
 

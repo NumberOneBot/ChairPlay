@@ -78,7 +78,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
     @Test
     fun `Add the rule runs the firewall commands elevated and reads the firewall again`() {
         var firewall = FirewallStatus.MISSING
-        val checks = SetupChecks({ null }, { null }, { firewall }, FirewallStatus.MISSING, { true })
+        val checks = SetupChecks({ null }, { null }, { firewall }, FirewallStatus.MISSING)
         val ui = controller(checks = checks)
         firewall = FirewallStatus.PRESENT
         val before = ui.version

@@ -82,6 +82,10 @@ export class Api implements Backend {
     return (await this.request('POST', 'firewall-rule', {})).status === 200
   }
 
+  async checkSetup(): Promise<void> {
+    await this.request('POST', 'setup-check', {})
+  }
+
   async keyBindings(): Promise<ControlsData | null> {
     const { status, data } = await this.request('GET', 'controls')
     return status === 200 ? (data as ControlsData) : null

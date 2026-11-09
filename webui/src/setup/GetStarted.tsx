@@ -7,6 +7,7 @@ import { Field, PasswordField, Select } from '../shell/fields'
 import { PencilIcon, ShieldIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import type { Steps, StepState } from './steps'
+import { useSetupChecks } from './useSetupChecks'
 import { NetworkConnection, showNetworkConnection, WifiHidden } from '../pages/NetworkConnection'
 
 function Tick() {
@@ -69,6 +70,7 @@ export function GetStarted(props: {
 }) {
   const { state, backend, settings, steps } = props
   const { setup } = state
+  useSetupChecks(backend)
   // A Wi-Fi step done opened again: its tick says only that the settings are complete, not that the password is right.
   const [editing, setEditing] = useState(false)
   // The network starts as the one this PC is on, and is saved with the password.

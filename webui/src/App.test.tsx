@@ -13,13 +13,13 @@ afterEach(() => {
 
 /**
  * Opens the app at [address], its event stream sending [state]; answers the requests the page makes, and lists the
- * actions it asks for (not where the keyboard is, which every page reports).
+ * actions it asks for (not where the keyboard is, which every page reports, nor the setup checks Connection asks for).
  */
 function open(address: string, state: AppState) {
   const posts: string[] = []
   const settings = new FakeBackend().data
   vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
-    if (init.method === 'POST' && url !== '/api/keyboard-focus') posts.push(url)
+    if (init.method === 'POST' && url !== '/api/keyboard-focus' && url !== '/api/setup-check') posts.push(url)
     return new Response(JSON.stringify(url === '/api/settings' ? settings : {}), { status: 200 })
   })
   let source: { onmessage: ((event: MessageEvent) => void) | null } | undefined

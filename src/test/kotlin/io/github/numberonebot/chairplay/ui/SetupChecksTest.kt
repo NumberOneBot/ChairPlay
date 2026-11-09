@@ -1,29 +1,48 @@
 package io.github.numberonebot.chairplay.ui
 
+import io.github.numberonebot.chairplay.network.EthernetAdapter
 import io.github.numberonebot.chairplay.network.WifiHiddenException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.concurrent.TimeUnit
 
 class SetupChecksTest {
     private var iphone: String? = null
-    private var wifi: String? = null
+    private var wifi: () -> String? = { null }
     private var firewall = FirewallStatus.MISSING
-    private var firewallReads = 0
-    private var nanos = 0L
-    private var active = true
+    private var mfi = false
+    private val reads = mutableListOf<String>()
 
-    private fun checks(start: FirewallStatus = FirewallStatus.MISSING) = SetupChecks(
-        pairedIphone = { iphone },
-        pcWifi = { wifi },
-        firewall = { firewallReads++; firewall },
+    private fun checks(
+        start: FirewallStatus = FirewallStatus.MISSING,
+        pairedIphone: () -> String? = { reads += "iphone"; iphone },
+        ethernet: () -> List<EthernetAdapter> = { reads += "ethernet"; emptyList() },
+        log: (String) -> Unit = {},
+    ) = SetupChecks(
+        pairedIphone = pairedIphone,
+        pcWifi = { reads += "wifi"; wifi() },
+        firewall = { reads += "firewall"; firewall },
         startFirewall = start,
-        active = { active },
-        now = { nanos },
+        mfiPresent = { reads += "mfi"; mfi },
+        ethernet = ethernet,
+        log = log,
     )
+
+    private fun firewallReads() = reads.count { it == "firewall" }
+
+    // The checks read Windows only when a page asks (as it opens, as the window has the focus back, after Add the rule),
+    // never on their own.
+    @Test
+    fun `nothing is read until a page asks, then everything once`() {
+        val checks = checks()
+        assertEquals(emptyList<String>(), reads)
+
+        checks.check()
+
+        assertEquals(listOf("firewall", "wifi", "ethernet", "iphone", "mfi").sorted(), reads.sorted())
+    }
 
     // The start reads the firewall after the windows open, not before: its answer takes the place of Not checked at once,
     // without a read of its own.
@@ -34,14 +53,26 @@ class SetupChecksTest {
         assertTrue(checks.firewallChecked(FirewallStatus.MISSING))
         assertEquals(FirewallStatus.MISSING, checks.snapshot.firewall)
         assertFalse(checks.firewallChecked(FirewallStatus.MISSING))
-        assertEquals(0, firewallReads)
+        assertEquals(0, firewallReads())
     }
 
-    // Get started says ChairPlay finds the MFi files on its own: a round must notice them arrive, as it does a pairing.
+    // Walking the rules takes about a second: a page opened while the start's walk is under way leaves it to that one.
     @Test
-    fun `a round notices the MFi files arrive and go`() {
-        var mfi = false
-        val checks = SetupChecks({ iphone }, { wifi }, { firewall }, FirewallStatus.MISSING, { active }, { nanos }, { mfi })
+    fun `a check leaves the firewall to the start's read while that one is under way`() {
+        val checks = checks(start = FirewallStatus.UNKNOWN)
+
+        checks.check()
+        assertEquals(0, firewallReads())
+
+        checks.firewallChecked(FirewallStatus.MISSING)
+        checks.check()
+        assertEquals(1, firewallReads())
+    }
+
+    // Get started says ChairPlay finds the MFi files on its own: a check must notice them arrive, as it does a pairing.
+    @Test
+    fun `a check notices the MFi files arrive and go`() {
+        val checks = checks()
         checks.check()
         assertFalse(checks.snapshot.mfiPresent)
 
@@ -55,69 +86,44 @@ class SetupChecksTest {
         assertFalse(checks.snapshot.mfiPresent)
     }
 
-    private fun seconds(n: Long) {
-        nanos += TimeUnit.SECONDS.toNanos(n)
-    }
-
     @Test
-    fun `a round reads the paired iPhone and the PC's Wi-Fi, and says whether anything changed`() {
+    fun `a check reads the paired iPhone and the PC's Wi-Fi, and says whether anything changed`() {
         val checks = checks()
         assertEquals(SetupSnapshot(null, null, FirewallStatus.MISSING), checks.snapshot)
 
         iphone = "Kate's iPhone"
-        wifi = "ChairPlay-5G"
+        wifi = { "ChairPlay-5G" }
         assertTrue(checks.check())
         assertEquals(SetupSnapshot("Kate's iPhone", "ChairPlay-5G", FirewallStatus.MISSING), checks.snapshot)
 
-        seconds(3)
         assertFalse(checks.check())
     }
 
-    // PowerShell is slow to start: the firewall is read again only while it is wrong, and at most every 10 s.
+    // A rule added in the firewall's console is seen when the user comes back; once it is there, it is not read again.
     @Test
-    fun `the firewall is read again at most every ten seconds, and only while it is wrong`() {
+    fun `each check reads the firewall while it is wrong, and no more once it is right`() {
         val checks = checks()
 
         checks.check()
-        assertEquals("not again right after the start's own reading", 0, firewallReads)
-        seconds(9)
-        checks.check()
-        assertEquals(0, firewallReads)
+        assertEquals(1, firewallReads())
 
-        seconds(1)
         firewall = FirewallStatus.PRESENT
         assertTrue(checks.check())
-        assertEquals(1, firewallReads)
+        assertEquals(2, firewallReads())
         assertEquals(FirewallStatus.PRESENT, checks.snapshot.firewall)
 
-        seconds(60)
         checks.check()
-        assertEquals("not once the rule is there", 1, firewallReads)
+        assertEquals("not once the rule is there", 2, firewallReads())
     }
 
     @Test
     fun `a firewall right at the start is not read again`() {
         for (start in listOf(FirewallStatus.PRESENT, FirewallStatus.OFF)) {
-            val checks = checks(start = start)
+            reads.clear()
+            checks(start = start).check()
 
-            seconds(60)
-            checks.check()
-
-            assertEquals(start.name, 0, firewallReads)
+            assertEquals(start.name, 0, firewallReads())
         }
-    }
-
-    // Nothing is read while CarPlay covers the page: no one would see it.
-    @Test
-    fun `nothing is read while the page is not shown`() {
-        val checks = checks()
-        active = false
-        iphone = "Kate's iPhone"
-        seconds(30)
-
-        assertFalse(checks.check())
-        assertNull(checks.snapshot.pairedIphone)
-        assertEquals(0, firewallReads)
     }
 
     // Windows hiding the PC's Wi-Fi network is told apart from no Wi-Fi, for the page to say how to show it; a cable is
@@ -125,20 +131,18 @@ class SetupChecksTest {
     @Test
     fun `a Wi-Fi network Windows hides is told apart from none`() {
         var hidden = true
-        var ethernetReads = 0
         val logged = mutableListOf<String>()
-        val checks = SetupChecks({ iphone }, { if (hidden) throw WifiHiddenException() else wifi }, { firewall },
-            FirewallStatus.MISSING, { true }, { nanos }, ethernet = { ethernetReads++; emptyList() }, log = { logged += it })
+        wifi = { if (hidden) throw WifiHiddenException() else "Home" }
+        val checks = checks(log = { logged += it })
         assertTrue(checks.check())
         assertTrue(checks.snapshot.wifiHidden)
         assertNull(checks.snapshot.pcWifi)
-        assertEquals(1, ethernetReads)
+        assertEquals(1, reads.count { it == "ethernet" })
         assertEquals(true, networkSetupFields(checks.snapshot, "").toMap()["wifiHidden"])
         assertFalse(checks.check())
         assertEquals(1, logged.size)
 
         hidden = false
-        wifi = "Home"
         assertTrue(checks.check())
         assertFalse(checks.snapshot.wifiHidden)
         assertEquals("Home", checks.snapshot.pcWifi)
@@ -146,8 +150,8 @@ class SetupChecksTest {
 
     @Test
     fun `a reader that fails reads as nothing found`() {
-        val checks = SetupChecks({ error("no Bluetooth radio") }, { wifi }, { firewall }, FirewallStatus.MISSING, { true }, { nanos })
-        wifi = "Home"
+        val checks = checks(pairedIphone = { error("no Bluetooth radio") })
+        wifi = { "Home" }
 
         assertTrue(checks.check())
 

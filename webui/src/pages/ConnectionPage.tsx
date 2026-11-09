@@ -7,6 +7,7 @@ import { BrowserAccess } from './BrowserAccess'
 import { ErrorMessage, SetupMessages } from './messages'
 import { Changed, pendingOf } from './parts'
 import { NetworkConnection, showNetworkConnection, WifiHidden } from './NetworkConnection'
+import { useSetupChecks } from '../setup/useSetupChecks'
 
 /** wifi.security as DesktopConfig names it, and as the page shows it. */
 export const SECURITY_CHOICES: readonly Choice[] = [
@@ -44,6 +45,7 @@ export function ConnectionPage(props: {
 }) {
   const { state, backend, settings } = props
   const { value, error, save } = settings
+  useSetupChecks(backend)
   const commit = (key: string) => (text: string) => save({ [key]: text })
   // A changed setting that waits for a restart or the next connection is marked beside its control; the others not.
   const pending = pendingOf(state)

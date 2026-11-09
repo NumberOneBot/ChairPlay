@@ -68,7 +68,7 @@ class ChairPlayUi(
     altscreenFrame: UiSafeAreaFrame? = null,
     /** Puts the bindings the Keyboard page saved in force. */
     onBindings: (ControlsConfig) -> Unit = {},
-    /** Reads the firewall again, quietly, for the live setup checks. */
+    /** Reads the firewall again, quietly, for the setup checks the pages ask for. */
     readFirewall: () -> FirewallStatus = checkFirewall,
     /** Hears the settings each save changed, for those that apply at once. */
     onSaved: (Map<String, String>) -> Unit = {},
@@ -93,7 +93,6 @@ class ChairPlayUi(
         ethernet = io.github.numberonebot.chairplay.network.EthernetAdapters::current,
         firewall = readFirewall,
         startFirewall = FirewallStatus.UNKNOWN,
-        active = { model.state.showsUi },
         mfiPresent = { mfiFilesPresent(config.mfiDirectory().toPath()) },
         // A warning, as the log keeps by default: a report of no network can then say why.
         log = { appLog.log(LogLevel.WARNING, it) },
@@ -134,12 +133,11 @@ class ChairPlayUi(
         bufferedAudio = bufferedAudio,
     )
 
-    private val checking = checks.start { controller.setupChanged() }
-
-    // The firewall's rules take about a second to walk: Get started shows Not checked until they are read.
+    // The firewall's rules take about a second to walk: Get started shows Not checked until they are read. A read that
+    // fails still ends the start's, so the pages' checks read the firewall again.
     init {
         Thread({
-            runCatching(checkFirewall).getOrNull()?.let { if (checks.firewallChecked(it)) controller.setupChanged() }
+            runCatching(checkFirewall).getOrDefault(FirewallStatus.UNKNOWN).let { if (checks.firewallChecked(it)) controller.setupChanged() }
         }, "firewall-check").apply { isDaemon = true }.start()
     }
 
@@ -155,7 +153,7 @@ class ChairPlayUi(
     /** Saves [changes] from one of the app's own keys, as a page saves them: the app and an open page hear of it alike. */
     fun saveSettings(changes: Map<String, String>) = controller.saveSettings(changes)
 
-    private val api = AppUiApi(controller, { updates.check() }) { driving }
+    private val api = AppUiApi(controller, { updates.check() }, checks) { driving }
 
     private val server = UiServer(
         api,
@@ -233,7 +231,6 @@ class ChairPlayUi(
 
     override fun close() {
         updates.close()
-        checking.close()
         server.close()
     }
 

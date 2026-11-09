@@ -144,7 +144,7 @@ class UiControllerTest : UiControllerFixture() {
     // Get started and the Connection page follow the PC as it changes: a phone paired, the PC on a network, a rule added.
     @Test
     fun `the setup in the state is the live checks'`() {
-        val checks = SetupChecks({ "Kate's iPhone" }, { "ChairPlay-5G" }, { FirewallStatus.PRESENT }, FirewallStatus.MISSING, { true })
+        val checks = SetupChecks({ "Kate's iPhone" }, { "ChairPlay-5G" }, { FirewallStatus.PRESENT }, FirewallStatus.MISSING)
         val ui = controller(checks = checks)
         val setup = { ui.state()["setup"] as Map<*, *> }
         assertEquals(null, setup()["pairedIphone"])

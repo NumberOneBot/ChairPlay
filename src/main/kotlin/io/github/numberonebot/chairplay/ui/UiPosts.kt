@@ -134,6 +134,10 @@ internal fun postRoute(api: UiApi, route: String, body: Map<*, *>): Pair<Int, Ma
         "firewall-rule" ->
             if (api.addFirewallRule()) json(200, mapOf("ok" to true))
             else json(409, mapOf("error" to "The rule was not added"))
+        "setup-check" -> {
+            api.checkSetup()
+            json(200, mapOf("ok" to true))
+        }
         "window-size" -> {
             val window = body["window"] as? String ?: "main"
             when {

@@ -94,6 +94,7 @@ internal class FakeUiApi : UiApi {
         calls += "firewall rule"
         return consent
     }
+    override fun checkSetup() { calls += "setup check" }
     var hasControls = true
     var savedControls: Map<String, String>? = null
     override fun controls(): Map<String, Any?>? = if (hasControls) mapOf("actions" to emptyMap<String, Any>()) else null
