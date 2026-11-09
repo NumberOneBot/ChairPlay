@@ -41,6 +41,9 @@ internal interface Platform {
     /** What the system adds to the app's windows: their title bar, their close and drag, their taskbar button. */
     val windows: WindowHooks
 
+    /** The picture and the telemetry shared with games; the system's library loads when it is first used. */
+    val bridge: GameBridge
+
     /** The source of keys pressed while another window has focus; it listens once started. */
     fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource
 

@@ -35,7 +35,7 @@ interface FrameTap {
  * native side. The safe rect ([safe], in the pixels of [screen]) is scaled to a picture of another size.
  */
 internal class FrameOutput(
-    private val sink: FrameSink = NativeFrameSink,
+    private val sink: FrameSink = io.github.numberonebot.chairplay.platform.Platforms.current.bridge.frames,
     private val screen: () -> WindowSize,
     private val safe: () -> AreaRect,
     private val log: (String) -> Unit,

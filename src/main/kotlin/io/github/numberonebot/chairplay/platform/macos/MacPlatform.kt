@@ -6,6 +6,7 @@ import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
+import io.github.numberonebot.chairplay.platform.GameBridge
 import io.github.numberonebot.chairplay.platform.HardwareVideo
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationResult
@@ -46,6 +47,7 @@ internal class MacPlatform : Platform {
     override val audio: SystemAudio = MacAudio
     override val video: HardwareVideo? get() = notReady()
     override val windows: WindowHooks = MacWindows
+    override val bridge: GameBridge get() = notReady()
 
     override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource = notReady()
 

@@ -1,5 +1,9 @@
 package io.github.numberonebot.chairplay.platform
 
+import io.github.numberonebot.chairplay.bridge.FakeFrameSink
+import io.github.numberonebot.chairplay.bridge.FrameSink
+import io.github.numberonebot.chairplay.bridge.TelemetrySource
+import io.github.numberonebot.chairplay.drive.FakeTelemetrySource
 import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
 import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.log.AppLog
@@ -34,6 +38,7 @@ internal class FakePlatform(
     override val audio: FakeAudio = FakeAudio(),
     override val video: HardwareVideo? = null,
     override val windows: FakeWindowHooks = FakeWindowHooks(),
+    override val bridge: FakeGameBridge = FakeGameBridge(),
     var updateAnswer: Boolean = false,
 ) : Platform {
     val shownUpdates = mutableListOf<UpdateResult>()
@@ -218,3 +223,9 @@ internal class FakeSpatialOutputs(var devices: List<OutputDevice> = emptyList())
 
     override fun open(deviceId: String?, channels: Int): SpatialDevice = throw UnsatisfiedLinkError("fake outputs open nothing")
 }
+
+/** A game bridge made of the sink and source the test gives. */
+internal class FakeGameBridge(
+    override val frames: FrameSink = FakeFrameSink(),
+    override val telemetry: TelemetrySource = FakeTelemetrySource(),
+) : GameBridge

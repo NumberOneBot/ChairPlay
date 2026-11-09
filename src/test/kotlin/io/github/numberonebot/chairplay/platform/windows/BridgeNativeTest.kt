@@ -1,9 +1,12 @@
-package io.github.numberonebot.chairplay.bridge
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.platform.win32.Kernel32
 import com.sun.jna.platform.win32.WinBase
 import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.ptr.IntByReference
+import io.github.numberonebot.chairplay.bridge.BridgeLayout
+import io.github.numberonebot.chairplay.bridge.BridgeStatus
+import io.github.numberonebot.chairplay.bridge.TelemetryRecord
 import io.github.numberonebot.chairplay.config.AreaRect
 import org.junit.After
 import org.junit.Assert.assertEquals

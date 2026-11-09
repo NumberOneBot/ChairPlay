@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.bridge
 
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.io.Closeable
 import java.nio.ByteBuffer
 
@@ -13,20 +14,6 @@ interface TelemetrySource {
     fun close()
 }
 
-object NativeTelemetrySource : TelemetrySource {
-    override fun open(): String? {
-        BridgeNative.loadError?.let { return it }
-        val lib = BridgeNative.lib
-        // The DLL keeps each thread's last failure: read it on this thread, right after the call.
-        return if (lib.cpb_telemetry_open() == 0) null else lib.cpb_last_error()
-    }
-
-    override fun read(into: ByteBuffer): Boolean = BridgeNative.lib.cpb_telemetry_read(into) == 1
-
-    override fun close() {
-        if (BridgeNative.loadError == null) BridgeNative.lib.cpb_telemetry_close()
-    }
-}
 
 /** What an outside source says about the car. */
 sealed interface External {
@@ -45,7 +32,7 @@ sealed interface External {
  * finds is a game's last before this input opened, perhaps long ago: only a later one is news.
  */
 class TelemetryInput(
-    private val source: TelemetrySource = NativeTelemetrySource,
+    private val source: TelemetrySource = Platforms.current.bridge.telemetry,
     private val log: (String) -> Unit,
     private val nanoTime: () -> Long = System::nanoTime,
 ) : Closeable {

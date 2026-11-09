@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.bridge
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Callback
 import com.sun.jna.Library
