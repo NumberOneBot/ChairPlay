@@ -22,7 +22,7 @@ export function CarPlayIcon() {
   )
 }
 
-/** An instrument cluster: a long filled panel with the speedometer and the rev counter cut out at its ends, each with its needle. */
+/** An instrument cluster: a long filled panel with the speedometer and the rev counter cut out at its ends. */
 export function AltScreenIcon() {
   const mask = useMaskId('alt')
   return (
@@ -36,8 +36,6 @@ export function AltScreenIcon() {
         </mask>
       </defs>
       <rect x="0.2" y="1.6" width="25.6" height="12.8" rx="4" fill="currentColor" mask={`url(#${mask})`} />
-      {/* A needle in each dial, as the controls knob's pointer, both leaning left */}
-      <path d="M5.9 8L3.85 5.95M20.1 8L18.05 5.95" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   )
 }
