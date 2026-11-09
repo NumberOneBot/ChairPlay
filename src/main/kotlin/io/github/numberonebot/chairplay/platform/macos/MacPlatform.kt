@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.platform.macos
 
+import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
+import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
@@ -44,6 +46,8 @@ internal class MacPlatform : Platform {
     override val audio: SystemAudio = MacAudio
     override val video: HardwareVideo? get() = notReady()
     override val windows: WindowHooks = MacWindows
+
+    override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource = notReady()
 
     override fun webView(userData: Path, debug: Boolean): WebViewBackend = notReady()
 

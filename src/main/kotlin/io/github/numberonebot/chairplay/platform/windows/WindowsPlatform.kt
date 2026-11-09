@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.platform.windows
 
+import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
+import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
@@ -31,6 +33,8 @@ internal class WindowsPlatform : Platform {
         HardwareVideo(AV_HWDEVICE_TYPE_D3D11VA, AV_PIX_FMT_D3D11, "D3D11", "D3D11VA")
     }
     override val windows: WindowHooks by lazy { WindowsWindowHooks() }
+
+    override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource = WindowsRawKeyboard(callbacks)
 
     override fun webView(userData: Path, debug: Boolean): WebViewBackend = WindowsWebView(userData, debug)
 

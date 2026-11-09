@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.platform
 
+import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
+import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.media.DefaultAudioDevices
 import io.github.numberonebot.chairplay.media.apac.SpatialDevice
@@ -36,11 +38,32 @@ internal class FakePlatform(
 ) : Platform {
     val shownUpdates = mutableListOf<UpdateResult>()
 
+    /** The global keyboard sources asked for, each with the callbacks it was given. */
+    val keyboard = mutableListOf<FakeGlobalKeyboard>()
+
+    override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource =
+        FakeGlobalKeyboard(callbacks).also { keyboard += it }
+
     override fun webView(userData: Path, debug: Boolean): WebViewBackend = throw WebViewUnavailable("the fake has no web view")
 
     override fun updateDialog(result: UpdateResult): Boolean {
         shownUpdates += result
         return updateAnswer
+    }
+}
+
+/** A global keyboard that counts its starts and closes and is ready when started. */
+internal class FakeGlobalKeyboard(val callbacks: GlobalKeyboardCallbacks) : GlobalKeyboardSource {
+    var starts = 0
+    var closes = 0
+
+    override fun start() {
+        starts++
+        callbacks.ready()
+    }
+
+    override fun close() {
+        closes++
     }
 }
 

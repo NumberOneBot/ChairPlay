@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.input
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Memory
 import com.sun.jna.Native

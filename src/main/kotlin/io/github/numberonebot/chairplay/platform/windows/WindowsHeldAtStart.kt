@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.input
+package io.github.numberonebot.chairplay.platform.windows
 
 /** GetAsyncKeyState supplies virtual keys before the first raw packet, not physical scan codes. */
 internal class WindowsHeldAtStart {

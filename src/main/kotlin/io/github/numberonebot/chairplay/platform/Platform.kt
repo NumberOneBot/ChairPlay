@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.platform
 
+import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
+import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.ui.WebViewBackend
 import io.github.numberonebot.chairplay.update.UpdateResult
 import java.nio.file.Path
@@ -38,6 +40,9 @@ internal interface Platform {
 
     /** What the system adds to the app's windows: their title bar, their close and drag, their taskbar button. */
     val windows: WindowHooks
+
+    /** The source of keys pressed while another window has focus; it listens once started. */
+    fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource
 
     /** The web view that holds the settings page in a window; the library loads when this is called. */
     fun webView(userData: Path, debug: Boolean): WebViewBackend

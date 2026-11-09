@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay
 
 import io.github.numberonebot.chairplay.input.*
+import io.github.numberonebot.chairplay.platform.Platforms
 import org.lwjgl.glfw.GLFW.*
 
 /** Native producer -> bounded router -> existing control actions on the window thread. */
@@ -10,7 +11,7 @@ internal class AppGlobalKeys(
     private val send: (Int, Control?, Any?) -> Unit,
     private val drive: (Int, Int, Int) -> Boolean,
     private val changed: () -> Unit,
-    private val factory: (GlobalKeyboardCallbacks) -> GlobalKeyboardSource = ::WindowsRawKeyboard,
+    private val factory: (GlobalKeyboardCallbacks) -> GlobalKeyboardSource = Platforms.current::globalKeyboard,
 ) : AutoCloseable {
     private val router = GlobalKeyRouter()
     private val leases = KeyboardFocusLease()

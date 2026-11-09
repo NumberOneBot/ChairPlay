@@ -1,6 +1,7 @@
-package io.github.numberonebot.chairplay.input
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Platform
+import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
 import org.junit.Assert.*
 import org.junit.Assume.assumeTrue
 import org.junit.Test

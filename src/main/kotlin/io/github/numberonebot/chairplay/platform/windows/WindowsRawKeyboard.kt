@@ -1,5 +1,7 @@
-package io.github.numberonebot.chairplay.input
+package io.github.numberonebot.chairplay.platform.windows
 
+import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
+import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Platform
@@ -11,14 +13,6 @@ import com.sun.jna.platform.win32.WinUser.*
 import com.sun.jna.ptr.IntByReference
 import org.lwjgl.glfw.GLFW.*
 import java.util.UUID
-
-internal interface GlobalKeyboardSource : AutoCloseable { fun start() }
-internal class GlobalKeyboardCallbacks(
-    val key: (Int, Int, Int, Boolean) -> Unit,
-    val reset: () -> Unit,
-    val ready: () -> Unit,
-    val failed: (String) -> Unit,
-)
 
 /** INPUTSINK only observes keys. No hooks, NOLEGACY, registrations of hotkeys, or synthetic key events. */
 internal class WindowsRawKeyboard(private val callbacks: GlobalKeyboardCallbacks) : GlobalKeyboardSource {

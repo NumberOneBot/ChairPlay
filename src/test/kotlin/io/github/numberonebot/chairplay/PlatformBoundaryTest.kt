@@ -98,8 +98,6 @@ class PlatformBoundaryTest {
         /** Paths relative to `src/main/kotlin/`. */
         val ALLOWED: Set<String> = sortedSetOf(
             "${APP_DIR}bridge/BridgeNative.kt",
-            "${APP_DIR}input/WindowsRawApi.kt",
-            "${APP_DIR}input/WindowsRawKeyboard.kt",
         )
 
         /**

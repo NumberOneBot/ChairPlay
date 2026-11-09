@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay
 
 import io.github.numberonebot.chairplay.input.*
+import io.github.numberonebot.chairplay.platform.FakePlatform
 import org.junit.Assert.*
 import org.junit.Test
 import org.lwjgl.glfw.GLFW.*
@@ -163,5 +164,17 @@ class AppGlobalKeysTest {
         key(GLFW_KEY_F8, GLFW_PRESS)
         app.pass()
         assertTrue(sent.single() is Control.Media)
+    }
+
+    @Test fun `the global keys start the platform's source`() {
+        val platform = FakePlatform()
+        val platformApp = AppGlobalKeys({ config }, { session }, { _, _, _ -> }, { _, _, _ -> false }, {}, platform::globalKeyboard)
+        platformApp.pass()
+        platformApp.pass()
+        val source = platform.keyboard.single()
+        assertEquals(1, source.starts)
+        assertEquals(0, source.closes)
+        platformApp.close()
+        assertEquals(1, source.closes)
     }
 }

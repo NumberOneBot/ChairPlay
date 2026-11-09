@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.input
+package io.github.numberonebot.chairplay.platform.windows
 
 import org.lwjgl.glfw.GLFW.*
 
