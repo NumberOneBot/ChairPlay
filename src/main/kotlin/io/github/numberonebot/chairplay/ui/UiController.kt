@@ -134,7 +134,7 @@ class UiController(
     /** The insets as saved, so the frame previews them before a restart puts them in force; blank is none. */
     override fun showAltscreenFrame(view: String?): Boolean {
         val frame = altscreenFrame ?: return false
-        val values = runCatching { settings.read() }.getOrDefault(emptyMap())
+        val values = settingsApi.values
         val insets = altscreenFrameInsets(values, view) ?: return false
         val (width, height) = altscreenFrameSize(values)
         frame.show(insets.top, insets.bottom, insets.left, insets.right, width, height)
@@ -211,7 +211,7 @@ class UiController(
 
     override fun state(): Map<String, Any?> {
         val state = model.state
-        val values = runCatching { settings.read() }.getOrDefault(emptyMap())
+        val values = settingsApi.values
         return linkedMapOf(
             "version" to version, "settingsVersion" to settingsApi.version,
             "phase" to state.phase.name.lowercase(),
@@ -241,12 +241,12 @@ class UiController(
             "controlsKeys" to (values["ui.controls.keys"]?.trim() == "true"),
             "setupDone" to setupDone,
             "accent" to setup.accent,
-            "about" to about.toPage(places.details()),
+            "about" to places.aboutPage,
             "reconnectPending" to state.reconnectPending.sorted(),
             "restartPending" to state.restartPending.sorted(),
             "setup" to linkedMapOf(
                 "mfiFolder" to setup.mfiDirectory.toString(),
-                "mfiPresent" to mfiFilesPresent(setup.mfiDirectory),
+                "mfiPresent" to (checks?.snapshot?.mfiPresent ?: false),
                 "firewall" to (checks?.snapshot?.firewall ?: setup.firewall).name.lowercase(),
                 "pairedIphone" to checks?.snapshot?.pairedIphone,
                 "pcWifi" to checks?.snapshot?.pcWifi,

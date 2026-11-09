@@ -33,6 +33,11 @@ internal class UiSettings(
     /** The settings as the app started with them, against which a change waits for the next start. */
     private val startup: Map<String, String> = settings.read()
 
+    /** The settings as the start read them and each save left them, for the state, which is built on every change. */
+    @Volatile
+    var values: Map<String, String> = startup
+        private set
+
     /** The settings the connection under way, or the last one, was made with; null before a bring-up read them. */
     private var connection: Map<String, String>? = null
 
@@ -72,6 +77,7 @@ internal class UiSettings(
             val errors = EditableSettings.validate(normalized, current)
             if (errors.isNotEmpty()) return SaveResult(errors, emptyMap())
             settings.write(normalized)
+            values = settings.read()
             normalized.filter { (key, value) -> current[key] != value }
         }
         val applies = normalized.keys.associateWith { appliesName(EditableSettings.applies(it)) }
@@ -79,7 +85,7 @@ internal class UiSettings(
         saved["ui.autoshow"]?.let { model.setAutoshow(it == "true") }
         if (saved.isNotEmpty()) onSaved(saved)
         updatePending()
-        val now = settings.read()
+        val now = values
         // While Get started is open it owns the first Connect: a network saved before its password must not start
         // a bring-up without one.
         if (!now["wifi.ssid"].isNullOrBlank() && model.wifiSaved() && connects()) {

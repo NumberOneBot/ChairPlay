@@ -40,7 +40,7 @@ internal class UiPlaces(
         "location" -> "ms-settings:privacy-location"
         "firewall-rules" -> Path.of(System.getenv("SystemRoot") ?: "C:/Windows", "System32", "wf.msc").toString()
         "issues" -> "$PROJECT/issues/new?body=" +
-            URLEncoder.encode("What happened, and what you expected:\n\n\n---\n${details()}", Charsets.UTF_8).replace("+", "%20")
+            URLEncoder.encode("What happened, and what you expected:\n\n\n---\n$details", Charsets.UTF_8).replace("+", "%20")
         "discussions" -> "$PROJECT/discussions"
         "pull-requests" -> "$PROJECT/pulls"
         "author" -> "https://github.com/NumberOneBot"
@@ -71,13 +71,16 @@ internal class UiPlaces(
 
     /**
      * What a report needs to say which ChairPlay it is about: the release version (or a development build) and its commit,
-     * the DiPlay core, and Windows; no setting.
+     * the DiPlay core, and Windows; no setting. Made once: none of them changes while the app runs.
      */
-    fun details(): String {
+    val details: String by lazy {
         val core = "DiPlay core ${about.core?.let { "${it.id} (${it.date})" } ?: "not recorded"}"
         val windows = runCatching(windowsVersion).getOrDefault("Windows")
-        return "${about.startLine()}\n$core\n$windows"
+        "${about.startLine()}\n$core\n$windows"
     }
+
+    /** The About page's part of the state ([BuildInfo.toPage]), made once with [details]. */
+    val aboutPage: Map<String, Any?> by lazy { about.toPage(details) }
 
     private companion object {
         /** The names the page may give ([open]). */

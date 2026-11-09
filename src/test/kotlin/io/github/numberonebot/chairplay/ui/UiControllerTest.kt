@@ -11,7 +11,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.nio.file.Files
 
 /** UiController: the state the pages show: the session, Get started, the controls, the demos and the GPS. */
 class UiControllerTest : UiControllerFixture() {
@@ -216,16 +215,6 @@ class UiControllerTest : UiControllerFixture() {
         val setup = state["setup"] as Map<*, *>
         assertEquals(false, setup["mfiPresent"])
         assertEquals("missing", setup["firewall"])
-    }
-
-    @Test
-    fun `the MFi files are found once they are in place`() {
-        val ui = controller()
-        Files.createDirectories(dir.resolve("offline-mfi"))
-        Files.writeString(dir.resolve("offline-mfi/identity.pk8"), "x")
-        Files.writeString(dir.resolve("offline-mfi/certificate.p7b"), "x")
-
-        assertEquals(true, (ui.state()["setup"] as Map<*, *>)["mfiPresent"])
     }
 
     @Test
