@@ -129,25 +129,30 @@ end;
 
 // Closes the ChairPlay running from {app} as its own exit does: taskkill without /F sends its window WM_CLOSE, and the
 // app ends the CarPlay session and lets go of ChairPlay.lock before it exits. Only one copy runs at a time, so the only
-// ChairPlay.exe is this one. Waits up to CloseWaitMillis for the lock on a progress page, which keeps the wizard
-// answering; a copy still running is left to WaitUntilClosed.
+// ChairPlay.exe is this one. Waits up to CloseWaitMillis for it to exit; Exec keeps the window answering meanwhile. A
+// copy still running is left to WaitUntilClosed.
+procedure StopRunning();
+var
+  ResultCode: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM ChairPlay.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), Format('-NoProfile -NonInteractive -Command ' +
+    '"Wait-Process -Name ChairPlay -Timeout %d -ErrorAction SilentlyContinue"', [CloseWaitMillis div 1000]),
+    '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+// Setup closes ChairPlay on a page of its own, after the user chose to install.
 procedure CloseRunning();
 var
   Progress: TOutputProgressWizardPage;
-  ResultCode, Waited: Integer;
 begin
   if not IsRunning() then
     Exit;
   Progress := CreateOutputProgressPage('Closing ChairPlay', 'ChairPlay is ending the CarPlay session.');
+  Progress.ProgressBar.Style := npbstMarquee;
   Progress.Show();
   try
-    Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM ChairPlay.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-    Waited := 0;
-    while IsRunning() and (Waited < CloseWaitMillis) do begin
-      Progress.SetProgress(Waited, CloseWaitMillis);
-      Sleep(250);
-      Waited := Waited + 250;
-    end;
+    StopRunning();
   finally
     Progress.Hide();
   end;
@@ -170,9 +175,14 @@ begin
     Result := 'ChairPlay is running. Close its window, then run Setup again.';
 end;
 
-function InitializeUninstall(): Boolean;
+// Uninstall closes ChairPlay only once the user confirmed it, in the uninstall's own window, before any file goes.
+procedure CloseRunningForUninstall();
 begin
-  Result := WaitUntilClosed();
+  if not IsRunning() then
+    Exit;
+  UninstallProgressForm.StatusLabel.Caption := 'Closing ChairPlay...';
+  StopRunning();
+  WaitUntilClosed();
 end;
 
 // The data the build names ({#AppData}), each a file or a folder in {app}; then {app} itself if nothing else is left.
@@ -199,6 +209,8 @@ end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
+  if CurUninstallStep = usUninstall then
+    CloseRunningForUninstall();
   if CurUninstallStep = usPostUninstall then
     if SuppressibleMsgBox(DeleteDataQuestion, mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES then
       DeleteData();
