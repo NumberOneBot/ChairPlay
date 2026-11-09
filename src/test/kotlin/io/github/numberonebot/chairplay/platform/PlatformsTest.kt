@@ -32,6 +32,14 @@ class PlatformsTest {
         }
     }
 
+    // main prints this and stops before any window or native load; a platform that works gives no refusal.
+    @Test
+    fun `an unknown system and a Mac are refused at start`() {
+        assertTrue(Platforms.refusal { Platforms.select("Linux") }.orEmpty().contains("Linux"))
+        assertEquals("macOS support is not ready", Platforms.refusal { Platforms.select("Mac OS X") })
+        assertEquals(null, Platforms.refusal { FakePlatform() })
+    }
+
     @Test
     fun `other systems are refused by name`() {
         val refused = assertThrows(UnsupportedPlatform::class.java) { Platforms.select("Linux") }

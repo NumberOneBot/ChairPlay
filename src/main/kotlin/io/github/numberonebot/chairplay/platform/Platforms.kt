@@ -7,6 +7,19 @@ import io.github.numberonebot.chairplay.platform.windows.WindowsPlatform
 internal object Platforms {
     val current: Platform by lazy { select(System.getProperty("os.name").orEmpty()) }
 
+    /**
+     * Why the app cannot start on the platform [choose] gives, or null if it can: the system is unknown, or the platform
+     * is a stub. Uses the platform once (its system name), so a stub refuses here and not in the middle of the start.
+     */
+    fun refusal(choose: () -> Platform = { current }): String? = try {
+        choose().shell.systemName()
+        null
+    } catch (e: UnsupportedPlatform) {
+        e.message
+    } catch (e: UnsupportedOperationException) {
+        e.message
+    }
+
     /** The platform for a system that calls itself [osName], or [UnsupportedPlatform] for one the app does not know. */
     fun select(osName: String): Platform = when {
         osName.startsWith("Windows") -> WindowsPlatform()

@@ -35,6 +35,11 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
+    // The platform first: nothing native loads before it is chosen, and a system with none says so and stops.
+    Platforms.refusal()?.let {
+        System.err.println(it)
+        exitProcess(1)
+    }
     if (args.firstOrNull() == "run") guardStart(appLog, start = ::runCarPlay) else exitProcess(runCommand(args))
 }
 
@@ -43,7 +48,6 @@ internal val appLog = AppLog()
 
 internal fun log(message: String) = appLog.info(message)
 
-private const val SCREENSHOT_PICTURE_WAIT_NANOS = 30_000_000_000L
 private const val PREVIOUS_RUN_WAIT_MILLIS = 15_000L
 
 /** Held for the life of the process; the system lets go of it when the process ends. */
@@ -185,16 +189,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     window.child = ui.view
     controlsWindow.child = ui.controlsView
     appControls.bindWindows(window, altscreen, controlsWindow, title::volumeFeedback) { ui.coversWindow }
-    // Diagnostics: CHAIRPLAY_SCREENSHOT_AFTER=<seconds> saves one screenshot that long after the first picture, or
-    // after half a minute without one, so the windows the app draws itself can be looked at without an iPhone.
-    System.getenv("CHAIRPLAY_SCREENSHOT_AFTER")?.toLongOrNull()?.let { seconds ->
-        Thread({
-            val giveUp = System.nanoTime() + SCREENSHOT_PICTURE_WAIT_NANOS
-            while (window.pictureSize.width == 0 && System.nanoTime() < giveUp) Thread.sleep(200)
-            Thread.sleep(seconds * 1000)
-            screenshots()
-        }, "screenshot-timer").apply { isDaemon = true }.start()
-    }
+    screenshotAfterPicture({ window.pictureSize.width != 0 }, ::screenshots)
     window.scrollHandler = { dy -> if (!ui.coversWindow) appControls.send(appControls.keys.scroll(dy)) }
     altscreen.scrollHandler = { dy -> appControls.send(appControls.keys.altscreenScroll(dy)) }
     fun sessionChanged() {

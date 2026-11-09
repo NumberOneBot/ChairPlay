@@ -96,14 +96,12 @@ class PlatformBoundaryTest {
         )
 
         /** Paths relative to `src/main/kotlin/`. */
-        val ALLOWED: Set<String> = sortedSetOf(
-        )
+        val ALLOWED: Set<String> = emptySet()
 
         /**
          * Windows code outside `platform/windows/` that still imports its COM, elevation and file-lock helpers, until
          * the task that moves it there; the list only shrinks.
          */
-        val IMPORTERS_LEFT: Set<String> = sortedSetOf(
-        )
+        val IMPORTERS_LEFT: Set<String> = emptySet()
     }
 }
