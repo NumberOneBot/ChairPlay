@@ -1,27 +1,24 @@
-package io.github.numberonebot.chairplay.bluetooth
+package io.github.numberonebot.chairplay.platform.windows
 
-import com.shilapi.xcertplay.transport.BlockingDuplexByteStream
-import com.shilapi.xcertplay.transport.BluetoothRfcommDuplexStream
-import com.shilapi.xcertplay.transport.BluetoothRfcommSocketAccess
 import com.sun.jna.Library
 import com.sun.jna.Memory
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.PointerByReference
-import java.io.Closeable
+import io.github.numberonebot.chairplay.platform.Bluetooth
+import io.github.numberonebot.chairplay.platform.PairedDevice
+import io.github.numberonebot.chairplay.platform.RfcommLink
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
 
-data class PairedDevice(val name: String, val address: String, val classOfDevice: Int)
-
 /**
- * Windows Bluetooth through BluetoothApis and Winsock. Structure layouts are written by offset:
- * the radio and device structures follow natural x64 alignment, while SOCKADDR_BTH is packed
+ * Windows Bluetooth through BluetoothApis and Winsock, each loaded at its first call. Structure layouts are written by
+ * offset: the radio and device structures follow natural x64 alignment, while SOCKADDR_BTH is packed
  * (ws2bth.h wraps it in pshpack1.h), which a JNA Structure would pad.
  */
-object WindowsBluetooth {
+internal object WindowsBluetooth : Bluetooth {
     private interface BluetoothApis : Library {
         fun BluetoothFindFirstRadio(params: Pointer, radio: PointerByReference): Pointer?
         fun BluetoothFindRadioClose(find: Pointer): Boolean
@@ -45,8 +42,8 @@ object WindowsBluetooth {
         fun closesocket(socket: Long): Int
     }
 
-    private val bluetooth = Native.load("BluetoothApis", BluetoothApis::class.java)
-    private val kernel32 = Native.load("kernel32", Kernel32::class.java)
+    private val bluetooth by lazy { Native.load("BluetoothApis", BluetoothApis::class.java) }
+    private val kernel32 by lazy { Native.load("kernel32", Kernel32::class.java) }
     private val winsock by lazy {
         Native.load("Ws2_32", Winsock::class.java).also {
             val result = it.WSAStartup(0x0202, Memory(512))
@@ -63,7 +60,7 @@ object WindowsBluetooth {
     private const val DEVICE_SEARCH_SIZE = 40
     private const val SOCKADDR_BTH_SIZE = 30
 
-    fun localRadioAddress(): String {
+    override fun radioAddress(): String {
         val params = Memory(4).apply { setInt(0, 4) }
         val radio = PointerByReference()
         val find = bluetooth.BluetoothFindFirstRadio(params, radio)
@@ -79,7 +76,7 @@ object WindowsBluetooth {
         }
     }
 
-    fun pairedDevices(): List<PairedDevice> {
+    override fun pairedDevices(): List<PairedDevice> {
         val params = Memory(DEVICE_SEARCH_SIZE.toLong()).apply {
             clear()
             setInt(0, DEVICE_SEARCH_SIZE)
@@ -107,7 +104,7 @@ object WindowsBluetooth {
     }
 
     /** Port 0 makes Windows resolve the RFCOMM channel through SDP from the service UUID. */
-    fun connectRfcomm(address: String, service: UUID): RfcommSocket {
+    override fun connectRfcomm(address: String, service: UUID): RfcommLink {
         val socket = winsock.socket(AF_BTH, SOCK_STREAM, BTHPROTO_RFCOMM)
         if (socket == INVALID_SOCKET) throw IOException("RFCOMM socket failed: WSA ${winsock.WSAGetLastError()}")
         val sockaddr = Memory(SOCKADDR_BTH_SIZE.toLong()).apply {
@@ -125,8 +122,8 @@ object WindowsBluetooth {
         return RfcommSocket(socket)
     }
 
-    class RfcommSocket internal constructor(private val socket: Long) : Closeable {
-        val inputStream: InputStream = object : InputStream() {
+    private class RfcommSocket(private val socket: Long) : RfcommLink {
+        override val input: InputStream = object : InputStream() {
             override fun read(): Int {
                 val one = ByteArray(1)
                 return if (read(one, 0, 1) == -1) -1 else one[0].toInt() and 0xff
@@ -143,7 +140,7 @@ object WindowsBluetooth {
             }
         }
 
-        val outputStream: OutputStream = object : OutputStream() {
+        override val output: OutputStream = object : OutputStream() {
             override fun write(b: Int) = write(byteArrayOf(b.toByte()), 0, 1)
 
             override fun write(b: ByteArray, off: Int, len: Int) {
@@ -160,16 +157,6 @@ object WindowsBluetooth {
         override fun close() {
             winsock.closesocket(socket)
         }
-
-        fun toDuplexStream(onDiagnostic: (String) -> Unit): BlockingDuplexByteStream =
-            BluetoothRfcommDuplexStream(
-                object : BluetoothRfcommSocketAccess {
-                    override fun inputStream(): InputStream = inputStream
-                    override fun outputStream(): OutputStream = outputStream
-                    override fun close() = this@RfcommSocket.close()
-                },
-                onDiagnostic,
-            )
     }
 
     internal fun formatAddress(value: Long): String =

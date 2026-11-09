@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.bluetooth
 
+import io.github.numberonebot.chairplay.platform.PairedDevice
+
 /** Bluetooth major device class "Phone"; AirPods and iPads report other classes. */
 private const val MAJOR_CLASS_PHONE = 0x02
 

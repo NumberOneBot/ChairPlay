@@ -7,11 +7,12 @@ import com.shilapi.xcertplay.transport.Iap2IdentificationClient
 import com.shilapi.xcertplay.transport.Iap2WirelessIdentification
 import com.shilapi.xcertplay.transport.Iap2WirelessLinkRole
 import com.shilapi.xcertplay.transport.forWirelessLink
-import io.github.numberonebot.chairplay.bluetooth.WindowsBluetooth
 import io.github.numberonebot.chairplay.bluetooth.selectIphone
+import io.github.numberonebot.chairplay.bluetooth.toDuplexStream
 import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.log.routeAllOutput
 import io.github.numberonebot.chairplay.media.AudioDevices
+import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.session.IAP2_IPHONE_UUID
 import io.github.numberonebot.chairplay.session.desktopIdentification
 import io.github.numberonebot.chairplay.session.redactTrace
@@ -42,8 +43,9 @@ internal fun runCommand(
 }
 
 internal fun listDevices() {
-    log("radio ${WindowsBluetooth.localRadioAddress()}")
-    WindowsBluetooth.pairedDevices().forEach {
+    val bluetooth = Platforms.current.bluetooth
+    log("radio ${bluetooth.radioAddress()}")
+    bluetooth.pairedDevices().forEach {
         log("${it.address}  class=0x%06X  ${it.name}".format(it.classOfDevice))
     }
     // The names audio.output and audio.input match against (Java Sound cuts them to 31 characters).
@@ -59,16 +61,18 @@ internal fun listDevices() {
  * handing the iPhone any Wi-Fi endpoint.
  */
 internal fun probeBluetooth(address: String?): Boolean {
-    val radio = WindowsBluetooth.localRadioAddress()
-    val iphone = selectIphone(WindowsBluetooth.pairedDevices(), address)
+    val bluetooth = Platforms.current.bluetooth
+    val radio = bluetooth.radioAddress()
+    val iphone = selectIphone(bluetooth.pairedDevices(), address)
     log("radio $radio, target ${iphone.name} ${iphone.address}")
 
     val mfiDirectory = dataDirectory().resolve("offline-mfi").toFile()
     val mfi = LocalMfiAuthenticationClient.load(mfiDirectory) { log("local MFi identity signs ($it-byte signature)") }
 
-    val socket = WindowsBluetooth.connectRfcomm(iphone.address, IAP2_IPHONE_UUID)
+    // Not openIphoneLink: the probe reports the radio and target first, and the connection only once it is made.
+    val link = bluetooth.connectRfcomm(iphone.address, IAP2_IPHONE_UUID)
     log("RFCOMM connected to the iAP2 service")
-    val stream = socket.toDuplexStream(::log)
+    val stream = link.toDuplexStream(::log)
     val session = Iap2Session.openWireless(stream, traceContext = "probe", onTrace = { log(redactTrace(it)) })
     try {
         val identification = desktopIdentification(radio).forWirelessLink(

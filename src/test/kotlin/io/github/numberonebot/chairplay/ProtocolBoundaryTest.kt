@@ -78,7 +78,7 @@ class ProtocolBoundaryTest {
         /** Paths relative to the chairplay source folder. */
         val ALLOWED: Set<String> = sortedSetOf(
             "Commands.kt",
-            "bluetooth/WindowsBluetooth.kt",
+            "bluetooth/RfcommStreams.kt",
             "carplay/AltscreenAreaMove.kt",
             "carplay/CarPlayConfig.kt",
             "carplay/CarPlayControl.kt",

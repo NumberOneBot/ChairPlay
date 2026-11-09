@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.platform.windows
 
+import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
@@ -16,4 +17,5 @@ internal class WindowsPlatform : Platform {
     override val location: LocationSource by lazy { WindowsLocation }
     override val firewall: Firewall by lazy { WindowsFirewall() }
     override val network: PcNetwork by lazy { WindowsNetwork() }
+    override val bluetooth: Bluetooth by lazy { WindowsBluetooth }
 }

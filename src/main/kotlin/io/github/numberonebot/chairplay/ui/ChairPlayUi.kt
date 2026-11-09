@@ -1,6 +1,5 @@
 package io.github.numberonebot.chairplay.ui
 
-import io.github.numberonebot.chairplay.bluetooth.WindowsBluetooth
 import io.github.numberonebot.chairplay.bluetooth.pairedIphoneName
 import io.github.numberonebot.chairplay.carplay.CarPlayConfig
 import io.github.numberonebot.chairplay.config.DesktopConfig
@@ -86,7 +85,7 @@ class ChairPlayUi(
     fun checkUpdatesAtStart() = updates.start(!settingsFile.read()["updates.check.on.start"].orEmpty().trim().equals("false", true))
 
     private val checks = SetupChecks(
-        pairedIphone = { pairedIphoneName(WindowsBluetooth.pairedDevices(), config.iphoneAddress) },
+        pairedIphone = { pairedIphoneName(Platforms.current.bluetooth.pairedDevices(), config.iphoneAddress) },
         pcWifi = { Platforms.current.network.wifiConnections().firstOrNull()?.ssid },
         ethernet = Platforms.current.network::ethernetAdapters,
         firewall = readFirewall,

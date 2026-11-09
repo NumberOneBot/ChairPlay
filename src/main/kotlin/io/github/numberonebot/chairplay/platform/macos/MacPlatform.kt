@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.platform.macos
 
 import io.github.numberonebot.chairplay.log.AppLog
+import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
@@ -9,14 +10,17 @@ import io.github.numberonebot.chairplay.platform.LocationSource
 import io.github.numberonebot.chairplay.network.EthernetAdapter
 import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
+import io.github.numberonebot.chairplay.platform.PairedDevice
 import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
+import io.github.numberonebot.chairplay.platform.RfcommLink
 import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.ui.FirewallStatus
 import java.io.Closeable
 import java.net.InetAddress
 import java.net.Socket
 import java.nio.file.Path
+import java.util.UUID
 
 /** macOS, chosen for a Mac but not ready: every use of it throws [notReady]'s exception. */
 internal class MacPlatform : Platform {
@@ -26,6 +30,15 @@ internal class MacPlatform : Platform {
     override val location: LocationSource = MacLocation
     override val firewall: Firewall = MacFirewall
     override val network: PcNetwork = MacNetwork
+    override val bluetooth: Bluetooth = MacBluetooth
+}
+
+private object MacBluetooth : Bluetooth {
+    override fun radioAddress(): String = notReady()
+
+    override fun pairedDevices(): List<PairedDevice> = notReady()
+
+    override fun connectRfcomm(address: String, service: UUID): RfcommLink = notReady()
 }
 
 private object MacFirewall : Firewall {

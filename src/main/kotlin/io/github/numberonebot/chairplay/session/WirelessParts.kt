@@ -17,12 +17,14 @@ import com.shilapi.xcertplay.transport.Iap2LocationProvider
 import com.shilapi.xcertplay.transport.Iap2WirelessCarPlayEndpoint
 import com.shilapi.xcertplay.transport.Iap2WirelessControlClient
 import com.shilapi.xcertplay.transport.Iap2WirelessControlResult
-import io.github.numberonebot.chairplay.bluetooth.WindowsBluetooth
 import io.github.numberonebot.chairplay.bluetooth.selectIphone
+import io.github.numberonebot.chairplay.bluetooth.toDuplexStream
 import io.github.numberonebot.chairplay.carplay.DataSubscriptions
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.discovery.DesktopBonjour
 import io.github.numberonebot.chairplay.network.DesktopNetwork
+import io.github.numberonebot.chairplay.platform.Bluetooth
+import io.github.numberonebot.chairplay.platform.Platforms
 import java.io.Closeable
 import java.io.IOException
 import java.net.InetAddress
@@ -57,8 +59,26 @@ internal interface WirelessParts {
     ): Iap2WirelessControlResult
 }
 
+/**
+ * The iAP2 stream to the iPhone over RFCOMM: the paired device at [configuredAddress], or else the one paired phone.
+ * Closing the stream closes the link.
+ */
+internal fun openIphoneLink(
+    bluetooth: Bluetooth,
+    configuredAddress: String?,
+    log: (String) -> Unit,
+): BlockingDuplexByteStream {
+    val iphone = selectIphone(bluetooth.pairedDevices(), configuredAddress)
+    log("RFCOMM connecting to ${iphone.name} ${iphone.address}")
+    return bluetooth.connectRfcomm(iphone.address, IAP2_IPHONE_UUID).toDuplexStream(log)
+}
+
 /** The parts of this PC: its MFi files, Wi-Fi, Bluetooth radio, Bonjour, and the iPhone paired with it. */
-internal class DesktopParts(private val config: DesktopConfig, private val log: (String) -> Unit) : WirelessParts {
+internal class DesktopParts(
+    private val config: DesktopConfig,
+    private val log: (String) -> Unit,
+    private val bluetooth: Bluetooth = Platforms.current.bluetooth,
+) : WirelessParts {
     override val mfi = LocalMfiAuthenticationClient.load(config.mfiDirectory())
 
     /** Read for each bring-up, so a network changed on the start screen applies with the next connection. */
@@ -67,7 +87,7 @@ internal class DesktopParts(private val config: DesktopConfig, private val log: 
         now.ethernetAdapter,
     )
 
-    override fun radioAddress() = WindowsBluetooth.localRadioAddress()
+    override fun radioAddress() = bluetooth.radioAddress()
 
     override fun media(sink: MediaSink, microphoneEnabled: Boolean) = CarPlayMediaEngine(sink, microphoneEnabled)
 
@@ -82,11 +102,7 @@ internal class DesktopParts(private val config: DesktopConfig, private val log: 
             }
         }
 
-    override fun connectIphone(): BlockingDuplexByteStream {
-        val iphone = selectIphone(WindowsBluetooth.pairedDevices(), config.iphoneAddress)
-        log("RFCOMM connecting to ${iphone.name} ${iphone.address}")
-        return WindowsBluetooth.connectRfcomm(iphone.address, IAP2_IPHONE_UUID).toDuplexStream(log)
-    }
+    override fun connectIphone() = openIphoneLink(bluetooth, config.iphoneAddress, log)
 
     override fun control(
         session: Iap2Session,

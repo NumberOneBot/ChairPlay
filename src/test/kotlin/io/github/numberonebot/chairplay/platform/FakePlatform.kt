@@ -4,10 +4,16 @@ import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.network.EthernetAdapter
 import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.ui.FirewallStatus
+import java.io.ByteArrayOutputStream
 import java.io.Closeable
+import java.io.InputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.net.InetAddress
 import java.net.Socket
 import java.nio.file.Path
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 /** A platform for tests: each answer is a field the test sets, and nothing reaches the real system. */
 internal class FakePlatform(
@@ -17,7 +23,48 @@ internal class FakePlatform(
     override val location: LocationSource = LocationSource { LocationResult.Unknown },
     override val firewall: FakeFirewall = FakeFirewall(),
     override val network: FakeNetwork = FakeNetwork(),
+    override val bluetooth: FakeBluetooth = FakeBluetooth(),
 ) : Platform
+
+/** Bluetooth with the [radio] and [paired] devices the test set; each RFCOMM connection it records gets [link]. */
+internal class FakeBluetooth(
+    var radio: String = "00:11:22:33:44:55",
+    var paired: List<PairedDevice> = emptyList(),
+    var link: () -> RfcommLink = { FakeRfcommLink() },
+) : Bluetooth {
+    val connected = mutableListOf<Pair<String, UUID>>()
+
+    override fun radioAddress(): String = radio
+
+    override fun pairedDevices(): List<PairedDevice> = paired
+
+    override fun connectRfcomm(address: String, service: UUID): RfcommLink {
+        connected += address to service
+        return link()
+    }
+}
+
+/** An RFCOMM link whose peer the test plays: [receive] feeds its input, [output] keeps what was sent. */
+internal class FakeRfcommLink : RfcommLink {
+    private val peer = PipedOutputStream()
+    private val closeCount = AtomicInteger()
+
+    override val input: InputStream = PipedInputStream(peer)
+    override val output = ByteArrayOutputStream()
+
+    val closes: Int get() = closeCount.get()
+
+    fun receive(bytes: ByteArray) {
+        peer.write(bytes)
+        peer.flush()
+    }
+
+    /** Ends the input as the peer hanging up does. */
+    override fun close() {
+        closeCount.incrementAndGet()
+        peer.close()
+    }
+}
 
 /** A firewall that answers [state] and records the rules it was asked to add. */
 internal class FakeFirewall(var state: FirewallStatus = FirewallStatus.UNKNOWN, var consent: Boolean = true) : Firewall {

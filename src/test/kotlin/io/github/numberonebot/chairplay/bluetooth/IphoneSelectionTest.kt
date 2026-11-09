@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.bluetooth
 
+import io.github.numberonebot.chairplay.platform.PairedDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail

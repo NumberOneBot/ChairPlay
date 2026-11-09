@@ -22,4 +22,7 @@ internal interface Platform {
 
     /** The PC's Wi-Fi, its wired adapters and the addresses of its physical adapters. */
     val network: PcNetwork
+
+    /** The PC's Bluetooth radio, its paired devices, and RFCOMM to them. */
+    val bluetooth: Bluetooth
 }
