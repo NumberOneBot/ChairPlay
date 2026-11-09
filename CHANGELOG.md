@@ -2,6 +2,22 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.0.10 - 2026-11-09
+
+A maintenance release: little changes on the outside, much on the inside. The code that calls Windows is now kept apart from the rest of ChairPlay, which makes the next large features and releases simpler to build.
+
+### Changed
+
+- Switching from CarPlay to the settings no longer flickers, and the settings show sooner.
+- ChairPlay does less work in the background. It reads the PC's network addresses and sound devices once as it starts, and the logs and screenshots folder sizes as **Experiments** opens. It no longer looks for a game's telemetry on every frame.
+
+### Fixed
+
+- A saved change that applies at the next connection was marked only next to its field. The toolbar now shows it too.
+- A change's mark stayed after its value was set back.
+
+[Release notes](docs/RELEASE-NOTES-1.0.10.md) · [Changes since v1.0.9](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.9...v1.0.10)
+
 ## 1.0.9 - 2026-11-09
 
 ### Added
