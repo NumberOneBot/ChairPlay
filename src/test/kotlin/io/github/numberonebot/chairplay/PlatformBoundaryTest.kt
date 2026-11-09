@@ -100,7 +100,6 @@ class PlatformBoundaryTest {
             "${APP_DIR}Firewall.kt",
             "${APP_DIR}bluetooth/WindowsBluetooth.kt",
             "${APP_DIR}bridge/BridgeNative.kt",
-            "${APP_DIR}drive/LocationApi.kt",
             "${APP_DIR}input/WindowsRawApi.kt",
             "${APP_DIR}input/WindowsRawKeyboard.kt",
             "${APP_DIR}media/ClientDrag.kt",
@@ -128,8 +127,6 @@ class PlatformBoundaryTest {
          * the task that moves it there; the list only shrinks.
          */
         val IMPORTERS_LEFT: Set<String> = sortedSetOf(
-            "${APP_DIR}drive/LocationApi.kt",
-            "${APP_DIR}drive/WindowsLocation.kt",
             "${APP_DIR}media/DefaultAudioDevices.kt",
             "${APP_DIR}session/Firewall.kt",
             "${APP_DIR}session/WindowsFirewallApi.kt",

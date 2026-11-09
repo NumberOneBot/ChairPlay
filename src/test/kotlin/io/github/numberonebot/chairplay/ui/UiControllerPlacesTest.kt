@@ -1,7 +1,7 @@
 package io.github.numberonebot.chairplay.ui
 
 import io.github.numberonebot.chairplay.drive.GeoPoint
-import io.github.numberonebot.chairplay.drive.WindowsLocation
+import io.github.numberonebot.chairplay.platform.LocationResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,10 +15,10 @@ class UiControllerPlacesTest : UiControllerFixture() {
     fun `Windows' location comes as a place or a reason`() {
         assertEquals(
             mapOf("latitude" to 48.85, "longitude" to 2.29),
-            controller(locate = { WindowsLocation.Found(GeoPoint(48.85, 2.29)) }).windowsLocation(),
+            controller(locate = { LocationResult.Found(GeoPoint(48.85, 2.29)) }).windowsLocation(),
         )
-        assertEquals(mapOf("error" to "denied"), controller(locate = { WindowsLocation.Denied }).windowsLocation())
-        assertEquals(mapOf("error" to "unknown"), controller(locate = { WindowsLocation.Unknown }).windowsLocation())
+        assertEquals(mapOf("error" to "denied"), controller(locate = { LocationResult.Denied }).windowsLocation())
+        assertEquals(mapOf("error" to "unknown"), controller(locate = { LocationResult.Unknown }).windowsLocation())
     }
 
     // Copy details and New issue carry the same text: the build, the DiPlay core, and Windows; never a setting.

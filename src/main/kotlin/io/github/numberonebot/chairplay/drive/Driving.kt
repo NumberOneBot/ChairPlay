@@ -2,10 +2,10 @@ package io.github.numberonebot.chairplay.drive
 
 import io.github.numberonebot.chairplay.bridge.External
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
+import io.github.numberonebot.chairplay.platform.*
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.abs
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 /**
  * The spoofed GPS's car for the app: placed at gps.start facing gps.heading, driven by [control] from the window loop,
@@ -22,7 +22,7 @@ class Driving(
     val nanoTime: () -> Long = System::nanoTime,
     /** The $GPGSV at a place and UTC, as the fix goes; null while fresh orbital data is unavailable. */
     val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
-    private val locate: () -> WindowsLocation.Result = WindowsLocation::read,
+    private val locate: () -> LocationResult = Platforms.current.location::read,
     private val lookup: (Runnable) -> Unit = { Thread(it, "gps-start").apply { isDaemon = true }.start() },
     /** A fresh reader of a game's telemetry, made each time gps.external comes into force. */
     private val telemetry: () -> TelemetryInput = { TelemetryInput(log = log) },
@@ -200,14 +200,14 @@ class Driving(
         lookup {
             try {
                 when (val found = locate()) {
-                    is WindowsLocation.Found -> if (!placed) {
+                    is LocationResult.Found -> if (!placed) {
                         drive.place(found.place, drive.snapshot().car.headingDegrees)
                         placed = true
                         log("GPS car placed where Windows locates this PC: ${found.place.latitude}, ${found.place.longitude}")
                         remember(drive.snapshot())
                     }
-                    WindowsLocation.Denied -> log("GPS start not found: Windows does not share this PC's location")
-                    WindowsLocation.Unknown -> log("GPS start not found: Windows found no position")
+                    LocationResult.Denied -> log("GPS start not found: Windows does not share this PC's location")
+                    LocationResult.Unknown -> log("GPS start not found: Windows found no position")
                 }
             } finally {
                 looking.set(false)

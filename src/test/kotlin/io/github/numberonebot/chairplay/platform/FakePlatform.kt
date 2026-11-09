@@ -9,6 +9,7 @@ internal class FakePlatform(
     override val shell: FakeShell = FakeShell(),
     override val oneCopy: OneCopyClaim = OneCopyClaim { _, _ -> Closeable { } },
     override val keepAlive: KeepAliveTuning = FakeKeepAlive(),
+    override val location: LocationSource = LocationSource { LocationResult.Unknown },
 ) : Platform
 
 /** A desktop shell that answers what the test set, and records what it was asked to show or open. */

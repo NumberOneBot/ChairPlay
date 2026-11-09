@@ -1,6 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
-import io.github.numberonebot.chairplay.drive.WindowsLocation
+import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.config.WindowSize
@@ -55,7 +55,7 @@ class UiController(
     private val demo: UiDemo? = null,
     /** The GPS car as the GPS page shows it; null without one. */
     private val gps: (() -> Map<String, Any?>)? = null,
-    private val locate: () -> WindowsLocation.Result = WindowsLocation::read,
+    private val locate: () -> LocationResult = Platforms.current.location::read,
     private val bufferedAudio: () -> Map<String, Any>? = { null },
 ) : UiApi {
     private val places = UiPlaces(setup, launch, log, about, systemVersion)

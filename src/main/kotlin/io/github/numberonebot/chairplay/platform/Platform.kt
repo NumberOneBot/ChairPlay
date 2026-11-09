@@ -13,4 +13,7 @@ internal interface Platform {
 
     /** TCP keep-alive timing for the session's sockets. */
     val keepAlive: KeepAliveTuning
+
+    /** Where the system locates this PC. */
+    val location: LocationSource
 }

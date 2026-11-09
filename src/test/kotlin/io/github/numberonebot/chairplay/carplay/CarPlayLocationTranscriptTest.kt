@@ -12,7 +12,7 @@ import io.github.numberonebot.chairplay.drive.LocationStatus
 import io.github.numberonebot.chairplay.drive.NmeaDialect
 import io.github.numberonebot.chairplay.drive.NmeaFraming
 import io.github.numberonebot.chairplay.drive.SatelliteGeometry
-import io.github.numberonebot.chairplay.drive.WindowsLocation
+import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.drive.almanacFixture
 import io.github.numberonebot.chairplay.drive.almanacTime
 import org.junit.Assert.assertEquals
@@ -42,7 +42,7 @@ class CarPlayLocationTranscriptTest {
     private val sky: (GeoPoint, Long) -> String? = { point, millis -> SatelliteGeometry.gsv(SatelliteGeometry.visible(almanac, point, millis)) }
     private var settings = GpsSettings(true, satellites = true, headingDegrees = 30.0, car = CarSpec(reverse = true))
     private val driving = Driving(settings, log, gamepad = { axes }, nanoTime = { now }, satelliteSentences = sky,
-        locate = { WindowsLocation.Found(kyiv) }, lookup = { it.run() }, telemetry = { TelemetryInput(source, log) { now } })
+        locate = { LocationResult.Found(kyiv) }, lookup = { it.run() }, telemetry = { TelemetryInput(source, log) { now } })
     private val schedule = FakeSchedule()
     private var failing = false
 

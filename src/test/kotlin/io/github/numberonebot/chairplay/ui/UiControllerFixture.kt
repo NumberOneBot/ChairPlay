@@ -3,7 +3,7 @@ package io.github.numberonebot.chairplay.ui
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.config.WindowSize
-import io.github.numberonebot.chairplay.drive.WindowsLocation
+import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
 import java.nio.file.Files
@@ -45,7 +45,7 @@ abstract class UiControllerFixture {
         onSaved: (Map<String, String>) -> Unit = {},
         demo: UiDemo? = null,
         gps: (() -> Map<String, Any?>)? = null,
-        locate: () -> WindowsLocation.Result = { WindowsLocation.Unknown },
+        locate: () -> LocationResult = { LocationResult.Unknown },
         systemVersion: () -> String = { "Windows 11 24H2 (build 26300)" },
     ): UiController {
         Files.writeString(file, settings)

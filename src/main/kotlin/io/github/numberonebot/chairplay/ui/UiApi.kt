@@ -2,7 +2,7 @@ package io.github.numberonebot.chairplay.ui
 
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.WindowSize
-import io.github.numberonebot.chairplay.drive.WindowsLocation
+import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.media.AudioDevices
 import io.github.numberonebot.chairplay.media.WindowsDefaultAudio
 import java.nio.file.Path
@@ -256,8 +256,8 @@ interface UiApi {
 }
 
 /** Where Windows located this PC, as the GPS page takes it: latitude and longitude, or the error "denied" or "unknown". */
-internal fun WindowsLocation.Result.toPage(): Map<String, Any?> = when (this) {
-    is WindowsLocation.Found -> mapOf("latitude" to place.latitude, "longitude" to place.longitude)
-    WindowsLocation.Denied -> mapOf("error" to "denied")
-    WindowsLocation.Unknown -> mapOf("error" to "unknown")
+internal fun LocationResult.toPage(): Map<String, Any?> = when (this) {
+    is LocationResult.Found -> mapOf("latitude" to place.latitude, "longitude" to place.longitude)
+    LocationResult.Denied -> mapOf("error" to "denied")
+    LocationResult.Unknown -> mapOf("error" to "unknown")
 }

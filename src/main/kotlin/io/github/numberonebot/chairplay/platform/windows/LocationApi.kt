@@ -1,4 +1,4 @@
-package io.github.numberonebot.chairplay.drive
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Callback
 import com.sun.jna.CallbackReference
@@ -11,8 +11,6 @@ import com.sun.jna.platform.win32.WTypes
 import com.sun.jna.ptr.DoubleByReference
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
-import io.github.numberonebot.chairplay.platform.windows.RELEASE
-import io.github.numberonebot.chairplay.platform.windows.comCall
 import java.lang.ref.Reference
 
 /**

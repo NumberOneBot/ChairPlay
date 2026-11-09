@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.platform.windows
 
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
+import io.github.numberonebot.chairplay.platform.LocationSource
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
 import io.github.numberonebot.chairplay.platform.Platform
 
@@ -10,4 +11,5 @@ internal class WindowsPlatform : Platform {
     override val shell: DesktopShell by lazy { WindowsShell() }
     override val oneCopy: OneCopyClaim by lazy { OneCopyClaim { name, timeoutMillis -> NamedMutex.claim(name, timeoutMillis) } }
     override val keepAlive: KeepAliveTuning by lazy { WinsockKeepAlive() }
+    override val location: LocationSource by lazy { WindowsLocation }
 }
