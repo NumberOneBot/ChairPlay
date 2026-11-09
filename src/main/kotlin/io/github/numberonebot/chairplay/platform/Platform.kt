@@ -16,4 +16,7 @@ internal interface Platform {
 
     /** Where the system locates this PC. */
     val location: LocationSource
+
+    /** The system firewall: whether the iPhone can get in, and adding the rule that lets it. */
+    val firewall: Firewall
 }

@@ -97,7 +97,6 @@ class PlatformBoundaryTest {
 
         /** Paths relative to `src/main/kotlin/`. */
         val ALLOWED: Set<String> = sortedSetOf(
-            "${APP_DIR}Firewall.kt",
             "${APP_DIR}bluetooth/WindowsBluetooth.kt",
             "${APP_DIR}bridge/BridgeNative.kt",
             "${APP_DIR}input/WindowsRawApi.kt",
@@ -114,10 +113,6 @@ class PlatformBoundaryTest {
             "${APP_DIR}media/apac/WasapiOutput.kt",
             "${APP_DIR}network/PhysicalAdapters.kt",
             "${APP_DIR}network/WlanApi.kt",
-            "${APP_DIR}session/AirPlayListener.kt",
-            "${APP_DIR}session/Firewall.kt",
-            "${APP_DIR}session/WindowsFirewallApi.kt",
-            "${APP_DIR}ui/ChairPlayUi.kt",
             "${APP_DIR}ui/WebView2.kt",
             "${APP_DIR}update/WindowsUpdateDialog.kt",
         )
@@ -128,8 +123,6 @@ class PlatformBoundaryTest {
          */
         val IMPORTERS_LEFT: Set<String> = sortedSetOf(
             "${APP_DIR}media/DefaultAudioDevices.kt",
-            "${APP_DIR}session/Firewall.kt",
-            "${APP_DIR}session/WindowsFirewallApi.kt",
         )
     }
 }

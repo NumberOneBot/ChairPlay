@@ -3,6 +3,8 @@ package io.github.numberonebot.chairplay.session
 import com.shilapi.xcertplay.airplay.AirPlayConfig
 import com.shilapi.xcertplay.airplay.AirPlayDisplayConfig
 import com.shilapi.xcertplay.airplay.AirPlayIdentity
+import io.github.numberonebot.chairplay.platform.windows.FIREWALL_RULE
+import io.github.numberonebot.chairplay.platform.windows.WindowsFirewall
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -54,7 +56,7 @@ class WirelessBootstrapEndpointTest : WirelessBootstrapFixture() {
 
     @Test
     fun `firewall hint names the port`() {
-        val hint = firewallHint(7000, "C:\\x\\chairplay.exe")
+        val hint = WindowsFirewall("C:\\x\\chairplay.exe").hint(7000, null)
 
         assertTrue(hint, "localport=7000" in hint)
         assertTrue(hint, "C:\\x\\chairplay.exe" in hint)

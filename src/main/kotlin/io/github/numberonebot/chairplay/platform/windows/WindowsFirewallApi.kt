@@ -1,9 +1,7 @@
-package io.github.numberonebot.chairplay.session
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.platform.win32.Guid
 import com.sun.jna.platform.win32.Kernel32Util
-import io.github.numberonebot.chairplay.platform.windows.Automation
-import io.github.numberonebot.chairplay.platform.windows.onComThread
 
 /** What [WindowsFirewallApi] read: the rules, the profiles with the firewall on, and those of the connected networks. */
 internal data class FirewallSnapshot(val rules: List<FirewallRule>, val enabledProfiles: Int, val connectedProfiles: Int)

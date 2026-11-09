@@ -1,12 +1,15 @@
 package io.github.numberonebot.chairplay.platform.macos
 
+import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.platform.DesktopShell
+import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.platform.LocationSource
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
 import io.github.numberonebot.chairplay.platform.Platform
 import io.github.numberonebot.chairplay.platform.SystemPage
+import io.github.numberonebot.chairplay.ui.FirewallStatus
 import java.io.Closeable
 import java.net.Socket
 import java.nio.file.Path
@@ -17,6 +20,17 @@ internal class MacPlatform : Platform {
     override val oneCopy: OneCopyClaim = MacOneCopy
     override val keepAlive: KeepAliveTuning = MacKeepAlive
     override val location: LocationSource = MacLocation
+    override val firewall: Firewall = MacFirewall
+}
+
+private object MacFirewall : Firewall {
+    override fun check(port: Int, uiPort: Int?, log: AppLog): FirewallStatus = notReady()
+
+    override fun status(uiPort: Int?): FirewallStatus = notReady()
+
+    override fun hint(port: Int, uiPort: Int?): String = notReady()
+
+    override fun addRules(commands: String): Boolean = notReady()
 }
 
 private object MacShell : DesktopShell {

@@ -1,8 +1,7 @@
-package io.github.numberonebot.chairplay
+package io.github.numberonebot.chairplay.platform.windows
 
 import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.log.LogLevel
-import io.github.numberonebot.chairplay.session.FirewallState
 import io.github.numberonebot.chairplay.ui.FirewallStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -21,7 +20,7 @@ class FirewallCheckTest {
     private fun loggedAtWarning(state: FirewallState?, uiPort: Int? = null): Pair<FirewallStatus, String> {
         val log = AppLog(clock = { LocalDateTime.of(2026, 10, 25, 12, 0, 0) }).apply { level = LogLevel.WARNING }
         log.open(dir)
-        val status = checkFirewall(7000, program, uiPort = uiPort, read = { state }, log = log)
+        val status = WindowsFirewall(program, read = { _, _ -> state }).check(7000, uiPort, log)
         log.close()
         return status to dir.listDirectoryEntries("chairplay-*.log").single().readText()
     }

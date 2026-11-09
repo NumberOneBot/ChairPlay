@@ -1,7 +1,5 @@
-package io.github.numberonebot.chairplay.session
+package io.github.numberonebot.chairplay.platform.windows
 
-import io.github.numberonebot.chairplay.platform.windows.runElevated
-import io.github.numberonebot.chairplay.platform.windows.withLockedFile
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -11,7 +9,7 @@ import java.util.concurrent.TimeUnit
  * rule, and allowing only private networks does nothing on a public one. A check by that name would find
  * Windows' rule and stay silent exactly when the iPhone cannot connect.
  */
-const val FIREWALL_RULE = "ChairPlay CarPlay inbound"
+internal const val FIREWALL_RULE = "ChairPlay CarPlay inbound"
 
 /**
  * Whether our allow rule exists, the enabled inbound block rules for the program with their profiles, and whether the
@@ -53,6 +51,22 @@ internal data class FirewallRule(
     val protocol: Int = ANY_PROTOCOL,
     val localPorts: String = "*",
 )
+
+/**
+ * Windows Firewall drops unsolicited inbound connections, so the iPhone would see the receiver but
+ * never reach it. The control port is the listener's, and AirPlayPortSelector falls back to the ten
+ * ports above it when 7000 is taken; the event, data and media streams bind ephemeral ports, which
+ * Windows takes from its dynamic range 49152-65535. JmDNS answers the iPhone's mDNS queries on UDP 5353. With
+ * [uiPort] (ui.network on), a fourth line opens the settings' port; a free port taken for a run instead of it lands in
+ * 49152-65535, open already.
+ */
+internal fun firewallHint(port: Int, programPath: String, uiPort: Int? = null): String {
+    val rule = "netsh advfirewall firewall add rule name=\"$FIREWALL_RULE\" dir=in action=allow program=\"$programPath\""
+    return "$rule protocol=TCP localport=$port-${port + 10},49152-65535\n" +
+        "$rule protocol=UDP localport=49152-65535\n" +
+        "$rule protocol=UDP localport=5353" +
+        (uiPort?.let { "\n$rule protocol=TCP localport=$it" } ?: "")
+}
 
 /** [localPorts] (as [FirewallRule] has them) let in [port]: `*`, the number, or a range holding it. */
 internal fun portsCover(localPorts: String, port: Int): Boolean = localPorts.split(',').map(String::trim).any { part ->
@@ -118,7 +132,7 @@ internal fun staleRuleCommands(rules: List<FirewallRule>, exists: (String) -> Bo
  * a prompt left open would. The script is held locked while netsh runs ([withLockedFile]): what the administrator
  * consented to is what runs.
  */
-fun addFirewallRules(commands: String): Boolean = try {
+internal fun addFirewallRules(commands: String): Boolean = try {
     val stale = WindowsFirewallApi.read()?.rules.orEmpty().let { rules -> staleRuleCommands(rules) { File(it).isFile } }
     // netsh reads its script as UTF-8, with no byte-order mark: a path with any user name survives.
     withLockedFile(netshScript((listOf(commands) + stale).joinToString("\n"))) { script ->

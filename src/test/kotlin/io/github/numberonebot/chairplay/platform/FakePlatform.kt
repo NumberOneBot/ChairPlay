@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.platform
 
+import io.github.numberonebot.chairplay.log.AppLog
+import io.github.numberonebot.chairplay.ui.FirewallStatus
 import java.io.Closeable
 import java.net.Socket
 import java.nio.file.Path
@@ -10,7 +12,24 @@ internal class FakePlatform(
     override val oneCopy: OneCopyClaim = OneCopyClaim { _, _ -> Closeable { } },
     override val keepAlive: KeepAliveTuning = FakeKeepAlive(),
     override val location: LocationSource = LocationSource { LocationResult.Unknown },
+    override val firewall: FakeFirewall = FakeFirewall(),
 ) : Platform
+
+/** A firewall that answers [state] and records the rules it was asked to add. */
+internal class FakeFirewall(var state: FirewallStatus = FirewallStatus.UNKNOWN, var consent: Boolean = true) : Firewall {
+    val added = mutableListOf<String>()
+
+    override fun check(port: Int, uiPort: Int?, log: AppLog): FirewallStatus = state
+
+    override fun status(uiPort: Int?): FirewallStatus = state
+
+    override fun hint(port: Int, uiPort: Int?): String = "add rule for $port,$uiPort"
+
+    override fun addRules(commands: String): Boolean {
+        added += commands
+        return consent
+    }
+}
 
 /** A desktop shell that answers what the test set, and records what it was asked to show or open. */
 internal class FakeShell(

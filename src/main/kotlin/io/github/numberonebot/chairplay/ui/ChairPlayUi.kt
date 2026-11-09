@@ -11,10 +11,8 @@ import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
 import io.github.numberonebot.chairplay.phone.LinkStatus
 import io.github.numberonebot.chairplay.platform.Platforms
-import io.github.numberonebot.chairplay.session.addFirewallRules
 import io.github.numberonebot.chairplay.appLog
 import io.github.numberonebot.chairplay.log.LogLevel
-import io.github.numberonebot.chairplay.session.firewallHint
 import io.github.numberonebot.chairplay.update.UpdateChecks
 import java.io.Closeable
 import java.nio.file.Path
@@ -105,11 +103,7 @@ class ChairPlayUi(
         SetupInfo(
             mfiDirectory = config.mfiDirectory().toPath(),
             firewall = FirewallStatus.UNKNOWN,
-            firewallCommands = firewallHint(
-                CarPlayConfig.PORT,
-                ProcessHandle.current().info().command().orElse("java.exe"),
-                config.uiServer.firewallPort,
-            ),
+            firewallCommands = Platforms.current.firewall.hint(CarPlayConfig.PORT, config.uiServer.firewallPort),
             settingsFile = dir.resolve(DesktopConfig.SETTINGS_FILE),
             displayWidth = config.displayWidth,
             displayHeight = config.displayHeight,
@@ -126,7 +120,7 @@ class ChairPlayUi(
         bindings = ControlsFile(dir),
         onBindings = onBindings,
         checks = checks,
-        elevate = ::addFirewallRules,
+        elevate = Platforms.current.firewall::addRules,
         setupStore = SetupStore(dir),
         onSaved = onSaved,
         demo = demo,
