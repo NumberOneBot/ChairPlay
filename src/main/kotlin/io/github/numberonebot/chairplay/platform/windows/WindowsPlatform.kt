@@ -3,12 +3,15 @@ package io.github.numberonebot.chairplay.platform.windows
 import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
+import io.github.numberonebot.chairplay.platform.HardwareVideo
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationSource
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
 import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
 import io.github.numberonebot.chairplay.platform.SystemAudio
+import org.bytedeco.ffmpeg.global.avutil.AV_HWDEVICE_TYPE_D3D11VA
+import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_D3D11
 
 /** Windows, through today's adapters; each is made the first time it is asked for, so none loads its DLLs before. */
 internal class WindowsPlatform : Platform {
@@ -20,4 +23,7 @@ internal class WindowsPlatform : Platform {
     override val network: PcNetwork by lazy { WindowsNetwork() }
     override val bluetooth: Bluetooth by lazy { WindowsBluetooth }
     override val audio: SystemAudio by lazy { WindowsAudio() }
+    override val video: HardwareVideo? by lazy {
+        HardwareVideo(AV_HWDEVICE_TYPE_D3D11VA, AV_PIX_FMT_D3D11, "D3D11", "D3D11VA")
+    }
 }

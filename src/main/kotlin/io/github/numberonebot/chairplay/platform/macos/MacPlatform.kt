@@ -4,6 +4,7 @@ import io.github.numberonebot.chairplay.log.AppLog
 import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
+import io.github.numberonebot.chairplay.platform.HardwareVideo
 import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.platform.LocationSource
@@ -37,6 +38,7 @@ internal class MacPlatform : Platform {
     override val network: PcNetwork = MacNetwork
     override val bluetooth: Bluetooth = MacBluetooth
     override val audio: SystemAudio = MacAudio
+    override val video: HardwareVideo? get() = notReady()
 }
 
 private object MacAudio : SystemAudio {

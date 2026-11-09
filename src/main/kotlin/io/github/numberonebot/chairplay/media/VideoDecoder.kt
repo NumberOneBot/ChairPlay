@@ -1,6 +1,8 @@
 package io.github.numberonebot.chairplay.media
 
 import io.github.numberonebot.chairplay.phone.VideoCodecKind
+import io.github.numberonebot.chairplay.platform.HardwareVideo
+import io.github.numberonebot.chairplay.platform.Platforms
 import org.bytedeco.ffmpeg.avcodec.AVCodec
 import org.bytedeco.ffmpeg.avcodec.AVCodecContext
 import org.bytedeco.ffmpeg.avcodec.AVPacket
@@ -68,7 +70,7 @@ internal class FramePool {
 }
 
 /**
- * H.264/HEVC decoder of an Annex B stream with D3D11 download to the existing renderer and software recovery on failure.
+ * H.264/HEVC decoder of an Annex B stream with GPU download to the existing renderer and software recovery on failure.
  * [recover] hears why the stream needs a keyframe.
  */
 class VideoDecoder internal constructor(
@@ -77,11 +79,12 @@ class VideoDecoder internal constructor(
     private val codec: VideoCodecKind = VideoCodecKind.H264,
     private val log: (String) -> Unit = {},
     hardware: Boolean = true,
-    private val hardwareFactory: (AVCodecContext, AVCodec) -> D3D11Video? = D3D11Video::open,
+    private val video: HardwareVideo? = Platforms.current.video,
+    private val hardwareFactory: (AVCodecContext, AVCodec) -> FfmpegHardware? = { c, k -> video?.let { FfmpegHardware.open(c, k, it) } },
 ) : Closeable {
     private val avCodec = avcodec_find_decoder(if (codec == VideoCodecKind.H264) AV_CODEC_ID_H264 else AV_CODEC_ID_HEVC)
         ?: error("FFmpeg has no $codec decoder")
-    private var gpu: D3D11Video? = null
+    private var gpu: FfmpegHardware? = null
     private var context = openContext(hardware)
     private val packet: AVPacket = av_packet_alloc()
     private val frame: AVFrame = av_frame_alloc()
@@ -102,11 +105,11 @@ class VideoDecoder internal constructor(
         ctx.flags(ctx.flags() or AV_CODEC_FLAG_LOW_DELAY)
         ctx.thread_type(2) // FF_THREAD_SLICE: frame threading adds latency.
         ctx.thread_count(Runtime.getRuntime().availableProcessors().coerceIn(1, 4))
-        if (tryHardware) {
+        if (tryHardware && video != null) {
             try {
                 gpu = hardwareFactory(ctx, avCodec)
             } catch (error: Exception) {
-                log("$codec D3D11 unavailable: ${error.message}")
+                log("$codec ${video?.name} unavailable: ${error.message}")
                 avcodec_free_context(ctx)
                 gpu?.close()
                 gpu = null
@@ -119,7 +122,7 @@ class VideoDecoder internal constructor(
             if (gpu != null) {
                 gpu?.close()
                 gpu = null
-                log("$codec D3D11 open failed ($result); using software")
+                log("$codec ${video?.name} open failed ($result); using software")
                 return openContext(false)
             }
             error("cannot open the $codec decoder ($result)")
@@ -174,9 +177,9 @@ class VideoDecoder internal constructor(
                 prependParameters = true
                 waitingForKeyframe = true
                 keyframeAsked = true
-                log("$codec D3D11 failed; using software: $failure")
+                log("$codec ${video?.name} failed; using software: $failure")
                 if (NalUnits.isRandomAccess(annexB, codec)) decode(annexB)
-                else recover("software decoder needs a keyframe after D3D11 failure")
+                else recover("software decoder needs a keyframe after ${video?.name} failure")
             }
         }
     }
@@ -188,13 +191,13 @@ class VideoDecoder internal constructor(
             if (received < 0) return "receive_frame failed: ${errorText(received)}"
             var picture: DecodedFrame? = null
             try {
-                val onGpu = frame.format() == AV_PIX_FMT_D3D11
+                val onGpu = video != null && frame.format() == video.pixelFormat
                 val readable = if (onGpu) checkNotNull(gpu).download(frame) else frame
                 picture = copier.copy(readable)
                 if (onGpu) hardwareFrames++
                 if (reportedHardware != onGpu) {
                     reportedHardware = onGpu
-                    log("$codec decoder: ${if (onGpu) "D3D11VA" else "software"}")
+                    log("$codec decoder: ${if (onGpu) video?.apiName else "software"}")
                 }
             } catch (error: Exception) {
                 return error.message ?: "cannot copy decoded video frame"

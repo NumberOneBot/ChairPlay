@@ -28,4 +28,7 @@ internal interface Platform {
 
     /** The PC's default sound devices and its multichannel outputs. */
     val audio: SystemAudio
+
+    /** The GPU video decoding FFmpeg can use here; null decodes in software only. */
+    val video: HardwareVideo?
 }

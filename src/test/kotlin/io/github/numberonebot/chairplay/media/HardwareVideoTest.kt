@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.media
 import com.shilapi.xcertplay.airplay.VideoCodec
 import io.github.numberonebot.chairplay.carplay.annexBParameterSets
 import io.github.numberonebot.chairplay.phone.VideoCodecKind
+import io.github.numberonebot.chairplay.platform.Platforms
 import org.bytedeco.ffmpeg.avutil.AVBufferRef
 import org.bytedeco.ffmpeg.global.avutil.*
 import org.bytedeco.javacpp.Pointer
@@ -72,7 +73,7 @@ class HardwareVideoTest {
         var frames = 0
         var failedTransfers = 0
         VideoDecoder(onFrame = { frames++; it.release() }, hardwareFactory = { context, codec ->
-            D3D11Video.open(context, codec) { _, _ -> failedTransfers++; -1 }
+            FfmpegHardware.open(context, codec, Platforms.current.video!!) { _, _ -> failedTransfers++; -1 }
         }).use {
             playAvc(it)
             assertEquals(1, failedTransfers)
@@ -89,7 +90,7 @@ class HardwareVideoTest {
         var recoveries = 0
         VideoDecoder(onFrame = { frames++; it.release() }, recover = { recoveries++ },
             hardwareFactory = { context, codec ->
-                D3D11Video.open(context, codec) { destination, source ->
+                FfmpegHardware.open(context, codec, Platforms.current.video!!) { destination, source ->
                     if (++transfers == 2) -1 else av_hwframe_transfer_data(destination, source, 0)
                 }
             }).use { decoder ->

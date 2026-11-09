@@ -27,6 +27,7 @@ internal class FakePlatform(
     override val network: FakeNetwork = FakeNetwork(),
     override val bluetooth: FakeBluetooth = FakeBluetooth(),
     override val audio: FakeAudio = FakeAudio(),
+    override val video: HardwareVideo? = null,
 ) : Platform
 
 /** Bluetooth with the [radio] and [paired] devices the test set; each RFCOMM connection it records gets [link]. */

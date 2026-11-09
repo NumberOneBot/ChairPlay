@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.media
 
+import io.github.numberonebot.chairplay.platform.HardwareVideo
 import org.bytedeco.ffmpeg.avcodec.AVCodec
 import org.bytedeco.ffmpeg.avcodec.AVCodecContext
 import org.bytedeco.ffmpeg.avutil.AVBufferRef
@@ -10,8 +11,9 @@ import org.bytedeco.javacpp.IntPointer
 import org.bytedeco.javacpp.Pointer
 import java.io.Closeable
 
-/** Owns the callback and download surface; the codec context owns its reference to the D3D11 device. */
-internal class D3D11Video private constructor(
+/** Owns the callback and download surface; the codec context owns its reference to the GPU device of [video]. */
+internal class FfmpegHardware private constructor(
+    private val video: HardwareVideo,
     private val transfer: (AVFrame, AVFrame) -> Int,
 ) : Closeable {
     private val downloaded = av_frame_alloc()
@@ -23,12 +25,12 @@ internal class D3D11Video private constructor(
             while (true) {
                 val candidate = formats.get(i++)
                 if (candidate == AV_PIX_FMT_NONE) break
-                if (candidate == AV_PIX_FMT_D3D11) return candidate
+                if (candidate == video.pixelFormat) return candidate
                 val desc = av_pix_fmt_desc_get(candidate)
                 if (software == AV_PIX_FMT_NONE && desc != null && !desc.isNull &&
                     desc.flags() and AV_PIX_FMT_FLAG_HWACCEL.toLong() == 0L) software = candidate
             }
-            // FFmpeg calls again without D3D11 if this stream/profile cannot use the device.
+            // FFmpeg calls again without the hardware format if this stream/profile cannot use the device.
             return software
         }
     }
@@ -36,7 +38,7 @@ internal class D3D11Video private constructor(
     fun download(frame: AVFrame): AVFrame {
         av_frame_unref(downloaded)
         val result = transfer(downloaded, frame)
-        check(result >= 0) { "D3D11 frame transfer failed ($result)" }
+        check(result >= 0) { "${video.name} frame transfer failed ($result)" }
         return downloaded
     }
 
@@ -46,21 +48,23 @@ internal class D3D11Video private constructor(
     }
 
     companion object {
-        fun open(context: AVCodecContext, codec: AVCodec): D3D11Video? =
-            open(context, codec) { destination, source -> av_hwframe_transfer_data(destination, source, 0) }
-
-        internal fun open(context: AVCodecContext, codec: AVCodec, transfer: (AVFrame, AVFrame) -> Int): D3D11Video? {
+        fun open(
+            context: AVCodecContext,
+            codec: AVCodec,
+            video: HardwareVideo,
+            transfer: (AVFrame, AVFrame) -> Int = { destination, source -> av_hwframe_transfer_data(destination, source, 0) },
+        ): FfmpegHardware? {
             var index = 0
             while (true) {
                 val config = avcodec_get_hw_config(codec, index++)
                 if (config == null || config.isNull) return null
-                if (config.device_type() == AV_HWDEVICE_TYPE_D3D11VA &&
+                if (config.device_type() == video.deviceType &&
                     config.methods() and AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX != 0) break
             }
             val device = AVBufferRef(null as Pointer?)
             try {
-                if (av_hwdevice_ctx_create(device, AV_HWDEVICE_TYPE_D3D11VA, null as String?, null, 0) < 0) return null
-                val hardware = D3D11Video(transfer)
+                if (av_hwdevice_ctx_create(device, video.deviceType, null as String?, null, 0) < 0) return null
+                val hardware = FfmpegHardware(video, transfer)
                 context.hw_device_ctx(av_buffer_ref(device))
                 context.get_format(hardware.format)
                 return hardware
