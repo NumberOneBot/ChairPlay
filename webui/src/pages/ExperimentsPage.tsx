@@ -7,25 +7,17 @@ import type { Settings } from '../shell/useSettings'
 import { byteSize } from './byteSize'
 import { Changed, parts, pendingOf } from './parts'
 
-/** How often the folders' sizes are read again while the page is open: the logs grow as the app runs. */
-const FOLDER_SIZES_EVERY_MS = 5000
-
-/** The logs and screenshots folders' sizes, read as the page opens and again every few seconds. */
+/** The logs and screenshots folders' sizes, read as the page opens: adding them up walks every file in them. */
 function useFolderSizes(backend: Backend): FolderSizes {
   const [sizes, setSizes] = useState<FolderSizes>({})
   useEffect(() => {
     let open = true
-    const read = () => {
-      backend.folderSizes().then(
-        (next) => open && setSizes(next),
-        () => {},
-      )
-    }
-    read()
-    const timer = setInterval(read, FOLDER_SIZES_EVERY_MS)
+    backend.folderSizes().then(
+      (next) => open && setSizes(next),
+      () => {},
+    )
     return () => {
       open = false
-      clearInterval(timer)
     }
   }, [backend])
   return sizes

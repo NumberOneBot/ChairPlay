@@ -160,8 +160,10 @@ export class FakeBackend implements Backend {
 
   opened: WindowsPlace[] = []
   sizes: FolderSizes = {}
+  folderSizeReads = 0
 
   async folderSizes() {
+    this.folderSizeReads++
     return this.sizes
   }
 

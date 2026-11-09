@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '../api'
 import { Shell } from '../shell/Shell'
 import { appState } from '../testing'
@@ -87,16 +87,32 @@ describe('Experiments page', () => {
   })
 
   // Under each folder button, what the folder holds; an empty or missing one shows nothing.
-  it("shows a folder's size, none for an empty one, and asks again", async () => {
+  it("shows a folder's size, none for an empty one", async () => {
     const backend = new FakeBackend()
     backend.sizes = { logs: 1536, screenshots: 0 }
     await experiments(appState(live), backend)
 
     expect(await screen.findByText('1.50 KB')).toBeTruthy()
     expect(screen.queryByText('0 bytes')).toBeNull()
-    backend.sizes = { logs: 1536, screenshots: 2048 }
-    expect(await screen.findByText('2.00 KB', {}, { timeout: 8000 })).toBeTruthy()
-  }, 10000)
+  })
+
+  // Adding the folders up walks every file in them: once as the page opens, not again while it stays open.
+  it('reads the folder sizes as the page opens, and not again until it opens again', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const backend = await experiments()
+      await waitFor(() => expect(backend.folderSizeReads).toBe(1))
+
+      await act(() => vi.advanceTimersByTimeAsync(30_000))
+      expect(backend.folderSizeReads).toBe(1)
+
+      fireEvent.click(screen.getByRole('tab', { name: 'Connection' }))
+      fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
+      await waitFor(() => expect(backend.folderSizeReads).toBe(2))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 
   it('saves sharing the CarPlay picture', async () => {
     const backend = await experiments()
