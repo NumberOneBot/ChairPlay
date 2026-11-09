@@ -47,11 +47,12 @@ html:has(.shell) {
 /*
  * Through black, in step with the window's own fade (Fade.kt, 150 ms each half): going away the page dims at once,
  * faster than the window, so it is black well before the window hides it and the frame the web view keeps hidden is
- * black too (one a little behind showed for a moment as the page came back); coming back it waits while the picture
- * dims, then comes up as the window shows it.
+ * black too (one a little behind showed for a moment as the page came back); coming back it rises at once, over 150 ms
+ * as the window's half does: the window shows the web view only once the picture has dimmed, and a hidden view paints
+ * nothing, so a wait here would come on top of the window's.
  */
 .shell {
-  transition: opacity 150ms ease 150ms;
+  transition: opacity 150ms ease;
 }
 
 .shell.away {
