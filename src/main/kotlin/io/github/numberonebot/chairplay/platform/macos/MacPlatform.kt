@@ -24,6 +24,8 @@ import io.github.numberonebot.chairplay.platform.WindowHooks
 import io.github.numberonebot.chairplay.media.DefaultAudioDevices
 import io.github.numberonebot.chairplay.media.apac.SpatialDevice
 import io.github.numberonebot.chairplay.ui.FirewallStatus
+import io.github.numberonebot.chairplay.ui.WebViewBackend
+import io.github.numberonebot.chairplay.update.UpdateResult
 import java.io.Closeable
 import java.net.InetAddress
 import java.net.Socket
@@ -42,6 +44,10 @@ internal class MacPlatform : Platform {
     override val audio: SystemAudio = MacAudio
     override val video: HardwareVideo? get() = notReady()
     override val windows: WindowHooks = MacWindows
+
+    override fun webView(userData: Path, debug: Boolean): WebViewBackend = notReady()
+
+    override fun updateDialog(result: UpdateResult): Boolean = notReady()
 }
 
 private object MacWindows : WindowHooks {

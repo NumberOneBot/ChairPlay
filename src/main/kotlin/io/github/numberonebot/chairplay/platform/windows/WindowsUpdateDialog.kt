@@ -1,9 +1,9 @@
-package io.github.numberonebot.chairplay.update
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.WString
-import java.io.File
+import io.github.numberonebot.chairplay.update.UpdateResult
 
 /** The Windows Task Dialog in the existing desktop UI DLL, with Open/Cancel for an available release. */
 internal object WindowsUpdateDialog {
@@ -12,10 +12,7 @@ internal object WindowsUpdateDialog {
     }
 
     private val api: Api by lazy {
-        val dirs = System.getProperty("java.library.path").orEmpty().split(File.pathSeparator) +
-            listOfNotNull(System.getProperty("jpackage.app-path")?.let { File(it).parent })
-        val dll = dirs.map { File(it, "chairplay_webview.dll") }.firstOrNull { it.isFile }
-            ?: error("chairplay_webview.dll was not found")
+        val dll = WindowsWebView.library() ?: error("chairplay_webview.dll was not found")
         Native.load(dll.absolutePath, Api::class.java)
     }
 

@@ -1,5 +1,9 @@
 package io.github.numberonebot.chairplay.platform
 
+import io.github.numberonebot.chairplay.ui.WebViewBackend
+import io.github.numberonebot.chairplay.update.UpdateResult
+import java.nio.file.Path
+
 /**
  * What the app asks of the operating system, one contract per concern. [Platforms.current] is the one the app runs on;
  * each adapter is made the first time it is asked for, so a system's libraries load only when they are used.
@@ -34,4 +38,10 @@ internal interface Platform {
 
     /** What the system adds to the app's windows: their title bar, their close and drag, their taskbar button. */
     val windows: WindowHooks
+
+    /** The web view that holds the settings page in a window; the library loads when this is called. */
+    fun webView(userData: Path, debug: Boolean): WebViewBackend
+
+    /** Shows the update dialog for [result]; true when the user chose to open the releases page. */
+    fun updateDialog(result: UpdateResult): Boolean
 }

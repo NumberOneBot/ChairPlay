@@ -16,7 +16,7 @@ internal sealed interface UpdateResult {
 internal class UpdateChecks(
     private val current: String?,
     private val lookup: () -> ReleaseVersion? = ReleaseClient()::latest,
-    private val show: (UpdateResult) -> Boolean = WindowsUpdateDialog::show,
+    private val show: (UpdateResult) -> Boolean = Platforms.current::updateDialog,
     private val openReleases: () -> Unit = {
         ProcessBuilder(Platforms.current.shell.openCommand("https://github.com/NumberOneBot/ChairPlay/releases")).start()
     },

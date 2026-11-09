@@ -1,10 +1,13 @@
-package io.github.numberonebot.chairplay.ui
+package io.github.numberonebot.chairplay.platform.windows
 
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.NativeLibrary
 import com.sun.jna.Pointer
 import com.sun.jna.WString
+import io.github.numberonebot.chairplay.platform.NativeLibraries
+import io.github.numberonebot.chairplay.ui.WebViewBackend
+import io.github.numberonebot.chairplay.ui.WebViewUnavailable
 import java.io.File
 import java.nio.file.Path
 
@@ -14,7 +17,7 @@ import java.nio.file.Path
  * beside it loaded first so the DLL finds it. [userData] is the folder WebView2 keeps its profile in; [debug]
  * allows the developer tools (F12) and the context menu.
  */
-class WebView2(private val userData: Path, private val debug: Boolean) : WebViewBackend {
+internal class WindowsWebView(private val userData: Path, private val debug: Boolean) : WebViewBackend {
     @Suppress("FunctionName")
     private interface Api : Library {
         fun cpw_create(parent: Pointer, userData: WString, debug: Int, error: ByteArray, capacity: Int): Pointer?
@@ -37,11 +40,8 @@ class WebView2(private val userData: Path, private val debug: Boolean) : WebView
     private val focus: Focus = Native.load("user32", Focus::class.java)
 
     private fun load(): Api {
-        val dirs = System.getProperty("java.library.path").orEmpty().split(File.pathSeparator).filter { it.isNotEmpty() } +
-            listOfNotNull(System.getProperty("jpackage.app-path")?.let { File(it).parent })
-        val dll = dirs.map { File(it, DLL) }.firstOrNull { it.isFile }
-            ?: throw WebViewUnavailable("$DLL is neither next to the exe nor on java.library.path")
-        File(dll.parentFile, LOADER).takeIf { it.isFile }?.let { NativeLibrary.getInstance(it.absolutePath) }
+        val dll = library() ?: throw WebViewUnavailable("$DLL is neither next to the exe nor on java.library.path")
+        loader(dll)?.let { NativeLibrary.getInstance(it.absolutePath) }
         return Native.load(dll.absolutePath, Api::class.java)
     }
 
@@ -77,7 +77,17 @@ class WebView2(private val userData: Path, private val debug: Boolean) : WebView
 
     companion object {
         const val DLL = "chairplay_webview.dll"
-        const val LOADER = "WebView2Loader.dll"
+        private const val LOADER = "WebView2Loader.dll"
+
+        /** chairplay_webview.dll on the library path or next to the exe, or null. */
+        fun library(
+            libraryPath: String? = System.getProperty("java.library.path"),
+            appPath: String? = System.getProperty("jpackage.app-path"),
+        ): File? = NativeLibraries.find("chairplay_webview", NativeLibraries.searchDirs(libraryPath, appPath))
+
+        /** WebView2Loader.dll beside [dll], which the DLL finds once it is loaded first, or null. */
+        fun loader(dll: File): File? = File(dll.parentFile, LOADER).takeIf { it.isFile }
+
         private const val VK_LBUTTON = 0x01
         private const val VK_RBUTTON = 0x02
         private const val VK_MBUTTON = 0x04

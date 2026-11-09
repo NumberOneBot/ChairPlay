@@ -176,7 +176,7 @@ class ChairPlayUi(
         view = EmbeddedUi(
             "${server.url}?window",
             showsUi = { model.state.showsUi },
-            backend = { WebView2(userData, debug) },
+            backend = { Platforms.current.webView(userData, debug) },
             openBrowser = Platforms.current.shell::openInBrowser,
             log = log,
             onEmbedded = { embedded ->
@@ -188,7 +188,7 @@ class ChairPlayUi(
             EmbeddedUi(
                 "${server.url}controls",
                 showsUi = { true },
-                backend = { WebView2(userData, debug) },
+                backend = { Platforms.current.webView(userData, debug) },
                 openBrowser = null,
                 log = { message -> log("controls window: $message") },
                 onEmbedded = {},

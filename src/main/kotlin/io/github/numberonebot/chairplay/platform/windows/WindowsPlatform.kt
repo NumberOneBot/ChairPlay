@@ -11,6 +11,9 @@ import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
 import io.github.numberonebot.chairplay.platform.SystemAudio
 import io.github.numberonebot.chairplay.platform.WindowHooks
+import io.github.numberonebot.chairplay.ui.WebViewBackend
+import io.github.numberonebot.chairplay.update.UpdateResult
+import java.nio.file.Path
 import org.bytedeco.ffmpeg.global.avutil.AV_HWDEVICE_TYPE_D3D11VA
 import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_D3D11
 
@@ -28,4 +31,8 @@ internal class WindowsPlatform : Platform {
         HardwareVideo(AV_HWDEVICE_TYPE_D3D11VA, AV_PIX_FMT_D3D11, "D3D11", "D3D11VA")
     }
     override val windows: WindowHooks by lazy { WindowsWindowHooks() }
+
+    override fun webView(userData: Path, debug: Boolean): WebViewBackend = WindowsWebView(userData, debug)
+
+    override fun updateDialog(result: UpdateResult): Boolean = WindowsUpdateDialog.show(result)
 }

@@ -6,6 +6,9 @@ import io.github.numberonebot.chairplay.media.apac.SpatialDevice
 import io.github.numberonebot.chairplay.network.EthernetAdapter
 import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.ui.FirewallStatus
+import io.github.numberonebot.chairplay.ui.WebViewBackend
+import io.github.numberonebot.chairplay.ui.WebViewUnavailable
+import io.github.numberonebot.chairplay.update.UpdateResult
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.InputStream
@@ -29,7 +32,17 @@ internal class FakePlatform(
     override val audio: FakeAudio = FakeAudio(),
     override val video: HardwareVideo? = null,
     override val windows: FakeWindowHooks = FakeWindowHooks(),
-) : Platform
+    var updateAnswer: Boolean = false,
+) : Platform {
+    val shownUpdates = mutableListOf<UpdateResult>()
+
+    override fun webView(userData: Path, debug: Boolean): WebViewBackend = throw WebViewUnavailable("the fake has no web view")
+
+    override fun updateDialog(result: UpdateResult): Boolean {
+        shownUpdates += result
+        return updateAnswer
+    }
+}
 
 /** Window hooks that touch no window: each GLFW handle is its own native one, and each hook it is asked for is kept. */
 internal class FakeWindowHooks(var closedByUser: Boolean = false) : WindowHooks {

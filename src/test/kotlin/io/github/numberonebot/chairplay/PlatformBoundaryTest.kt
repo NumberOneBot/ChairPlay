@@ -100,8 +100,6 @@ class PlatformBoundaryTest {
             "${APP_DIR}bridge/BridgeNative.kt",
             "${APP_DIR}input/WindowsRawApi.kt",
             "${APP_DIR}input/WindowsRawKeyboard.kt",
-            "${APP_DIR}ui/WebView2.kt",
-            "${APP_DIR}update/WindowsUpdateDialog.kt",
         )
 
         /**
