@@ -26,20 +26,10 @@ export function OperationNotice({ output }: { output: GpsOutput }) {
   return <Message tone="info" head={operationHead(output.operation)} text="" />
 }
 
-/** One notice as a block; Reconnect is the action of the one that asks for it. */
-export function NoticeBlock({ notice, backend }: { notice: GpsNotice; backend: Backend }) {
+/** One notice as a block. A reconnect that waits is the settings' own mark, not a notice. */
+export function NoticeBlock({ notice }: { notice: GpsNotice; backend?: Backend }) {
   const { head, text } = noticeText(notice)
-  return (
-    <Message tone={notice.tone} head={head} text={text}>
-      {notice.code === 'reconnect-needed' && (
-        <div className="acts">
-          <button type="button" className="btn small" title="End the session and connect again" onClick={() => void backend.reconnect()}>
-            Reconnect
-          </button>
-        </div>
-      )}
-    </Message>
-  )
+  return <Message tone={notice.tone} head={head} text={text} />
 }
 
 /** Above the GPS switch: the operation's progress, then the results; the USB warning is the window's (GlobalNotices). */

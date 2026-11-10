@@ -53,12 +53,13 @@ describe('GPS notices', () => {
     expect(blocks()).toHaveLength(0)
   })
 
-  // D8: the app never reconnects CarPlay by itself; the notice offers it, and the button is the user's.
-  it('offers Reconnect for a reconnect that is needed, and reconnects only on the button', async () => {
-    const { backend } = await openSection(gpsState(outputs.reconnectNeeded))
+  // D8: a method chosen waits for the next connection with the settings' own mark, not a notice; the app reconnects
+  // nothing by itself.
+  it('marks a method that waits for the next connection as any such setting', async () => {
+    const { backend } = await openSection(gpsState(outputs.reconnectNeeded, undefined, { reconnectPending: ['gps.method'] }))
+    expect(within(page()).getByTitle('Changed; applies at the next connection')).toBeTruthy()
+    expect(blocks()).toHaveLength(0)
     expect(backend.reconnects).toBe(0)
-    fireEvent.click(within(page()).getByRole('button', { name: 'Reconnect' }))
-    await waitFor(() => expect(backend.reconnects).toBe(1))
   })
 
   it('warns of Windows location unavailable', async () => {

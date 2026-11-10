@@ -187,20 +187,18 @@ class GpsLifecycleTest {
         assertTrue(h.output().notices.any { it.code == NoticeCode.RESET_SENT })
     }
 
-    // D4: no reconnect by the app; a session that identified otherwise than the method needs says so.
+    // D4: no reconnect by the app; a session that identified without the GPS sends nothing until the user's reconnect.
     @Test
-    fun `a session that identified without the GPS asks for a reconnect`() {
+    fun `a session that identified without the GPS waits for a reconnect`() {
         val h = GpsHarness(GpsSettings(enabled = true))
         h.carplay.state = ChannelState(GpsReason.CARPLAY_RECONNECT_NEEDED, sessionGps = false)
 
         h.reconcile()
 
         assertEquals(GpsReason.CARPLAY_RECONNECT_NEEDED, h.output().reason)
-        assertTrue(h.output().notices.any { it.code == NoticeCode.RECONNECT_NEEDED })
         h.carplay.state = ChannelState(null, sessionGps = true)
         h.reconcile()
         assertTrue(h.output().running)
-        assertTrue(h.output().notices.none { it.code == NoticeCode.RECONNECT_NEEDED })
     }
 
     // P-06: USB on without its iPhone does not drive the car; CarPlay's method drives it as before.

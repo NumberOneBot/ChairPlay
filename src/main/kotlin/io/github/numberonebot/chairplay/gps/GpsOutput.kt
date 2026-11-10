@@ -59,8 +59,6 @@ enum class NoticeCode(val key: String) {
     WINDOWS_UNAVAILABLE("windows-unavailable"),
     /** usb + enabled saved, no phone: the warning above Settings' content (UI-23); stays until it changes. */
     USB_UNAVAILABLE("usb-unavailable"),
-    /** The chosen method, or the switch, waits for a CarPlay reconnect (D4, D8); stays until it is in force. */
-    RECONNECT_NEEDED("reconnect-needed"),
 }
 
 data class GpsNotice(

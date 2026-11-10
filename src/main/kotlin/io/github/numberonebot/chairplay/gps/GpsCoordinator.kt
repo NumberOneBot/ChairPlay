@@ -172,7 +172,7 @@ class GpsCoordinator(
             applied == GpsMethod.CARPLAY && enabled && !flows.carplay.running -> flows.startSelected(wizardBounds = true)
             !enabled && flows.channel(applied).running -> flows.channel(applied).quiesce()
         }
-        keepNotices(selected, applied, enabled)
+        keepNotices(applied, enabled)
         // The page hears of a change only: the tick alone tells it nothing.
         val now = output()
         if (now != lastOutput) changed()
@@ -196,11 +196,8 @@ class GpsCoordinator(
         ops.run(operation) { body(operation) }
     }
 
-    private fun keepNotices(selected: GpsMethod, applied: GpsMethod, enabled: Boolean) {
-        val session = flows.carplay.state().sessionGps
-        // D4, D8: a method chosen but not in force, or a session that identified otherwise than the switch needs.
-        val mismatch = session != null && session != (enabled && applied == GpsMethod.CARPLAY)
-        notices.keep(NoticeCode.RECONNECT_NEEDED, NoticeTone.INFO, selected != applied || mismatch)
+    // A reconnect that waits is the settings' own mark (UiSettings' reconnect pending), not a notice of this.
+    private fun keepNotices(applied: GpsMethod, enabled: Boolean) {
         val missing = applied == GpsMethod.USB && enabled && !flows.usb.running && flows.reason == GpsReason.USB_NOT_CONNECTED
         notices.keep(NoticeCode.USB_UNAVAILABLE, NoticeTone.WARN, missing)
     }

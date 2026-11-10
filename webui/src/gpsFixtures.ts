@@ -41,11 +41,13 @@ const notice = (code: GpsNotice['code'], tone: GpsNotice['tone'], extra: Partial
 export const outputs = {
   carplayOff: gpsOutput(),
   carplayOn: gpsOutput({ enabledIntent: true, activeMethod: 'carplay', running: true, successfulSends: 412 }),
-  /** The method was chosen but CarPlay has not been reconnected since: the notice offers it (D8). */
+  /**
+   * USB chosen but CarPlay not reconnected since: CarPlay still sends, and the settings' reconnect mark (the state's
+   * reconnectPending, gps.method) says the choice waits (D8).
+   */
   reconnectNeeded: gpsOutput({
     selected: 'usb', applied: 'carplay', enabledIntent: true, activeMethod: 'carplay', running: true, usbPrepared: true,
-    rateHz: 10, availability: 'unavailable', reason: 'carplay-reconnect-needed', generation: 2,
-    notices: [notice('reconnect-needed', 'info')],
+    successfulSends: 412, generation: 2,
   }),
   usbUnprepared: gpsOutput({ selected: 'usb', applied: 'usb', availability: 'unavailable', reason: 'usb-setup-needed', rateHz: 10 }),
   usbPreparedNoCable: gpsOutput({

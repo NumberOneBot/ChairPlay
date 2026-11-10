@@ -66,8 +66,8 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
       <Group title="GPS" note={note(LINK_KEYS)} />
       <GpsNotices output={output} backend={backend} />
       <>
-        <EnableRow output={output} backend={backend} />
-        <MethodRows output={output} backend={backend} />
+        <EnableRow output={output} backend={backend} pending={pending} />
+        <MethodRows output={output} backend={backend} pending={pending} />
         {!usb && (
           <div className={off ? 'held' : undefined} inert={off} title={holdTitle(off) ?? undefined}>
             {sendRow(

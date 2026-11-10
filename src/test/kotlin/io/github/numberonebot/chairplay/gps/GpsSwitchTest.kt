@@ -20,7 +20,7 @@ class GpsSwitchTest {
     }
 
     @Test
-    fun `choosing a method only saves it and says a reconnect is due`() {
+    fun `choosing a method only saves it`() {
         val h = runningUsb()
 
         assertEquals(CommandOutcome.ACCEPTED, h.gps.selectMethod(GpsMethod.CARPLAY, h.output().generation))
@@ -32,7 +32,6 @@ class GpsSwitchTest {
         assertEquals(GpsMethod.USB, out.applied)
         assertTrue(h.usb.running)
         assertNull(out.operation)
-        assertTrue(out.notices.any { it.code == NoticeCode.RECONNECT_NEEDED })
     }
 
     // L-01 at the connection: the old USB stops as an explicit stop does, then CarPlay starts; the car stays.
@@ -49,7 +48,6 @@ class GpsSwitchTest {
         assertEquals(listOf("usb.quiesce", "locate", "usb.release 49.84,24.03", "carplay.start 40.7,-74.0"), h.calls)
         val out = h.output()
         assertEquals(GpsMethod.CARPLAY, out.applied)
-        assertTrue(out.notices.none { it.code == NoticeCode.RECONNECT_NEEDED })
         assertTrue(out.notices.any { it.code == NoticeCode.RESET_SENT })
         assertEquals(0, h.hold.held)
     }

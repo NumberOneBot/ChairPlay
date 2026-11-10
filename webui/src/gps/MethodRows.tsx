@@ -1,5 +1,6 @@
 import type { Backend } from '../api'
 import type { GpsOutput } from '../gpsApi'
+import { Changed, type Pending } from '../pages/parts'
 import { Row, Segmented, Switch, type Choice } from '../shell/controls'
 import { UsbIcon } from './icons'
 
@@ -14,7 +15,7 @@ export function waitsForCable(output: GpsOutput): boolean {
 }
 
 /** The one Enable signal simulation switch, whichever method carries it. */
-export function EnableRow({ output, backend }: { output: GpsOutput; backend: Backend }) {
+export function EnableRow({ output, backend, pending }: { output: GpsOutput; backend: Backend; pending: Pending }) {
   // While USB starts or stops the switch waits; the rest of the window does not.
   const waiting = waitsForCable(output)
   const busy = output.operation !== null
@@ -26,6 +27,7 @@ export function EnableRow({ output, backend }: { output: GpsOutput; backend: Bac
         disabled={waiting || busy}
         onChange={(enabled) => void backend.gpsEnabled(enabled)}
       />
+      <Changed keys={['gps.enabled']} pending={pending} />
     </Row>
   )
 }
@@ -34,7 +36,7 @@ export function EnableRow({ output, backend }: { output: GpsOutput; backend: Bac
  * How the position reaches the iPhone: CarPlay or USB. For USB, the advanced feature's hint, the button that opens
  * its setup, and, until a USB iPhone was ever prepared, what is left to do.
  */
-export function MethodRows({ output, backend }: { output: GpsOutput; backend: Backend }) {
+export function MethodRows({ output, backend, pending }: { output: GpsOutput; backend: Backend; pending: Pending }) {
   return (
     <>
       <Row label="GPS method" title="Send the position over the CarPlay connection, or over a USB cable">
@@ -44,6 +46,8 @@ export function MethodRows({ output, backend }: { output: GpsOutput; backend: Ba
           options={METHODS}
           onChange={(method) => void backend.gpsMethod(method as GpsOutput['selected'], output.generation)}
         />
+        {/* A method chosen applies at the next connection (D8), marked as any such setting. */}
+        <Changed keys={['gps.method']} pending={pending} />
       </Row>
       {output.selected === 'usb' && (
         <>

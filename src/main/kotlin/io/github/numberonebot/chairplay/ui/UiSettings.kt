@@ -124,7 +124,21 @@ internal class UiSettings(
         val made = connection?.takeIf { phase != Phase.SETUP && phase != Phase.IDLE }
         val restart = EditableSettings.keys.filter { EditableSettings.applies(it) == Applies.RESTART && differs(it, startup) }
         val reconnect = made?.let { EditableSettings.keys.filter { key -> EditableSettings.applies(key) == Applies.RECONNECT && differs(key, it) } }
-        model.pending(reconnect.orEmpty().toSet(), restart.toSet())
+        model.pending((reconnect.orEmpty() + made?.let { gpsPending(now, it) }.orEmpty()).toSet(), restart.toSet())
+    }
+
+    /**
+     * The GPS output's own keys a connection waits for: a method chosen since it was made (D8); else the switch, where
+     * it changed what CarPlay identifies with (on, with CarPlay's method; D4), as USB's acts at once.
+     */
+    private fun gpsPending(now: Map<String, String>, made: Map<String, String>): List<String> {
+        fun method(values: Map<String, String>) = values["gps.method"]?.trim()?.lowercase()?.ifEmpty { null } ?: "carplay"
+        fun carPlayGps(values: Map<String, String>) = values["gps.enabled"]?.trim() == "true" && method(values) == "carplay"
+        return when {
+            method(now) != method(made) -> listOf("gps.method")
+            carPlayGps(now) != carPlayGps(made) -> listOf("gps.enabled")
+            else -> emptyList()
+        }
     }
 
     /**

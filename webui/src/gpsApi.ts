@@ -35,7 +35,6 @@ export type GpsNoticeCode =
   | 'reset-sent'
   | 'windows-unavailable'
   | 'usb-unavailable'
-  | 'reconnect-needed'
 
 export interface GpsNotice {
   id: number

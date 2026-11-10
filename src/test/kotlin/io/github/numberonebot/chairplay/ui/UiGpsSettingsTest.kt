@@ -35,6 +35,35 @@ class UiGpsSettingsTest : UiControllerFixture() {
         assertEquals(listOf(mapOf("gps.method" to "usb", "gps.enabled" to "true", "gps.usb.device" to "00008110-000A")), saved)
     }
 
+    // D8: a method chosen waits for the next connection, marked as any reconnect setting is.
+    @Test
+    fun `a method chosen waits for the next connection`() {
+        val ui = controller()
+        ui.saveGps(mapOf("gps.method" to "carplay", "gps.enabled" to "true"))
+        ui.connected(SettingsFile(file).read())
+
+        ui.saveGps(mapOf("gps.method" to "usb"))
+
+        assertEquals(listOf("gps.method"), ui.state()["reconnectPending"])
+        ui.saveGps(mapOf("gps.method" to "carplay"))
+        assertEquals(emptyList<String>(), ui.state()["reconnectPending"])
+    }
+
+    // D4: the switch waits for a reconnect only where CarPlay identifies with the GPS; USB's acts at once.
+    @Test
+    fun `the switch waits for a reconnect with CarPlay's method only`() {
+        val ui = controller()
+        ui.saveGps(mapOf("gps.method" to "carplay", "gps.enabled" to "false"))
+        ui.connected(SettingsFile(file).read())
+        ui.saveGps(mapOf("gps.enabled" to "true"))
+        assertEquals(listOf("gps.enabled"), ui.state()["reconnectPending"])
+
+        ui.saveGps(mapOf("gps.method" to "usb", "gps.enabled" to "false"))
+        ui.connected(SettingsFile(file).read())
+        ui.saveGps(mapOf("gps.enabled" to "true"))
+        assertEquals(emptyList<String>(), ui.state()["reconnectPending"])
+    }
+
     @Test
     fun `the coordinator's save still refuses a method the app does not know`() {
         val ui = controller()

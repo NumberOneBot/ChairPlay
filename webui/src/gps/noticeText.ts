@@ -36,7 +36,5 @@ export function noticeText(notice: GpsNotice): NoticeText {
       }
     case 'usb-unavailable':
       return { head: 'USB GPS unavailable', text: 'Connect your iPhone with a USB cable to resume simulation.' }
-    case 'reconnect-needed':
-      return { head: 'Reconnect needed', text: 'Reconnect CarPlay to apply the GPS change.' }
   }
 }

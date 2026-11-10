@@ -16,6 +16,8 @@ interface Scene {
   /** The Developer tools folder's size, for Experiments. */
   tools?: number
   connected?: boolean
+  /** Settings that wait for the next connection (the state's reconnectPending). */
+  pending?: string[]
 }
 
 const later = Date.now() + 3_600_000
@@ -36,7 +38,7 @@ export const SCENES: Record<string, Scene> = {
   'usb-no-cable': { output: outputs.usbPreparedNoCable },
   'usb-on': { output: outputs.usbOn },
   'usb-no-position': { output: outputs.usbNoPosition },
-  'reconnect-needed': { output: outputs.reconnectNeeded },
+  'reconnect-needed': { output: outputs.reconnectNeeded, pending: ['gps.method'] },
   connect: { output: prepared, setup: setups.connect },
   drivers: { output: prepared, setup: setups.drivers },
   'apple-closed': { output: prepared, setup: setups.appleDevicesClosed },
@@ -70,11 +72,11 @@ function Preview() {
   const scene = SCENES[name] ?? SCENES.carplay
   const section = query.get('section') ?? scene.section ?? 'GPS'
   const real = useMemo(
-    () => gpsState(scene.output, scene.setup, scene.connected === false ? { phase: 'idle', canShowCarPlay: false } : {}),
+    () => gpsState(scene.output, scene.setup, { reconnectPending: scene.pending ?? [], ...(scene.connected === false ? { phase: 'idle' as const, canShowCarPlay: false } : {}) }),
     [scene],
   )
   // The page opens its section while the window is free; the scene's own state, locked or not, comes after.
-  const free = useMemo(() => gpsState({ ...scene.output, operation: null }, scene.setup, { phase: real.phase, canShowCarPlay: real.canShowCarPlay }), [scene, real])
+  const free = useMemo(() => gpsState({ ...scene.output, operation: null }, scene.setup, { phase: real.phase, canShowCarPlay: real.canShowCarPlay, reconnectPending: real.reconnectPending }), [scene, real])
   const [state, setState] = useState(free)
   const backend = useMemo(() => {
     const fake = new FakeBackend()
