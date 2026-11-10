@@ -139,7 +139,8 @@ val syncApp by tasks.registering(Sync::class) {
     dependsOn(jpackageImage)
     from(layout.buildDirectory.dir("jpackage/ChairPlay"))
     into(appHome)
-    preserve { include(appDataFiles) }
+    // helper\ is the USB GPS helper's, which deployHelper keeps: the image the app runs from here has none.
+    preserve { include(appDataFiles + "helper/**") }
     // jpackage leaves ChairPlay.exe read-only, and Windows refuses to replace a read-only file: the copies stay
     // writable, so the next deploy can replace them.
     filePermissions { user { write = true } }
@@ -157,12 +158,22 @@ val syncApp by tasks.registering(Sync::class) {
     }
 }
 
+// The USB GPS helper (gradle/usb-gps.gradle.kts), some 6,400 files, goes into the app folder's helper\ on its own:
+// copied only when it was built anew, never with every deploy.
+val deployHelper by tasks.registering(Sync::class) {
+    description = "Copies the frozen USB GPS helper into the app folder's helper\\ when it changed."
+    dependsOn("usbGpsHelper")
+    from(layout.buildDirectory.dir("usb-gps/dist/helper"))
+    into(appHome.map { "$it/helper" })
+    filePermissions { user { write = true } }
+}
+
 // Then writes the default settings, controls and car icon the folder lacks, so the Wi-Fi can be filled in
 // before the first start; the templates live in the app's code (AppDefaults.kt).
 tasks.register<JavaExec>("deploy") {
     group = "distribution"
     description = "Installs the app into the app folder (chairplay.home) with default settings where it has none."
-    dependsOn(syncApp)
+    dependsOn(syncApp, deployHelper)
     mainClass = "io.github.numberonebot.chairplay.config.AppDefaultsKt"
     classpath = mainSourceSet.runtimeClasspath
     jvmArgs("-Djava.awt.headless=true")

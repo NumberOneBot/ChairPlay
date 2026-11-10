@@ -114,22 +114,28 @@ val usbGpsHelper by tasks.registering {
     }
 }
 
-// The image's helper\ folder, which the app starts (WindowsShell.usbGpsHelper), and its packages' licences in
-// licenses\usb-gps-helper\. deploy (a Sync) and the installer carry the image whole; an update replaces helper\.
+// The image gets the helper's packages' licences in licenses\usb-gps-helper\ with every build.
 tasks.named("jpackageImage") {
     dependsOn(usbGpsHelper)
     val image = layout.buildDirectory.dir("jpackage/ChairPlay")
-    val helper = usbGpsWork.map { it.dir("dist/helper") }
     val licences = usbGpsWork.map { it.dir("licenses") }
     val ops = objects.newInstance<HelperBuildOps>()
     doLast {
-        ops.fs.copy {
-            from(helper)
-            into(image.get().dir("helper"))
-        }
         ops.fs.copy {
             from(licences)
             into(image.get().dir("licenses/usb-gps-helper"))
         }
     }
 }
+
+// The helper itself, some 6,400 files, joins the image's helper\ (which the app starts, WindowsShell.usbGpsHelper)
+// only for the installer and the portable zip, where an update replaces helper\ whole. deploy puts it in the app
+// folder on its own, when it changed (deployHelper in gradle/package.gradle.kts).
+val imageHelper by tasks.registering(Copy::class) {
+    description = "Puts the frozen USB GPS helper into the app image's helper\\ for the installer and the portable zip."
+    dependsOn(usbGpsHelper)
+    mustRunAfter("jpackageImage")
+    from(usbGpsWork.map { it.dir("dist/helper") })
+    into(layout.buildDirectory.dir("jpackage/ChairPlay/helper"))
+}
+tasks.matching { it.name == "installer" || it.name == "portableZip" }.configureEach { dependsOn(imageHelper) }
