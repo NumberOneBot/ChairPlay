@@ -4,8 +4,8 @@
 //
 // Everything runs in build/usb-gps/venv: Python 3.12 with exactly the locked packages (requirements-lock.txt) and
 // the pinned PyInstaller (requirements-build.txt), made again only when those change. The Python comes from the
-// usbgps.python property, else the CHAIRPLAY_BUILD_PYTHON variable (the release workflow sets it), else the py
-// launcher's 3.12. The first build downloads the packages from PyPI.
+// usbgps.python property (the release workflow sets it as ORG_GRADLE_PROJECT_usbgps.python), else the py launcher's
+// 3.12. The first build downloads the packages from PyPI.
 
 interface HelperBuildOps {
     @get:Inject val fs: FileSystemOperations

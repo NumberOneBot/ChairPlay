@@ -53,6 +53,17 @@ jobs:
         with:
           cache-read-only: true
 
+      # The USB GPS helper is frozen with Python 3.12 (gradle/usb-gps.gradle.kts): every Gradle call below gets it as the
+      # usbgps.python property.
+      - id: python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+
+      - name: Name the helper's Python to Gradle
+        shell: pwsh
+        run: '"ORG_GRADLE_PROJECT_usbgps.python=${{ steps.python.outputs.python-path }}" >> $env:GITHUB_ENV'
+
       # The runner image may come with another Inno Setup: upgrade or downgrade to the pinned one, and show which runs.
       - name: Install Inno Setup
         shell: pwsh
