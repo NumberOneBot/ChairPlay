@@ -31,13 +31,17 @@ class HelperProcessTest {
         data.toFile().deleteRecursively()
     }
 
+    /** A frozen helper (helper.spec's output) to run instead of the package, as the app image does. */
+    private val frozen: Path? = System.getenv("CHAIRPLAY_USB_GPS_HELPER")?.let { Path.of(it) }
+
     private fun start(): ProcessUsbHelper {
-        assumeTrue("no helper Python here", python != null)
+        assumeTrue("no helper Python here", python != null || frozen != null)
         val scenario = data.resolve("scenario.json")
         Files.writeString(scenario, """{"devices":[{"udid":"$udid","name":"Test phone"}],"components":"ready"}""")
         val store = DeveloperToolsStore.root(data)
-        val launcher = ProcessHelperLauncher(listOf(python.toString(), "-s", "-m", "usb_gps_helper"), store, tools,
-            listOf("--fake", scenario.toString()))
+        val fake = listOf("--fake", scenario.toString())
+        val launcher = if (frozen != null) ProcessHelperLauncher(listOf(frozen.toString()), store, frozen.parent, fake)
+        else ProcessHelperLauncher(listOf(python.toString(), "-s", "-m", "usb_gps_helper"), store, tools, fake)
         return ProcessUsbHelper(launcher, log = { println(it) }).also { helper = it }
     }
 

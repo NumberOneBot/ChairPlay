@@ -107,6 +107,14 @@ class CliTests(unittest.TestCase):
         self.assertEqual(0, helper.process.wait(timeout=10))
         helper.finish()
 
+    def test_the_self_test_loads_the_device_library_and_touches_no_phone(self):
+        result = subprocess.run([sys.executable, '-m', 'usb_gps_helper', '--self-test'], cwd=ROOT, capture_output=True,
+                                env=dict(os.environ, PYTHONPATH=str(ROOT)), timeout=60)
+        self.assertEqual(0, result.returncode, result.stderr.decode(errors='replace'))
+        report = json.loads(result.stdout)
+        self.assertEqual(('self-test', True, '11.45.0', 2), (report['type'], report['ok'], report['library'],
+                                                              report['protocol']))
+
     def test_stdout_carries_only_protocol_lines(self):
         helper = Helper('--role', 'session', '--fake', str(self.scenario))
         helper.process.stdin.write(b'\xff\xfe not utf-8\n' + b'x' * 10000 + b'\n')

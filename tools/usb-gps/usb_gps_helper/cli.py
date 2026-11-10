@@ -28,7 +28,9 @@ def _seconds(value):
 
 def parser():
     root = argparse.ArgumentParser(prog='helper', description="ChairPlay's USB GPS helper (protocol 2).")
-    root.add_argument('--role', choices=('control', 'session'), required=True)
+    root.add_argument('--role', choices=('control', 'session'))
+    root.add_argument('--self-test', action='store_true',
+                      help='Load every part the real backend needs, print one JSON line and end; no device is opened.')
     root.add_argument('--store', type=Path, help='The developer tools folder (control role).')
     root.add_argument('--fake', type=Path, help='A fake phone scenario, for dry runs.')
     root.add_argument('--idle-timeout', type=_seconds, default=30.0,
@@ -97,8 +99,24 @@ def _control(args, backend, components, write):
     return ControlOps(backend, store, downloads, components, write)
 
 
+def self_test():
+    """For a frozen build: every module the real backend imports loads, and the pinned library is the one inside."""
+    import json
+    from . import VERSION, components, control, device, download, library, library_version, packages, protocol
+    library.load()
+    components.detect(usbmux=lambda: False, installed=lambda: [], running=lambda: [])
+    assert device and control and download and packages.EXPECTED_BUILD
+    print(json.dumps({'type': 'self-test', 'ok': True, 'protocol': protocol.PROTOCOL, 'helper': VERSION,
+                      'library': library_version(), 'ddiBuild': packages.EXPECTED_BUILD}), flush=True)
+    return 0
+
+
 def run(argv=None):
     args = parser().parse_args(argv)
+    if args.self_test:
+        return self_test()
+    if args.role is None:
+        parser().error('give --role control or --role session')
     if args.role == 'control' and args.store is None:
         parser().error('the control role needs --store')
     logs.configure()

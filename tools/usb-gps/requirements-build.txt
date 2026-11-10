@@ -1,0 +1,3 @@
+# To freeze the helper (helper.spec), on top of requirements.txt. Not needed to run it or its tests.
+pyinstaller==6.22.3
+pyinstaller-hooks-contrib==2026.10
