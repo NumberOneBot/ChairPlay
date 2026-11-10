@@ -39,7 +39,8 @@ data class GpsSettings(
     )
 
     companion object {
-        val RATES = listOf(1, 4, 10)
+        /** Fixes a second the car's position may go at: the iPhone asks for 4, and 20 is one each 50 ms. */
+        val RATE = 1..20
         val POWER_HP = 20.0..2000.0
         val MASS_KG = 300.0..10000.0
 

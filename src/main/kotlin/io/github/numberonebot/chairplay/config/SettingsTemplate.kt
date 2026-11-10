@@ -217,7 +217,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "gps.wheel" to "steering", "gps.units" to "metric", "gps.gauges.style" to "german",
     ),
     SettingBlock(
-        "Experiments in what the iPhone takes from the GPS: fixes a second, '1', '4' (as the iPhone asks) or '10';\n" +
+        "Experiments in what the iPhone takes from the GPS: fixes a second, a whole number from 1 to 20 (4 as the iPhone asks);\n" +
             "and the sentences, 'classic' (\$GPGGA, \$GPRMC) or 'modern' (\$GNGGA, \$GNRMC, \$GNGSA, \$GNVTG).",
         "gps.rate" to "4", "gps.nmea" to "classic",
     ),

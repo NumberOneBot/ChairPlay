@@ -47,6 +47,14 @@ internal fun Properties.positiveSetting(key: String): Int? {
     return value
 }
 
+/** A whole number in [range]; blank means [default]. */
+internal fun Properties.wholeSetting(key: String, default: Int, range: IntRange): Int {
+    val raw = getProperty(key)?.trim()?.ifEmpty { null } ?: return default
+    val value = raw.toIntOrNull()
+    require(value != null && value in range) { "$key must be a whole number from ${range.first} to ${range.last}, not $raw" }
+    return value
+}
+
 /** A number in [range]; blank means [default]. */
 internal fun Properties.decimalSetting(key: String, default: Double, range: ClosedFloatingPointRange<Double>): Double {
     val raw = getProperty(key)?.trim()?.ifEmpty { null } ?: return default

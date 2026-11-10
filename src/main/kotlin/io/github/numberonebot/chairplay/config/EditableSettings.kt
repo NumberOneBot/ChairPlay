@@ -1,7 +1,6 @@
 package io.github.numberonebot.chairplay.config
 
 import com.shilapi.xcertplay.transport.Iap2WirelessSecurity
-import io.github.numberonebot.chairplay.drive.Coordinates
 import io.github.numberonebot.chairplay.drive.GpsSettings
 
 /** When a changed setting takes effect. */
@@ -126,7 +125,7 @@ object EditableSettings {
         "gps.wheel" to choice("heading", "steering", applies = Applies.NOW),
         "gps.units" to choice("metric", "imperial", applies = Applies.NOW),
         // The next fix goes so.
-        "gps.rate" to choice(*GpsSettings.RATES.map { it.toString() }.toTypedArray(), applies = Applies.NOW),
+        "gps.rate" to Setting(Applies.NOW) { checkWhole(it, GpsSettings.RATE, "a rate", "fixes a second") },
         "gps.nmea" to choice("classic", "modern", applies = Applies.NOW),
         "gps.framing" to choice("joined", "messages", "params", applies = Applies.NOW),
     )
@@ -222,78 +221,4 @@ object EditableSettings {
                 else "A WPA password is 8 to 63 characters (English letters, digits and symbols), or 64 hexadecimal digits"
         }
     }
-
-    private fun checkBoolean(value: String): String? =
-        if (value.trim().lowercase() in setOf("true", "false")) null else "Must be true or false"
-
-    private fun checkOptionalSize(value: String, min: Int): String? {
-        if (value.isBlank()) return null
-        val number = value.trim().toIntOrNull()
-        return when {
-            number == null || number < 1 -> "Enter a positive whole number of pixels, or leave it blank"
-            number < min -> "The main window is at least $min pixels"
-            number > MAX_PIXELS -> TOO_MANY_PIXELS
-            else -> null
-        }
-    }
-
-    private fun checkDeviceName(value: String): String? = when {
-        value.any(Char::isISOControl) -> "The name cannot hold control characters"
-        value.trim().toByteArray(Charsets.UTF_8).size > 63 -> "The name is at most 63 bytes (fewer letters outside English)"
-        else -> null
-    }
-
-    private val address = Regex("[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}")
-
-    private fun checkAddress(value: String): String? =
-        if (value.isBlank() || address.matches(value.trim())) null
-        else "Enter a Bluetooth address such as 01:23:45:67:89:AB, or leave it blank"
-
-    private fun checkPositive(value: String, unit: String): String? =
-        if ((value.trim().toIntOrNull() ?: 0) > 0) null else "Enter a positive whole number $unit"
-
-    private fun checkOptionalPositive(value: String): String? =
-        if (value.isBlank() || (value.trim().toIntOrNull() ?: 0) > 0) null else "Enter a positive whole number, or leave it blank"
-
-    private fun checkNonNegative(value: String): String? =
-        if ((value.trim().toIntOrNull() ?: -1) >= 0) null else "Enter zero or more pixels"
-
-    private fun checkMillis(value: String): String? =
-        if ((value.trim().toIntOrNull() ?: -1) >= 0) null else "Enter zero or more milliseconds"
-
-    private fun checkOptionalNonNegative(value: String): String? =
-        if (value.isBlank() || (value.trim().toIntOrNull() ?: -1) >= 0) null else "Enter zero or more pixels, or leave it blank"
-
-    private fun checkDuckDecibels(value: String): String? =
-        if (value.trim().toIntOrNull() in DesktopConfig.DUCK_DECIBELS) null else "Enter a level from -30 to 0 dB"
-
-    private fun checkStart(value: String): String? =
-        if (value.isBlank() || Coordinates.parse(value) != null) null
-        else "Enter a latitude and longitude, such as 50.4501, 30.5234, or paste a map link"
-
-    private fun checkNumber(value: String, range: ClosedFloatingPointRange<Double>, what: String, unit: String): String? =
-        if (value.isBlank() || value.trim().toDoubleOrNull()?.let { it in range } == true) null
-        else "Enter $what from ${range.start.toInt()} to ${range.endInclusive.toInt()} $unit"
-
-    private fun checkFps(value: String): String? =
-        if (value.trim().toIntOrNull() in 30..60) null else "Enter a frame rate from 30 to 60"
-
-    private fun checkPositiveEven(value: String): String? {
-        val number = value.trim().toIntOrNull()
-        return when {
-            number == null || number < 1 || number % 2 != 0 -> "Enter a positive even number of pixels"
-            number > MAX_PIXELS -> TOO_MANY_PIXELS
-            else -> null
-        }
-    }
-
-    private fun checkAreaRect(value: String): String? {
-        if (value.isBlank()) return null
-        val rect = AreaRect.parse(value) ?: return "Enter four whole numbers: x, y, width, height"
-        return if (!rect.isLargeEnough) "Enter a width and height of at least $MIN_AREA px" else null
-    }
-
-    /** The most pixels a side of a screen or window may have. */
-    private const val MAX_PIXELS = 4096
-    private const val TOO_MANY_PIXELS = "Enter a smaller number of pixels"
 }

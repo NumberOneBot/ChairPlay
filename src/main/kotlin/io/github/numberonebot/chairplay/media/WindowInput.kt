@@ -27,6 +27,8 @@ internal fun installWindowInput(
     }
     glfwSetCursorPosCallback(window) { _, x, y -> if (held) emit(x, y) }
     glfwSetMouseButtonCallback(window) { _, button, action, _ ->
+        // A mouse button that stands for a key presses and lets go of it, held as long as the button is.
+        mouseButtonKey(button)?.let { return@glfwSetMouseButtonCallback key(it, action, 0) }
         if (button != GLFW_MOUSE_BUTTON_LEFT) return@glfwSetMouseButtonCallback
         held = action == GLFW_PRESS
         val x = DoubleArray(1)
@@ -39,3 +41,9 @@ internal fun installWindowInput(
     glfwSetWindowFocusCallback(window) { _, focused -> if (!focused) focusLost() }
     glfwSetScrollCallback(window) { _, _, dy -> scroll(dy) }
 }
+
+/**
+ * The key a mouse button stands for: the back button (XButton1) is Escape, which always goes back whatever the keys
+ * are set to. Null for a button that is no key: the left one touches.
+ */
+internal fun mouseButtonKey(button: Int): Int? = if (button == GLFW_MOUSE_BUTTON_4) GLFW_KEY_ESCAPE else null

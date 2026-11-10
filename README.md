@@ -72,7 +72,7 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 | Arrows                                    | tilt the knob: move the focus                                  |
 | Tab / Shift+Tab, mouse wheel              | turn the knob                                                  |
 | Enter, Space                              | select                                                         |
-| Backspace, Esc                            | back                                                           |
+| Backspace, Esc, mouse back button         | back                                                           |
 | Home                                      | home screen                                                    |
 | Ctrl+R                                    | reconnect                                                      |
 | S                                         | Siri                                                           |

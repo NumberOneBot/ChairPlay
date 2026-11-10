@@ -204,17 +204,6 @@ describe('GPS page', () => {
     expect(backend.saved).toEqual([])
   })
 
-  // How the fixes go, for finding what the iPhone takes: the rate, 4 a second as the iPhone asks.
-  it('sets the GPS rate', async () => {
-    const backend = await gps()
-
-    const fixes = screen.getByRole('radiogroup', { name: 'Updates' })
-    expect(within(fixes).getByRole('radio', { name: '4' }).getAttribute('aria-checked')).toBe('true')
-    fireEvent.click(within(fixes).getByRole('radio', { name: '10' }))
-
-    await waitFor(() => expect(backend.saved).toEqual([{ 'gps.rate': '10' }]))
-  })
-
   // Heading sending, on by default: the switch turns it off, saving the key.
   it('turns heading sending off', async () => {
     const backend = await gps()

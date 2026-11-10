@@ -28,7 +28,7 @@ internal fun Properties.gpsSettings() = GpsSettings(
         powerHp = decimalSetting("gps.car.power.hp", CarSpec().powerHp, GpsSettings.POWER_HP),
         handling = choiceSetting("gps.car.handling", Handling.NORMAL, Handling.entries.associateBy { it.key }),
     ),
-    rate = choiceSetting("gps.rate", 4, GpsSettings.RATES.associateBy { it.toString() }),
+    rate = wholeSetting("gps.rate", 4, GpsSettings.RATE),
     nmea = choiceSetting("gps.nmea", NmeaDialect.CLASSIC, NmeaDialect.entries.associateBy { it.key }),
     framing = choiceSetting("gps.framing", NmeaFraming.PARAMETERS, NmeaFraming.entries.associateBy { it.key }),
     gauges = choiceSetting("gps.gauges", GaugeSize.LARGE, GaugeSize.entries.associateBy { it.key }),

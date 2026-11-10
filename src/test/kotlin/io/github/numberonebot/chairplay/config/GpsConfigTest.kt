@@ -30,7 +30,8 @@ class GpsConfigTest {
         // The experiments: the rate the iPhone asks for, and DiPlay's sentences.
         assertEquals(4, off.rate)
         assertEquals(NmeaDialect.CLASSIC, off.nmea)
-        assertEquals(10, configWith("gps.rate=10").gps.rate)
+        // Any whole number of fixes a second from 1 to 20.
+        for (rate in listOf(1, 7, 10, 20)) assertEquals(rate, configWith("gps.rate=$rate").gps.rate)
         assertEquals(NmeaDialect.MODERN, configWith("gps.nmea=modern").gps.nmea)
         assertEquals(NmeaFraming.PARAMETERS, off.framing)
         assertEquals(NmeaFraming.JOINED, configWith("gps.framing=joined").gps.framing)
@@ -72,6 +73,7 @@ class GpsConfigTest {
     fun `rejects GPS values the car cannot have`() {
         for (bad in listOf(
             "gps.start=Kyiv", "gps.heading=north", "gps.heading=360", "gps.car.power.hp=5", "gps.car.mass.kg=50",
+            "gps.rate=0", "gps.rate=21", "gps.rate=2.5", "gps.rate=fast",
         )) {
             val key = bad.substringBefore('=')
             val error = assertThrows(IllegalArgumentException::class.java) { configWith(bad).gps }
@@ -84,7 +86,7 @@ class GpsConfigTest {
     fun `unknown GPS choices read as their defaults`() {
         assertEquals(
             configWith().gps,
-            configWith("gps.rate=3", "gps.nmea=ancient", "gps.framing=pigeons", "gps.car.handling=wild", "gps.gauges=huge", "gps.wheel=sideways").gps,
+            configWith("gps.nmea=ancient", "gps.framing=pigeons", "gps.car.handling=wild", "gps.gauges=huge", "gps.wheel=sideways").gps,
         )
     }
 }

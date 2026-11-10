@@ -10,13 +10,6 @@ import { WindowsLocationButton } from './WindowsLocationButton'
 /** What the iPhone learns as it connects: whether there is a GPS, and what it sends besides the position. */
 const LINK_KEYS = ['gps.enabled', 'gps.wheel.speed']
 
-/** gps.rate: fixes a second on the tunnel; the iPhone asks for one every 250 ms. */
-const RATES: readonly Choice[] = [
-  ['1', '1', "DiPlay's own rate"],
-  ['4', '4', 'As the iPhone asks'],
-  ['10', '10'],
-]
-
 /** gps.car.handling: how the car turns. */
 const HANDLING: readonly Choice[] = [
   ['gentle', 'Gentle'],
@@ -110,17 +103,6 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           'The car heading as the course in the position sentences, so the iPhone can face its arrow the way the car goes',
           true,
         )}
-        {/* Experiment in what the iPhone takes, from the next fix: how often the position goes. */}
-        <Row label="Updates" title="How often the car's position goes to the iPhone while it listens">
-          <Segmented
-            label="Updates"
-            value={value('gps.rate') || '4'}
-            options={RATES}
-            onChange={(rate) => save({ 'gps.rate': rate })}
-            className="half"
-          />
-          <span className="unit">a second</span>
-        </Row>
         {now && <Row label="iPhone">{now.iphone}</Row>}
         {/* Where the car is, apart from the car itself, whose own settings grow. */}
         <Group title="Position" />
