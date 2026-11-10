@@ -38,6 +38,10 @@ internal class WindowsShell : DesktopShell {
 
     override fun dataDirectory(): Path = DesktopConfig.appDirectory()
 
+    // The frozen helper (PyInstaller --onedir) the image ships in helper\ beside ChairPlay.exe.
+    override fun usbGpsHelper(): Path? =
+        DesktopConfig.appDirectory().resolve("helper").resolve("helper.exe").takeIf { java.nio.file.Files.isRegularFile(it) }
+
     /** Windows' own message box, as no window of the app is open to show the failure in (or none to go on with). */
     override fun showError(text: String) {
         Native.load("user32", MessageBoxes::class.java).MessageBoxW(null, WString(text), WString("ChairPlay"), MB_ICONERROR or MB_SETFOREGROUND)

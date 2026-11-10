@@ -17,6 +17,7 @@ import io.github.numberonebot.chairplay.log.routeAllOutput
 import io.github.numberonebot.chairplay.log.routeFfmpegLog
 import io.github.numberonebot.chairplay.media.runWindows
 import io.github.numberonebot.chairplay.drive.Driving
+import io.github.numberonebot.chairplay.gps.usb.appUsbHelper
 import io.github.numberonebot.chairplay.media.saveScreenshot
 import io.github.numberonebot.chairplay.media.titleNotice
 import io.github.numberonebot.chairplay.phone.PhoneLink
@@ -166,7 +167,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         demo = altView.demos, gps = { gps.get()?.state() ?: driving.state() }, driving = uiDriving(driving, window, ::screenshots, ::log),
         bufferedAudio = audio::bufferedAudio, gpsCommands = { gps.get()?.coordinator })
     // The GPS output: CarPlay's and USB's channels for the car, and their one coordinator (gps/).
-    val appGps = AppGps(dir, driving, { ui.saveGps(it) }, { ui.saveSettings(it) }, { active.get() != null }, ::log)
+    val appGps = AppGps(dir, driving, { ui.saveGps(it) }, { ui.saveSettings(it) }, { active.get() != null }, ::log,
+        appUsbHelper(dir, Platforms.current.shell.usbGpsHelper(), ::log))
     appGps.coordinator.changed = ui::gpsChanged
     gps.set(appGps)
     altView.onWindowsChanged = { ui.windowsChanged() }

@@ -31,8 +31,8 @@ internal class AppGps(
     saveSettings: (Map<String, String>) -> Unit,
     session: () -> Boolean,
     log: (String) -> Unit,
-    /** Null until the app ships the USB helper. */
-    helper: UsbHelper? = null,
+    /** Null in an app without the USB helper ([io.github.numberonebot.chairplay.gps.usb.appUsbHelper]). */
+    private val helper: UsbHelper? = null,
 ) {
     val carplay = CarPlayGpsChannel(session) { driving.location }
 
@@ -88,5 +88,6 @@ internal class AppGps(
         coordinator.close()
         setup.close()
         usb.close()
+        helper?.close()
     }
 }

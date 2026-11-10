@@ -30,4 +30,7 @@ internal interface DesktopShell {
 
     /** What [openCommand] takes to open [page]. */
     fun systemPage(page: SystemPage): String
+
+    /** The USB GPS helper program the app's image ships (helper/ beside the app), or null when it has none. */
+    fun usbGpsHelper(): Path? = null
 }
