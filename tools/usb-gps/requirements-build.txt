@@ -1,3 +1,7 @@
-# To freeze the helper (helper.spec), on top of requirements.txt. Not needed to run it or its tests.
+# To freeze the helper (helper.spec), on top of requirements-lock.txt. Not needed to run it or its tests.
 pyinstaller==6.22.3
 pyinstaller-hooks-contrib==2026.10
+altgraph==0.17.5
+pefile==2024.8.26
+pywin32-ctypes==0.2.3
+setuptools==84.2.1

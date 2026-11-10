@@ -44,6 +44,7 @@ class InstallerScriptTest {
             setOf(
                 "{app}\\app" to "filesandordirs",
                 "{app}\\runtime" to "filesandordirs",
+                "{app}\\helper" to "filesandordirs",
             ),
             entries.toSet(),
         )
@@ -86,10 +87,19 @@ class InstallerScriptTest {
         }
     }
 
+    // deploy keeps, the installer refuses in an image and deletes on request exactly appDataFiles: every data name.
+    @Test
+    fun `the build's data list covers all the user's data`() {
+        val gradle = File("gradle/package.gradle.kts").readText()
+        val list = gradle.substringAfter("val appDataFiles = listOf(").substringBefore(")")
+        val names = Regex(""""([^"]+)"""").findAll(list).map { it.groupValues[1].removeSuffix("/**") }.toSet()
+        for (name in userData) assertTrue("appDataFiles lacks $name", name in names)
+    }
+
     companion object {
         private val userData = listOf(
             "settings.properties", "controls.properties", "window.properties", "identity.properties", "pairings",
-            "offline-mfi", "carplay-icon.png", "logs", "screenshots", "ChairPlay.lock", "webview2",
+            "offline-mfi", "carplay-icon.png", "logs", "screenshots", "ChairPlay.lock", "webview2", "cache",
         )
 
         /** Lines of each `[Section]`, by its lower-case name, without blanks, `;` comments and `#` directives. */
