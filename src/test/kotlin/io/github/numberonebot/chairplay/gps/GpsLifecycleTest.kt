@@ -180,6 +180,20 @@ class GpsLifecycleTest {
         assertTrue(h.output().notices.none { it.code == NoticeCode.RECONNECT_NEEDED })
     }
 
+    // P-06: USB on without its iPhone does not drive the car; CarPlay's method drives it as before.
+    @Test
+    fun `the car drives only while its channel can send`() {
+        val h = GpsHarness(usbOn)
+        h.usb.state = ChannelState(GpsReason.USB_NOT_CONNECTED)
+        h.reconcile()
+        assertFalse(h.gps.carLive())
+        h.usb.state = attached
+        h.reconcile()
+        assertTrue(h.gps.carLive())
+        assertTrue(GpsHarness(GpsSettings(enabled = true)).gps.carLive())
+        assertFalse(GpsHarness(GpsSettings(enabled = false)).gps.carLive())
+    }
+
     // UI-21: the reset notice goes after 10 s.
     @Test
     fun `the reset notice goes after ten seconds`() {

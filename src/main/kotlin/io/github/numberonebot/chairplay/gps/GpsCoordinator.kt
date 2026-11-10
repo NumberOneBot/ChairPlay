@@ -204,7 +204,15 @@ class GpsCoordinator(
         notices.keep(NoticeCode.USB_UNAVAILABLE, NoticeTone.WARN, missing)
     }
 
-    override fun output(): GpsOutput = synchronized(flows.lock) { GpsOutputs.of(flows, ops.current, notices.current()) }
+    /** Whether the car may drive: the switch on, and CarPlay's method or USB sending; USB on without a cable stands (P-06). */
+    fun carLive(): Boolean = synchronized(flows.lock) {
+        flows.enabled && (flows.selected == GpsMethod.CARPLAY || flows.usb.running)
+    }
+
+    /** Whether an operation holds the app's input (S-09). */
+    val holding: Boolean get() = ops.current != null
+
+    override fun output(): GpsOutput =synchronized(flows.lock) { GpsOutputs.of(flows, ops.current, notices.current()) }
 
     /** The app closes: a USB simulation goes as an explicit stop's does, within [GpsTiming.shutdownMillis]; the switch stays saved. */
     fun close() {

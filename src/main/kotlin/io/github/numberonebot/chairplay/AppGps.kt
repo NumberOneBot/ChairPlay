@@ -9,6 +9,7 @@ import io.github.numberonebot.chairplay.gps.FileCleanupJournal
 import io.github.numberonebot.chairplay.gps.GpsCar
 import io.github.numberonebot.chairplay.gps.GpsCoordinator
 import io.github.numberonebot.chairplay.gps.GpsSettingsStore
+import io.github.numberonebot.chairplay.gps.InputHold
 import io.github.numberonebot.chairplay.gps.UnavailableUsbHelper
 import io.github.numberonebot.chairplay.gps.UsbGpsChannel
 import io.github.numberonebot.chairplay.gps.UsbHelper
@@ -59,8 +60,18 @@ internal class AppGps(
         setup = setup,
         locator = DeadlineLocator(Platforms.current.location::read),
         journal = FileCleanupJournal(FileCleanupJournal.at(dir), log),
+        // The window loop's next pass puts a hold, or its end, in force on the car.
+        hold = object : InputHold {
+            override fun hold() = driving.wake()
+            override fun release() = driving.wake()
+        },
         log = log,
     )
+
+    init {
+        driving.live = coordinator::carLive
+        driving.held = { coordinator.holding }
+    }
 
     fun start() {
         usb.start()

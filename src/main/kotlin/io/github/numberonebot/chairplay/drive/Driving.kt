@@ -77,13 +77,29 @@ class Driving(
      */
     fun pass(): Double? {
         val settings = settings
-        if (settings.enabled && settings.external) return external()
+        val on = settings.enabled && live()
+        if (on && held()) return hold()
+        if (on && settings.external) return external()
         unfollow()
-        if (settings.enabled) return control.pass().also { ownControls() }
+        if (on) return control.pass().also { ownControls() }
         if (!control.keyboard && !drive.moving) return null
         if (control.keyboard) control.toggleKeyboard()
         drive.stop()
         return DriveControl.FRAME_SECONDS
+    }
+
+    /** Whether the GPS output can send the car now: a switch on with nowhere to send drives as off does (P-06). */
+    @Volatile var live: () -> Boolean = { true }
+
+    /** Whether a GPS operation holds the app's input (S-09): the car stands, let go, drive mode kept. */
+    @Volatile var held: () -> Boolean = { false }
+
+    // A pass while held: no input reaches the car, and a game's place waits too; the time held drives nothing after.
+    private fun hold(): Double {
+        control.scripted = CarInput()
+        if (drive.moving || drive.input != CarInput()) drive.stop()
+        drive.input = CarInput()
+        return DriveControl.GAMEPAD_POLL_SECONDS
     }
 
     /**
