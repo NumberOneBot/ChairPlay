@@ -228,25 +228,7 @@ class Driving(
     }
 
     /** What the GPS page shows: the car's place and motion, the controls driving it, and what the iPhone asked for. */
-    fun state(): Map<String, Any?> {
-        val snapshot = drive.snapshot()
-        val car = snapshot.car
-        val status = location?.status()
-        return linkedMapOf(
-            "position" to if (placed) listOf(snapshot.position.latitude, snapshot.position.longitude) else null,
-            "heading" to car.headingDegrees.roundToInt() % 360,
-            "speed" to car.speedKmh.roundToInt(),
-            "rpm" to car.rpm.roundToInt(),
-            "gear" to car.gearName,
-            "throttle" to snapshot.input.throttle,
-            "brake" to snapshot.input.brake,
-            "keyboard" to control.keyboard,
-            "gamepad" to control.gamepad,
-            "listening" to (status?.listening ?: false),
-            "sentences" to status?.requested?.map { SENTENCES[it] ?: "#$it" },
-            "sent" to (status?.sent ?: 0L),
-        )
-    }
+    fun state(): Map<String, Any?> = drivingState(this)
 
     // What the GPS page was last told it shows; the status tick's thread only.
     private var shown: Map<String, Any?>? = null
@@ -281,8 +263,6 @@ class Driving(
     private fun headingText(degrees: Double) = (degrees.roundToInt() % 360 + 360).rem(360).toString()
 
     private companion object {
-        /** 0xFFFA's selectors, identification fields 17 to 20 less 16. */
-        val SENTENCES = mapOf(1 to "GGA", 2 to "RMC", 4 to "PASCD")
         /**
          * What remakes the car: its own settings, the units, whose speedometer's end it runs to, and the gauges' style,
          * how far it revs.
