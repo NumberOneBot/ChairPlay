@@ -28,12 +28,14 @@ class FakeUsbHelper : UsbHelper {
     var reveal: UsbResult<Unit> = UsbResult.Ok(Unit)
     var prepare: (FakeUsbHelper.(String, (DownloadProgress) -> Unit, Cancellation) -> UsbResult<Unit>) = { _, _, _ -> UsbResult.Ok(Unit) }
     val calls = mutableListOf<String>()
+    /** Runs on each probe call, to let a test act in the middle of a check. */
+    var onProbe: () -> Unit = {}
 
     fun count(name: String) = calls.count { it == name }
 
     override fun components(): AppleComponents = components.also { calls += "components" }
     override fun devices() = devices.also { calls += "devices" }
-    override fun probe(udid: String) = probe.also { calls += "probe:$udid" }
+    override fun probe(udid: String) = probe.also { calls += "probe:$udid"; onProbe() }
     override fun revealDeveloperMode(udid: String) = reveal.also { calls += "reveal:$udid" }
     override fun toolsStatus(udid: String) = tools.also { calls += "tools:$udid" }
     override fun prepareTools(udid: String, progress: (DownloadProgress) -> Unit, cancel: Cancellation): UsbResult<Unit> {
@@ -59,16 +61,23 @@ class FakeUsbHelper : UsbHelper {
 class ManualExecutor : SetupExecutor {
     private val queue = ArrayDeque<() -> Unit>()
     var late = false
-    var repeating = false
-    private var tickTask: (() -> Unit)? = null
+    private val tickers = mutableListOf<() -> Unit>()
+    val repeating get() = tickers.isNotEmpty()
+    val activeTickers get() = tickers.size
+    /** The next [call] gives up at once with its fallback; its task stays queued and runs on [drain]. */
+    var callTimesOut = false
 
     override fun post(task: () -> Unit) { queue.addLast(task) }
     override fun repeat(periodMillis: Long, task: () -> Unit): AutoCloseable {
-        repeating = true
-        tickTask = task
-        return AutoCloseable { repeating = false; tickTask = null }
+        tickers += task
+        return AutoCloseable { tickers.remove(task) }
     }
-    override fun <T> call(timeoutMillis: Long, fallback: T, task: () -> T): T = task()
+    override fun <T> call(timeoutMillis: Long, fallback: T, task: () -> T): T {
+        if (!callTimesOut) return task()
+        callTimesOut = false
+        queue.addLast { task() }
+        return fallback
+    }
     override fun <T> within(deadlineMillis: Long, task: () -> T): T? = if (late) null else task()
     override fun close() {}
 
@@ -76,7 +85,7 @@ class ManualExecutor : SetupExecutor {
     fun drain() { while (queue.isNotEmpty()) queue.removeFirst()() }
 
     /** One poll of the watcher, as the timer would make it, and its work. */
-    fun tick() { tickTask?.invoke(); drain() }
+    fun tick() { tickers.toList().forEach { it() }; drain() }
 }
 
 class SetupHarness(

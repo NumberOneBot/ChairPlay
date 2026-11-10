@@ -6,14 +6,31 @@ import io.github.numberonebot.chairplay.gps.SetupStep
 import io.github.numberonebot.chairplay.gps.StepState
 import io.github.numberonebot.chairplay.gps.StepStatus
 import io.github.numberonebot.chairplay.gps.UsbDevice
-import io.github.numberonebot.chairplay.gps.UsbDeviceView
 import io.github.numberonebot.chairplay.gps.UsbSetupView
-import java.security.MessageDigest
+import io.github.numberonebot.chairplay.gps.view
 
-/** One wizard run. Its results belong to [device] and to this operation; guarded by the store's lock. */
+/**
+ * One Enable or Done. It and Cancel compete for [state]: Cancel (or a caller that gave up waiting) takes it from
+ * FINISHING and the attempt never calls the coordinator; once COMMITTED, Cancel is refused.
+ */
+internal class FinishAttempt {
+    val state = java.util.concurrent.atomic.AtomicInteger(FINISHING)
+    fun active() = state.get() != OVER
+
+    companion object {
+        const val FINISHING = 0
+        const val COMMITTED = 1
+        const val OVER = 2
+    }
+}
+
+/** One wizard run.Its results belong to [device] and to this operation; guarded by the store's lock. */
 internal class SetupSession(val id: Long, val intent: SetupIntent) {
     /** Set when the operation ends: late work sees it and drops its result. */
     @Volatile var cancelled = false
+    var finish: FinishAttempt? = null
+    /** The poll timer of this run; closed when the run ends. */
+    var ticker: AutoCloseable? = null
     var device: UsbDevice? = null
     val steps: MutableMap<SetupStep, StepState> = SetupStep.entries.associateWith { StepState(StepStatus.UNKNOWN) }.toMutableMap()
     /** Developer Mode was revealed on this phone in this run. */
@@ -37,10 +54,11 @@ internal class SetupStore(private val changed: () -> Unit) {
     @Volatile var view: UsbSetupView = UsbSetupView.closed()
         private set
 
-    fun begin(intent: SetupIntent, positionValid: Boolean): SetupSession? {
+    fun begin(intent: SetupIntent, positionValid: Boolean, startTimer: (SetupSession) -> AutoCloseable): SetupSession? {
         val session = synchronized(lock) {
             if (current != null) return null
             SetupSession(nextId++, intent).also {
+                it.ticker = startTimer(it)
                 it.positionValid = positionValid
                 it.steps[SetupStep.USB] = StepState(StepStatus.CHECKING)
                 current = it
@@ -74,6 +92,8 @@ internal class SetupStore(private val changed: () -> Unit) {
         synchronized(lock) {
             if (current !== session) return false
             session.cancelled = true
+            session.ticker?.close()
+            session.ticker = null
             current = null
             generation++
             view = UsbSetupView.closed(generation)
@@ -88,13 +108,11 @@ internal class SetupStore(private val changed: () -> Unit) {
         if (!ready && s.state(SetupStep.READY).status != StepStatus.UNKNOWN) s.steps[SetupStep.READY] = StepState(StepStatus.UNKNOWN)
         view = UsbSetupView(
             open = true, operationId = s.id, generation = generation, intent = s.intent,
-            device = s.device?.let { UsbDeviceView(ref(it.udid), it.name) },
+            device = s.device?.view(),
             steps = SetupStep.entries.associateWith { s.state(it) },
             current = s.current(), download = s.download,
             windowsWarning = s.windowsWarning, positionValid = s.positionValid,
         )
     }
 
-    private fun ref(udid: String): String =
-        MessageDigest.getInstance("SHA-256").digest(udid.toByteArray()).take(6).joinToString("") { "%02x".format(it) }
 }
