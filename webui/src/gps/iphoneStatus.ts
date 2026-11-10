@@ -1,6 +1,5 @@
 import type { GpsState } from '../api'
 import type { GpsOutput } from '../gpsApi'
-import { operationHead } from './noticeText'
 
 const REASON_TEXT: Partial<Record<NonNullable<GpsOutput['reason']>, string>> = {
   'usb-setup-needed': 'Setup required',
@@ -29,8 +28,10 @@ function carplayStatus(car: GpsState | null): string {
   return car.listening ? `Listening: ${(car.sentences ?? []).join(', ')}; ${updates}` : 'Not listening'
 }
 
-/** The iPhone row, last in the GPS section: the operation while one runs, else by the selected method. */
+/**
+ * The iPhone row, last in the GPS section: what the method in force does (until a reconnect applies a new choice, the
+ * old method still sends); an operation under way has its own status line above, so the row does not repeat it.
+ */
 export function iphoneStatus(output: GpsOutput, car: GpsState | null): string {
-  if (output.operation) return operationHead(output.operation)
-  return output.selected === 'usb' ? usbStatus(output) : carplayStatus(car)
+  return output.applied === 'usb' ? usbStatus(output) : carplayStatus(car)
 }
