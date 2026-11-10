@@ -55,7 +55,7 @@ internal object Json {
                 c == '\r' -> out.append("\\r")
                 c == '\t' -> out.append("\\t")
                 // Control characters, and the line separators JavaScript once refused inside strings.
-                c < ' ' || c == ' ' || c == ' ' -> out.append("\\u%04x".format(c.code))
+                c < ' ' || c == '\u2028' || c == '\u2029' -> out.append("\\u%04x".format(c.code))
                 else -> out.append(c)
             }
         }
