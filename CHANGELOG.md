@@ -2,6 +2,26 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.0.11 - 2026-11-10
+
+### Added
+
+- **Settings > GPS > Gauge style** chooses the GPS car's dials: German, as before, Italian, or British ([compare them](docs/images/gauge-styles.png)).
+- **Experiments > HUD demo > Gauges** runs the gauges up and down on the AltScreen in the style set, without an iPhone or the GPS.
+- An app driving the GPS car can send the throttle, the brake, the steering wheel's angle, and the car's top speed. The gauges show the pedals and the wheel, and the speedometer's scale runs to the top speed. See [Integrations](docs/INTEGRATIONS.md).
+
+### Changed
+
+- An app's red line and top speed stay on the gauges after it stops sending, until the gamepad or keys drive the GPS car again.
+- The GPS car parks and stops its engine after standing 5 seconds instead of 10.
+- Setup and the uninstaller close a running ChairPlay themselves and end its CarPlay session as closing the window does.
+
+### Removed
+
+- **Send satellites in view**, with its almanac download and cache. The iPhone showed no difference with it.
+
+[Release notes](docs/RELEASE-NOTES-1.0.11.md) · [Changes since v1.0.10](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.10...v1.0.11)
+
 ## 1.0.10 - 2026-11-09
 
 A maintenance release: little changes on the outside, much on the inside. The code that calls Windows is now kept apart from the rest of ChairPlay, which makes the next large features and releases simpler to build.
