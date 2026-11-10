@@ -79,8 +79,8 @@ class ParseTests(unittest.TestCase):
 
 class MessageTests(unittest.TestCase):
     def test_the_error_codes_are_the_apps_keys(self):
-        self.assertEqual(21, len(protocol.CODES))
-        self.assertIn('several-devices', protocol.CODES)
+        self.assertEqual(20, len(protocol.CODES))
+        self.assertNotIn('several-devices', protocol.CODES)
         with self.assertRaises(ValueError):
             HelperError('made-up', 'x')
 

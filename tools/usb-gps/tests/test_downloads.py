@@ -46,16 +46,11 @@ class DownloadTests(unittest.IsolatedAsyncioTestCase):
         seen = []
         package = await self.obtain(progress=lambda received, total: seen.append((received, total)))
         self.assertEqual(self.store.find(packages.CRYPTEX).path, package.path)
-        self.store.verify(package)
+        packages.check(packages.CRYPTEX, package.path)
         total = sum(len(data) for data in self.remote.files.values())
         self.assertEqual((total, total), seen[-1])
         self.assertEqual(sorted(received for received, _ in seen), [received for received, _ in seen])
         self.assertEqual([], self.leftovers())
-
-    async def test_two_requests_for_one_package_share_one_download(self):
-        first, second = await asyncio.gather(self.obtain(), self.obtain())
-        self.assertEqual(first.path, second.path)
-        self.assertEqual(len(self.remote.files), len(self.remote.fetched))
 
     async def test_a_cancelled_download_publishes_nothing(self):
         cancel = asyncio.Event()
@@ -71,18 +66,6 @@ class DownloadTests(unittest.IsolatedAsyncioTestCase):
         await self.idle()
         self.assertIsNone(self.store.find(packages.CRYPTEX))
         self.assertEqual([], self.leftovers())
-
-    async def test_when_one_of_two_cancels_the_other_still_gets_the_package(self):
-        cancel = asyncio.Event()
-        self.remote.chunk_hook = lambda name: __import__('time').sleep(.002)
-        leaving = asyncio.ensure_future(self.obtain(cancel=cancel))
-        staying = asyncio.ensure_future(self.obtain())
-        await asyncio.sleep(.02)
-        cancel.set()
-        with self.assertRaises(HelperError):
-            await leaving
-        package = await staying
-        self.store.verify(package)
 
     async def test_a_failed_fetch_publishes_nothing(self):
         self.remote.fail['Image.dmg'] = RuntimeError('connection reset')

@@ -1,9 +1,8 @@
-"""Downloads a developer-tools package into the store, once however many requests want it.
+"""Downloads the developer-tools package into the store.
 
 The transfer runs in a daemon thread (requests is blocking; a daemon thread never holds up the helper's exit), into a
-partial folder the store then publishes whole. Requests for the same kind share one transfer and its progress; the
-transfer is cancelled only when every request waiting for it has gone. Errors: download-failed, disk-full,
-verification-failed (not a package), store-unavailable, cancelled.
+partial folder the store then publishes whole; a failed or cancelled one deletes its folder. Errors: download-failed,
+disk-full, verification-failed (not a package), store-unavailable, cancelled.
 """
 import asyncio
 import errno
@@ -63,12 +62,12 @@ def _failure(error):
 
 
 class _Job:
-    def __init__(self, loop):
+    def __init__(self, loop, progress):
         self.loop = loop
+        self.progress = progress
         self.future = loop.create_future()
         self.future.add_done_callback(lambda future: future.cancelled() or future.exception())
         self.cancel = threading.Event()
-        self.waiters = {}
         self.received = 0
         self.total = None
         self.reported = 0.0
@@ -80,23 +79,17 @@ class Downloads:
         self.head = head
         self.fetch = fetch
         self.progress_interval = progress_interval
-        self._jobs = {}
-        self._partials = set()
-        self._lock = threading.Lock()
+        self._running = 0
 
     def running(self):
-        return bool(self._jobs)
+        return self._running > 0
 
     async def obtain(self, kind, progress, cancel):
         """The published package of [kind]; [progress](received, total or None); [cancel] an asyncio.Event."""
-        loop = asyncio.get_running_loop()
-        job = self._jobs.get(kind)
-        if job is None:
-            job = self._jobs[kind] = _Job(loop)
-            job.future.add_done_callback(lambda _: self._jobs.pop(kind, None))
-            threading.Thread(target=self._run, args=(kind, job), name=f'download-{kind}', daemon=True).start()
-        token = object()
-        job.waiters[token] = progress
+        job = _Job(asyncio.get_running_loop(), progress)
+        self._running += 1
+        job.future.add_done_callback(lambda _: self._finished())
+        threading.Thread(target=self._run, args=(kind, job), name=f'download-{kind}', daemon=True).start()
         cancelled = asyncio.ensure_future(cancel.wait())
         try:
             done, _ = await asyncio.wait({job.future, cancelled}, return_when=asyncio.FIRST_COMPLETED)
@@ -105,18 +98,17 @@ class Downloads:
             raise HelperError('cancelled', 'The download was cancelled.')
         finally:
             cancelled.cancel()
-            job.waiters.pop(token, None)
-            if not job.waiters and not job.future.done():
+            if not job.future.done():
                 job.cancel.set()
+
+    def _finished(self):
+        self._running -= 1
 
     def _run(self, kind, job):
         partial = None
         try:
             self.store.ensure_root()
-            with self._lock:
-                self.store.sweep(keep=set(self._partials))
-                partial = self.store.begin(kind)
-                self._partials.add(partial)
+            partial = self.store.begin(kind)
             manifest_path = partial / packages.MANIFEST_NAME
             self._get(job, packages.remote_url(kind, packages.MANIFEST_NAME), manifest_path)
             manifest = manifest_path.read_bytes()
@@ -134,9 +126,6 @@ class Downloads:
             if partial is not None:
                 self.store.discard(partial)
             job.loop.call_soon_threadsafe(_settle, job.future, None, _failure(error))
-        finally:
-            with self._lock:
-                self._partials = {item for item in self._partials if item.exists()}
 
     def _get(self, job, url, destination):
         def on_bytes(count):
@@ -150,12 +139,7 @@ class Downloads:
         now = time.monotonic()
         if force or now - job.reported >= self.progress_interval:
             job.reported = now
-            job.loop.call_soon_threadsafe(_broadcast, job, job.received, job.total)
-
-
-def _broadcast(job, received, total):
-    for progress in list(job.waiters.values()):
-        progress(received, total)
+            job.loop.call_soon_threadsafe(job.progress, job.received, job.total)
 
 
 def _settle(future, result, error):

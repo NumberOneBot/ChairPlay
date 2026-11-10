@@ -13,12 +13,11 @@ from .protocol import PROTOCOL, HelperError, parse_request
 
 
 class Server:
-    def __init__(self, role, handlers, write, idle_timeout=None, max_pending=16, drain_timeout=6.0):
+    def __init__(self, role, handlers, write, idle_timeout=None, drain_timeout=6.0):
         self.role = role
         self.handlers = handlers
         self.write = write
         self.idle_timeout = idle_timeout
-        self.max_pending = max_pending
         self.drain_timeout = drain_timeout
         self.pending = {}
         self.finished = asyncio.Event()
@@ -76,8 +75,6 @@ class Server:
     def _dispatch(self, request):
         if request.id in self.pending or self.handlers.holds(request.id):
             return self._fail(request.id, 'This id still waits for its reply.')
-        if len(self.pending) >= self.max_pending:
-            return self._fail(request.id, 'Too many requests wait for their replies.')
         work = self.handlers.handle(request)
         if work is not None:
             self.pending[request.id] = asyncio.ensure_future(self._answer(request, work))

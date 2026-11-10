@@ -2,7 +2,6 @@ import json
 import os
 import pathlib
 import tempfile
-import time
 import unittest
 
 from tests.packaging_fakes import cryptex_manifest
@@ -37,13 +36,13 @@ class StoreTests(unittest.TestCase):
         self.assertIsNone(self.store.find(packages.CRYPTEX))
         self.assertFalse((self.data / 'cache').exists())
 
-    def test_a_published_package_is_found_and_verifies(self):
+    def test_a_published_package_is_found_with_its_files(self):
         package = self.publish()
         self.assertEqual((packages.CRYPTEX, packages.EXPECTED_BUILD), (package.kind, package.build))
         found = self.store.find(packages.CRYPTEX)
         self.assertEqual(package.path, found.path)
-        self.store.verify(found)
-        self.assertIsNone(self.store.find(packages.PERSONALIZED))
+        packages.check(packages.CRYPTEX, found.path)
+        self.assertIsNone(self.store.find('other'))
 
     def test_the_manifest_is_written_last_and_holds_no_device_data(self):
         package = self.publish()
@@ -58,21 +57,18 @@ class StoreTests(unittest.TestCase):
         os.rename(partial, self.root / f'{packages.CRYPTEX}-{packages.EXPECTED_BUILD}')
         self.assertIsNone(self.store.find(packages.CRYPTEX))
 
-    def test_a_changed_file_fails_verification(self):
+    def test_a_package_with_a_file_cut_short_or_gone_is_no_package(self):
         package = self.publish()
         image = package.path / 'Image.dmg'
-        image.write_bytes(b'x' * image.stat().st_size)
-        found = self.store.find(packages.CRYPTEX)
-        with self.assertRaises(HelperError) as caught:
-            self.store.verify(found)
-        self.assertEqual('verification-failed', caught.exception.code)
         image.write_bytes(b'short')
+        self.assertIsNone(self.store.find(packages.CRYPTEX))
+        image.unlink()
         self.assertIsNone(self.store.find(packages.CRYPTEX))
 
     def test_a_manifest_of_another_format_or_kind_is_ignored(self):
         package = self.publish()
         manifest = json.loads((package.path / MANIFEST).read_text())
-        for change in ({'format': 99}, {'kind': packages.PERSONALIZED}):
+        for change in ({'format': 99}, {'kind': 'other'}):
             (package.path / MANIFEST).write_text(json.dumps({**manifest, **change}))
             self.assertIsNone(self.store.find(packages.CRYPTEX), change)
 
@@ -85,7 +81,7 @@ class StoreTests(unittest.TestCase):
 
     def test_a_broken_package_is_removed_whole(self):
         package = self.publish()
-        self.store.remove(package)
+        self.store.remove(package.path)
         self.assertFalse(package.path.exists())
         self.assertEqual([], [p for p in self.root.iterdir()])
 
@@ -93,15 +89,6 @@ class StoreTests(unittest.TestCase):
         self.publish('26Z9999z')
         expected = self.publish()
         self.assertEqual(expected.path, self.store.find(packages.CRYPTEX).path)
-
-    def test_old_partials_are_swept_and_fresh_ones_kept(self):
-        old = self.write_partial()
-        fresh = self.write_partial()
-        stale = time.time() - 3600
-        os.utime(old, (stale, stale))
-        self.store.sweep()
-        self.assertFalse(old.exists())
-        self.assertTrue(fresh.exists())
 
     def test_an_unreachable_store_is_store_unavailable(self):
         for root in (self.data / 'gone' / 'deeper' / 'cache' / 'developer-tools', self.data / 'file'):

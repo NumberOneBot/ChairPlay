@@ -1,11 +1,10 @@
 """The developer-tools store: the folder the app names (<data>/cache/developer-tools), never a profile folder.
 
 A package is <store>/<kind>-<build>/ with its files and manifest.json, which is written last, inside a partial folder
-that is then renamed into place: a package is published whole or not at all. A partial or cancelled download stays a
-.partial-* folder and is swept later. The manifest lists each file's size and SHA-256, and holds nothing about any
-phone: the package is shared by every phone of its kind, while personalization happens on the phone at each mount.
+that is then renamed into place: a package is published whole or not at all, and a failed download's partial folder
+is deleted. The manifest lists each file's size and holds nothing about any phone: the package is shared by every
+phone, while personalization happens on the phone at each mount.
 """
-import hashlib
 import json
 import os
 import shutil
@@ -22,7 +21,6 @@ MANIFEST = 'manifest.json'
 FORMAT = 1
 PARTIAL = '.partial-'
 REMOVING = '.removing-'
-STALE_SECONDS = 600
 
 
 @dataclass(frozen=True)
@@ -35,14 +33,6 @@ class Package:
     @property
     def id(self):
         return self.path.name
-
-
-def _sha256(path):
-    digest = hashlib.sha256()
-    with open(path, 'rb') as stream:
-        for chunk in iter(lambda: stream.read(1 << 20), b''):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _unavailable(detail):
@@ -78,7 +68,7 @@ class Store:
         return partial
 
     def find(self, kind):
-        """The best published package of [kind], by a quick check (manifest and sizes); creates nothing."""
+        """The published package of [kind] whose files are all there; creates nothing."""
         if not self.root.is_dir():
             return None
         found = [package for child in self.root.iterdir() if child.name.startswith(f'{kind}-')
@@ -87,22 +77,11 @@ class Store:
             return None
         return max(found, key=lambda package: (package.build == packages.EXPECTED_BUILD, package.path.stat().st_mtime))
 
-    def verify(self, package):
-        """Every file's hash matches the manifest and the layout is whole; raises verification-failed."""
-        try:
-            for path, entry in package.files.items():
-                if _sha256(package.path / path) != entry['sha256']:
-                    raise HelperError('verification-failed', f'{path} does not match the package manifest.')
-        except OSError as error:
-            raise HelperError('verification-failed', 'A package file cannot be read.') from error
-        packages.check(package.kind, package.path)
-
     def publish(self, partial, kind):
         manifest_bytes = (partial / packages.MANIFEST_NAME).read_bytes()
         build = packages.build_of(manifest_bytes)
         packages.check(kind, partial)
-        files = {path: {'size': (partial / path).stat().st_size, 'sha256': _sha256(partial / path)}
-                 for path in packages.files(kind, manifest_bytes)}
+        files = {path: {'size': (partial / path).stat().st_size} for path in packages.files(kind, manifest_bytes)}
         target = self.root / f'{kind}-{build}'
         existing = self._load(target, kind)
         if existing is not None:
@@ -130,28 +109,14 @@ class Store:
     def discard(self, partial):
         shutil.rmtree(partial, ignore_errors=True)
 
-    def remove(self, package_or_path):
-        """Moves a package out of sight first, so a half-deleted one is never taken for a package."""
-        path = getattr(package_or_path, 'path', package_or_path)
+    def remove(self, path):
+        """Moves a package folder out of sight first, so a half-deleted one is never taken for a package."""
         aside = self.root / f'{REMOVING}{uuid.uuid4().hex[:8]}'
         try:
             os.rename(path, aside)
         except OSError:
             aside = path
         shutil.rmtree(aside, ignore_errors=True)
-
-    def sweep(self, keep=()):
-        """Deletes partial and half-removed folders left by earlier runs; [keep] are this run's own."""
-        if not self.root.is_dir():
-            return
-        limit = time.time() - STALE_SECONDS
-        for child in self.root.iterdir():
-            if child.name.startswith((PARTIAL, REMOVING)) and child not in keep:
-                try:
-                    if child.stat().st_mtime < limit:
-                        shutil.rmtree(child, ignore_errors=True)
-                except OSError:
-                    pass
 
     def _load(self, folder, kind):
         try:
@@ -160,7 +125,7 @@ class Store:
                 return None
             files = record['files']
             for path, entry in files.items():
-                if (folder / path).stat().st_size != entry['size'] or not isinstance(entry['sha256'], str):
+                if (folder / path).stat().st_size != entry['size']:
                     return None
             return Package(kind, str(record['build']), folder, files)
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
