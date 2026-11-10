@@ -97,7 +97,7 @@ internal val SETTINGS_TEMPLATE = listOf(
     ),
     SettingBlock(
         "Video for both screens: h264, or h264+h265 to let the iPhone choose. Reconnect to apply.",
-        "video.codecs" to "h264+h265",
+        "video.codecs" to "h264",
     ),
     SettingBlock(
         "Video decoding: hardware (D3D11VA, with software fallback), or software. Reconnect to apply.",

@@ -78,9 +78,9 @@ export function CarPlayPage({ state, backend, settings }: { state: AppState; bac
         )}
       </Row>
       <Row label="Video codec" title="Codecs offered to the iPhone for both screens">
-        {choice('video.codecs', 'Video codec', 'h264+h265', [
-          ['h264+h265', 'H265'],
+        {choice('video.codecs', 'Video codec', 'h264', [
           ['h264', 'H264'],
+          ['h264+h265', 'H265'],
         ])}
       </Row>
       <Row label="Decoding" title="Hardware decoding automatically falls back to software if the GPU is unavailable or decoding fails">

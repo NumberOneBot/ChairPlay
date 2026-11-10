@@ -209,7 +209,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     val keyboardTextInput: Boolean = settings.booleanSetting("keyboard.text.input", true)
 
     /** video.codecs: whether the iPhone may send H.265 as well as H.264. */
-    val h265: Boolean = settings.choiceSetting("video.codecs", true, mapOf("h264" to false, "h264+h265" to true))
+    val h265: Boolean = settings.choiceSetting("video.codecs", false, mapOf("h264" to false, "h264+h265" to true))
 
     /** audio.music.mode: buffered, apps that can send music ahead, so short Wi-Fi gaps do not interrupt it; or standard. */
     val bufferedMusic: Boolean = settings.choiceSetting("audio.music.mode", true, mapOf("standard" to false, "buffered" to true))

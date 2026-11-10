@@ -16,10 +16,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class DesktopConfigTest {
+    // H.264 alone unless H.265 is asked for: a new user's iPhone sends H.264.
     @Test
-    fun `desktop advertises HEVC to the phone`() {
+    fun `desktop advertises HEVC to the phone only when asked`() {
         val config = configWith()
-        assertTrue(AirPlayInfoPlist.build(config.airPlay).containsKey("hevcInfo"))
+        assertFalse(AirPlayInfoPlist.build(config.airPlay).containsKey("hevcInfo"))
+        assertTrue(AirPlayInfoPlist.build(configWith("video.codecs=h264+h265").airPlay).containsKey("hevcInfo"))
         assertTrue(config.hardwareVideo)
         assertFalse(configWith("video.decoder=software").hardwareVideo)
     }

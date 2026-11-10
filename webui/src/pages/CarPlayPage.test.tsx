@@ -27,12 +27,14 @@ const chosen = (group: string) =>
 describe('CarPlay page, display', () => {
   it('saves codec capability and decoder preference separately', async () => {
     const backend = await carplay()
-    fireEvent.click(radio('Video codec', 'H264'))
-    await waitFor(() => expect(backend.saved).toEqual([{ 'video.codecs': 'h264' }]))
-    fireEvent.click(radio('Decoding', 'Software'))
-    await waitFor(() => expect(backend.saved).toEqual([{ 'video.codecs': 'h264' }, { 'video.decoder': 'software' }]))
+    // Unset, the codec is H.264 alone.
+    expect(chosen('Video codec')).toEqual(['H264'])
     fireEvent.click(radio('Video codec', 'H265'))
-    await waitFor(() => expect(backend.saved.at(-1)).toEqual({ 'video.codecs': 'h264+h265' }))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'video.codecs': 'h264+h265' }]))
+    fireEvent.click(radio('Decoding', 'Software'))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'video.codecs': 'h264+h265' }, { 'video.decoder': 'software' }]))
+    fireEvent.click(radio('Video codec', 'H264'))
+    await waitFor(() => expect(backend.saved.at(-1)).toEqual({ 'video.codecs': 'h264' }))
     fireEvent.click(radio('Decoding', 'Hardware'))
     await waitFor(() => expect(backend.saved.at(-1)).toEqual({ 'video.decoder': 'hardware' }))
   })

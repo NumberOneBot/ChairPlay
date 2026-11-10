@@ -85,7 +85,9 @@ class AirPlayInfoTranscriptTest {
     private fun appFolder(settings: List<String>): Path {
         val dir = Files.createTempDirectory("chairplay-info")
         writeTestSettings(dir)
-        Files.writeString(dir.resolve("settings.properties"), settings.joinToString("") { "$it\n" }, StandardOpenOption.APPEND)
+        // Recorded while H.265 was offered by default: it still is here, and a scenario's own codecs come after.
+        val written = listOf("video.codecs=h264+h265") + settings
+        Files.writeString(dir.resolve("settings.properties"), written.joinToString("") { "$it\n" }, StandardOpenOption.APPEND)
         Files.writeString(dir.resolve("identity.properties"), "privateKey=${"11".repeat(32)}\npublicKey=${"22".repeat(32)}\n" +
             "pairingId=00000000-0000-4000-8000-000000000001\n")
         return dir
