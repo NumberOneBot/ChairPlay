@@ -29,6 +29,21 @@ val usbGpsSources = fileTree(usbGpsTools) {
     exclude(".venv/**", "**/__pycache__/**", "build/**", "dist/**")
 }
 
+// Gradle runs a task again whenever this script changes, even with its inputs as they were. The venv, the tests and
+// the frozen helper each keep a stamp of what they were made from, and do nothing when it still matches: editing the
+// script never costs a reinstall of the packages or a new PyInstaller run.
+fun usbGpsStamp(): String {
+    val digest = java.security.MessageDigest.getInstance("SHA-256")
+    usbGpsSources.files.sortedBy { it.relativeTo(usbGpsTools.asFile).invariantSeparatorsPath }.forEach { file ->
+        digest.update(file.relativeTo(usbGpsTools.asFile).invariantSeparatorsPath.toByteArray())
+        digest.update(file.readBytes())
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
+}
+
+fun stampMatches(stamp: File, expected: String, vararg made: File): Boolean =
+    stamp.isFile && stamp.readText() == expected && made.all { it.exists() }
+
 val usbGpsVenv by tasks.registering {
     group = "build"
     description = "Makes build/usb-gps/venv: Python 3.12 with the helper's locked packages and PyInstaller."
@@ -39,6 +54,11 @@ val usbGpsVenv by tasks.registering {
     outputs.file(marker)
     val ops = objects.newInstance<HelperBuildOps>()
     doLast {
+        val wanted = usbGpsLock.asFile.readText() + usbGpsBuildRequirements.asFile.readText()
+        if (stampMatches(marker.get().asFile, wanted, venvPython())) {
+            logger.lifecycle("USB GPS helper venv: already made from these requirements")
+            return@doLast
+        }
         val base = basePython()
         val version = ops.exec.runCatching {
             exec { commandLine(base + listOf("-c", "import sys; sys.exit(sys.version_info[:2] != (3, 12))")) }
@@ -53,7 +73,7 @@ val usbGpsVenv by tasks.registering {
             commandLine(venvPython().path, "-m", "pip", "install", "--disable-pip-version-check", "--no-input",
                 "--require-virtualenv", "-r", usbGpsLock.asFile.path, "-r", usbGpsBuildRequirements.asFile.path)
         }
-        marker.get().asFile.writeText(usbGpsLock.asFile.readText() + usbGpsBuildRequirements.asFile.readText())
+        marker.get().asFile.writeText(wanted)
     }
 }
 
@@ -67,11 +87,16 @@ val usbGpsTest by tasks.registering {
     outputs.file(passed)
     val ops = objects.newInstance<HelperBuildOps>()
     doLast {
+        val stamp = usbGpsStamp()
+        if (stampMatches(passed.get().asFile, stamp)) {
+            logger.lifecycle("USB GPS helper tests: passed already for these sources")
+            return@doLast
+        }
         ops.exec.exec {
             workingDir(usbGpsTools.asFile)
             commandLine(venvPython().path, "run_tests.py", "--timeout", "300")
         }
-        passed.get().asFile.writeText("ok\n")
+        passed.get().asFile.writeText(stamp)
     }
 }
 
@@ -90,10 +115,16 @@ val usbGpsHelper by tasks.registering {
     outputs.dir(helper)
     outputs.dir(licences)
     val ops = objects.newInstance<HelperBuildOps>()
+    val built = usbGpsWork.map { it.file("helper-built.txt") }
     doLast {
-        ops.fs.delete { delete(dist, usbGpsWork.map { it.dir("pyinstaller") }) }
+        val stamp = usbGpsStamp()
+        if (stampMatches(built.get().asFile, stamp, helper.get().file("helper.exe").asFile, licences.get().asFile)) {
+            logger.lifecycle("USB GPS helper: already frozen from these sources")
+            return@doLast
+        }
+        ops.fs.delete { delete(dist, built, usbGpsWork.map { it.dir("pyinstaller") }) }
         ops.exec.exec {
-            commandLine(venvPython().path, "-m", "PyInstaller", "--noconfirm", "--clean", "--log-level", "WARN",
+            commandLine(venvPython().path, "-m", "PyInstaller", "--noconfirm", "--clean", "--log-level", "ERROR",
                 "--distpath", dist.get().asFile.path, "--workpath", usbGpsWork.get().dir("pyinstaller").asFile.path,
                 usbGpsTools.file("helper.spec").asFile.path)
         }
@@ -111,6 +142,7 @@ val usbGpsHelper by tasks.registering {
             commandLine(venvPython().path, usbGpsTools.file("licenses.py").asFile.path, "--lock", usbGpsLock.asFile.path,
                 "--extra", "pyinstaller", "--out", licences.get().asFile.path)
         }
+        built.get().asFile.writeText(stamp)
     }
 }
 
