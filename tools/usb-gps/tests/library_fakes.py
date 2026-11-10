@@ -63,7 +63,7 @@ class Library:
         return SimpleNamespace(list_devices=self.list_devices, create_lockdown=self.create_lockdown, tunnel=self.tunnel,
                                tun_type=self.tun_type, dial_plane=self.dial_plane, rsd=self.rsd, dvt=self.dvt,
                                location=self.location, amfi=self.amfi, image_mounted=self.image_mounted,
-                               ddi_installed=self.ddi_installed, mount_personalized=self.mount_personalized,
+                               ddi_installed=self.ddi_installed,
                                install_cryptex=self.install_cryptex)
 
     async def list_devices(self, usbmux_address=None):
@@ -156,11 +156,6 @@ class Library:
 
     async def ddi_installed(self, rsd):
         return self.cryptex_installed
-
-    async def mount_personalized(self, client, image, manifest, trust_cache):
-        self.log.append(('mount-personalized', image.name, manifest.name, trust_cache.name))
-        if self.mount_error is not None:
-            raise self.mount_error
 
     async def install_cryptex(self, rsd, restore_dir):
         self.log.append(('install-cryptex', restore_dir))

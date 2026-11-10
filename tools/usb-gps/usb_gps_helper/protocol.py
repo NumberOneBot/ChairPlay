@@ -20,7 +20,7 @@ MAX_LINE = 4096
 
 # The app's UsbErrorCode keys (gps/UsbHelper.kt); the page words them, the helper never sends text for users.
 CODES = frozenset((
-    'no-device', 'several-devices', 'drivers-missing', 'usbmux-unavailable', 'locked', 'not-trusted',
+    'no-device', 'drivers-missing', 'usbmux-unavailable', 'locked', 'not-trusted',
     'developer-mode-off', 'image-missing', 'service-unavailable', 'unsupported-ios', 'download-failed', 'disk-full',
     'verification-failed', 'mount-failed', 'store-unavailable', 'timeout', 'cancelled', 'link-lost',
     'invalid-coordinates', 'helper-failed', 'protocol',

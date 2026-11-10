@@ -125,11 +125,12 @@ val appHome: Provider<String> = providers.gradleProperty("chairplay.home")
     .orElse(layout.projectDirectory.dir("dist/ChairPlay").asFile.path)
 
 // The app data, which the app writes next to its exe: settings, controls, window places and car icon, the AirPlay
-// identity, pairings, the MFi files, the data logs, screenshots and the instance lock. deploy keeps them, and the
-// installer (gradle/installer.gradle.kts) refuses an image holding any of them.
+// identity, pairings, the MFi files, the data logs, screenshots, the instance lock, and cache\ (the USB GPS developer
+// tools and its cleanup journal). deploy keeps them, and the installer (gradle/installer.gradle.kts) refuses an image
+// holding any of them.
 val appDataFiles = listOf(
     "settings.properties", "controls.properties", "window.properties", "carplay-icon.png", "identity.properties",
-    "pairings/**", "offline-mfi/**", "logs/**", "screenshots/**", "ChairPlay.lock", "webview2/**",
+    "pairings/**", "offline-mfi/**", "logs/**", "screenshots/**", "ChairPlay.lock", "webview2/**", "cache/**",
 )
 project.extra["appDataFiles"] = appDataFiles
 

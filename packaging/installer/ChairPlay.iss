@@ -2,9 +2,9 @@
 ; passes AppVersion, SourceDir (the jpackage app image), OutputDir and AppData (the app's data, ';' between names).
 ;
 ; ChairPlay keeps its data next to its exe (settings, controls and window files, identity.properties, pairings\,
-; offline-mfi\, carplay-icon.png, logs\, screenshots\, ChairPlay.lock). Optional MfiSourceDir supplies an initial MFi pair.
-; Otherwise the installer ships no user data and deletes only
-; the program folders app\ and runtime\ before an update: a lost identity or pairing makes the iPhone see a new car.
+; offline-mfi\, carplay-icon.png, logs\, screenshots\, ChairPlay.lock, and cache\ with the USB GPS developer tools).
+; Optional MfiSourceDir supplies an initial MFi pair. Otherwise the installer ships no user data and deletes only the
+; program folders app\, runtime\ and helper\ before an update: a lost identity or pairing makes the iPhone see a new car.
 ; Uninstalling asks whether to delete the data too, No by default and in a silent run.
 
 #ifndef AppVersion
@@ -56,6 +56,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\app"
 Type: filesandordirs; Name: "{app}\runtime"
+; The USB GPS helper (a PyInstaller folder): a newer one's files replace the older ones whole.
+Type: filesandordirs; Name: "{app}\helper"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

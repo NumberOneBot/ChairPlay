@@ -1,6 +1,7 @@
 // ChairPlay's build: the app and its tests, with DiPlay's core copied in from upstream/ (gradle/upstream.gradle.kts),
 // the C and C++ parts zig builds (gradle/native.gradle.kts), the web UI and its web view (gradle/web.gradle.kts), and
-// the app image deployed into the app folder (gradle/package.gradle.kts).
+// the app image deployed into the app folder (gradle/package.gradle.kts), with the USB GPS helper it carries
+// (gradle/usb-gps.gradle.kts).
 
 plugins {
     kotlin("jvm") version "2.2.10"
@@ -137,4 +138,5 @@ apply(from = "gradle/bridge.gradle.kts")
 apply(from = "gradle/apac.gradle.kts")
 apply(from = "gradle/web.gradle.kts")
 apply(from = "gradle/package.gradle.kts")
+apply(from = "gradle/usb-gps.gradle.kts")
 apply(from = "gradle/installer.gradle.kts")

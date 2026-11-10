@@ -141,9 +141,12 @@ class OpenTests(unittest.IsolatedAsyncioTestCase):
             await session.open(request('open', 'o', udid=udid, **session_fields()))
         return caught.exception.code, backend
 
-    async def test_two_usb_phones_open_nothing(self):
-        code, backend = await self.open(FakeBackend([UDID, 'OTHER']))
-        self.assertEqual(('several-devices', 0), (code, backend.opened))
+    async def test_of_two_usb_phones_the_asked_one_opens(self):
+        backend = FakeBackend([UDID, 'OTHER'])
+        session = SimulationSession(backend, Wire(), rpc_timeout=.2, presence_interval=None)
+        await session.open(request('open', 'o', udid=UDID, **session_fields()))
+        self.assertEqual(1, backend.opened)
+        await session.close(request('close', 'x', **session_fields()))
 
     async def test_another_phone_than_the_asked_one_is_no_device(self):
         code, backend = await self.open(FakeBackend(['OTHER']))

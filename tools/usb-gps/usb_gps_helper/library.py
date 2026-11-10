@@ -29,7 +29,7 @@ def load():
     from pymobiledevice3.services.dvt.instruments.dvt_provider import DvtProvider
     from pymobiledevice3.services.dvt.instruments.location_simulation import LocationSimulation
     from pymobiledevice3.services.mobile_image_mounter import (
-        MobileImageMounterService, PersonalizedImageMounter, image_type_for_device,
+        MobileImageMounterService, image_type_for_device,
     )
     from pymobiledevice3.usbmux import list_devices
 
@@ -41,10 +41,6 @@ def load():
         installed = await CryptexdService(rsd).copy_installed()
         return any(item.identifier == DDI_CRYPTEX_IDENTIFIER for item in installed)
 
-    async def mount_personalized(client, image, manifest, trust_cache):
-        async with PersonalizedImageMounter(lockdown=client) as mounter:
-            await mounter.mount(image, manifest, trust_cache)
-
     async def install_cryptex(rsd, restore_dir):
         await CryptexdService(rsd).auto_install_ddi(restore_dir=restore_dir)
 
@@ -52,4 +48,4 @@ def load():
         list_devices=list_devices, create_lockdown=create_using_usbmux, tunnel=tunnel_service, tun_type=UserspaceTun,
         dial_plane=UserspaceDialPlane, rsd=RemoteServiceDiscoveryService, dvt=DvtProvider, location=LocationSimulation,
         amfi=AmfiService, image_mounted=image_mounted, ddi_installed=ddi_installed,
-        mount_personalized=mount_personalized, install_cryptex=install_cryptex)
+        install_cryptex=install_cryptex)

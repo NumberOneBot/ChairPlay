@@ -1,9 +1,8 @@
 """The control helper's operations: Apple's components, the USB phone, its probe, Developer Mode's reveal, and the
 developer tools. None of them sends a position.
 
-prepare: probe; an image already mounted is probed again and never unmounted; otherwise a verified cached package is
-mounted without a download (a damaged one is replaced), or one is downloaded first; then the location service must
-answer. Progress events name the request: stage download (with bytes), mount, check. cancel ends a download at once,
+prepare: probe; an image already mounted is probed again and never unmounted; otherwise a cached package with all its
+files is mounted without a download, or one is downloaded first; then the location service must answer. Progress events name the request: stage download (with bytes), mount, check. cancel ends a download at once,
 and other stages at their end, as a mount half done on the phone is not ours to break.
 """
 import asyncio
@@ -76,8 +75,6 @@ class ControlOps:
 
     async def _discover(self, request):
         udids = await self._bounded(self.backend.usb_devices(), LIST_TIMEOUT)
-        if len(udids) > 1:
-            raise HelperError('several-devices', 'More than one iPhone is connected by USB.')
         # Polled about once a second: a phone is asked its name and iOS once while it stays connected.
         self._described = {udid: info for udid, info in self._described.items() if udid in udids}
         devices = []
@@ -147,11 +144,7 @@ class ControlOps:
     async def _package(self, request, kind, cancel):
         package = self.store.find(kind)
         if package is not None:
-            try:
-                await asyncio.to_thread(self.store.verify, package)
-                return package, False
-            except HelperError:
-                self.store.remove(package)
+            return package, False
         self._progress(request, 'download', 0, None)
         package = await self.downloads.obtain(
             kind, lambda received, total: self._progress(request, 'download', received, total), cancel)

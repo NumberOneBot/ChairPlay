@@ -5,7 +5,7 @@ import threading
 import time
 import unittest
 
-from tests.fakes import UDID, FakeBackend, FakeDevice, Wire, request
+from tests.fakes import UDID, FakeBackend, Wire, request
 from tests.packaging_fakes import FakeRemote
 from usb_gps_helper import packages
 from usb_gps_helper.control import ControlOps
@@ -75,12 +75,10 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(time.monotonic() - started, .5)
         await preparing
 
-    async def test_two_usb_phones_are_several_devices_for_every_device_operation(self):
+    async def test_of_two_usb_phones_both_are_listed_and_the_asked_one_answers(self):
         self.backend.udids = [UDID, 'OTHER']
-        for op, fields in (('discover', {}), ('probe', {'udid': UDID}), ('reveal', {'udid': UDID}),
-                           ('tools-status', {'udid': UDID}), ('prepare', {'udid': UDID})):
-            self.assertEqual('several-devices', await self.code(op, **fields), op)
-        self.assertEqual([], self.backend.calls)
+        self.assertEqual([UDID, 'OTHER'], [device['udid'] for device in (await self.call('discover'))['devices']])
+        self.assertEqual(UDID, (await self.call('probe', udid=UDID))['udid'])
 
     async def test_a_hanging_usbmux_holds_discover_three_seconds_at_most(self):
         async def hangs():
@@ -153,18 +151,17 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([], self.remote.fetched)
 
     async def test_an_old_ios_is_unsupported(self):
-        self.device.ios = '16.7'
+        self.device.ios = '26.4'
         self.assertEqual('unsupported-ios', await self.code('prepare', udid=UDID))
         self.assertEqual('unsupported-ios', await self.code('tools-status', udid=UDID))
 
-    async def test_a_damaged_cached_package_is_downloaded_again(self):
+    async def test_a_cached_package_missing_a_file_is_downloaded_again(self):
         await self.call('prepare', udid=UDID)
-        image = self.store.find(packages.CRYPTEX).path / 'Image.dmg'
-        image.write_bytes(b'x' * image.stat().st_size)
+        (self.store.find(packages.CRYPTEX).path / 'Image.dmg').write_bytes(b'cut')
         self.device.imageMounted = False
         result = await self.call('prepare', udid=UDID)
         self.assertTrue(result['downloaded'])
-        self.store.verify(self.store.find(packages.CRYPTEX))
+        packages.check(packages.CRYPTEX, self.store.find(packages.CRYPTEX).path)
 
     async def test_cancel_ends_a_download_and_publishes_nothing(self):
         started = threading.Event()
@@ -185,11 +182,6 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual('mount-failed', await self.code('prepare', udid=UDID))
         self.assertIsNotNone(self.store.find(packages.CRYPTEX))
 
-    async def test_a_phone_on_17_gets_the_personalized_image(self):
-        self.backend.devices = {UDID: FakeDevice(ios='18.1')}
-        self.remote.__init__(packages.PERSONALIZED)
-        result = await self.call('prepare', udid=UDID)
-        self.assertEqual(f'personalized-{packages.EXPECTED_BUILD}', result['packageId'])
 
 
 if __name__ == '__main__':

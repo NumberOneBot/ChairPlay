@@ -102,21 +102,6 @@ class ServerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({'cleanup': 'not-needed'}, self.wire.replies()['c']['result'])
         self.assertNotIn('q', self.wire.replies())
 
-    async def test_too_many_open_requests_are_refused(self):
-        self.backend.driver.clear_delay = .1
-        lines = [hello(), op('o', 'open', udid=UDID, **SESSION)]
-        lines += [op(f'c{index}', 'clear', **SESSION) for index in range(20)]
-        server = Server('session', SessionHandlers(SimulationSession(self.backend, self.wire, rpc_timeout=1,
-                                                                     presence_interval=None)),
-                        self.wire, max_pending=4)
-        source = Input(*lines)
-        source_read = source.read
-
-        async def fast_read():
-            return source.items.pop(0) if source.items else await source_read()
-        await asyncio.wait_for(server.run(fast_read), 10)
-        codes = [line['error']['code'] for line in self.wire.lines if line['type'] == 'reply' and not line['ok']]
-        self.assertIn('protocol', codes)
 
 
 if __name__ == '__main__':

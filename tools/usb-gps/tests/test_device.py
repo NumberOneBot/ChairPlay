@@ -90,12 +90,6 @@ class DeviceTests(unittest.IsolatedAsyncioTestCase):
         await self.backend().mount(UDID, packages.CRYPTEX, package)
         self.assertIn(('install-cryptex', folder), self.log)
 
-    async def test_a_personalized_image_is_mounted_from_its_files(self):
-        package = SimpleNamespace(path=pathlib.Path('pkg'), id='personalized-x')
-        await self.backend(version='18.1').mount(UDID, packages.PERSONALIZED, package)
-        self.assertIn(('mount-personalized', 'Image.dmg', 'BuildManifest.plist', 'Image.dmg.trustcache'), self.log)
-        self.assertNotIn('tunnel', self.log)
-
     async def test_an_image_mounted_meanwhile_is_no_failure(self):
         backend = self.backend()
         self.library.mount_error = AlreadyMountedError()
@@ -111,7 +105,7 @@ class DeviceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_the_location_needs_developer_mode_and_the_image(self):
         for setup, code in ((dict(developer=False), 'developer-mode-off'), (dict(), 'image-missing'),
-                            (dict(paired=False), 'not-trusted'), (dict(version='17.2'), 'unsupported-ios')):
+                            (dict(paired=False), 'not-trusted'), (dict(version='26.4'), 'unsupported-ios')):
             backend = self.backend(**setup)
             with self.assertRaises(HelperError) as caught:
                 async with backend.location(UDID):
