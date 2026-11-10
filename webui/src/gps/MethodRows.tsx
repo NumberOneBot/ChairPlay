@@ -49,6 +49,11 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
         {/* A method chosen applies at the next connection (D8), marked as any such setting. */}
         <Changed keys={['gps.method']} pending={pending} />
       </Row>
+      {output.selected === 'carplay' && (
+        <Row className="hint-row">
+          <span className="hint">CarPlay GPS works only within about 80 km (50 mi) of your iPhone’s real location.</span>
+        </Row>
+      )}
       {output.selected === 'usb' && (
         <>
           <Row className="hint-row above">

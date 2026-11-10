@@ -47,6 +47,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
   const placed = placeOf(state.gps, value('gps.start')) !== null
   const positionHeld = placed && (off || (notSending && output.reason !== 'no-position'))
   const carHeld = off || notSending
+  const presetsHeld = usb && output.applied !== 'usb'
   const holdTitle = (held: boolean) =>
     !held
       ? null
@@ -99,7 +100,16 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           >
             <PositionFields settings={settings} car={state.gps} heading={heading} />
           </Row>
-          {usb && <CityPresets settings={settings} place={placeOf(state.gps, value('gps.start'))} />}
+          {usb && (
+            // USB chosen but not in force until CarPlay reconnects (D8): its presets wait for it.
+            <div
+              className={presetsHeld ? 'held' : undefined}
+              inert={presetsHeld}
+              title={presetsHeld ? 'Reconnect CarPlay to start USB GPS first' : undefined}
+            >
+              <CityPresets settings={settings} place={placeOf(state.gps, value('gps.start'))} />
+            </div>
+          )}
           {!usb && value('gps.heading.send') !== 'false' && (
             <Row
               label="Heading"

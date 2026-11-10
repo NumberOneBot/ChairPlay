@@ -76,18 +76,15 @@
   -webkit-text-stroke: 0;
 }
 
+/*
+ * 34 px with its 4 px above and below: a row taller than one line (a group of choices in several rows, a status that
+ * wraps) keeps the same gaps to its neighbours as a one-line row.
+ */
 .shell .row {
   display: grid;
   grid-template-columns: var(--label-width) minmax(0, 1fr);
   align-items: center;
   min-height: 34px;
-}
-
-/*
- * A group of choices in several rows (.seg.rows) is taller than the row's 34 px: it keeps the 4 px above and below that
- * a one-line group of 26 px gets, so the gaps between the page's rows stay even.
- */
-.shell .row:has(.seg.rows) {
   padding-block: 4px;
 }
 

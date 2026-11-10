@@ -134,6 +134,15 @@ describe('GPS page, what each method shows', () => {
     await waitFor(() => expect(backend.saved).toHaveLength(1))
     expect(Object.keys(backend.saved[0]).sort()).toEqual(['gps.heading', 'gps.start'])
   })
+
+  // USB chosen but not in force until CarPlay reconnects (D8): the presets show, held, until then.
+  it('holds the city presets until USB is in force', async () => {
+    await openSection(gpsState(outputs.reconnectNeeded))
+    expect(inert(screen.getByRole('radio', { name: 'PAR' }))).toBe(true)
+    cleanup()
+    await openSection(gpsState(outputs.usbOn))
+    expect(inert(screen.getByRole('radio', { name: 'PAR' }))).toBe(false)
+  })
 })
 
 describe('GPS page, what waits', () => {
