@@ -26,7 +26,10 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
   const pending = pendingOf(state)
   const { note } = parts(settings, pending)
   const { value, save } = settings
-  const output = outputOf(state, settings)
+  const reported = outputOf(state, settings)
+  // A switch under way already shows its target: the page is what it will be when it ends.
+  const target = reported.operation?.kind === 'switch' ? reported.operation.target : null
+  const output = target ? { ...reported, selected: target } : reported
   const usb = output.selected === 'usb'
   const locked = isLocked(output)
   const setup = state.gps?.usbSetup

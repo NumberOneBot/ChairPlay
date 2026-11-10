@@ -30,6 +30,13 @@ describe('GPS page, the switch and the method', () => {
     expect(backend.saved).toEqual([])
   })
 
+  // While the switch runs the page is what it will be when it ends: the method chosen is the one lit.
+  it('shows the method being switched to as the chosen one', async () => {
+    await openSection(gpsState(outputs.switchingToUsb))
+    expect(method('USB').getAttribute('aria-checked')).toBe('true')
+    expect(method('CarPlay').getAttribute('aria-checked')).toBe('false')
+  })
+
   it('has no rate or satellites to choose', async () => {
     await openSection(gpsState(outputs.carplayOff))
     expect(screen.queryByRole('radiogroup', { name: /updates|rate/i })).toBeNull()
