@@ -130,7 +130,7 @@ class UsbSetupController(
             }
             is UsbResult.Failed -> {
                 store.mutate(s, udid) { download = null }
-                if (!s.cancelled) flow.toolsFailed(s, udid, r.code)
+                if (!s.cancelled) flow.toolsFailed(s, udid, r.code, if (connecting) "cached" else "missing")
             }
         }
     }

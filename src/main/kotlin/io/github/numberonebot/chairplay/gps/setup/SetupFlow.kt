@@ -179,13 +179,10 @@ internal class SetupFlow(
     }
 
     /** A failed tools call keeps the step, its detail and every check before it. */
-    fun toolsFailed(s: SetupSession, udid: String, code: UsbErrorCode): Boolean = when (code) {
+    fun toolsFailed(s: SetupSession, udid: String, code: UsbErrorCode, known: String? = null): Boolean = when (code) {
         UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> lost(s)
         UsbErrorCode.UNSUPPORTED_IOS -> stop(s, SetupStep.TOOLS, StepState(StepStatus.ERROR, "unsupported-ios", code.key), udid)
-        else -> {
-            val detail = store.read(s) { state(SetupStep.TOOLS).detail }?.takeIf { it == "missing" || it == "cached" }
-            stop(s, SetupStep.TOOLS, StepState(StepStatus.ERROR, detail, code.key), udid)
-        }
+        else -> stop(s, SetupStep.TOOLS, StepState(StepStatus.ERROR, known, code.key), udid)
     }
 
     // ---- Ready ----
