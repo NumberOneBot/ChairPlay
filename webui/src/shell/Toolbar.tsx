@@ -16,18 +16,7 @@ const DOT = { ok: 'ok', busy: 'busy', warn: 'warn', idle: '' } as const
  * or Reconnect and Disconnect once connecting has begun. In a narrow window the window buttons show their icons alone,
  * and the status gives way before the buttons do.
  */
-export function Toolbar({
-  state,
-  backend,
-  guide,
-  locked,
-}: {
-  state: AppState
-  backend: Backend
-  guide?: Steps | null
-  /** An operation holds the window: the bar neither takes the pointer nor the keys. */
-  locked?: boolean
-}) {
+export function Toolbar({ state, backend, guide }: { state: AppState; backend: Backend; guide?: Steps | null }) {
   const session = state.canShowCarPlay
   const titles = (keys: string[]) => sectionsOf(keys).map((id) => SECTIONS.find((section) => section.id === id)!.title)
   const restart = titles(state.restartPending)
@@ -43,7 +32,7 @@ export function Toolbar({
       : describe(state)
   const connectWaits = networkWaits(state) ?? (guide ? guide.connectWaits : state.phase === 'setup' ? 'Enter the iPhone Wi-Fi network first' : null)
   return (
-    <header className="tb" inert={locked} aria-busy={locked || undefined}>
+    <header className="tb">
       <button
         type="button"
         className="btn"

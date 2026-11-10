@@ -17,14 +17,12 @@ export function UsbIcon() {
   )
 }
 
-/** A shopping bag, the Microsoft Store's sign, on Get Apple Devices. */
+/** The Microsoft Store's bag with the Windows logo, the mock's own drawing (mockups/usb-gps/views.js), on Get Apple Devices. */
 export function StoreIcon() {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" strokeLinecap="round">
-        <path d="M2.6 5h10.8l-.7 8.4H3.3z" />
-        <path d="M5.5 5V4a2.5 2.5 0 0 1 5 0v1" />
-      </g>
+      <path d="M2.5 5h11v9h-11zM5 5V3.8a3 3 0 0 1 6 0V5" fill="none" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M5.5 7h2v2h-2zm3 0h2v2h-2zm-3 3h2v2h-2zm3 0h2v2h-2z" fill="currentColor" />
     </svg>
   )
 }

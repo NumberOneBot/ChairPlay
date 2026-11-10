@@ -1,9 +1,8 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { GpsNotice } from '../gpsApi'
 import { gpsOutput, outputs } from '../gpsFixtures'
-import { Shell } from '../shell/Shell'
-import { gpsBackend, gpsState, openSection } from './gpsTesting'
+import { gpsState, openSection } from './gpsTesting'
 
 afterEach(cleanup)
 
@@ -18,42 +17,35 @@ function notice(code: GpsNotice['code'], tone: GpsNotice['tone'], expiresAt: num
 }
 
 describe('GPS notices', () => {
-  // One block over the switch for every stage of every operation; none without an operation.
-  it('shows the operation running as one block, and no block without one', async () => {
-    const { update } = await openSection(gpsState(outputs.switchingToUsb))
+  // One status line for the operation under way, whatever its kind; none without one.
+  it('shows the operation under way as one status line, and none without one', async () => {
+    const { update } = await openSection(gpsState(outputs.stoppingUsb))
     expect(blocks()).toHaveLength(1)
-    for (const output of [outputs.switchingToCarplay, outputs.stoppingUsb]) {
-      update(gpsState(output))
-      expect(blocks()).toHaveLength(1)
-    }
+    const first = blocks()[0].textContent
+    update(gpsState({ ...outputs.stoppingUsb, operation: { ...outputs.stoppingUsb.operation!, kind: 'enable' } }))
+    expect(blocks()).toHaveLength(1)
+    expect(blocks()[0].textContent).not.toBe(first)
     update(gpsState(outputs.carplayOff))
     expect(blocks()).toHaveLength(0)
   })
 
-  it('shows the stages of one operation as it moves on, in the same block', async () => {
-    const operation = outputs.switchingToUsb.operation!
-    const { update } = await openSection(gpsState(outputs.switchingToUsb))
+  it('shows no stage: the status line is the same at every stage', async () => {
+    const operation = outputs.stoppingUsb.operation!
+    const { update } = await openSection(gpsState(outputs.stoppingUsb))
     const first = blocks()[0].textContent
-    update(gpsState({ ...outputs.switchingToUsb, operation: { ...operation, stage: 'start' } }))
-    expect(blocks()).toHaveLength(1)
-    expect(blocks()[0].textContent).not.toBe(first)
+    update(gpsState({ ...outputs.stoppingUsb, operation: { ...operation, stage: 'clear' } }))
+    expect(blocks()[0].textContent).toBe(first)
   })
 
-  // Reset command sent goes at its time (10 seconds in the app); a notice that stays (an error) does not.
-  it('drops the reset result at its time and keeps the notices that stay', async () => {
+  // Reset command sent goes at its time (10 seconds in the app).
+  it('drops the reset result at its time', async () => {
     const output = gpsOutput({
       selected: 'usb', usbPrepared: true,
-      notices: [
-        { ...notice('reset-sent', 'info', Date.now() + 400), id: 1 },
-        { ...notice('cleanup-unconfirmed', 'warn'), id: 2 },
-      ],
+      notices: [{ ...notice('reset-sent', 'info', Date.now() + 400), id: 1 }],
     })
     await openSection(gpsState(output))
     expect(blocks()).toHaveLength(1)
-    expect(alerts()).toHaveLength(1)
-
     await waitFor(() => expect(blocks()).toHaveLength(0))
-    expect(alerts()).toHaveLength(1)
   })
 
   it('does not show a reset result that has already gone', async () => {
@@ -61,7 +53,7 @@ describe('GPS notices', () => {
     expect(blocks()).toHaveLength(0)
   })
 
-  // D4: the app never reconnects CarPlay by itself; the notice offers it, and the button is the user's.
+  // D8: the app never reconnects CarPlay by itself; the notice offers it, and the button is the user's.
   it('offers Reconnect for a reconnect that is needed, and reconnects only on the button', async () => {
     const { backend } = await openSection(gpsState(outputs.reconnectNeeded))
     expect(backend.reconnects).toBe(0)
@@ -69,17 +61,8 @@ describe('GPS notices', () => {
     await waitFor(() => expect(backend.reconnects).toBe(1))
   })
 
-  it('holds the Reconnect button while an operation runs', async () => {
-    const output = { ...outputs.reconnectNeeded, operation: outputs.switchingToUsb.operation }
-    await openSection(gpsState(output))
-    const button = within(page()).getByRole('button', { name: 'Reconnect' }) as HTMLButtonElement
-    expect(button.disabled || inert(button)).toBe(true)
-  })
-
-  it('warns of Windows location unavailable and of a reset not confirmed', async () => {
-    const { update } = await openSection(gpsState(outputs.windowsUnavailable))
-    expect(alerts()).toHaveLength(1)
-    update(gpsState(outputs.cleanupUnconfirmed))
+  it('warns of Windows location unavailable', async () => {
+    await openSection(gpsState(outputs.windowsUnavailable))
     expect(alerts()).toHaveLength(1)
   })
 
@@ -94,8 +77,7 @@ describe('GPS warning over the window (USB unavailable)', () => {
   // On every section, outside the scrolling page, so the next section's content does not hide it (UI-23, V35).
   it('is on every section, outside the page that scrolls', async () => {
     const { backend } = await openSection(gpsState(outputs.usbStartupMissing))
-    const warning = screen.getByRole('alert')
-    expect(page().contains(warning)).toBe(false)
+    expect(page().contains(screen.getByRole('alert'))).toBe(false)
 
     fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
     expect(screen.getByRole('alert')).toBeTruthy()
@@ -118,45 +100,31 @@ describe('GPS warning over the window (USB unavailable)', () => {
   })
 })
 
+// D9: an operation holds the switch and nothing else.
 describe('the window while an operation runs', () => {
-  it('holds the toolbar, the sections, and the page, and leaves the message readable', async () => {
-    await openSection(gpsState(outputs.switchingToUsb))
-    expect(screen.getByRole('banner').closest('[inert]')).not.toBeNull()
-    expect(inert(screen.getByRole('tab', { name: 'About' }))).toBe(true)
-    expect(inert(screen.getByRole('switch', { name: 'Enable signal simulation' }))).toBe(true)
-    expect(inert(screen.getByRole('radio', { name: 'CarPlay' }))).toBe(true)
-    expect(inert(screen.getByRole('textbox', { name: 'latitude' }))).toBe(true)
-    expect(inert(blocks()[0])).toBe(false)
-    expect(screen.getByRole('switch', { name: 'Enable signal simulation' }).closest('[aria-busy]')).not.toBeNull()
+  it('holds the switch only, on every part of the window', async () => {
+    const { update } = await openSection(gpsState(outputs.stoppingUsb))
+    expect((screen.getByRole('switch', { name: 'Enable signal simulation' }) as HTMLInputElement).disabled).toBe(true)
+    expect(inert(screen.getByRole('banner'))).toBe(false)
+    expect(inert(screen.getByRole('tab', { name: 'About' }))).toBe(false)
+    expect(inert(screen.getByRole('radio', { name: 'CarPlay' }))).toBe(false)
+    expect(screen.getByRole('tabpanel').closest('[aria-busy]')).toBeNull()
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
+    expect(inert(screen.getByRole('button', { name: 'Logs' }))).toBe(false)
+    expect(within(page().parentElement!).queryAllByRole('status')).toHaveLength(0)
+    update(gpsState(outputs.usbPreparedNoCable))
   })
 
-  it('holds the other sections too, and says why on them', async () => {
-    // The sections cannot be clicked while it runs: Experiments is open when the operation begins.
-    const { update } = await openSection(gpsState(outputs.carplayOff), undefined, 'Experiments')
-    update(gpsState(outputs.stoppingUsb))
-    expect(inert(screen.getByRole('button', { name: 'Logs' }))).toBe(true)
-    expect(within(page().parentElement!).getAllByRole('status')).toHaveLength(1)
-  })
-
-  it('holds Escape while an operation runs, and takes it otherwise', async () => {
-    const { backend, update } = await openSection(gpsState(outputs.switchingToUsb))
-    fireEvent.keyDown(window, { key: 'Escape' })
-    expect(backend.shown).toEqual([])
-    update(gpsState(outputs.carplayOff))
+  it('takes Escape as usual', async () => {
+    const { backend } = await openSection(gpsState(outputs.stoppingUsb))
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(backend.shown).toEqual(['carplay'])
   })
 
-  it('holds Get started too', async () => {
-    render(<Shell state={gpsState(outputs.switchingToUsb, undefined, { setupDone: false })} backend={gpsBackend()} />)
-    expect((await screen.findByRole('heading', { name: 'Get started' })).closest('[inert]')).not.toBeNull()
-  })
-
-  it('gives the window back when the operation ends', async () => {
-    const { update } = await openSection(gpsState(outputs.switchingToUsb))
+  it('gives the switch back when the operation ends', async () => {
+    const { update } = await openSection(gpsState(outputs.stoppingUsb))
     update(gpsState(outputs.usbPreparedNoCable))
-    expect(inert(screen.getByRole('tab', { name: 'About' }))).toBe(false)
-    expect(inert(screen.getByRole('switch', { name: 'Enable signal simulation' }))).toBe(false)
-    expect(screen.getByRole('banner').closest('[inert]')).toBeNull()
+    expect((screen.getByRole('switch', { name: 'Enable signal simulation' }) as HTMLInputElement).disabled).toBe(false)
   })
 })
