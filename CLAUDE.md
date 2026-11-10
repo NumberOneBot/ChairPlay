@@ -5,6 +5,7 @@ Rules for coding agents, learned from mistakes made on this port. DiPlay itself 
 ## Scope
 
 - For every upstream update, audit local overrides and bug workarounds. Remove code superseded by equivalent upstream behavior, keeping regression coverage. Retain only documented desktop differences or missing features.
+- Before adding a mechanism, a state or a UI element, find how the project already does the same job and use that: a setting that waits for a reconnect or restart (reconnectPending and its ⟳ mark), Message for notices, the settings save and its applies, Row/Group/Segmented/Switch, disabled controls with a tooltip. Build a new one only when none exists, and say why in the commit. A spec or a mock never overrides this; agents' briefs repeat it.
 - Never edit files inside `upstream/`: it is DiPlay, pinned to a commit, and moving it to a newer DiPlay must stay a pointer change. Replace or wrap upstream code from this repository instead.
 - Notes and plans that are not for the repository go to `desktop-docs/` (ignored by git).
 - To take a newer DiPlay: `git -C upstream fetch`, `git -C upstream checkout <commit>`, build and test, then commit the `upstream` pointer. Upstream can change the core's API, so a new DiPlay can break this build. When the submodule points at a mirror rather than DiPlay's GitHub, run `scripts\mirror-upstream.cmd <url>` first (add `--local` if only this clone uses the mirror): the script fills it and pins every commit used here.
