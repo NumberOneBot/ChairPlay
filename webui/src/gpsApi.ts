@@ -15,7 +15,7 @@ export type GpsReason =
   | 'usb-helper-failed'
   | 'no-position'
 
-export type GpsOperationKind = 'enable' | 'disable' | 'resume' | 'shutdown'
+export type GpsOperationKind = 'apply' | 'enable' | 'disable' | 'resume' | 'shutdown'
 export type GpsOperationStage = 'quiesce' | 'locate' | 'return' | 'clear' | 'close' | 'start'
 
 /** The one operation running; while there is one, the whole app is held (S-09). */

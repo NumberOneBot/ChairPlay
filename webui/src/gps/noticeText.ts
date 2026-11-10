@@ -16,6 +16,8 @@ export function operationHead(operation: GpsOperation): string {
     case 'disable':
     case 'shutdown':
       return 'Stopping USB GPS'
+    case 'apply':
+      return 'Applying the GPS method'
   }
 }
 
