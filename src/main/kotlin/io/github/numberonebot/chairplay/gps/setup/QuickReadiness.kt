@@ -13,12 +13,17 @@ import io.github.numberonebot.chairplay.gps.UsbResult
 internal class QuickReadiness(private val helper: UsbHelper) {
     fun check(preparedUdid: String?): UsbReadiness {
         if (preparedUdid == null) return NotReady(GpsReason.USB_SETUP_NEEDED, SetupStep.USB)
-        if (helper.components() == AppleComponents.MISSING) return NotReady(GpsReason.USB_SETUP_NEEDED, SetupStep.USB)
+        when (helper.components()) {
+            AppleComponents.MISSING -> return NotReady(GpsReason.USB_SETUP_NEEDED, SetupStep.USB)
+            // Installed but not answering: the wizard asks to open Apple Devices.
+            AppleComponents.NOT_RUNNING -> return NotReady(GpsReason.USB_NOT_READY, SetupStep.USB)
+            else -> {}
+        }
         val list = when (val r = helper.devices()) {
             is UsbResult.Ok -> r.value
             is UsbResult.Failed -> return when (r.code) {
-                UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST, UsbErrorCode.USBMUX_UNAVAILABLE ->
-                    NotReady(GpsReason.USB_NOT_CONNECTED, SetupStep.USB)
+                UsbErrorCode.USBMUX_UNAVAILABLE -> NotReady(GpsReason.USB_NOT_READY, SetupStep.USB)
+                UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> NotReady(GpsReason.USB_NOT_CONNECTED, SetupStep.USB)
                 UsbErrorCode.SEVERAL_DEVICES -> NotReady(GpsReason.USB_SEVERAL, SetupStep.USB)
                 UsbErrorCode.DRIVERS_MISSING -> NotReady(GpsReason.USB_SETUP_NEEDED, SetupStep.USB)
                 UsbErrorCode.LOCKED -> NotReady(GpsReason.USB_NOT_READY, SetupStep.TRUST)
@@ -37,9 +42,10 @@ internal class QuickReadiness(private val helper: UsbHelper) {
             }
         }
         return when {
-            p.trusted == false || p.locked == true -> NotReady(GpsReason.USB_NOT_READY, SetupStep.TRUST)
+            // Only a definite yes is ready; a locked phone that is trusted and whose service answers still is.
+            p.trusted != true -> NotReady(GpsReason.USB_NOT_READY, SetupStep.TRUST)
             p.developerMode == DeveloperModeStatus.OFF -> NotReady(GpsReason.USB_NOT_READY, SetupStep.DEVELOPER_MODE)
-            p.imageMounted == false || p.serviceReady == false -> NotReady(GpsReason.USB_NOT_READY, SetupStep.TOOLS)
+            p.imageMounted != true || p.serviceReady != true -> NotReady(GpsReason.USB_NOT_READY, SetupStep.TOOLS)
             else -> UsbReadiness.Ready(device)
         }
     }

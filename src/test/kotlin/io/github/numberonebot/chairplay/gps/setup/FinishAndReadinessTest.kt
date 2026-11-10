@@ -43,14 +43,12 @@ class FinishAndReadinessTest {
         assertFalse(h.view().windowsWarning)
     }
 
-    @Test fun `no valid position refuses Enable but not Done`() {
+    @Test fun `no valid position shows in the view and the coordinator decides on Enable`() {
         h.position = false
         val id = h.open()
         assertFalse(h.view().positionValid)
-        assertEquals(CommandOutcome.INVALID, h.controller.act(id, SetupAction.ENABLE))
-        assertTrue(h.finishes.isEmpty())
-        assertEquals(CommandOutcome.ACCEPTED, h.controller.act(id, SetupAction.DONE))
-        assertEquals(false, h.finishes.single().third)
+        assertEquals(CommandOutcome.ACCEPTED, h.controller.act(id, SetupAction.ENABLE))
+        assertEquals(true, h.finishes.single().third)
     }
 
     @Test fun `setting a position while open turns Enable on at the next poll`() {

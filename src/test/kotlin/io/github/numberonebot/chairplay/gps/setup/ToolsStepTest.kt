@@ -50,7 +50,7 @@ class ToolsStepTest {
     @Test fun `a mounted image whose service does not answer is not ready`() {
         tools(cached = true, mounted = true, service = false)
         h.open()
-        assertEquals(StepStatus.ACTION, h.status(SetupStep.TOOLS))
+        assertEquals(StepStatus.ERROR, h.status(SetupStep.TOOLS))
         assertEquals("cached", h.detail(SetupStep.TOOLS))
     }
 

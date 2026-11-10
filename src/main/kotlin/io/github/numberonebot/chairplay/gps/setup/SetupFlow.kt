@@ -28,18 +28,20 @@ internal class SetupFlow(
     private val positionValid: () -> Boolean,
     private val locateDeadlineMillis: Long,
 ) {
-    fun run(s: SetupSession, from: Stage) {
+    /** True when every check passed and Ready was reached; false when one stopped the run (its step says why). */
+    fun run(s: SetupSession, from: Stage): Boolean {
         var stage = from
         while (!s.cancelled) {
             val go = when (stage) {
                 Stage.USB -> checkUsb(s)
                 Stage.PROBE -> checkProbe(s)
                 Stage.TOOLS -> checkTools(s)
-                Stage.READY -> { checkReady(s); false }
+                Stage.READY -> { checkReady(s); return !s.cancelled }
             }
-            if (!go) return
+            if (!go) return false
             stage = Stage.entries[stage.ordinal + 1]
         }
+        return false
     }
 
     /** Which stage re-checks [step]. */
@@ -58,6 +60,12 @@ internal class SetupFlow(
         return false
     }
 
+    /** A failure that says nothing about the prerequisite (timeout, helper trouble): a finished step stays finished. */
+    private fun soft(s: SetupSession, step: SetupStep, state: StepState, udid: String? = null): Boolean {
+        if (store.read(s) { isDone(step) }) return false
+        return stop(s, step, state, udid)
+    }
+
     private fun usbError(code: UsbErrorCode) = StepState(StepStatus.ERROR, null, code.key)
 
     // ---- USB ----
@@ -71,19 +79,23 @@ internal class SetupFlow(
         return when (val r = helper.devices()) {
             is UsbResult.Ok -> when {
                 r.value.isEmpty() -> noDevice(s)
-                r.value.size > 1 -> stop(s, SetupStep.USB, StepState(StepStatus.WAITING, "several-devices"))
+                r.value.size > 1 -> several(s)
                 else -> adopt(s, r.value.single())
             }
             is UsbResult.Failed -> when (r.code) {
                 UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> noDevice(s)
-                UsbErrorCode.SEVERAL_DEVICES -> stop(s, SetupStep.USB, StepState(StepStatus.WAITING, "several-devices"))
+                UsbErrorCode.SEVERAL_DEVICES -> several(s)
                 UsbErrorCode.DRIVERS_MISSING -> stop(s, SetupStep.USB, StepState(StepStatus.ACTION, "drivers-missing"))
                 UsbErrorCode.USBMUX_UNAVAILABLE -> stop(s, SetupStep.USB, StepState(StepStatus.ACTION, "apple-devices-closed"))
-                UsbErrorCode.LOCKED -> stop(s, SetupStep.USB, StepState(StepStatus.WAITING, "locked"))
-                else -> stop(s, SetupStep.USB, usbError(r.code))
+                UsbErrorCode.LOCKED -> soft(s, SetupStep.USB, StepState(StepStatus.WAITING, "locked"))
+                else -> soft(s, SetupStep.USB, usbError(r.code))
             }
         }
     }
+
+    /** One phone only in 1.1 (D6): an error the user fixes by unplugging one. */
+    private fun several(s: SetupSession) =
+        stop(s, SetupStep.USB, StepState(StepStatus.ERROR, "several-devices", "several-devices"))
 
     private fun noDevice(s: SetupSession): Boolean {
         if (store.read(s) { device } != null) return lost(s)
@@ -131,7 +143,7 @@ internal class SetupFlow(
                 UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> lost(s)
                 UsbErrorCode.NOT_TRUSTED -> stop(s, SetupStep.TRUST, StepState(StepStatus.WAITING, "trust-prompt"), udid)
                 UsbErrorCode.LOCKED -> locked(s, udid)
-                else -> stop(s, if (store.read(s) { isDone(SetupStep.TRUST) }) SetupStep.DEVELOPER_MODE else SetupStep.TRUST, usbError(r.code), udid)
+                else -> soft(s, if (store.read(s) { isDone(SetupStep.TRUST) }) SetupStep.DEVELOPER_MODE else SetupStep.TRUST, usbError(r.code), udid)
             }
         }
     }
@@ -171,7 +183,11 @@ internal class SetupFlow(
                 if (t.imageMounted && t.serviceReady) {
                     set(s, SetupStep.TOOLS, StepState(StepStatus.DONE), udid)
                 } else {
-                    stop(s, SetupStep.TOOLS, StepState(StepStatus.ACTION, if (t.packageCached) "cached" else "missing"), udid)
+                    val known = if (t.packageCached) "cached" else "missing"
+                    // Mounted without an answering service: Connect again would loop, so it is an error to re-check.
+                    val state = if (t.imageMounted) StepState(StepStatus.ERROR, known, UsbErrorCode.SERVICE_UNAVAILABLE.key)
+                    else StepState(StepStatus.ACTION, known)
+                    stop(s, SetupStep.TOOLS, state, udid)
                 }
             }
             is UsbResult.Failed -> toolsFailed(s, udid, r.code)
@@ -182,7 +198,7 @@ internal class SetupFlow(
     fun toolsFailed(s: SetupSession, udid: String, code: UsbErrorCode, known: String? = null): Boolean = when (code) {
         UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> lost(s)
         UsbErrorCode.UNSUPPORTED_IOS -> stop(s, SetupStep.TOOLS, StepState(StepStatus.ERROR, "unsupported-ios", code.key), udid)
-        else -> stop(s, SetupStep.TOOLS, StepState(StepStatus.ERROR, known, code.key), udid)
+        else -> soft(s, SetupStep.TOOLS, StepState(StepStatus.ERROR, known, code.key), udid)
     }
 
     // ---- Ready ----
