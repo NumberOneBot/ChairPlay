@@ -24,14 +24,12 @@ internal class QuickReadiness(private val helper: UsbHelper) {
             is UsbResult.Failed -> return when (r.code) {
                 UsbErrorCode.USBMUX_UNAVAILABLE -> NotReady(GpsReason.USB_NOT_READY, SetupStep.USB)
                 UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> NotReady(GpsReason.USB_NOT_CONNECTED, SetupStep.USB)
-                UsbErrorCode.SEVERAL_DEVICES -> NotReady(GpsReason.USB_SEVERAL, SetupStep.USB)
                 UsbErrorCode.DRIVERS_MISSING -> NotReady(GpsReason.USB_SETUP_NEEDED, SetupStep.USB)
                 UsbErrorCode.LOCKED -> NotReady(GpsReason.USB_NOT_READY, SetupStep.TRUST)
                 else -> NotReady(GpsReason.USB_HELPER_FAILED, null)
             }
         }
-        if (list.size > 1) return NotReady(GpsReason.USB_SEVERAL, SetupStep.USB)
-        val device = list.firstOrNull()?.takeIf { it.udid == preparedUdid }
+        val device = list.firstOrNull { it.udid == preparedUdid }
             ?: return NotReady(GpsReason.USB_NOT_CONNECTED, SetupStep.USB)
         val p = when (val r = helper.probe(device.udid)) {
             is UsbResult.Ok -> r.value

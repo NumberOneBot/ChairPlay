@@ -47,12 +47,8 @@ class FakeChannel(override val method: GpsMethod, private val calls: Calls) : Gp
     }
 }
 
-class FakeCar(var at: GeoPoint? = GeoPoint(40.7, -74.0), private val calls: Calls) : GpsCar {
+class FakeCar(var at: GeoPoint? = GeoPoint(40.7, -74.0)) : GpsCar {
     override fun position() = at
-    override fun place(point: GeoPoint) {
-        calls += "car.place ${point.latitude},${point.longitude}"
-        at = point
-    }
 }
 
 class FakeStore(var settings: GpsSettings, private val calls: Calls) : GpsSettingsStore {
@@ -65,18 +61,6 @@ class FakeStore(var settings: GpsSettings, private val calls: Calls) : GpsSettin
             "gps.usb.device" -> settings.copy(usbDevice = value)
             else -> settings
         }
-    }
-}
-
-class FakeJournal(var udid: String? = null, private val calls: Calls) : CleanupJournal {
-    override fun dirty() = udid
-    override fun mark(udid: String) {
-        calls += "journal.mark $udid"
-        this.udid = udid
-    }
-    override fun clear() {
-        if (udid != null) calls += "journal.clear"
-        udid = null
     }
 }
 
@@ -115,22 +99,20 @@ class CountingHold : InputHold {
 class GpsHarness(
     settings: GpsSettings = GpsSettings(enabled = false),
     var located: ReturnPoint = ReturnPoint.Found(HOME),
-    journal: String? = null,
     timing: GpsTiming = GpsTiming(tickMillis = 60_000),
 ) {
     val calls = Calls()
     val store = FakeStore(settings, calls)
-    val car = FakeCar(calls = calls)
+    val car = FakeCar()
     val carplay = FakeChannel(GpsMethod.CARPLAY, calls)
     val usb = FakeChannel(GpsMethod.USB, calls)
     val setup = FakeSetup(calls)
-    val journal = FakeJournal(journal, calls)
     val hold = CountingHold()
     var now = 1_000L
     private val worker = Executors.newSingleThreadScheduledExecutor()
     private val watchdog = Executors.newSingleThreadScheduledExecutor()
     val gps = GpsCoordinator(
-        store, car, carplay, usb, setup, { _ -> calls += "locate"; located }, this.journal, hold,
+        store, car, carplay, usb, setup, { _ -> calls += "locate"; located }, hold,
         clock = { now }, timing = timing, worker = worker, watchdog = watchdog,
     )
 

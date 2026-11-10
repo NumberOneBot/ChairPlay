@@ -149,11 +149,9 @@ class FinishAndReadinessTest {
         assertEquals(GpsReason.USB_SETUP_NEEDED, notReady().reason)
     }
 
-    @Test fun `readiness with no cable, several phones, another phone`() {
+    @Test fun `readiness with no cable or another phone`() {
         h.helper.devices = UsbResult.Ok(emptyList())
         assertEquals(GpsReason.USB_NOT_CONNECTED, notReady().reason)
-        h.helper.devices = UsbResult.Ok(listOf(PHONE, OTHER))
-        assertEquals(GpsReason.USB_SEVERAL, notReady().reason)
         h.helper.devices = UsbResult.Ok(listOf(OTHER))
         assertEquals(GpsReason.USB_NOT_CONNECTED, notReady().reason)
     }

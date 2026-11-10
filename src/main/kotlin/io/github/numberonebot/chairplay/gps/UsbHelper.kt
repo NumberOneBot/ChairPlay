@@ -10,7 +10,6 @@ import java.nio.file.Path
 /** Stable error codes from the helper; the page words them. */
 enum class UsbErrorCode(val key: String) {
     NO_DEVICE("no-device"),
-    SEVERAL_DEVICES("several-devices"),
     DRIVERS_MISSING("drivers-missing"),
     /** Apple's components are installed but their USB service is not answering: open Apple Devices, then probe again. */
     USBMUX_UNAVAILABLE("usbmux-unavailable"),
@@ -76,7 +75,7 @@ fun interface Cancellation {
 interface UsbHelper : AutoCloseable {
     fun components(): AppleComponents
 
-    /** USB-attached iPhones only, never Wi-Fi ones. More than one is [UsbErrorCode.SEVERAL_DEVICES] for 1.1 (D6). */
+    /** USB-attached iPhones only, never Wi-Fi ones; of several the app takes the first (D11). */
     fun devices(): UsbResult<List<UsbDevice>>
 
     fun probe(udid: String): UsbResult<UsbProbe>
