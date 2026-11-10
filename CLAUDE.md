@@ -31,6 +31,18 @@ Rules for coding agents, learned from mistakes made on this port. DiPlay itself 
 - Write the failing test first and watch it fail for the expected reason (superpowers:test-driven-development).
 - Except for texts and layout: no test pins what the app says or how it is laid out. No assertion on a label, caption, tooltip, message, title, the settings file's comments or any other wording; on the order, count, placement or grouping of elements; or on CSS classes, styles, sizes or drawing constants. Such tests only restate the code, catch no bug and double the cost of every change the owner asks for; check those changes with a screenshot of the page instead. Tests stay for behavior: what a control saves, sends or asks the app for, which state enables, disables or holds a control, which page or status a state leads to, parsing, validation, geometry and protocol. A text may still find an element (`getByRole('button', { name: 'Connect' })`).
 
+## Build cost and the editor
+
+Learned the hard way (2026-11-11, the USB GPS helper): the owner's VS Code froze four times and deploy went from 30 s to 4 minutes.
+
+- A change that adds work to `deploy`, `check` or the build is measured before it is committed: run it twice with `--profile` and give the owner the numbers (first run, second run). A second run that does the heavy work again is a bug, not a cost.
+- Heavy steps (installing packages, freezing, downloading, building other languages) do their work only when their own inputs change. Gradle reruns a task whenever its build script changes, so such a task keeps a stamp of what it was made from (a hash of its sources, the requirements' text) and returns at once while it matches. Check it: edit the script, run twice, the second run skips.
+- `deploy` copies only what changed. A large part that rarely changes (the USB GPS helper's 6,400 files) goes by its own up-to-date task, never inside the image that every deploy syncs.
+- Nothing puts thousands of files into a folder the owner's VS Code has open (ChairPlay and ChairPlayApp, see ChairPlay.code-workspace) unless that path is in the workspace's `files.watcherExclude` and `search.exclude` first. Count the files a new step creates before adding it.
+- Agents' git worktrees live outside the project folder (`..\ChairPlay-worktrees\<name>`) and are removed as soon as their branch is merged.
+- Before starting a build or command expected to take over 30 s, say how long and why. After the first editor freeze or slowdown, stop: count files and profile to find the cause before running anything else. Never guess and run again.
+- When the owner asks to run something himself, give him the exact commands for cmd and run nothing.
+
 ## Size of files
 
 - A code file (Kotlin, TypeScript, CSS, C, scripts, build files, tests alike) stays under 300 lines, split by what it is about: a stylesheet per screen or component, a class or concern per Kotlin file, a test file per subject.
