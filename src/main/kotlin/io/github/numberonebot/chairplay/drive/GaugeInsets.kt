@@ -4,44 +4,50 @@ import io.github.numberonebot.chairplay.drive.GaugeStyle.GREEN
 import io.github.numberonebot.chairplay.drive.GaugeStyle.RED
 import org.lwjgl.nanovg.NanoVG.*
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
 
 // What the dials show in the gaps their scales leave: the tachometer the car's coordinates, the speedometer the wheel
-// and both pedals. German, they stand under the hubs as Audi's; in the other styles each goes on its gap's middle line,
-// as large as fits there ([insetPlace]), the pedals over the wheel.
+// and both pedals. German, they stand under the hubs as Audi's; British, on screens set into the dials as Aston
+// Martin's; Italian, as ItalianInsets lays them out.
+
+/** Between the pedals and the wheel, in the face's radius, wherever they lie. */
+internal const val CONTROLS_GAP = 0.045f
+
+/** From the throttle's bar to the brake's, middle to middle, in the face's radius, side by side or one over the other. */
+internal const val PEDALS_STEP = 0.08f
+
+/** The pedals' bars, long and thick, and the wheel's radius, in the face's radius: the same in every style. */
+internal const val BAR_LENGTH = 0.3f
+internal const val BAR_THICKNESS = 0.02f
+internal const val WHEEL_RADIUS = 0.112f
+
+/** The pedals' bars, one over the other, and the wheel in a row across [middle] at height [cy]; the wheel first or last. */
+private fun controlsRow(pen: NanoPen, view: GaugeView, middle: Float, cy: Float, face: Float, wheelFirst: Boolean) {
+    val start = middle - face * (BAR_LENGTH + CONTROLS_GAP + 2 * WHEEL_RADIUS) / 2
+    val barsX = start + face * (if (wheelFirst) 2 * WHEEL_RADIUS + CONTROLS_GAP + BAR_LENGTH / 2 else BAR_LENGTH / 2)
+    val wheelX = start + face * (if (wheelFirst) WHEEL_RADIUS else BAR_LENGTH + CONTROLS_GAP + WHEEL_RADIUS)
+    pedalBar(pen, barsX, cy - face * PEDALS_STEP / 2, face * BAR_LENGTH, face * BAR_THICKNESS, view.throttle, GREEN)
+    pedalBar(pen, barsX, cy + face * PEDALS_STEP / 2, face * BAR_LENGTH, face * BAR_THICKNESS, view.brake, RED)
+    wheel(pen, wheelX, cy, face * WHEEL_RADIUS, wheelTurn(view.wheelMode, view.headingDegrees, view.steer))
+}
 
 /** The heading wheel and its edge. */
-private const val WHEEL = 0xFF1C1C1F.toInt()
-private const val WHEEL_EDGE = 0xFF55555C.toInt()
-
-/** The pedals over the wheel, in the face's radius: as wide as the bars, from their top to the wheel's bottom. */
-private const val STACK_WIDTH = 0.38f
-private const val STACK_HEIGHT = 0.34f
+internal const val WHEEL = 0xFF1C1C1F.toInt()
+internal const val WHEEL_EDGE = 0xFF55555C.toInt()
 
 /** The tachometer's inset, in the gap of its [sweep]: the coordinates and heading in a dark box. */
 internal fun positionInset(pen: NanoPen, view: GaugeView, cx: Float, cy: Float, face: Float, sweep: Sweep) {
     val steering = view.wheelMode == WheelMode.STEERING
     val height = face * 0.3f
-    if (view.design == GaugeDesign.GERMAN) {
-        gaugePosition(pen, cx, cy + face * 0.625f, height, view.position, view.headingDegrees, steering)
-        return
+    when (view.design) {
+        GaugeDesign.GERMAN -> gaugePosition(pen, cx, cy + face * 0.625f, height, view.position, view.headingDegrees, steering)
+        GaugeDesign.BRITISH -> britishPosition(pen, view, cx, cy, face, height, gapSide(sweep))
+        GaugeDesign.ITALIAN -> italianPosition(pen, view, cx, cy, face, height)
     }
-    if (view.design == GaugeDesign.BRITISH) {
-        britishPosition(pen, view, cx, cy, face, height, gapSide(sweep))
-        return
-    }
-    val width = gaugePositionWidth(pen, height)
-    // Italian, a little larger than fits its gap, over the hub's edge.
-    val place = insetPlace(sweep, width / face, height / face).let { it.copy(scale = it.scale * ITALIAN_POSITION_GROWTH) }
-    val x = cx + place.x * face
-    val y = cy + place.y * face
-    scaledAbout(pen.vg, x, y, place.scale) { gaugePosition(pen, x, y - height / 2, height, view.position, view.headingDegrees, steering) }
 }
-
-/** How much larger the Italian coordinates are than the most their gap holds. */
-private const val ITALIAN_POSITION_GROWTH = 1.2f
 
 /** The British screens: black, as the hub. */
 private const val BRITISH_SCREEN = GaugeStyle.HUB_FILL
@@ -54,11 +60,34 @@ private const val BRITISH_PAD = 0.0625f
  * compass beside them, in a screen set into the dial from inside the hub out to the well's edge, which cuts it.
  */
 private fun britishPosition(pen: NanoPen, view: GaugeView, cx: Float, cy: Float, face: Float, height: Float, side: Float) {
+    val pad = BRITISH_PAD * face
+    britishScreen(pen, britishScreenX(cx, face, side), cy - height / 2 - pad, height + 2 * pad, cx, cy, face)
     gaugePosition(
         pen, cx + side * BRITISH_SCREEN_MIDDLE * face, cy - height / 2, height, view.position, view.headingDegrees,
-        view.wheelMode == WheelMode.STEERING, BRITISH_SCREEN, BRITISH_SCREEN_WIDTH * face, britishScreenX(cx, face, side),
-        BRITISH_PAD * face, wellCut(pen, cx, cy, face), compassBeside = true,
+        view.wheelMode == WheelMode.STEERING, boxWidth = BRITISH_SCREEN_WIDTH * face, compassBeside = true, box = false,
     )
+}
+
+/** The British screens' edge where the well cuts them: almost black, as the screen's glass meets the well's rim. */
+private const val BRITISH_RIM = 0xFF0E0E10.toInt()
+
+/**
+ * A British screen from [x], [y], [height] high, set into the dial at [cx], [cy] and cut by its well's circle, the cut's
+ * edge [BRITISH_RIM] over the box's own.
+ */
+private fun britishScreen(pen: NanoPen, x: Float, y: Float, height: Float, cx: Float, cy: Float, face: Float) {
+    val vg = pen.vg
+    val radius = face / GaugeStyle.FACE
+    val width = BRITISH_SCREEN_WIDTH * face
+    val outline = roundedRectInCircle(x, y, width, height, height * 0.12f, cx, cy, radius)
+    insetBox(pen, x, y, width, height, BRITISH_SCREEN, { _, _, _, _ -> trace(vg, outline) })
+    val edge = circleEdge(outline, cx, cy, radius)
+    if (edge.size < 2) return
+    nvgBeginPath(vg)
+    nvgMoveTo(vg, edge[0].first, edge[0].second)
+    for ((px, py) in edge.drop(1)) nvgLineTo(vg, px, py)
+    nvgStrokeWidth(vg, 2f)
+    pen.stroke(BRITISH_RIM)
 }
 
 /** The British screens' width, and the middle of what shows of them, from their inner end to the well's edge. */
@@ -75,25 +104,13 @@ private fun britishScreenX(cx: Float, face: Float, side: Float) =
  */
 private fun britishControls(pen: NanoPen, view: GaugeView, cx: Float, cy: Float, face: Float, side: Float) {
     val height = face * (0.3f + 2 * BRITISH_PAD)
-    insetBox(pen, britishScreenX(cx, face, side), cy - height / 2, BRITISH_SCREEN_WIDTH * face, height, BRITISH_SCREEN, wellCut(pen, cx, cy, face))
-    // The bars, a gap and the wheel (its radius [hub]), in the face's radius: as large as the screen comfortably holds.
-    val bars = 0.34f
-    val gap = 0.045f
-    val hub = 0.11f
-    val start = BRITISH_SCREEN_MIDDLE - (bars + gap + 2 * hub) / 2
-    val barsX = cx + side * (start + bars / 2) * face
-    pedalBar(pen, barsX, cy - face * 0.046f, face * bars, face * 0.033f, view.throttle, GREEN)
-    pedalBar(pen, barsX, cy + face * 0.046f, face * bars, face * 0.033f, view.brake, RED)
-    wheel(pen, cx + side * (start + bars + gap + hub) * face, cy, face * hub, wheelTurn(view.wheelMode, view.headingDegrees, view.steer))
-}
-
-/** A box's outline cut by the circle of the well round the dial at [cx], [cy]. */
-private fun wellCut(pen: NanoPen, cx: Float, cy: Float, face: Float): (Float, Float, Float, Float) -> Unit = { x, y, width, height ->
-    trace(pen.vg, roundedRectInCircle(x, y, width, height, height * 0.12f, cx, cy, face / GaugeStyle.FACE))
+    britishScreen(pen, britishScreenX(cx, face, side), cy - height / 2, height, cx, cy, face)
+    // The bars toward the hub, the wheel toward the rim.
+    controlsRow(pen, view, cx + side * BRITISH_SCREEN_MIDDLE * face, cy, face, wheelFirst = side < 0)
 }
 
 /** Adds the closed outline through [points] to the path. */
-private fun trace(vg: Long, points: List<Pair<Float, Float>>) {
+internal fun trace(vg: Long, points: List<Pair<Float, Float>>) {
     nvgMoveTo(vg, points[0].first, points[0].second)
     for ((x, y) in points.drop(1)) nvgLineTo(vg, x, y)
     nvgClosePath(vg)
@@ -132,36 +149,34 @@ internal fun roundedRectInCircle(
     }
 }
 
+/**
+ * The part of a closed [outline] made by [roundedRectInCircle] that lies on the circle of [radius] at [circleX],
+ * [circleY]: the cut's edge, in order from one end to the other; empty for a box the circle does not cut.
+ */
+internal fun circleEdge(outline: List<Pair<Float, Float>>, circleX: Float, circleY: Float, radius: Float): List<Pair<Float, Float>> {
+    fun on(p: Pair<Float, Float>) = abs(hypot(p.first - circleX, p.second - circleY) - radius) < radius * 1e-4f
+    // Started from a point off the circle, the run on it cannot wrap round the list's end.
+    val off = outline.indexOfFirst { !on(it) }
+    if (off < 0) return outline
+    val turned = outline.drop(off) + outline.take(off)
+    return turned.dropWhile { !on(it) }.takeWhile(::on)
+}
+
 private const val CORNER_STEPS = 6
 private const val SIDE_STEPS = 48
 
 /** The speedometer's inset, in the gap of its [sweep]: the wheel, turned by the heading or the steering, and both pedals. */
 internal fun controlsInset(pen: NanoPen, view: GaugeView, cx: Float, cy: Float, face: Float, sweep: Sweep) {
-    val turn = wheelTurn(view.wheelMode, view.headingDegrees, view.steer)
-    val barWidth = face * STACK_WIDTH
-    val barHeight = face * 0.025f
-    if (view.design == GaugeDesign.GERMAN) {
-        wheel(pen, cx - face * 0.2f, cy + face * 0.76f, face * 0.112f, turn)
-        pedalBar(pen, cx + face * 0.18f, cy + face * 0.72f, barWidth, barHeight, view.throttle, GREEN)
-        pedalBar(pen, cx + face * 0.18f, cy + face * 0.80f, barWidth, barHeight, view.brake, RED)
-        return
-    }
-    if (view.design == GaugeDesign.BRITISH) {
-        britishControls(pen, view, cx, cy, face, gapSide(sweep))
-        return
-    }
-    val place = insetPlace(sweep, STACK_WIDTH, STACK_HEIGHT)
-    val x = cx + place.x * face
-    val y = cy + place.y * face
-    scaledAbout(pen.vg, x, y, place.scale) {
-        pedalBar(pen, x, y - face * 0.1575f, barWidth, barHeight, view.throttle, GREEN)
-        pedalBar(pen, x, y - face * 0.0875f, barWidth, barHeight, view.brake, RED)
-        wheel(pen, x, y + face * 0.058f, face * 0.112f, turn)
+    when (view.design) {
+        // Under the hub, the wheel on the left.
+        GaugeDesign.GERMAN -> controlsRow(pen, view, cx, cy + face * 0.76f, face, wheelFirst = true)
+        GaugeDesign.BRITISH -> britishControls(pen, view, cx, cy, face, gapSide(sweep))
+        GaugeDesign.ITALIAN -> italianControls(pen, view, cx, cy, face)
     }
 }
 
 /** Draws [draw] scaled by [scale] about [x], [y]. */
-private inline fun scaledAbout(vg: Long, x: Float, y: Float, scale: Float, draw: () -> Unit) {
+internal inline fun scaledAbout(vg: Long, x: Float, y: Float, scale: Float, draw: () -> Unit) {
     nvgSave(vg)
     nvgTranslate(vg, x, y)
     nvgScale(vg, scale, scale)
@@ -192,7 +207,7 @@ private fun pedalBar(pen: NanoPen, cx: Float, cy: Float, width: Float, height: F
  * round rim, spokes to the left, the right and down, and a broad pad, each edged a shade lighter to stand off the
  * face.
  */
-private fun wheel(pen: NanoPen, cx: Float, cy: Float, radius: Float, turn: Double) {
+internal fun wheel(pen: NanoPen, cx: Float, cy: Float, radius: Float, turn: Double) {
     val vg = pen.vg
     val rim = radius * 0.86f
     val thick = radius * 0.13f

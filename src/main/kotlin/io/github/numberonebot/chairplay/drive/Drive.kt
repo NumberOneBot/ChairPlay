@@ -76,12 +76,15 @@ class Drive(
 
     /**
      * Puts the car where a game says it is, facing, as fast (m/s, negative backing up), and in the gear it says: a
-     * game's telemetry driving it. The pedals let go, and the wheel speed is sampled as [advance] samples it.
+     * game's telemetry driving it. The pedals and the wheel are as the game holds them ([input], at rest unless given),
+     * and the wheel speed is sampled as [advance] samples it.
      */
-    fun follow(position: GeoPoint, headingDegrees: Double, speed: Double, rpm: Double?, gear: Int?): Unit = synchronized(lock) {
+    fun follow(
+        position: GeoPoint, headingDegrees: Double, speed: Double, rpm: Double?, gear: Int?, input: CarInput = CarInput(),
+    ): Unit = synchronized(lock) {
         car = CarModel(spec, CarState(speed, headingDegrees, rpm ?: 0.0, gear ?: 1, parked = false))
         this.position = position
-        input = CarInput()
+        this.input = input
         val now = nanoTime()
         lastNanos = now
         sample(now)

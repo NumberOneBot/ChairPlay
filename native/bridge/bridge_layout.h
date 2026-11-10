@@ -17,6 +17,10 @@
 #define CPB_TELEMETRY_GEAR 2u
 #define CPB_TELEMETRY_PAUSED 4u
 #define CPB_TELEMETRY_REDLINE 8u
+#define CPB_TELEMETRY_THROTTLE 16u
+#define CPB_TELEMETRY_BRAKE 32u
+#define CPB_TELEMETRY_STEER 64u
+#define CPB_TELEMETRY_TOP_SPEED 128u
 
 struct cpb_status {
     uint32_t magic;             /*   0 */
@@ -44,7 +48,7 @@ struct cpb_status {
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 96 */
+    uint16_t size;              /*   6: 112 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -56,7 +60,11 @@ struct cpb_telemetry {
     float rpm;                  /*  56 */
     float redline;              /*  60: rpm where the red zone starts */
     char source[32];            /*  64 */
-    uint8_t reserved[160];      /*  96 */
+    float throttle;             /*  96: 0 released to 1 pressed */
+    float brake;                /* 100: 0 released to 1 pressed */
+    float steer_degrees;        /* 104: steering wheel angle, negative = left, past a turn too */
+    float top_speed;            /* 108: m/s, the speedometer's scale */
+    uint8_t reserved[144];      /* 112 */
 };
 
 static_assert(sizeof(struct cpb_status) == 256, "status size");
@@ -96,6 +104,10 @@ static_assert(offsetof(struct cpb_telemetry, longitude) == 48, "longitude");
 static_assert(offsetof(struct cpb_telemetry, rpm) == 56, "rpm");
 static_assert(offsetof(struct cpb_telemetry, redline) == 60, "redline");
 static_assert(offsetof(struct cpb_telemetry, source) == 64, "source");
-static_assert(offsetof(struct cpb_telemetry, reserved) == 96, "telemetry reserved");
+static_assert(offsetof(struct cpb_telemetry, throttle) == 96, "throttle");
+static_assert(offsetof(struct cpb_telemetry, brake) == 100, "brake");
+static_assert(offsetof(struct cpb_telemetry, steer_degrees) == 104, "steer_degrees");
+static_assert(offsetof(struct cpb_telemetry, top_speed) == 108, "top_speed");
+static_assert(offsetof(struct cpb_telemetry, reserved) == 112, "telemetry reserved");
 
 #endif

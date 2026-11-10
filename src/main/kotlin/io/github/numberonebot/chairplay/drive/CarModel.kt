@@ -197,7 +197,7 @@ class CarModel(val spec: CarSpec, initial: CarState = CarState()) {
         private const val STOPPED_SPEED = 0.3
         private const val REVERSE_HOLD_SECONDS = 0.4
         /** How long the car stands before it parks and stops its engine. */
-        private const val PARK_SECONDS = 10.0
+        private const val PARK_SECONDS = 5.0
         private const val REVERSE_TOP_SPEED = 20 / 3.6
         private const val REVERSE_RATIO = 3.4
         /** What the engine revs to as the clutch slips at a launch, at full throttle. */

@@ -100,18 +100,19 @@ class GaugePainter(
         val (cornerX, cornerY) = GaugeLayout.corner(w, h, small)
         val needle = now.design.needle ?: accent
         val fill = now.design.fill ?: (0x59000000 or needle)
+        val numbers = now.design.numbersFont
         // Each dial with its inset: the tachometer's single digits half as large again as the speedometer's three.
         val engine = { x: Float ->
             dial.draw(
                 x, cy, face, now.tachometer, LABEL_SIZE * 1.5f, now.rpm / 1000, now.gear, "×1000 rpm", needle, fill,
-                now.design.redZone, now.design.reading, now.design.caption,
+                now.design.redZone, now.design.reading, numbers,
             )
             positionInset(pen, now, x, cy, face, now.tachometer.sweep)
         }
         val speed = { x: Float ->
             dial.draw(
                 x, cy, face, now.speedometer, LABEL_SIZE, now.speed, now.speed.roundToInt().toString(), now.units.symbol,
-                needle, fill, reading = now.design.reading, caption = now.design.caption,
+                needle, fill, reading = now.design.reading, numbers = numbers,
             )
             controlsInset(pen, now, x, cy, face, now.speedometer.sweep)
         }

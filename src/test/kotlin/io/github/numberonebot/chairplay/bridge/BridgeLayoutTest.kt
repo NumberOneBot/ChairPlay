@@ -117,6 +117,42 @@ class BridgeLayoutTest {
         assertEquals(20000.0, TelemetryRecord.parse(telemetry(0b1000).also { it.putFloat(60, 20000f) })!!.redline!!, 0.0)
     }
 
+    // The pedals and the wheel, appended at 96, 100 and 104, each with its own flag (bits 4, 5 and 6); the wheel as the
+    // steering wheel's angle in degrees, as far round as the game turns it.
+    @Test
+    fun `telemetry gives the pedals and the wheel with their flags`() {
+        fun inputs(flags: Int, throttle: Float, brake: Float, steer: Float) =
+            telemetry(flags).also { it.putFloat(96, throttle); it.putFloat(100, brake); it.putFloat(104, steer) }
+        val t = TelemetryRecord.parse(inputs(0b111_0000, 0.75f, 0.25f, -450f))!!
+        assertEquals(0.75, t.throttle!!, 0.0)
+        assertEquals(0.25, t.brake!!, 0.0)
+        assertEquals(-450.0, t.steerDegrees!!, 0.0)
+        val none = TelemetryRecord.parse(inputs(0, 0.75f, 0.25f, -450f))!!
+        assertNull(none.throttle)
+        assertNull(none.brake)
+        assertNull(none.steerDegrees)
+        // Pedals past their range stop at its ends, the wheel goes round past a turn; not a number, none is given, and
+        // the record still drives.
+        val wild = TelemetryRecord.parse(inputs(0b111_0000, 1.5f, -0.2f, 1080f))!!
+        assertEquals(listOf(1.0, 0.0, 1080.0), listOf(wild.throttle, wild.brake, wild.steerDegrees))
+        val nan = TelemetryRecord.parse(inputs(0b111_0000, Float.NaN, Float.POSITIVE_INFINITY, Float.NaN))
+        assertNotNull(nan)
+        assertEquals(listOf(null, null, null), listOf(nan!!.throttle, nan.brake, nan.steerDegrees))
+    }
+
+    // The car's top speed, m/s, appended at 108 with flag bit 7, for the speedometer's scale; not a number above 0, none.
+    @Test
+    fun `telemetry gives the top speed with flag bit 7`() {
+        fun top(flags: Int, value: Float) = telemetry(flags).also { it.putFloat(108, value) }
+        assertEquals(97.5, TelemetryRecord.parse(top(0b1000_0000, 97.5f))!!.topSpeed!!, 0.0)
+        assertNull(TelemetryRecord.parse(top(0, 97.5f))!!.topSpeed)
+        for (bad in listOf(Float.NaN, Float.POSITIVE_INFINITY, 0f, -10f)) {
+            val t = TelemetryRecord.parse(top(0b1000_0000, bad))
+            assertNotNull("$bad", t)
+            assertNull("$bad", t!!.topSpeed)
+        }
+    }
+
     @Test
     fun `telemetry with another magic is not read`() {
         assertNull(TelemetryRecord.parse(telemetry(0, magic = 0)))
@@ -135,14 +171,18 @@ class BridgeLayoutTest {
 
     @Test
     fun `write then parse gives the record back`() {
-        val r = TelemetryRecord(9, true, -1, -2.5, 90.0, -33.9, 151.2, 800.0, "Assetto Corsa", redline = 8250.0)
+        val r = TelemetryRecord(
+            9, true, -1, -2.5, 90.0, -33.9, 151.2, 800.0, "Assetto Corsa", redline = 8250.0,
+            throttle = 0.5, brake = 0.25, steerDegrees = -270.0, topSpeed = 83.25,
+        )
         val b = buffer()
         TelemetryRecord.write(r, b)
         assertNotNull(TelemetryRecord.parse(b))
         assertEquals(r, TelemetryRecord.parse(b))
         assertEquals(8, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16) and 8)
         assertEquals(8250f, b.getFloat(60), 0f)
-        val bare = r.copy(gear = null, rpm = null, paused = false, redline = null)
+        assertEquals(112, b.getShort(6).toInt())
+        val bare = r.copy(gear = null, rpm = null, paused = false, redline = null, throttle = null, brake = null, steerDegrees = null, topSpeed = null)
         TelemetryRecord.write(bare, b)
         assertEquals(bare, TelemetryRecord.parse(b))
     }

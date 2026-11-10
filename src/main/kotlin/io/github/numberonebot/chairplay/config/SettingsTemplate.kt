@@ -212,7 +212,7 @@ internal val SETTINGS_TEMPLATE = listOf(
             "map like Google Maps) or 'heading' (north up, for a north-up map like Apple Maps). Speed units are\n" +
             "'metric' (km/h) or 'imperial' (mph), for the gauges and speed readouts only. The gauges' style:\n" +
             "'german' (both clockwise over the top), 'italian' (both from 6 o'clock to 3, yellow needles) or\n" +
-            "'british' (the tachometer from 5 o'clock to 2, the speedometer back from 7 to 10, green needles).",
+            "'british' (the speedometer from 5 o'clock to 1, the tachometer back from 7 to 11, green needles).",
         "gps.car.power.hp" to "300", "gps.car.mass.kg" to "1500", "gps.car.handling" to "normal", "gps.gauges" to "large",
         "gps.wheel" to "steering", "gps.units" to "metric", "gps.gauges.style" to "german",
     ),

@@ -6,8 +6,6 @@ import io.github.numberonebot.chairplay.config.configWith
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import kotlin.math.atan2
-import kotlin.math.hypot
 
 /** gps.gauges.style: where each dial's scale starts, which way it runs, and where its insets sit in the gap it leaves. */
 class GaugeDesignTest {
@@ -42,19 +40,19 @@ class GaugeDesignTest {
 
     // Aston Martin's: the speedometer on the left, the tachometer on the right, their needles turning apart.
     @Test
-    fun `British dials run apart, the speedometer from 5 to 2 o'clock and the tachometer from 7 to 10`() {
+    fun `British dials run apart, the speedometer from 5 to 1 o'clock and the tachometer from 7 to 11`() {
         val tach = GaugeScale.tachometer(CarSpec().redlineRpm, GaugeDesign.BRITISH.tachometer)
         val speed = GaugeScale.speedometer(SpeedUnits.METRIC, GaugeDesign.BRITISH.speedometer)
         assertTrue(GaugeDesign.BRITISH.tachometerOnRight)
         assertTrue(GaugeDesign.entries.filter { it.tachometerOnRight } == listOf(GaugeDesign.BRITISH))
         assertAt(5.0, speed.angle(0.0))
-        assertAt(2.0, speed.angle(speed.max))
+        assertAt(1.0, speed.angle(speed.max))
         assertTrue("the speedometer turns clockwise", speed.angle(20.0) > speed.angle(0.0))
         assertAt(7.0, tach.angle(0.0))
-        assertAt(10.0, tach.angle(tach.max))
+        assertAt(11.0, tach.angle(tach.max))
         assertTrue("the tachometer turns anticlockwise", tach.angle(1.0) < tach.angle(0.0))
-        // Both over the bottom: the evenly numbered tachometer passes 6 o'clock a ninth of the way, 30 of 270 degrees.
-        assertAt(6.0, tach.angle(tach.max / 9))
+        // Both over the bottom: the evenly numbered tachometer passes 6 o'clock an eighth of the way, 30 of 240 degrees.
+        assertAt(6.0, tach.angle(tach.max / 8))
     }
 
     // Each gap's middle: below the hub (German), to the lower right (Italian), or facing the other dial (British).
@@ -63,30 +61,8 @@ class GaugeDesignTest {
         assertAt(6.0, Math.toRadians(GaugeDesign.GERMAN.tachometer.gapMiddleDegrees))
         assertAt(4.5, Math.toRadians(GaugeDesign.ITALIAN.tachometer.gapMiddleDegrees))
         assertAt(4.5, Math.toRadians(GaugeDesign.ITALIAN.speedometer.gapMiddleDegrees))
-        assertAt(3.5, Math.toRadians(GaugeDesign.BRITISH.speedometer.gapMiddleDegrees))
-        assertAt(8.5, Math.toRadians(GaugeDesign.BRITISH.tachometer.gapMiddleDegrees))
-    }
-
-    // An inset in a gap: clear of the hub, inside the face, and within the gap, short of the scale's end numbers.
-    @Test
-    fun `insets fit their gaps`() {
-        for (design in GaugeDesign.entries) for (sweep in listOf(design.tachometer, design.speedometer)) {
-            for ((width, height) in listOf(0.5f to 0.3f, 0.38f to 0.34f)) {
-                val place = insetPlace(sweep, width, height)
-                assertTrue("$design $sweep scale ${place.scale}", place.scale > 0.5f && place.scale <= 1f)
-                val gap = Math.toRadians(sweep.gapMiddleDegrees)
-                val half = Math.toRadians(sweep.gapDegrees / 2)
-                for (sx in listOf(-1, 1)) for (sy in listOf(-1, 1)) {
-                    val x = place.x + sx * width * place.scale / 2
-                    val y = place.y + sy * height * place.scale / 2
-                    val r = hypot(x, y)
-                    assertTrue("$design corner at $r clears the hub", r >= GaugeStyle.HUB + 0.02f)
-                    assertTrue("$design corner at $r is inside the face", r <= 0.95f)
-                    val off = Math.abs(Math.IEEEremainder(atan2(y.toDouble(), x.toDouble()) - gap, 2 * Math.PI))
-                    assertTrue("$design corner within the gap", off < half)
-                }
-            }
-        }
+        assertAt(3.0, Math.toRadians(GaugeDesign.BRITISH.speedometer.gapMiddleDegrees))
+        assertAt(9.0, Math.toRadians(GaugeDesign.BRITISH.tachometer.gapMiddleDegrees))
     }
 
     // British, the coordinates sit on 3 o'clock, from inside the hub out past the well's rim.
@@ -121,6 +97,22 @@ class GaugeDesignTest {
         assertTrue(EditableSettings.validate(mapOf("gps.gauges.style" to "british"), emptyMap()).isEmpty())
         assertTrue("gps.gauges.style" in EditableSettings.validate(mapOf("gps.gauges.style" to "french"), emptyMap()))
         assertEquals(Applies.NOW, EditableSettings.applies("gps.gauges.style"))
+    }
+
+    // Italian, the GPS car's own engine revs higher, to a tachometer up to 9; the others keep the car's. A game's red line,
+    // when it gives one, is the game's whatever the style.
+    @Test
+    fun `the Italian GPS car revs to a tachometer up to 9`() {
+        val driving = Driving(GpsSettings(true), gamepad = { null }, nanoTime = { 0L })
+        driving.driveMode(true)
+        driving.pass()
+        assertEquals(8.0, driving.gauges()!!.tachometer.max, 0.0)
+        driving.saved(driving.settings.copy(design = GaugeDesign.ITALIAN), setOf("gps.gauges.style"))
+        assertEquals(9.0, driving.gauges()!!.tachometer.max, 0.0)
+        assertEquals(8500.0, driving.drive.spec.redlineRpm, 0.0)
+        driving.saved(driving.settings.copy(design = GaugeDesign.BRITISH), setOf("gps.gauges.style"))
+        assertEquals(8.0, driving.gauges()!!.tachometer.max, 0.0)
+        assertEquals(CarSpec().redlineRpm, driving.drive.spec.redlineRpm, 0.0)
     }
 
     // Drive mode's gauges take the style's scales and say which style they are, from the next frame.

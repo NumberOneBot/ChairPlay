@@ -23,8 +23,8 @@ import kotlin.math.sin
 
 /**
  * One dial on its face, as Audi's: the needle's sweep and the red zone (dashed where it begins) thin along the rim,
- * short ticks with italic numbers inside them, the needle in the accent colour or the style's, and a dark hub with the
- * reading upright in its middle.
+ * short ticks with numbers inside them (italic unless given upright), the needle in the accent colour or the style's,
+ * and a dark hub with the reading upright in its middle.
  */
 internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
     private val vg = pen.vg
@@ -32,7 +32,7 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
     /**
      * [face] is the face's radius, and [labelSize] the numbers' size in it; [needle] the needle's colour, 0xRRGGBB,
      * [fill] the scale's up to it and [redZone] the red zone's (the red unless given), 0xAARRGGBB; [reading] the size
-     * of the hub's reading and [caption] of its unit, in the face's radius.
+     * of the hub's reading, in the face's radius, its unit's the same in every style; [numbers] the scale's numbers' font.
      */
     fun draw(
         cx: Float, cy: Float, face: Float, scale: GaugeScale, labelSize: Float, value: Double, digits: String, unit: String,
@@ -40,7 +40,7 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
         fill: Int = 0x59000000 or needle,
         redZone: Int? = null,
         reading: Float = 0.40f,
-        caption: Float = 0.114f,
+        numbers: String = ITALIC,
     ) {
         // Just inside the knurled ring.
         val track = face * 0.975f
@@ -65,7 +65,7 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
             pen.ray(cx, cy, angle, face * from, face * TICKS_TO)
             nvgStrokeWidth(vg, face * width)
             pen.stroke(if (red) redMark else if (tick.major) WHITE else TICK)
-            if (tick.major) label(tick.value.roundToInt().toString(), cx, cy, angle, face * MAJOR_FROM, face * labelSize, if (red) redMark else LABEL)
+            if (tick.major) label(tick.value.roundToInt().toString(), cx, cy, angle, face * MAJOR_FROM, face * labelSize, if (red) redMark else LABEL, numbers, face * OUTLINE)
         }
         needle(cx, cy, face, scale.angle(value), needle)
         nvgBeginPath(vg)
@@ -75,7 +75,7 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
         pen.stroke(EDGE)
         // The reading in the hub's very middle, its unit below.
         pen.text(digits, cx, cy, face * reading, WHITE, BOLD)
-        pen.text(unit, cx, cy + face * 0.28f, face * caption, CAPTION, REGULAR)
+        pen.text(unit, cx, cy + face * 0.28f, face * UNIT_SIZE, CAPTION, REGULAR)
     }
 
     /** The red zone's start, dashed from [from] to [to] in [argb]. */
@@ -87,20 +87,20 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
      * A scale's number on the ray at [angle], a gap inside the ticks' inner end [edge], set back by its width and height
      * along that ray: the wide numbers at the sides stand as far from their ticks as the low ones at the top.
      */
-    private fun label(text: String, cx: Float, cy: Float, angle: Double, edge: Float, size: Float, argb: Int) {
+    private fun label(text: String, cx: Float, cy: Float, angle: Double, edge: Float, size: Float, argb: Int, font: String, outline: Float) {
         val dx = cos(angle).toFloat()
         val dy = sin(angle).toFloat()
-        val halfWidth = pen.textWidth(text, size, ITALIC) / 2
+        val halfWidth = pen.textWidth(text, size, font) / 2
         val at = edge - size * LABEL_GAP - (halfWidth * abs(dx) + size * HALF_CAP * abs(dy))
         val x = cx + dx * at
         val y = cy + dy * at
         // A black outline: NanoVG strokes no text, so the number in black round a small circle, then itself on top.
-        val outline = maxOf(1f, size * OUTLINE)
+        val ring = maxOf(1f, outline)
         for (i in 0 until 8) {
             val around = i * PI / 4
-            pen.text(text, x + cos(around).toFloat() * outline, y + sin(around).toFloat() * outline, size, BLACK, ITALIC)
+            pen.text(text, x + cos(around).toFloat() * ring, y + sin(around).toFloat() * ring, size, BLACK, font)
         }
-        pen.text(text, x, y, size, argb, ITALIC)
+        pen.text(text, x, y, size, argb, font)
     }
 
     /** A needle from the hub's rim to the scale, tapering, in [rgb] with a faint glow. */
@@ -141,8 +141,13 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
         /** The numbers' gap from the ticks, and half a digit's height, in the numbers' size. */
         const val LABEL_GAP = 0.35f
         const val HALF_CAP = 0.36f
-        /** The numbers' black outline, in their size. */
-        const val OUTLINE = 0.11f
+        /**
+         * The numbers' black outline, in the face's radius and the same for every number whatever its size: 4 px on a
+         * face of 300, as the large gauges have in 1920 x 720.
+         */
+        const val OUTLINE = 4f / 300f
+        /** The size of the hubs' units under their readings, in the face's radius, in every style. */
+        const val UNIT_SIZE = 0.088f
     }
 }
 

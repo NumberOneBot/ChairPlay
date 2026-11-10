@@ -74,12 +74,12 @@ class CarModelTest {
         assertTrue("stopped at $stoppedAt s", stoppedAt in 2.0..6.0)
     }
 
-    // Standing 10 s, with the brake held or not, the car goes into park and its engine stops; a touch of the throttle
+    // Standing 5 s, with the brake held or not, the car goes into park and its engine stops; a touch of the throttle
     // starts it and drives off.
     @Test
-    fun `standing ten seconds parks the car and stops its engine, and the throttle starts it`() {
+    fun `standing five seconds parks the car and stops its engine, and the throttle starts it`() {
         val car = CarModel(CarSpec())
-        car.run(9.5, CarInput(brake = 1.0))
+        car.run(4.5, CarInput(brake = 1.0))
         assertEquals("D1", car.state.gearName)
         assertEquals(car.spec.idleRpm, car.state.rpm, 1.0)
         car.run(2.0, CarInput())

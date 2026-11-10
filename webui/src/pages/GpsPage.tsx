@@ -34,7 +34,7 @@ const GAUGES: readonly Choice[] = [
 const GAUGE_STYLES: readonly Choice[] = [
   ['german', 'German', 'Both dials clockwise over the top, the needles in the accent color'],
   ['italian', 'Italian', 'Both dials from 6 o’clock to 3, with yellow needles'],
-  ['british', 'British', 'The dials turn apart, the tachometer from 5 o’clock to 2 and the speedometer back from 7 to 10, with green needles'],
+  ['british', 'British', 'The dials turn apart, the speedometer from 5 o’clock to 1 and the tachometer back from 7 to 11, with green needles'],
 ]
 
 /** gps.wheel: what the gauges' steering wheel shows. */
@@ -169,17 +169,6 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
             onChange={(handling) => save({ 'gps.car.handling': handling })}
           />
         </Row>
-        <Row
-          label="Gauges"
-          title={`The speedometer and tachometer in drive mode: as tall as the AltScreen, or small in its lower corners${gaugesKey ? ` (${keyLabel(gaugesKey)})` : ''}`}
-        >
-          <Segmented
-            label="Gauges"
-            value={value('gps.gauges') || 'large'}
-            options={GAUGES}
-            onChange={(size) => save({ 'gps.gauges': size })}
-          />
-        </Row>
         <Row label="Speed units" title="Choose kilometers or miles per hour for the gauges and speed readings">
           <Segmented
             label="Speed units"
@@ -208,6 +197,17 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
             <br />
             Heading — north-up maps (Apple Maps): the wheel shows the car's course.
           </span>
+        </Row>
+        <Row
+          label="Gauges"
+          title={`The speedometer and tachometer in drive mode: as tall as the AltScreen, or small in its lower corners${gaugesKey ? ` (${keyLabel(gaugesKey)})` : ''}`}
+        >
+          <Segmented
+            label="Gauges"
+            value={value('gps.gauges') || 'large'}
+            options={GAUGES}
+            onChange={(size) => save({ 'gps.gauges': size })}
+          />
         </Row>
         <Row label="Gauge style" title="How drive mode's dials are graduated and their needles colored">
           <Segmented

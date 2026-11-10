@@ -29,12 +29,12 @@ class WheelTurnTest {
         assertEquals(-right, left, 1e-9)
     }
 
-    // The wheel turns more the further the input is pushed, and no further than full lock past it.
+    // The wheel turns more the further the input is pushed; a game's wheel, past full lock and past a turn, as far.
     @Test
-    fun `steering grows with the input and holds at full lock`() {
+    fun `steering grows with the input, past full lock too`() {
         val half = wheelTurn(WheelMode.STEERING, headingDegrees = 0.0, steer = 0.5)
         val full = wheelTurn(WheelMode.STEERING, headingDegrees = 0.0, steer = 1.0)
         assertTrue(half > 0.0 && half < full)
-        assertEquals(full, wheelTurn(WheelMode.STEERING, headingDegrees = 0.0, steer = 2.0), 1e-9)
+        assertEquals(2 * full, wheelTurn(WheelMode.STEERING, headingDegrees = 0.0, steer = 2.0), 1e-9)
     }
 }

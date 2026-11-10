@@ -2,16 +2,18 @@ package io.github.numberonebot.chairplay.drive
 
 /**
  * What the gauges show in [settings]' scales and style, at [size]: [engine]'s speed, revs, gear and pedals, an engine red
- * from [redlineRpm], and the place, heading and steering of [car].
+ * from [redlineRpm], a speedometer up to [topKmh] when a game gives one, and the place, heading and steering of [car].
  */
-internal fun gaugeView(settings: GpsSettings, engine: DriveSnapshot, car: DriveSnapshot, redlineRpm: Double, size: GaugeSize) = GaugeView(
+internal fun gaugeView(
+    settings: GpsSettings, engine: DriveSnapshot, car: DriveSnapshot, redlineRpm: Double, size: GaugeSize, topKmh: Double? = null,
+) = GaugeView(
     speedKmh = engine.car.speedKmh,
     rpm = engine.car.rpm,
     gear = engine.car.gearName,
     throttle = engine.input.throttle,
     brake = engine.input.brake,
     headingDegrees = car.car.headingDegrees,
-    speedometer = GaugeScale.speedometer(settings.units, settings.design.speedometer),
+    speedometer = GaugeScale.speedometer(settings.units, settings.design.speedometer, topKmh?.let(settings.units::fromKmh)),
     tachometer = GaugeScale.tachometer(redlineRpm, settings.design.tachometer),
     position = car.position,
     size = size,

@@ -46,12 +46,20 @@ data class GaugeScale(
         const val START_DEGREES = 130.0
         const val SWEEP_DEGREES = 280.0
 
-        /** Dense at low speeds: km/h by 20 to 140, then 40 to 300; mph by 10 to 60, then 20 to 180. */
-        fun speedometer(units: SpeedUnits = SpeedUnits.METRIC, sweep: Sweep = Sweep.GERMAN): GaugeScale = GaugeScale(
-            if (units == SpeedUnits.IMPERIAL) listOf(0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0, 180.0)
-            else listOf(0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 180.0, 220.0, 260.0, 300.0),
-            sweep = sweep,
-        )
+        /**
+         * Dense at low speeds: km/h by 20 to 140, then 40 to 300; mph by 10 to 60, then 20 to 180. Given a game's [top]
+         * speed, in [units], the numbers run on as they do, by 40 km/h or 20 mph, up to the first at or past it.
+         */
+        fun speedometer(units: SpeedUnits = SpeedUnits.METRIC, sweep: Sweep = Sweep.GERMAN, top: Double? = null): GaugeScale {
+            val imperial = units == SpeedUnits.IMPERIAL
+            val own = if (imperial) listOf(0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0, 180.0)
+            else listOf(0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 180.0, 220.0, 260.0, 300.0)
+            if (top == null) return GaugeScale(own, sweep = sweep)
+            val step = if (imperial) 20.0 else 40.0
+            val numbers = own.toMutableList()
+            while (numbers.last() < top) numbers += numbers.last() + step
+            return GaugeScale(numbers.take(numbers.indexOfFirst { it >= top } + 1), sweep = sweep)
+        }
 
         fun tachometer(spec: CarSpec): GaugeScale = tachometer(spec.redlineRpm)
 
@@ -89,15 +97,16 @@ data class GaugeView(
     val speed: Double get() = units.fromKmh(speedKmh)
 }
 
-/** Full steering lock, how far the wheel turns at [CarInput.steer] of 1: enough to read as a hard turn. */
-private val STEER_LOCK = Math.toRadians(115.0)
+/** Full steering lock, how far the wheel turns at [CarInput.steer] of 1, in degrees: enough to read as a hard turn. */
+internal const val STEER_LOCK_DEGREES = 115.0
 
 /**
  * How far the gauges' steering wheel is turned, in radians (NanoVG: 0 at rest pointing up, positive clockwise). In
  * [WheelMode.HEADING] it points along the car's [headingDegrees] (north up); in [WheelMode.STEERING] it turns with the
- * [steer] input (-1 left to 1 right) like a real wheel, centred going straight, whatever the heading.
+ * [steer] input (-1 left to 1 right for the gamepad and keys) like a real wheel, centred going straight, whatever the
+ * heading. A game's wheel goes as far as the game turns it, past a full turn too.
  */
 fun wheelTurn(mode: WheelMode, headingDegrees: Double, steer: Double): Double = when (mode) {
     WheelMode.HEADING -> Math.toRadians(headingDegrees)
-    WheelMode.STEERING -> steer.coerceIn(-1.0, 1.0) * STEER_LOCK
+    WheelMode.STEERING -> Math.toRadians(steer * STEER_LOCK_DEGREES)
 }

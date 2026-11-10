@@ -90,4 +90,16 @@ class GaugesTest {
         off.pass()
         assertNull(off.gauges())
     }
+
+    // A game's top speed: the speedometer's numbers run on as ours do (by 40 km/h or 20 mph past the dense start) up to
+    // the first at or past it, and stop there.
+    @Test
+    fun `the speedometer runs to a game's top speed`() {
+        assertEquals(220.0, GaugeScale.speedometer(SpeedUnits.METRIC, top = 200.0).max, 0.0)
+        assertEquals(380.0, GaugeScale.speedometer(SpeedUnits.METRIC, top = 360.0).max, 0.0)
+        assertEquals(listOf(300.0, 340.0, 380.0), GaugeScale.speedometer(SpeedUnits.METRIC, top = 360.0).numbers.takeLast(3))
+        assertEquals(100.0, GaugeScale.speedometer(SpeedUnits.IMPERIAL, top = 100.0).max, 0.0)
+        assertEquals(60.0, GaugeScale.speedometer(SpeedUnits.METRIC, top = 45.0).max, 0.0)
+        assertEquals(GaugeScale.speedometer(), GaugeScale.speedometer(top = null))
+    }
 }

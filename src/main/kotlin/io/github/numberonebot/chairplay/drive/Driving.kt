@@ -65,8 +65,10 @@ class Driving(
     @Volatile private var gameThere = false
     // Whether the last poll had a game there, driving or halted; the window loop's thread only.
     private var following = false
-    // The red line the game last gave while driving, for the tachometer until it is gone; null for the GPS car's own.
+    // The red line and top speed (m/s) the game last gave while driving, for the gauges until the gamepad or keys first
+    // drive the car again ([ownControls]); null for the GPS car's own.
     @Volatile private var gameRedline: Double? = null
+    @Volatile private var gameTopSpeed: Double? = null
 
     /**
      * [DriveControl.pass] while the GPS is on, after a game's telemetry with gps.external on ([external]); off, the
@@ -77,7 +79,7 @@ class Driving(
         val settings = settings
         if (settings.enabled && settings.external) return external()
         unfollow()
-        if (settings.enabled) return control.pass()
+        if (settings.enabled) return control.pass().also { ownControls() }
         if (!control.keyboard && !drive.moving) return null
         if (control.keyboard) control.toggleKeyboard()
         drive.stop()
@@ -95,8 +97,13 @@ class Driving(
         if (gameThere) when (val said = poll()) {
             is External.Drives -> {
                 val record = said.record
-                drive.follow(GeoPoint(record.latitude, record.longitude), record.headingDegrees, record.speed, record.rpm, record.gear)
+                drive.follow(
+                    GeoPoint(record.latitude, record.longitude), record.headingDegrees, record.speed, record.rpm, record.gear,
+                    // The game's wheel angle as a share of the gauges' lock, which turns their wheel as far.
+                    CarInput(record.throttle ?: 0.0, record.brake ?: 0.0, (record.steerDegrees ?: 0.0) / STEER_LOCK_DEGREES),
+                )
                 gameRedline = record.redline
+                gameTopSpeed = record.topSpeed
                 placed = true
                 following = true
                 return DriveControl.FRAME_SECONDS
@@ -109,7 +116,7 @@ class Driving(
             External.Absent -> gameThere = false
         }
         handBack()
-        return control.pass()
+        return control.pass().also { ownControls() }
     }
 
     /**
@@ -142,9 +149,16 @@ class Driving(
     private fun handBack() {
         if (!following) return
         following = false
-        gameRedline = null
         drive.stop()
         remember(drive.snapshot())
+    }
+
+    // The gamepad or keys driving the car again put a game's dials away: from their first press, the gauges are the GPS
+    // car's. A game sending again brings its own back.
+    private fun ownControls() {
+        if (drive.snapshot().input == CarInput()) return
+        gameRedline = null
+        gameTopSpeed = null
     }
 
     /** Turns drive mode on or off and says which; it stays off while the GPS is off. */
@@ -249,7 +263,9 @@ class Driving(
     fun gauges(): GaugeView? {
         if (!settings.enabled || !control.keyboard) return null
         val snapshot = drive.snapshot()
-        return gaugeView(settings, snapshot, snapshot, gameRedline ?: drive.spec.redlineRpm, settings.gauges)
+        return gaugeView(
+            settings, snapshot, snapshot, gameRedline ?: drive.spec.redlineRpm, settings.gauges, gameTopSpeed?.times(3.6),
+        )
     }
 
     /** Saves where the car is for the next start; the app calls it as it closes. */
@@ -267,8 +283,11 @@ class Driving(
     private companion object {
         /** 0xFFFA's selectors, identification fields 17 to 20 less 16. */
         val SENTENCES = mapOf(1 to "GGA", 2 to "RMC", 4 to "PASCD")
-        /** What remakes the car: its own settings, and the units, whose speedometer's end it runs to. */
-        val CAR_KEYS = setOf("gps.car.power.hp", "gps.car.mass.kg", "gps.car.handling", "gps.units")
+        /**
+         * What remakes the car: its own settings, the units, whose speedometer's end it runs to, and the gauges' style,
+         * how far it revs.
+         */
+        val CAR_KEYS = setOf("gps.car.power.hp", "gps.car.mass.kg", "gps.car.handling", "gps.units", "gps.gauges.style")
         /** Degrees apart within the five decimals the place is saved with. */
         const val SAME = 1e-5
     }

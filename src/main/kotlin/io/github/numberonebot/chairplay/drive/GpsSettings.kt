@@ -29,8 +29,14 @@ data class GpsSettings(
     /** gps.external: whether a game's telemetry drives the car while it sends, instead of the gamepad and keys. */
     val external: Boolean = false,
 ) {
-    /** The car as it drives: [car], running to the end of the speedometer in its [units] and no further. */
-    val driven: CarSpec get() = car.copy(limiterKmh = units.toKmh(GaugeScale.speedometer(units).max))
+    /**
+     * The car as it drives: [car], running to the end of the speedometer in its [units] and no further, and revving as
+     * far as its [design] has it.
+     */
+    val driven: CarSpec get() = car.copy(
+        limiterKmh = units.toKmh(GaugeScale.speedometer(units).max),
+        redlineRpm = design.redlineRpm ?: car.redlineRpm,
+    )
 
     companion object {
         val RATES = listOf(1, 4, 10)

@@ -3,7 +3,7 @@
 ChairPlay offers two experimental interfaces to other apps on the same PC, such as a game mod, a plugin, or a telemetry tool:
 
 - **CarPlay picture:** ChairPlay publishes the main CarPlay screen as a named Direct3D 11 shared texture, with a status file that says whether a picture is there, its size, and the texture's current name. Another app can show it on a screen of its own, for example a car's center display in a racing game.
-- **GPS car from other apps:** another app writes a position, heading, and speed (and optionally rpm, gear, and red line) into a telemetry file. ChairPlay moves its GPS car there, and the iPhone navigates by it.
+- **GPS car from other apps:** another app writes a position, heading, and speed (and optionally rpm, gear, red line, the pedals, the steering wheel, and the top speed) into a telemetry file. ChairPlay moves its GPS car there, and the iPhone navigates by it.
 
 Both work through Windows shared memory and a DXGI shared resource. The other app needs no ChairPlay code; everything it needs is the names and byte layouts below. The C definitions are in [`native/bridge/bridge_layout.h`](../native/bridge/bridge_layout.h).
 
@@ -120,10 +120,10 @@ One app writes at a time. Two writers at once are not supported.
 |---:|---|---|---|
 | 0 | u32 | `magic` | `0x54435043` ("CPCT" in memory); 0 while no app has written |
 | 4 | u16 | `version` | 1 |
-| 6 | u16 | `size` | Bytes of defined fields: 96 in version 1 |
+| 6 | u16 | `size` | Bytes of defined fields: 112 in version 1 (96 before the pedals and the wheel, 108 before the top speed) |
 | 8 | u32 | `seq` | Seqlock: odd while the app writes |
 | 12 | u32 | `counter` | The app adds one with each update; ChairPlay judges freshness by its changes, not by a clock |
-| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given |
+| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given |
 | 20 | i32 | `gear` | −1 reverse, 0 neutral, 1 and up forward gears |
 | 24 | f64 | `speed` | m/s, signed: below 0 is reversing. Required |
 | 32 | f64 | `heading` | Degrees clockwise from true north, 0 to 360. Required |
@@ -132,7 +132,11 @@ One app writes at a time. Two writers at once are not supported.
 | 56 | f32 | `rpm` | Engine speed, rpm |
 | 60 | f32 | `redline` | The rpm where the tachometer's red zone starts |
 | 64 | char[32] | `source` | The app's name, UTF-8, zero-ended, for ChairPlay's log (for example "Assetto Corsa") |
-| 96 | — | reserved | Write zero, up to byte 256 |
+| 96 | f32 | `throttle` | The accelerator pedal, 0 released to 1 fully pressed |
+| 100 | f32 | `brake` | The brake pedal, 0 released to 1 fully pressed |
+| 104 | f32 | `steer_degrees` | The steering wheel's angle in degrees, below 0 to the left, as far round as the game turns it (±450 on a 900° wheel) |
+| 108 | f32 | `top_speed` | The car's top speed, m/s, for the speedometer's scale |
+| 112 | — | reserved | Write zero, up to byte 256 |
 
 ### Writing
 
@@ -146,6 +150,8 @@ ChairPlay does not map game coordinates. The app converts its own world into rea
 - A record whose `speed` or `heading` is not a finite number, or whose `latitude` or `longitude` is not a finite number in range, is ignored whole. `heading` is taken modulo 360.
 - `rpm` counts only with bit 0 and as a finite number; `gear` only with bit 1.
 - `redline` counts only with bit 3 and when above 1000 and at most 20000; otherwise it is treated as not given.
+- `throttle`, `brake`, and `steer_degrees` count only with their bits and as finite numbers. The pedals are held to 0 to 1; the wheel is taken as it is, past a full turn too.
+- `top_speed` counts only with bit 7 and as a finite number above 0.
 - The `counter` ChairPlay finds when it opens the file is the starting point: the app drives only once `counter` changes after that.
 
 ### What ChairPlay does
@@ -166,7 +172,13 @@ ChairPlay does not map game coordinates. The app converts its own world into rea
 
 In drive mode (F10, or the switch on the GPS page) ChairPlay shows the GPS car's speedometer and tachometer on the AltScreen. While an app drives, they show its speed, and its rpm and gear when given: rpm as is, also past the red line; the gear as R, N, D1, and so on, also past the GPS car's own gears. Without bit 1 the gear shows D1.
 
-With `redline` given, the tachometer is red from it, with a dashed mark 500 rpm below, and its scale runs in thousands up to the next whole thousand at or above `redline` + 500 (7000 → 8, 7500 → 8, 7600 → 9). An update without bit 3 brings back the GPS car's own scale. A pause or stale telemetry keeps the app's scale; when the app is gone, or the switch or GPS spoofing is off, the GPS car's scale is back.
+With `redline` given, the tachometer is red from it, with a dashed mark 500 rpm below, and its scale runs in thousands up to the next whole thousand at or above `redline` + 500 (7000 → 8, 7500 → 8, 7600 → 9). An update without bit 3 brings back the GPS car's own scale.
+
+With `top_speed` given, the speedometer's numbers run on past its own end, by 40 km/h or 20 mph, up to the first at or above it (95 m/s, 342 km/h → 380); below the own end, the scale stops at that first number. An update without bit 7 brings back the GPS car's own scale.
+
+The app's scales stay through a pause, stale telemetry, and the app gone, until the gamepad or keys first drive the car: from then on the gauges have the GPS car's own scales, and the app's come back with its next update.
+
+With `throttle` and `brake` given, the gauges' pedal bars show them; with `steer_degrees` given and the gauges' wheel set to follow the steering, it turns by the angle the app gives. A value not given shows at rest.
 
 ## Examples
 
@@ -183,6 +195,10 @@ These snippets use [`bridge_layout.h`](../native/bridge/bridge_layout.h), whose 
 #define CPB_TELEMETRY_GEAR 2u
 #define CPB_TELEMETRY_PAUSED 4u
 #define CPB_TELEMETRY_REDLINE 8u
+#define CPB_TELEMETRY_THROTTLE 16u
+#define CPB_TELEMETRY_BRAKE 32u
+#define CPB_TELEMETRY_STEER 64u
+#define CPB_TELEMETRY_TOP_SPEED 128u
 
 struct cpb_status {
     uint32_t magic;             /*   0 */
@@ -210,7 +226,7 @@ struct cpb_status {
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 96 */
+    uint16_t size;              /*   6: 112 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -222,7 +238,11 @@ struct cpb_telemetry {
     float rpm;                  /*  56 */
     float redline;              /*  60: rpm where the red zone starts */
     char source[32];            /*  64 */
-    uint8_t reserved[160];      /*  96 */
+    float throttle;             /*  96: 0 released to 1 pressed */
+    float brake;                /* 100: 0 released to 1 pressed */
+    float steer_degrees;        /* 104: steering wheel angle, negative = left, past a turn too */
+    float top_speed;            /* 108: m/s, the speedometer's scale */
+    uint8_t reserved[144];      /* 112 */
 };
 ```
 
@@ -333,9 +353,11 @@ int telemetry_open(const char* source) {
     return 1;
 }
 
-/* One update: real-world position and heading in degrees, speed in m/s; rpm, gear, and redline as the game has them. */
+/* One update: real-world position and heading in degrees, speed in m/s; rpm, gear, redline, the pedals (0 to 1), the
+   steering wheel's angle in degrees, and the top speed in m/s as the game has them. */
 void telemetry_write(double latitude, double longitude, double heading, double speed,
-                     float rpm, int gear, float redline, int paused) {
+                     float rpm, int gear, float redline, float throttle, float brake, float steer_degrees,
+                     float top_speed, int paused) {
     volatile struct cpb_telemetry* t = telemetry;
     InterlockedIncrement((volatile LONG*)&t->seq);  /* odd: being written */
     MemoryBarrier();
@@ -346,7 +368,13 @@ void telemetry_write(double latitude, double longitude, double heading, double s
     t->rpm = rpm;
     t->gear = gear;
     t->redline = redline;
-    t->flags = CPB_TELEMETRY_RPM | CPB_TELEMETRY_GEAR | CPB_TELEMETRY_REDLINE | (paused ? CPB_TELEMETRY_PAUSED : 0);
+    t->throttle = throttle;
+    t->brake = brake;
+    t->steer_degrees = steer_degrees;
+    t->top_speed = top_speed;
+    t->flags = CPB_TELEMETRY_RPM | CPB_TELEMETRY_GEAR | CPB_TELEMETRY_REDLINE | CPB_TELEMETRY_THROTTLE |
+               CPB_TELEMETRY_BRAKE | CPB_TELEMETRY_STEER | CPB_TELEMETRY_TOP_SPEED |
+               (paused ? CPB_TELEMETRY_PAUSED : 0);
     t->counter = t->counter + 1;
     MemoryBarrier();
     InterlockedIncrement((volatile LONG*)&t->seq);  /* even: whole */

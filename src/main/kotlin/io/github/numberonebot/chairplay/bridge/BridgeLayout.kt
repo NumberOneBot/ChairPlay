@@ -13,7 +13,7 @@ object BridgeLayout {
     const val STATUS_FILE = "ChairPlay.Bridge.v1"
     const val TELEMETRY_FILE = "ChairPlay.Telemetry.v1"
     const val STATUS_SIZE = 136
-    const val TELEMETRY_SIZE = 96
+    const val TELEMETRY_SIZE = 112
 
     fun textureName(generation: Int): String = "ChairPlay.Main.v1.$generation"
 
@@ -99,6 +99,15 @@ data class TelemetryRecord(
     val source: String,
     /** Where the tachometer's red zone starts, in rpm; null when not given or not an engine's. */
     val redline: Double? = null,
+    /**
+     * The pedals pressed, 0 to 1, and the steering wheel's angle in degrees, below 0 to the left and as far round as the
+     * game turns it; each null when not given.
+     */
+    val throttle: Double? = null,
+    val brake: Double? = null,
+    val steerDegrees: Double? = null,
+    /** The car's top speed, m/s, for the speedometer's scale; null when not given or not above 0. */
+    val topSpeed: Double? = null,
 ) {
     companion object {
         private const val MAGIC = 0
@@ -115,10 +124,18 @@ data class TelemetryRecord(
         private const val REDLINE = 60
         private const val SOURCE = 64
         private const val SOURCE_MAX = 32
+        private const val THROTTLE = 96
+        private const val BRAKE = 100
+        private const val STEER = 104
+        private const val TOP_SPEED = 108
         private const val FLAG_RPM = 1
         private const val FLAG_GEAR = 2
         private const val FLAG_PAUSED = 4
         private const val FLAG_REDLINE = 8
+        private const val FLAG_THROTTLE = 16
+        private const val FLAG_BRAKE = 32
+        private const val FLAG_STEER = 64
+        private const val FLAG_TOP_SPEED = 128
         /** A red line at or below 1000 rpm or above 20000 is no engine's (and would number a dial past reading). */
         private const val LOWEST_REDLINE = 1000.0
         private const val HIGHEST_REDLINE = 20000.0
@@ -138,6 +155,9 @@ data class TelemetryRecord(
             val flags = b.getInt(FLAGS)
             val rpm = b.getFloat(RPM).toDouble()
             val redline = b.getFloat(REDLINE).toDouble()
+            // A pedal or the wheel given as a number, held to its range; not a number, as if not given.
+            fun input(flag: Int, at: Int, range: ClosedFloatingPointRange<Double>) =
+                b.getFloat(at).toDouble().takeIf { flags and flag != 0 && it.isFinite() }?.coerceIn(range)
             return TelemetryRecord(
                 counter = b.getInt(COUNTER),
                 paused = flags and FLAG_PAUSED != 0,
@@ -150,6 +170,10 @@ data class TelemetryRecord(
                 source = BridgeLayout.readText(b, SOURCE, SOURCE_MAX),
                 // NaN fails both comparisons, infinity the second.
                 redline = if (flags and FLAG_REDLINE != 0 && redline > LOWEST_REDLINE && redline <= HIGHEST_REDLINE) redline else null,
+                throttle = input(FLAG_THROTTLE, THROTTLE, 0.0..1.0),
+                brake = input(FLAG_BRAKE, BRAKE, 0.0..1.0),
+                steerDegrees = input(FLAG_STEER, STEER, -Double.MAX_VALUE..Double.MAX_VALUE),
+                topSpeed = b.getFloat(TOP_SPEED).toDouble().takeIf { flags and FLAG_TOP_SPEED != 0 && it.isFinite() && it > 0 },
             )
         }
 
@@ -166,6 +190,10 @@ data class TelemetryRecord(
             if (record.gear != null) flags = flags or FLAG_GEAR
             if (record.paused) flags = flags or FLAG_PAUSED
             if (record.redline != null) flags = flags or FLAG_REDLINE
+            if (record.throttle != null) flags = flags or FLAG_THROTTLE
+            if (record.brake != null) flags = flags or FLAG_BRAKE
+            if (record.steerDegrees != null) flags = flags or FLAG_STEER
+            if (record.topSpeed != null) flags = flags or FLAG_TOP_SPEED
             b.putInt(FLAGS, flags)
             b.putInt(GEAR, record.gear ?: 0)
             b.putDouble(SPEED, record.speed)
@@ -175,6 +203,10 @@ data class TelemetryRecord(
             b.putFloat(RPM, (record.rpm ?: 0.0).toFloat())
             b.putFloat(REDLINE, (record.redline ?: 0.0).toFloat())
             BridgeLayout.writeText(b, SOURCE, SOURCE_MAX, record.source)
+            b.putFloat(THROTTLE, (record.throttle ?: 0.0).toFloat())
+            b.putFloat(BRAKE, (record.brake ?: 0.0).toFloat())
+            b.putFloat(STEER, (record.steerDegrees ?: 0.0).toFloat())
+            b.putFloat(TOP_SPEED, (record.topSpeed ?: 0.0).toFloat())
         }
     }
 }
