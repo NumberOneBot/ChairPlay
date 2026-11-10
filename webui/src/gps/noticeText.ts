@@ -9,7 +9,7 @@ export interface NoticeText {
 const STAGE_TEXT: Record<GpsOperationStage, string> = {
   quiesce: 'Pausing the virtual car…',
   locate: 'Reading the Windows location…',
-  return: 'Sending the saved Windows location before ending the simulation…',
+  return: 'Sending the Windows location before ending the simulation…',
   clear: 'Sending the reset command…',
   close: 'Closing the developer connection…',
   start: 'Starting the simulation…',

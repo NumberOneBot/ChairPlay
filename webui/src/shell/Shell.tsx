@@ -54,17 +54,17 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
   }, [state.setupDone])
 
   // F11, F12 and the app's other keys work over the settings as over CarPlay.
-  useKeysToApp(backend, false)
+  useKeysToApp(backend, false, !locked)
   useKeyboardFocus(backend, state.controls?.globalKeyboard?.enabled === true)
 
   useEffect(() => {
-    if (!showable) return
+    if (!showable || locked) return
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !event.defaultPrevented) backend.show('carplay')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [backend, showable])
+  }, [backend, showable, locked])
 
   // Connecting on its own the app waits, black, instead of showing the settings, until CarPlay covers it.
   if (state.waiting) return <Waiting state={state} backend={backend} />
@@ -76,7 +76,7 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
     <div className={`shell ${away ? 'away' : ''}`}>
       <Toolbar state={state} backend={backend} guide={steps} locked={locked} />
       {steps ? (
-        <div className="body setup-body">
+        <div className="body setup-body" inert={locked} aria-busy={locked || undefined}>
           {settings.data && (
             <GetStarted
               state={state}

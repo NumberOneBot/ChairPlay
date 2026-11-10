@@ -1,8 +1,9 @@
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { GpsNotice } from '../gpsApi'
 import { gpsOutput, outputs } from '../gpsFixtures'
-import { gpsState, openSection } from './gpsTesting'
+import { Shell } from '../shell/Shell'
+import { gpsBackend, gpsState, openSection } from './gpsTesting'
 
 afterEach(cleanup)
 
@@ -68,6 +69,13 @@ describe('GPS notices', () => {
     await waitFor(() => expect(backend.reconnects).toBe(1))
   })
 
+  it('holds the Reconnect button while an operation runs', async () => {
+    const output = { ...outputs.reconnectNeeded, operation: outputs.switchingToUsb.operation }
+    await openSection(gpsState(output))
+    const button = within(page()).getByRole('button', { name: 'Reconnect' }) as HTMLButtonElement
+    expect(button.disabled || inert(button)).toBe(true)
+  })
+
   it('warns of Windows location unavailable and of a reset not confirmed', async () => {
     const { update } = await openSection(gpsState(outputs.windowsUnavailable))
     expect(alerts()).toHaveLength(1)
@@ -128,6 +136,20 @@ describe('the window while an operation runs', () => {
     update(gpsState(outputs.stoppingUsb))
     expect(inert(screen.getByRole('button', { name: 'Logs' }))).toBe(true)
     expect(within(page().parentElement!).getAllByRole('status')).toHaveLength(1)
+  })
+
+  it('holds Escape while an operation runs, and takes it otherwise', async () => {
+    const { backend, update } = await openSection(gpsState(outputs.switchingToUsb))
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(backend.shown).toEqual([])
+    update(gpsState(outputs.carplayOff))
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(backend.shown).toEqual(['carplay'])
+  })
+
+  it('holds Get started too', async () => {
+    render(<Shell state={gpsState(outputs.switchingToUsb, undefined, { setupDone: false })} backend={gpsBackend()} />)
+    expect((await screen.findByRole('heading', { name: 'Get started' })).closest('[inert]')).not.toBeNull()
   })
 
   it('gives the window back when the operation ends', async () => {

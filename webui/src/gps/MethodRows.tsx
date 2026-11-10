@@ -56,7 +56,7 @@ export function MethodRows({ output, backend }: { output: GpsOutput; backend: Ba
               type="button"
               className="btn small"
               title="Set up the iPhone for USB GPS"
-              onClick={() => void backend.openUsbSetup('prepare')}
+              onClick={() => void backend.openUsbSetup(output.enabledIntent ? 'resume' : 'prepare')}
             >
               <UsbIcon />
               USB setup

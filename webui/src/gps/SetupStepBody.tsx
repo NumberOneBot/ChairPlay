@@ -95,6 +95,13 @@ function UsbBody({ detail, ask }: { detail: string | null; ask: Ask }) {
         </div>
       </>
     )
+  if (detail === 'several-devices')
+    return (
+      <>
+        <span>Several iPhones are connected. Disconnect all but one.</span>
+        <Wait>Waiting for one iPhone…</Wait>
+      </>
+    )
   if (detail === 'locked')
     return (
       <>
@@ -185,7 +192,7 @@ function ReadyBody({ setup }: { setup: UsbSetupView }) {
         <li>Developer Mode on</li>
         <li>Developer tools ready</li>
       </ul>
-      {!setup.positionValid && <span>The car has no position yet. Set one on the GPS page after enabling.</span>}
+      {!setup.positionValid && <span>The car needs a position before USB GPS sends. Set one on the GPS page.</span>}
     </>
   )
 }
