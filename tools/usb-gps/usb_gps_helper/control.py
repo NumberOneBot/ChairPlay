@@ -15,6 +15,7 @@ from .selection import select_device
 
 DEVICE_TIMEOUT = 15.0
 MOUNT_TIMEOUT = 150.0
+LIST_TIMEOUT = 3.0
 _KEPT_ON_MOUNT = {'locked', 'not-trusted', 'developer-mode-off', 'unsupported-ios', 'timeout', 'no-device',
                   'image-missing', 'service-unavailable', 'cancelled'}
 
@@ -74,7 +75,7 @@ class ControlOps:
         return {'state': await asyncio.to_thread(self.components)}
 
     async def _discover(self, request):
-        udids = await self._bounded(self.backend.usb_devices())
+        udids = await self._bounded(self.backend.usb_devices(), LIST_TIMEOUT)
         if len(udids) > 1:
             raise HelperError('several-devices', 'More than one iPhone is connected by USB.')
         # Polled about once a second: a phone is asked its name and iOS once while it stays connected.

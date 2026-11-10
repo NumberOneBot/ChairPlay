@@ -82,6 +82,14 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual('several-devices', await self.code(op, **fields), op)
         self.assertEqual([], self.backend.calls)
 
+    async def test_a_hanging_usbmux_holds_discover_three_seconds_at_most(self):
+        async def hangs():
+            await asyncio.sleep(60)
+        self.backend.usb_devices = hangs
+        started = time.monotonic()
+        self.assertEqual('timeout', await self.code('discover'))
+        self.assertLess(time.monotonic() - started, 4)
+
     async def test_usbmux_not_answering_is_usbmux_unavailable(self):
         async def down():
             raise ConnectionFailedToUsbmuxdError('refused')
