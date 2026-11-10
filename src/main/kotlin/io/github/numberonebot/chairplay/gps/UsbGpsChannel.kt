@@ -37,7 +37,8 @@ class UsbGpsChannel(
 
     private fun look() {
         val now = when (val found = helper()?.devices()) {
-            is UsbResult.Ok -> found.value.singleOrNull()
+            // Several iPhones never really happen (D11): the first one.
+            is UsbResult.Ok -> found.value.firstOrNull()
             else -> null
         }
         if (now?.udid != attached?.udid) {
@@ -93,11 +94,7 @@ class UsbGpsChannel(
     @Synchronized
     override fun release(returnTo: GeoPoint?, onStage: (OperationStage) -> Unit): Release {
         stopPump()
-        val live = session
-        val own = live ?: attached?.let { device ->
-            // A simulation left by an earlier session or run: a session of its own, for the clear (V49, V50).
-            (helper()?.openSession(device.udid) as? UsbResult.Ok)?.value
-        } ?: return Release.NOTHING
+        val own = session ?: return Release.NOTHING
         val returned = if (returnTo == null) StepOutcome.SKIPPED else {
             onStage(OperationStage.RETURN)
             outcome(own.returnTo(returnTo))
@@ -106,7 +103,7 @@ class UsbGpsChannel(
         val cleared = outcome(own.clear())
         onStage(OperationStage.CLOSE)
         val closed = runCatching { own.close() }.fold({ StepOutcome.DONE }, { StepOutcome.FAILED })
-        if (live != null) lastSends = live.acknowledged
+        lastSends = own.acknowledged
         session = null
         return Release(returned, cleared, closed)
     }
@@ -125,7 +122,6 @@ class UsbGpsChannel(
     companion object {
         fun reason(code: UsbErrorCode): GpsReason = when (code) {
             UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> GpsReason.USB_NOT_CONNECTED
-            UsbErrorCode.SEVERAL_DEVICES -> GpsReason.USB_SEVERAL
             UsbErrorCode.LOCKED, UsbErrorCode.NOT_TRUSTED, UsbErrorCode.DEVELOPER_MODE_OFF, UsbErrorCode.IMAGE_MISSING,
             UsbErrorCode.SERVICE_UNAVAILABLE -> GpsReason.USB_NOT_READY
             else -> GpsReason.USB_HELPER_FAILED

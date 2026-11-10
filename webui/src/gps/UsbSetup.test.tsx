@@ -86,21 +86,20 @@ describe('USB setup', () => {
     await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 retry tools']))
   })
 
-  it('shows the error of several iPhones on the first step', async () => {
-    const { backend } = await wizard(setups.several)
+  // D12: one generic error for any code but the download's; it too is tried again for its own step.
+  it('shows any other error as one generic error that can be tried again', async () => {
+    const { backend } = await wizard({
+      ...setups.connecting,
+      steps: { ...setups.connecting.steps, tools: { status: 'error', detail: 'missing', error: 'mount-failed' } },
+    })
+    expect(screen.getByRole('alert')).toBeTruthy()
     click('Try again')
-    await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 retry usb']))
+    await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 retry tools']))
   })
 
-  it('shows several iPhones as a state of the step as well as an error', async () => {
-    await wizard({ ...setups.connect, steps: { ...setups.connect.steps, usb: { status: 'waiting', detail: 'several-devices', error: null } } })
-    expect(screen.queryByText(/Connect a data-capable/)).toBeNull()
-  })
-
-  it('shows the operation above the setup, readable', async () => {
-    await wizard(setups.readyEnable, outputs.switchingToUsb)
-    const status = screen.getAllByRole('status').find((each) => each.closest('.usb-setup') === null && each.textContent)!
-    expect(status.closest('[inert]')).toBeNull()
+  it('waits on an unlocked iPhone with nothing to press', async () => {
+    await wizard(setups.locked)
+    expect(screen.getAllByRole('button').filter((each) => each.closest('.step'))).toHaveLength(0)
   })
 
   it('does not ask a stale or missing operation for anything', async () => {
@@ -181,8 +180,8 @@ describe('USB setup, leaving it', () => {
     expect(backend.saved).toEqual([])
   })
 
-  it('holds the setup too while an operation runs', async () => {
-    await wizard(setups.readyEnable, outputs.switchingToUsb)
-    expect(screen.getByRole('button', { name: 'Enable USB GPS' }).closest('[inert]')).not.toBeNull()
+  it('does not hold the setup while an operation runs', async () => {
+    await wizard(setups.readyEnable, outputs.stoppingUsb)
+    expect(screen.getByRole('button', { name: 'Enable USB GPS' }).closest('[inert]')).toBeNull()
   })
 })

@@ -15,13 +15,15 @@ export function waitsForCable(output: GpsOutput): boolean {
 
 /** The one Enable signal simulation switch, whichever method carries it. */
 export function EnableRow({ output, backend }: { output: GpsOutput; backend: Backend }) {
+  // While USB starts or stops the switch waits; the rest of the window does not.
   const waiting = waitsForCable(output)
+  const busy = output.operation !== null
   return (
     <Row title={waiting ? 'Connect your iPhone with a USB cable to resume simulation' : undefined}>
       <Switch
         label="Enable signal simulation"
         checked={output.enabledIntent}
-        disabled={waiting}
+        disabled={waiting || busy}
         onChange={(enabled) => void backend.gpsEnabled(enabled)}
       />
     </Row>

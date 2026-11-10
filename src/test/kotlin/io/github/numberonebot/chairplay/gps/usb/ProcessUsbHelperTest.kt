@@ -50,9 +50,9 @@ class ProcessUsbHelperTest {
     }
 
     @Test
-    fun `several phones come back as their code`() {
-        controlAnswers { fail(it, "several-devices") }
-        assertEquals(UsbErrorCode.SEVERAL_DEVICES, (soon { helper.devices() } as UsbResult.Failed).code)
+    fun `a failure comes back as its code`() {
+        controlAnswers { fail(it, "locked") }
+        assertEquals(UsbErrorCode.LOCKED, (soon { helper.devices() } as UsbResult.Failed).code)
     }
 
     @Test

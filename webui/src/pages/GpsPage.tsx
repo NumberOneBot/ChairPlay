@@ -1,10 +1,9 @@
 import { useId } from 'react'
 import type { AppState, Backend } from '../api'
-import { GpsNotices, OperationNotice } from '../gps/GpsNotices'
+import { GpsNotices } from '../gps/GpsNotices'
 import { iphoneStatus } from '../gps/iphoneStatus'
-import { Locked } from '../gps/Locked'
 import { EnableRow, MethodRows } from '../gps/MethodRows'
-import { isLocked, outputOf } from '../gps/output'
+import { outputOf } from '../gps/output'
 import { UsbSetupWizard } from '../gps/UsbSetupWizard'
 import { VirtualCar } from '../gps/VirtualCar'
 import { Group, Row, Switch } from '../shell/controls'
@@ -26,12 +25,8 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
   const pending = pendingOf(state)
   const { note } = parts(settings, pending)
   const { value, save } = settings
-  const reported = outputOf(state, settings)
-  // A switch under way already shows its target: the page is what it will be when it ends.
-  const target = reported.operation?.kind === 'switch' ? reported.operation.target : null
-  const output = target ? { ...reported, selected: target } : reported
+  const output = outputOf(state, settings)
   const usb = output.selected === 'usb'
-  const locked = isLocked(output)
   const setup = state.gps?.usbSetup
   // Where the car is and which way it faces now, while the app runs; else as saved.
   const heading = state.gps ? String(state.gps.heading) : value('gps.heading') || '0'
@@ -39,19 +34,15 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
 
   if (setup?.open) {
     return (
-      <>
-        <OperationNotice output={output} />
-        <Locked locked={locked}>
-          <UsbSetupWizard setup={setup} backend={backend} enabled={output.enabledIntent} />
-        </Locked>
-      </>
+      <UsbSetupWizard setup={setup} backend={backend} enabled={output.enabledIntent} />
     )
   }
 
   // Off, the GPS has nothing to set: the rest waits for it. So does a USB one that is not sending; the car waits for
   // a position too, while the position itself is what is missing, and stays open.
   const off = !output.enabledIntent
-  const notSending = usb && output.availability !== 'ready'
+  // Until the reconnect the method in force is the old one: a USB that cannot send is the one in force.
+  const notSending = usb && output.applied === 'usb' && output.availability !== 'ready'
   // With no place for the car at all, Position is how it gets one: it stays open whatever the switch says (L-09).
   const placed = placeOf(state.gps, value('gps.start')) !== null
   const positionHeld = placed && (off || (notSending && output.reason !== 'no-position'))
@@ -74,7 +65,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
     <>
       <Group title="GPS" note={note(LINK_KEYS)} />
       <GpsNotices output={output} backend={backend} />
-      <Locked locked={locked}>
+      <>
         <EnableRow output={output} backend={backend} />
         <MethodRows output={output} backend={backend} />
         {!usb && (
@@ -121,7 +112,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           )}
         </div>
         <VirtualCar state={state} backend={backend} settings={settings} held={carHeld ? holdTitle(true) : null} />
-      </Locked>
+      </>
     </>
   )
 }

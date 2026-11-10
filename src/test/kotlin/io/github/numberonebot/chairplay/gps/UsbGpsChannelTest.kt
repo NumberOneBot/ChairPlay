@@ -40,13 +40,16 @@ class UsbGpsChannelTest {
     private val channel = UsbGpsChannel({ helper }, { GeoPoint(40.7, -74.0) }, { 20 }, pollMillis = 20)
 
     @Test
-    fun `it sees the one attached iPhone, and none without a helper or with several`() {
+    fun `it sees the attached iPhone, the first of several (D11), and none without a helper`() {
         var changes = 0
         channel.onChanged = { changes++ }
         channel.start()
         Thread.sleep(150)
         assertEquals(ChannelState(null, device = phone.view()), channel.state())
         devices = UsbResult.Ok(listOf(phone, phone.copy(udid = "UDID-2")))
+        Thread.sleep(150)
+        assertEquals(ChannelState(null, device = phone.view()), channel.state())
+        devices = UsbResult.Ok(emptyList())
         Thread.sleep(150)
         assertEquals(GpsReason.USB_NOT_CONNECTED, channel.state().reason)
         assertEquals(2, changes)
@@ -86,15 +89,13 @@ class UsbGpsChannelTest {
 
     // V49, V50: what an earlier run left is cleared through a session of its own; with no iPhone nothing is tried.
     @Test
-    fun `release without a session clears through a new one, or tries nothing without the iPhone`() {
+    fun `release without a session tries nothing, the iPhone attached or not (D12)`() {
         assertEquals(Release.NOTHING, channel.release(null) {})
         channel.start()
         Thread.sleep(100)
 
-        val release = channel.release(null) {}
-
-        assertEquals(Release(StepOutcome.SKIPPED, StepOutcome.DONE, StepOutcome.DONE), release)
-        assertEquals(listOf("open UDID-1", "s1.clear", "s1.close"), log.toList())
+        assertEquals(Release.NOTHING, channel.release(null) {})
+        assertEquals(emptyList<String>(), log.toList())
         channel.close()
     }
 

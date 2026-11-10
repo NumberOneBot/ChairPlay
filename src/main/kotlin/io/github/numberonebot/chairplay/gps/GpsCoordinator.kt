@@ -6,11 +6,12 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The GPS output's one owner (03 §2): the method chosen, the saved switch, the one writer, the operation holding the
- * app, and the cleanup of a USB simulation. Commands come from the page ([GpsCommands]) and the USB wizard's final
- * button ([UsbSetupPort.onFinish]); everything they start runs on one thread, as does [reconcile], which the channels'
- * changes and a tick each [GpsTiming.tickMillis] run: it keeps the selected channel sending when it can and the other
- * quiet, resumes USB when the iPhone comes back (L-06), and clears a simulation this app left (V49, V50).
+ * The GPS output's one owner (03 §2): the method chosen and the one in force, the saved switch, the one writer, and
+ * the operation the switch waits for. The method the user chooses is only saved; the next CarPlay connection puts it in
+ * force ([connected], D8). Commands come from the page ([GpsCommands]) and the USB wizard's final button
+ * ([UsbSetupPort.onFinish]); what they start runs on one thread, as does [reconcile], which the channels' changes and a
+ * tick each [GpsTiming.tickMillis] run: it keeps the method in force sending when it can and the other quiet, and
+ * resumes USB when the iPhone comes back (L-06).
  */
 class GpsCoordinator(
     store: GpsSettingsStore,
@@ -19,7 +20,6 @@ class GpsCoordinator(
     usb: GpsChannel,
     setup: UsbSetupPort,
     locator: ReturnLocator,
-    journal: CleanupJournal,
     hold: InputHold = InputHold.NONE,
     private val log: (String) -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis,
@@ -31,10 +31,13 @@ class GpsCoordinator(
     @Volatile var changed: () -> Unit = {}
 
     private val notices = GpsNotices(clock)
-    private val ops = GpsOperations(clock, hold, worker, watchdog, timing.operationMillis, log) { changed() }
-    private val flows = GpsFlows(store, car, carplay, usb, setup, locator, journal, notices, ops, timing, log)
+    // An operation's every step tells the page; its end also asks for a reconcile, which waits while one runs.
+    private val ops = GpsOperations(clock, hold, worker, watchdog, timing.operationMillis, log) { changed(); poke() }
+    private val flows = GpsFlows(store, car, carplay, usb, setup, locator, notices, ops, timing, log)
     private val queued = AtomicBoolean()
+    @Volatile private var connecting = false
     private var wizardWasOpen = false
+    private var lastOutput: GpsOutput? = null
 
     init {
         carplay.onChanged = ::poke
@@ -53,24 +56,25 @@ class GpsCoordinator(
         if (queued.compareAndSet(false, true)) worker.execute { queued.set(false); reconcile() }
     }
 
+    /** A CarPlay bring-up read the settings: the method chosen since goes in force with it (D8). */
+    fun connected() {
+        connecting = true
+        poke()
+    }
+
     override fun usbSetup(): UsbSetupView = flows.setup.view()
 
+    /** D8: only saved; the next connection puts it in force, and the page says a reconnect is due. */
     override fun selectMethod(method: GpsMethod, generation: Long): CommandOutcome {
-        val (from, operation) = synchronized(flows.lock) {
-            if (ops.current != null) return CommandOutcome.BUSY
+        synchronized(flows.lock) {
             if (generation != flows.generation) return CommandOutcome.STALE
             if (method == flows.selected) return CommandOutcome.NO_CHANGE
-            val from = flows.selected
-            // The choice is saved before anything that may fail or take long: nothing after vetoes it (V15).
             flows.selected = method
             flows.generation++
-            flows.reason = null
             flows.store.save(mapOf("gps.method" to method.key))
-            notices.drop(NoticeCode.USB_UNAVAILABLE, NoticeCode.START_FAILED)
-            from to ops.begin(OperationKind.SWITCH, flows.generation, method)
         }
-        log("GPS: method ${from.key} -> ${method.key}")
-        operation?.let { ops.run(it) { flows.switch(it, from) } }
+        log("GPS: method ${method.key} chosen; in force from the next connection")
+        poke()
         return CommandOutcome.ACCEPTED
     }
 
@@ -79,23 +83,24 @@ class GpsCoordinator(
             if (ops.current != null) return CommandOutcome.BUSY
             if (enabled == flows.enabled) return CommandOutcome.NO_CHANGE
         }
-        if (enabled && flows.selected == GpsMethod.USB) return enableUsb()
+        if (enabled && flows.applied == GpsMethod.USB) return enableUsb()
         val operation = synchronized(flows.lock) {
             flows.enabled = enabled
             flows.reason = null
             flows.store.save(mapOf("gps.enabled" to enabled.toString()))
-            val ours = flows.usb.running || flows.journal.dirty() != null
-            if (!enabled && flows.selected == GpsMethod.USB && ours) ops.begin(OperationKind.DISABLE, flows.generation, null) else null
+            if (!enabled && flows.usb.running) ops.begin(OperationKind.DISABLE, flows.generation, null) else null
         }
         log("GPS: simulation ${if (enabled) "on" else "off"}")
         if (operation != null) ops.run(operation) { flows.stopUsb(operation) } else poke()
         return CommandOutcome.ACCEPTED
     }
 
-    // Enable with USB selected: a never-prepared iPhone opens the wizard at once; else the iPhone is checked, and
+    // Enable with USB in force: a never-prepared iPhone opens the wizard at once; else the iPhone is checked, and
     // opens the wizard unless it is ready. Until the wizard's final Enable nothing is saved (F-14, V56).
     private fun enableUsb(): CommandOutcome {
-        if (flows.store.current().usbDevice == null) return wizard(SetupIntent.ENABLE)
+        if (flows.store.current().usbDevice == null) {
+            return flows.setup.open(SetupIntent.ENABLE).let { if (it == CommandOutcome.ACCEPTED) CommandOutcome.SETUP_OPENED else it }
+        }
         val operation = synchronized(flows.lock) { ops.begin(OperationKind.ENABLE, flows.generation, GpsMethod.USB) }
             ?: return CommandOutcome.BUSY
         ops.run(operation) {
@@ -110,9 +115,6 @@ class GpsCoordinator(
         return CommandOutcome.ACCEPTED
     }
 
-    private fun wizard(intent: SetupIntent): CommandOutcome =
-        flows.setup.open(intent).let { if (it == CommandOutcome.ACCEPTED) CommandOutcome.SETUP_OPENED else it }
-
     override fun openUsbSetup(intent: SetupIntent): CommandOutcome {
         if (ops.current != null) return CommandOutcome.BUSY
         return flows.setup.open(intent)
@@ -121,29 +123,26 @@ class GpsCoordinator(
     override fun usbSetupAction(operationId: Long, action: SetupAction, step: SetupStep?): CommandOutcome =
         flows.setup.act(operationId, action, step)
 
-    /** The wizard's ENABLE or DONE, its readiness just checked: the prepared iPhone is saved, and ENABLE starts USB. */
+    /**
+     * The wizard's ENABLE or DONE, its readiness just checked: the prepared iPhone is saved; ENABLE saves the switch on
+     * and USB chosen, and starts USB when it is in force (else the next connection does).
+     */
     private fun finishSetup(operationId: Long, device: UsbDevice, enable: Boolean): CommandOutcome {
         flows.store.save(mapOf("gps.usb.device" to device.udid))
-        if (!enable) {
-            // Prepared now: a "setup needed" from before goes; the next reconcile says what holds USB, if anything.
-            synchronized(flows.lock) { flows.reason = null }
-            poke()
-            return CommandOutcome.ACCEPTED
-        }
-        val (from, operation) = synchronized(flows.lock) {
-            val from = flows.selected
-            val kind = if (from == GpsMethod.USB) OperationKind.ENABLE else OperationKind.SWITCH
-            if (from != GpsMethod.USB) flows.generation++
-            val operation = ops.begin(kind, flows.generation, GpsMethod.USB) ?: return CommandOutcome.BUSY
-            flows.selected = GpsMethod.USB
-            flows.store.save(mapOf("gps.method" to "usb"))
-            from to operation
+        synchronized(flows.lock) { flows.reason = null }
+        if (!enable) return CommandOutcome.ACCEPTED.also { poke() }
+        val operation = synchronized(flows.lock) {
+            if (flows.selected != GpsMethod.USB) {
+                flows.selected = GpsMethod.USB
+                flows.generation++
+                flows.store.save(mapOf("gps.method" to "usb"))
+            }
+            if (flows.applied == GpsMethod.USB) ops.begin(OperationKind.ENABLE, flows.generation, GpsMethod.USB) ?: return CommandOutcome.BUSY
+            else null
         }
         saveEnabled()
         log("GPS: USB setup finished with Enable USB GPS (wizard operation $operationId)")
-        ops.run(operation) {
-            if (from == GpsMethod.USB) flows.enableUsb(operation, device) else flows.switch(operation, from)
-        }
+        if (operation != null) ops.run(operation) { flows.enableUsb(operation, device) } else poke()
         return CommandOutcome.ACCEPTED
     }
 
@@ -155,36 +154,30 @@ class GpsCoordinator(
     /** On the coordinator's thread, between operations: see the class. */
     private fun reconcile() {
         if (ops.current != null) return
-        val (selected, enabled) = synchronized(flows.lock) { flows.selected to flows.enabled }
-        // One writer: the method not chosen never sends.
-        flows.channel(if (selected == GpsMethod.USB) GpsMethod.CARPLAY else GpsMethod.USB).takeIf { it.running }?.quiesce()
+        val (selected, applied, enabled) = synchronized(flows.lock) { Triple(flows.selected, flows.applied, flows.enabled) }
+        if (connecting) {
+            connecting = false
+            if (selected != applied) return begin(OperationKind.APPLY) { flows.apply(it, applied) }
+        }
+        // One writer: the method not in force never sends.
+        flows.channel(if (applied == GpsMethod.USB) GpsMethod.CARPLAY else GpsMethod.USB).takeIf { it.running }?.quiesce()
         val usbState = flows.usb.state()
         val wizardOpen = flows.setup.view().open
-        if (flows.cleanup == Cleanup.NEEDED && !flows.usb.running) synchronized(flows.lock) {
-            // The cable or the helper went (L-03): the iPhone may still simulate, unconfirmed.
-            flows.cleanup = Cleanup.UNCONFIRMED
-            log("GPS: USB simulation lost; the switch stays on")
-        }
         // A wizard closed without its final Enable does not start USB on the next tick (F-14); the next arrival may.
         if (wizardWasOpen && !wizardOpen) flows.resumeArmed = false
         wizardWasOpen = wizardOpen
         if (usbState.device == null) flows.resumeArmed = true
-        val usbWanted = selected == GpsMethod.USB && enabled
         when {
-            !wizardOpen && usbState.device != null && !flows.usb.running && flows.journal.dirty() != null && !usbWanted ->
-                begin(OperationKind.RESTORE) { flows.restore(it) }
-            usbWanted && !flows.usb.running && !wizardOpen -> resumeUsb(usbState)
-            selected == GpsMethod.CARPLAY && enabled && !flows.carplay.running -> flows.startSelected(wizardBounds = true)
-            !enabled && flows.channel(selected).running -> flows.channel(selected).quiesce()
+            applied == GpsMethod.USB && enabled && !flows.usb.running && !wizardOpen -> resumeUsb(usbState)
+            applied == GpsMethod.CARPLAY && enabled && !flows.carplay.running -> flows.startSelected(wizardBounds = true)
+            !enabled && flows.channel(applied).running -> flows.channel(applied).quiesce()
         }
-        keepNotices(selected, enabled)
+        keepNotices(selected, applied, enabled)
         // The page hears of a change only: the tick alone tells it nothing.
         val now = output()
         if (now != lastOutput) changed()
         lastOutput = now
     }
-
-    private var lastOutput: GpsOutput? = null
 
     private fun resumeUsb(state: ChannelState) {
         if (state.device == null) {
@@ -203,30 +196,31 @@ class GpsCoordinator(
         ops.run(operation) { body(operation) }
     }
 
-    private fun keepNotices(selected: GpsMethod, enabled: Boolean) {
+    private fun keepNotices(selected: GpsMethod, applied: GpsMethod, enabled: Boolean) {
         val session = flows.carplay.state().sessionGps
-        // D4: a connected session that identified otherwise than the method needs waits for the user's reconnect.
-        notices.keep(NoticeCode.RECONNECT_NEEDED, NoticeTone.INFO, session != null && session != (enabled && selected == GpsMethod.CARPLAY))
-        val missing = selected == GpsMethod.USB && enabled && !flows.usb.running && flows.reason == GpsReason.USB_NOT_CONNECTED
+        // D4, D8: a method chosen but not in force, or a session that identified otherwise than the switch needs.
+        val mismatch = session != null && session != (enabled && applied == GpsMethod.CARPLAY)
+        notices.keep(NoticeCode.RECONNECT_NEEDED, NoticeTone.INFO, selected != applied || mismatch)
+        val missing = applied == GpsMethod.USB && enabled && !flows.usb.running && flows.reason == GpsReason.USB_NOT_CONNECTED
         notices.keep(NoticeCode.USB_UNAVAILABLE, NoticeTone.WARN, missing)
     }
 
-    /** Whether the car may drive: the switch on, and CarPlay's method or USB sending; USB on without a cable stands (P-06). */
+    /** Whether the car may drive: the switch on, and CarPlay in force or USB sending; USB on without a cable stands (P-06). */
     fun carLive(): Boolean = synchronized(flows.lock) {
-        flows.enabled && (flows.selected == GpsMethod.CARPLAY || flows.usb.running)
+        flows.enabled && (flows.applied == GpsMethod.CARPLAY || flows.usb.running)
     }
 
-    /** Whether an operation holds the app's input (S-09). */
+    /** Whether an operation runs: the switch waits and the car stands (D9). */
     val holding: Boolean get() = ops.current != null
 
-    override fun output(): GpsOutput =synchronized(flows.lock) { GpsOutputs.of(flows, ops.current, notices.current()) }
+    override fun output(): GpsOutput = synchronized(flows.lock) { GpsOutputs.of(flows, ops.current, notices.current()) }
 
     /** The app closes: a USB simulation goes as an explicit stop's does, within [GpsTiming.shutdownMillis]; the switch stays saved. */
     fun close() {
         val stopping = Thread({
             runCatching {
                 flows.carplay.quiesce()
-                if (flows.usb.running || flows.journal.dirty() != null && flows.usb.state().device != null) {
+                if (flows.usb.running) {
                     val operation = synchronized(flows.lock) { ops.begin(OperationKind.SHUTDOWN, flows.generation, null) }
                     if (operation != null) flows.stopUsb(operation)
                 }

@@ -59,14 +59,6 @@ class SetupReviewTest {
 
     // ---- steps ----
 
-    @Test fun `several phones are an error with the code`() {
-        h.helper.devices = UsbResult.Ok(listOf(PHONE, FakeUsbHelper.OTHER))
-        h.open()
-        assertEquals(StepStatus.ERROR, h.status(SetupStep.USB))
-        assertEquals("several-devices", h.detail(SetupStep.USB))
-        assertEquals("several-devices", h.step(SetupStep.USB).error)
-    }
-
     @Test fun `a mounted image without a service is an error that Try again re-checks`() {
         h.helper.tools = UsbResult.Ok(ToolsStatus(packageCached = true, imageMounted = true, serviceReady = false))
         val id = h.open()

@@ -7,7 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** GpsCoordinator: the switch, the start without the iPhone, its return, and the cleanup it owes (01 §3–§5). */
+/** GpsCoordinator: the switch, the start without the iPhone, and its return (01 §3–§5). */
 class GpsLifecycleTest {
     private val usbOn = GpsSettings(enabled = true, method = GpsMethod.USB, usbDevice = "UDID-1")
     private val attached = ChannelState(null, device = UsbDeviceView("r", "iPhone"))
@@ -40,10 +40,10 @@ class GpsLifecycleTest {
         assertTrue(h.output().notices.isEmpty())
     }
 
-    // L-06, V39, L-10, V51: the iPhone back resumes the saved simulation once, the old clear first.
+    // L-06, V39, L-10, V51: the iPhone back resumes the saved simulation once.
     @Test
-    fun `the iPhone back resumes USB once, after the old session's clear`() {
-        val h = GpsHarness(usbOn, journal = "UDID-1")
+    fun `the iPhone back resumes USB once`() {
+        val h = GpsHarness(usbOn)
         h.usb.state = ChannelState(GpsReason.USB_NOT_CONNECTED)
         h.reconcile()
         h.usb.state = attached
@@ -51,29 +51,26 @@ class GpsLifecycleTest {
         h.reconcile()
         h.reconcile()
 
-        assertEquals(listOf("usb.release -", "journal.clear", "setup.readiness", "journal.mark UDID-1", "usb.start 40.7,-74.0 UDID-1"),
-            h.calls.filter { it.startsWith("usb.") || it.startsWith("journal") || it.startsWith("setup") })
+        assertEquals(listOf("setup.readiness", "usb.start 40.7,-74.0 UDID-1"),
+            h.calls.filter { it.startsWith("usb.") || it.startsWith("setup") })
         assertTrue(h.output().running)
         assertTrue(h.output().notices.none { it.code == NoticeCode.USB_UNAVAILABLE })
     }
 
-    // V40, V50: with the switch off or CarPlay chosen, the iPhone back starts no USB; the owned clear still goes.
+    // V40: with CarPlay in force, the iPhone back starts no USB and tries nothing on it (D12).
     @Test
-    fun `the iPhone back with CarPlay chosen clears what this app left and starts no USB`() {
-        val h = GpsHarness(GpsSettings(enabled = true), journal = "UDID-1")
+    fun `the iPhone back with CarPlay in force starts no USB`() {
+        val h = GpsHarness(GpsSettings(enabled = true))
         h.usb.state = attached
 
         h.reconcile()
 
-        assertTrue("usb.release -" in h.calls)
-        assertFalse(h.calls.any { it.startsWith("usb.start") })
-        assertEquals(GpsMethod.CARPLAY, h.output().selected)
-        assertNull(h.journal.dirty())
+        assertFalse(h.calls.any { it.startsWith("usb.") })
     }
 
-    // L-03: the cable out keeps the switch and the method; the cleanup is unconfirmed.
+    // L-03: the cable out keeps the switch and the method.
     @Test
-    fun `a lost USB simulation keeps the switch on and its cleanup unconfirmed`() {
+    fun `a lost USB simulation keeps the switch on`() {
         val h = GpsHarness(usbOn)
         h.usb.state = attached
         h.reconcile()
@@ -86,8 +83,8 @@ class GpsLifecycleTest {
         val out = h.output()
         assertTrue(out.enabledIntent)
         assertEquals(GpsMethod.USB, out.selected)
-        assertEquals(Cleanup.UNCONFIRMED, out.cleanup)
-        assertEquals("UDID-1", h.journal.dirty())
+        assertFalse(out.running)
+        assertTrue(out.notices.any { it.code == NoticeCode.USB_UNAVAILABLE })
     }
 
     // F-14, V56: Enable with USB never prepared opens the wizard and saves nothing; Cancel leaves it off.
@@ -185,7 +182,7 @@ class GpsLifecycleTest {
         h.gps.setEnabled(false)
         h.idle()
 
-        assertEquals(listOf("save gps.enabled=false", "usb.quiesce", "locate", "usb.release 49.84,24.03", "journal.clear"), h.calls)
+        assertEquals(listOf("save gps.enabled=false", "usb.quiesce", "locate", "usb.release 49.84,24.03"), h.calls)
         assertFalse(h.output().enabledIntent)
         assertTrue(h.output().notices.any { it.code == NoticeCode.RESET_SENT })
     }

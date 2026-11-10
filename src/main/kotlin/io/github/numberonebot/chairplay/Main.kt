@@ -167,7 +167,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         demo = altView.demos, gps = { gps.get()?.state() ?: driving.state() }, driving = uiDriving(driving, window, ::screenshots, ::log),
         bufferedAudio = audio::bufferedAudio, gpsCommands = { gps.get()?.coordinator })
     // The GPS output: CarPlay's and USB's channels for the car, and their one coordinator (gps/).
-    val appGps = AppGps(dir, driving, { ui.saveGps(it) }, { ui.saveSettings(it) }, { active.get() != null }, ::log,
+    val appGps = AppGps(driving, { ui.saveGps(it) }, { active.get() != null }, ::log,
         appUsbHelper(dir, Platforms.current.shell.usbGpsHelper(), ::log))
     appGps.coordinator.changed = ui::gpsChanged
     gps.set(appGps)
@@ -260,6 +260,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         now.altscreenWarnings.forEach { appLog.log(LogLevel.WARNING, it) }
         altView.connected(now)
         appGps.carplay.identified(now.gps.carPlayGps)
+        // The GPS method chosen since the last connection goes in force with this one (D8).
+        appGps.coordinator.connected()
     }
     Runtime.getRuntime().addShutdownHook(Thread {
         // The window is gone at once; the sound fades over the seconds the session takes to end.

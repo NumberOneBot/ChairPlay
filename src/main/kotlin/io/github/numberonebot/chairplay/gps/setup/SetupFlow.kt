@@ -79,12 +79,11 @@ internal class SetupFlow(
         return when (val r = helper.devices()) {
             is UsbResult.Ok -> when {
                 r.value.isEmpty() -> noDevice(s)
-                r.value.size > 1 -> several(s)
-                else -> adopt(s, r.value.single())
+                // Several iPhones never really happen (D11): the first one.
+                else -> adopt(s, r.value.first())
             }
             is UsbResult.Failed -> when (r.code) {
                 UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> noDevice(s)
-                UsbErrorCode.SEVERAL_DEVICES -> several(s)
                 UsbErrorCode.DRIVERS_MISSING -> stop(s, SetupStep.USB, StepState(StepStatus.ACTION, "drivers-missing"))
                 UsbErrorCode.USBMUX_UNAVAILABLE -> stop(s, SetupStep.USB, StepState(StepStatus.ACTION, "apple-devices-closed"))
                 UsbErrorCode.LOCKED -> soft(s, SetupStep.USB, StepState(StepStatus.WAITING, "locked"))
@@ -92,10 +91,6 @@ internal class SetupFlow(
             }
         }
     }
-
-    /** One phone only in 1.1 (D6): an error the user fixes by unplugging one. */
-    private fun several(s: SetupSession) =
-        stop(s, SetupStep.USB, StepState(StepStatus.ERROR, "several-devices", "several-devices"))
 
     private fun noDevice(s: SetupSession): Boolean {
         if (store.read(s) { device } != null) return lost(s)

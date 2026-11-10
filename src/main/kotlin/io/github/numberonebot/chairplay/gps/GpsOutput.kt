@@ -24,7 +24,6 @@ enum class GpsReason(val key: String) {
     CARPLAY_RECONNECT_NEEDED("carplay-reconnect-needed"),
     USB_SETUP_NEEDED("usb-setup-needed"),
     USB_NOT_CONNECTED("usb-not-connected"),
-    USB_SEVERAL("usb-several"),
     /** Plugged in but a prerequisite went (trust, Developer Mode, the image): [UsbSetupView] says which. */
     USB_NOT_READY("usb-not-ready"),
     USB_HELPER_FAILED("usb-helper-failed"),
@@ -33,14 +32,15 @@ enum class GpsReason(val key: String) {
 }
 
 enum class OperationKind(val key: String) {
-    SWITCH("switch"), ENABLE("enable"), DISABLE("disable"), RESUME("resume"), RESTORE("restore"), SHUTDOWN("shutdown"),
+    /** APPLY: a reconnect puts the chosen method in force (D8): the old one stops, the new one starts. */
+    APPLY("apply"), ENABLE("enable"), DISABLE("disable"), RESUME("resume"), SHUTDOWN("shutdown"),
 }
 
 enum class OperationStage(val key: String) {
     QUIESCE("quiesce"), LOCATE("locate"), RETURN("return"), CLEAR("clear"), CLOSE("close"), START("start"),
 }
 
-/** The one operation running; while there is one, the whole app's input is held (S-09). */
+/** The one operation running; while there is one the switch waits and the car stands (D9). */
 data class GpsOperation(
     val id: Long,
     val generation: Long,
@@ -49,9 +49,6 @@ data class GpsOperation(
     val target: GpsMethod?,
     val startedAtMillis: Long,
 )
-
-/** Whether a USB simulation this app started may still be on the iPhone. */
-enum class Cleanup(val key: String) { CLEAN("clean"), NEEDED("needed"), ATTEMPTING("attempting"), UNCONFIRMED("unconfirmed") }
 
 enum class NoticeTone(val key: String) { INFO("info"), WARN("warn"), BAD("bad") }
 
@@ -62,12 +59,8 @@ enum class NoticeCode(val key: String) {
     WINDOWS_UNAVAILABLE("windows-unavailable"),
     /** usb + enabled saved, no phone: the warning above Settings' content (UI-23); stays until it changes. */
     USB_UNAVAILABLE("usb-unavailable"),
-    /** A reset was skipped or failed: the simulation may still be on the iPhone. */
-    CLEANUP_UNCONFIRMED("cleanup-unconfirmed"),
-    /** The connected CarPlay session needs a reconnect for the selected method's GPS (D4); stays until it matches. */
+    /** The chosen method, or the switch, waits for a CarPlay reconnect (D4, D8); stays until it is in force. */
     RECONNECT_NEEDED("reconnect-needed"),
-    /** The new method could not start; args: reason = a [GpsReason] key or a [UsbErrorCode] key. */
-    START_FAILED("start-failed"),
 }
 
 data class GpsNotice(
@@ -82,7 +75,10 @@ data class GpsNotice(
 data class UsbDeviceView(val ref: String, val name: String)
 
 data class GpsOutput(
+    /** The method the user chose (gps.method). */
     val selected: GpsMethod,
+    /** The method in force: [selected] once a CarPlay reconnect applied it (D8). */
+    val applied: GpsMethod,
     val enabledIntent: Boolean,
     val activeMethod: GpsMethod?,
     val running: Boolean,
@@ -98,11 +94,11 @@ data class GpsOutput(
     /** Moves on with each accepted method change; a gps-method command names the one it saw. */
     val generation: Long,
     val operation: GpsOperation?,
-    val cleanup: Cleanup,
     val notices: List<GpsNotice>,
 ) {
     fun toPage(): Map<String, Any?> = linkedMapOf(
         "selected" to selected.key,
+        "applied" to applied.key,
         "enabledIntent" to enabledIntent,
         "activeMethod" to activeMethod?.key,
         "running" to running,
@@ -119,7 +115,6 @@ data class GpsOutput(
                 "target" to it.target?.key, "startedAt" to it.startedAtMillis,
             )
         },
-        "cleanup" to cleanup.key,
         "notices" to notices.map {
             linkedMapOf("id" to it.id, "tone" to it.tone.key, "code" to it.code.key, "args" to it.args, "expiresAt" to it.expiresAtMillis)
         },

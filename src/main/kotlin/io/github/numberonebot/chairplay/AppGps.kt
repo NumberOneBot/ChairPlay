@@ -5,7 +5,6 @@ import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.GeoPoint
 import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.gps.DeadlineLocator
-import io.github.numberonebot.chairplay.gps.FileCleanupJournal
 import io.github.numberonebot.chairplay.gps.GpsCar
 import io.github.numberonebot.chairplay.gps.GpsCoordinator
 import io.github.numberonebot.chairplay.gps.GpsSettingsStore
@@ -16,19 +15,15 @@ import io.github.numberonebot.chairplay.gps.UsbHelper
 import io.github.numberonebot.chairplay.gps.setup.ThreadSetupExecutor
 import io.github.numberonebot.chairplay.gps.setup.UsbSetupController
 import io.github.numberonebot.chairplay.platform.Platforms
-import java.nio.file.Path
-import java.util.Locale
 
 /**
  * The GPS output as the app makes it: CarPlay's and USB's channels around the one [driving] car, the USB setup, and
  * the coordinator that owns them (gps/GpsCoordinator.kt). [saveGps] is the settings' save for the coordinator's own
- * keys, [saveSettings] a page's (the car's place); [session] says whether a CarPlay session runs.
+ * keys; [session] says whether a CarPlay session runs.
  */
 internal class AppGps(
-    dir: Path,
     private val driving: Driving,
     saveGps: (Map<String, String>) -> Unit,
-    saveSettings: (Map<String, String>) -> Unit,
     session: () -> Boolean,
     log: (String) -> Unit,
     /** Null in an app without the USB helper ([io.github.numberonebot.chairplay.gps.usb.appUsbHelper]). */
@@ -52,14 +47,11 @@ internal class AppGps(
         },
         car = object : GpsCar {
             override fun position(): GeoPoint? = this@AppGps.position()
-            override fun place(point: GeoPoint) =
-                saveSettings(mapOf("gps.start" to String.format(Locale.ROOT, "%.5f, %.5f", point.latitude, point.longitude)))
         },
         carplay = carplay,
         usb = usb,
         setup = setup,
         locator = DeadlineLocator(Platforms.current.location::read),
-        journal = FileCleanupJournal(FileCleanupJournal.at(dir), log),
         // The window loop's next pass puts a hold, or its end, in force on the car.
         hold = object : InputHold {
             override fun hold() = driving.wake()

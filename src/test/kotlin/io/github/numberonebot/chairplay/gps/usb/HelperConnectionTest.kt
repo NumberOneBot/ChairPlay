@@ -76,9 +76,9 @@ class HelperConnectionTest {
 
     @Test
     fun `an error reply carries its code`() {
-        val helper = FakeHelper { request -> if (!standard(request)) fail(request, "several-devices") }
+        val helper = FakeHelper { request -> if (!standard(request)) fail(request, "locked") }
         val result = started(helper).call("discover", emptyMap(), 1_000)
-        assertEquals(UsbErrorCode.SEVERAL_DEVICES, (result as UsbResult.Failed).code)
+        assertEquals(UsbErrorCode.LOCKED, (result as UsbResult.Failed).code)
     }
 
     @Test
