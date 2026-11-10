@@ -60,7 +60,9 @@ class EditableSettingsTest {
         assertEquals(emptyMap<String, String>(), result)
         // Blank is the default, as the app reads it and the page shows it.
         assertEquals(emptyMap<String, String>(), errors("gps.start" to "", "gps.heading" to "", "gps.car.power.hp" to "", "gps.car.mass.kg" to ""))
-        for (key in listOf("gps.enabled", "gps.wheel.speed")) assertEquals(Applies.RECONNECT, EditableSettings.applies(key))
+        assertEquals(Applies.RECONNECT, EditableSettings.applies("gps.wheel.speed"))
+        // The GPS output's coordinator says itself when its switch needs a reconnect (D4).
+        assertEquals(Applies.NOW, EditableSettings.applies("gps.enabled"))
         assertEquals(emptyMap<String, String>(), errors("gps.rate" to "10", "gps.nmea" to "modern"))
         for (rate in listOf("1", "3", "7", "20", "")) assertEquals(rate, emptyMap<String, String>(), errors("gps.rate" to rate))
         for (rate in listOf("0", "21", "2.5", "fast")) assertTrue(rate, "gps.rate" in errors("gps.rate" to rate))

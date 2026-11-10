@@ -250,6 +250,9 @@ class UiController(
 
     override fun saveSettings(changes: Map<String, String>): SaveResult = settingsApi.save(changes)
 
+    /** The GPS output coordinator's save, the only one that changes gps.method, gps.enabled and gps.usb.device. */
+    fun saveGps(changes: Map<String, String>): SaveResult = settingsApi.save(changes, owned = true)
+
     /** A bring-up read [values] from the settings file: the connection it makes runs with them. */
     fun connected(values: Map<String, String>) = settingsApi.connected(values)
 

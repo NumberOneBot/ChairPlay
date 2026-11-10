@@ -10,6 +10,7 @@ import io.github.numberonebot.chairplay.drive.NmeaDialect
 import io.github.numberonebot.chairplay.drive.NmeaFraming
 import io.github.numberonebot.chairplay.drive.WheelMode
 import io.github.numberonebot.chairplay.drive.SpeedUnits
+import io.github.numberonebot.chairplay.gps.GpsMethod
 import java.util.Properties
 
 /** gps.*: the spoofed GPS and the car that drives it; the iPhone learns of the GPS when it connects. */
@@ -36,4 +37,7 @@ internal fun Properties.gpsSettings() = GpsSettings(
     wheel = choiceSetting("gps.wheel", WheelMode.STEERING, WheelMode.entries.associateBy { it.key }),
     units = choiceSetting("gps.units", SpeedUnits.METRIC, SpeedUnits.entries.associateBy { it.key }),
     external = booleanSetting("gps.external", false),
+    method = choiceSetting("gps.method", GpsMethod.CARPLAY, GpsMethod.entries.associateBy { it.key }),
+    usbDevice = getProperty("gps.usb.device")?.trim()?.ifEmpty { null },
+    usbRate = wholeSetting("gps.usb.rate", 10, GpsSettings.RATE),
 )

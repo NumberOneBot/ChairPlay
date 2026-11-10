@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.drive
 
+import io.github.numberonebot.chairplay.gps.GpsMethod
+
 /**
  * gps.*: whether the iPhone navigates by the spoofed car, and what it is told besides its place ([wheelSpeed] for
  * $PASCD); where the car is ([start], null until set; the car saves it as it stops) and which
@@ -28,6 +30,12 @@ data class GpsSettings(
     val units: SpeedUnits = SpeedUnits.METRIC,
     /** gps.external: whether a game's telemetry drives the car while it sends, instead of the gamepad and keys. */
     val external: Boolean = false,
+    /** gps.method: the channel to the iPhone, CarPlay's location messages or USB developer simulation. */
+    val method: GpsMethod = GpsMethod.CARPLAY,
+    /** gps.usb.device: the UDID of the iPhone USB setup prepared; null before one was. */
+    val usbDevice: String? = null,
+    /** gps.usb.rate: positions a second over USB, a hand edit only. */
+    val usbRate: Int = 10,
 ) {
     /**
      * The car as it drives: [car], running to the end of the speedometer in its [units] and no further, and revving as

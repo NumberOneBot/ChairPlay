@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.ui
 
 import io.github.numberonebot.chairplay.config.Applies
 import io.github.numberonebot.chairplay.config.EditableSettings
+import io.github.numberonebot.chairplay.config.GpsOwnedSettings
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.input.ControlAction
 import io.github.numberonebot.chairplay.input.ControlsConfig
@@ -73,17 +74,21 @@ internal class UiSettings(
         )
     }
 
-    fun save(changes: Map<String, String>): SaveResult {
+    /** Saves [changes]; only the GPS output's coordinator ([owned]) may change [GpsOwnedSettings.keys]. */
+    fun save(changes: Map<String, String>, owned: Boolean = false): SaveResult {
         val normalized = changes.mapValues { (key, value) -> normalize(key, value) }
         val saved = synchronized(this) {
             val current = settings.read()
-            val errors = EditableSettings.validate(normalized, current)
+            val gps = normalized.filterKeys { it in GpsOwnedSettings.keys }
+            val errors = EditableSettings.validate(normalized - gps.keys, current) + gps.mapNotNull { (key, value) ->
+                (if (owned) GpsOwnedSettings.check(key, value) else GpsOwnedSettings.REFUSED)?.let { key to it }
+            }
             if (errors.isNotEmpty()) return SaveResult(errors, emptyMap())
             settings.write(normalized)
             values = settings.read()
             normalized.filter { (key, value) -> current[key] != value }
         }
-        val applies = normalized.keys.associateWith { appliesName(EditableSettings.applies(it)) }
+        val applies = normalized.keys.associateWith { if (it in EditableSettings.keys) appliesName(EditableSettings.applies(it)) else "now" }
         if (saved.isNotEmpty()) log("settings saved: ${saved.keys.joinToString()}")
         saved["ui.autoshow"]?.let { model.setAutoshow(it == "true") }
         if (saved.isNotEmpty()) onSaved(saved)

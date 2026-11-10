@@ -8,6 +8,7 @@ import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.drive.NmeaDialect
 import io.github.numberonebot.chairplay.drive.NmeaFraming
 import io.github.numberonebot.chairplay.drive.WheelMode
+import io.github.numberonebot.chairplay.gps.GpsMethod
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -69,11 +70,28 @@ class GpsConfigTest {
         assertTrue(configWith("gps.external=true").gps.external)
     }
 
+    // A settings file from before USB GPS sends by CarPlay, its switch as it was (V01); USB keeps its own rate.
+    @Test
+    fun `the GPS goes by CarPlay unless USB is chosen, and USB has its own rate`() {
+        val old = configWith("gps.enabled=true", "gps.rate=10").gps
+        assertEquals(GpsMethod.CARPLAY, old.method)
+        assertTrue(old.enabled)
+        assertEquals(10, old.rate)
+        assertEquals(10, old.usbRate)
+        assertNull(old.usbDevice)
+        val usb = configWith("gps.method=usb", "gps.usb.rate=5", "gps.usb.device=00008110-000A").gps
+        assertEquals(GpsMethod.USB, usb.method)
+        assertEquals(5, usb.usbRate)
+        assertEquals(4, usb.rate)
+        assertEquals("00008110-000A", usb.usbDevice)
+        assertEquals(GpsMethod.CARPLAY, configWith("gps.method=pigeon").gps.method)
+    }
+
     @Test
     fun `rejects GPS values the car cannot have`() {
         for (bad in listOf(
             "gps.start=Kyiv", "gps.heading=north", "gps.heading=360", "gps.car.power.hp=5", "gps.car.mass.kg=50",
-            "gps.rate=0", "gps.rate=21", "gps.rate=2.5", "gps.rate=fast",
+            "gps.rate=0", "gps.rate=21", "gps.rate=2.5", "gps.rate=fast", "gps.usb.rate=0", "gps.usb.rate=21",
         )) {
             val key = bad.substringBefore('=')
             val error = assertThrows(IllegalArgumentException::class.java) { configWith(bad).gps }

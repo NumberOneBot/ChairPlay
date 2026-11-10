@@ -109,7 +109,8 @@ object EditableSettings {
         "log.carplay.data" to switch(Applies.RESTART),
         "log.level" to choice("error", "warning", "info", "debug", "trace", applies = Applies.NOW),
         // The iPhone learns which sentences the GPS sends as it connects; the car is placed and changed at once.
-        "gps.enabled" to switch(Applies.RECONNECT),
+        // gps.enabled is shown here but saved by the GPS output's coordinator alone, which says when a reconnect is due.
+        "gps.enabled" to switch(Applies.NOW),
         "gps.wheel.speed" to switch(Applies.RECONNECT),
         "gps.start" to Setting(Applies.NOW, check = ::checkStart),
         "gps.heading" to Setting(Applies.NOW) {
