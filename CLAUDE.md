@@ -54,7 +54,9 @@ Every text the app shows (web UI, controls window, window titles, messages) foll
 
 ## Layout of the settings pages
 
-- Every page fits 640 CSS px wide (a 1280 px window at 200 %) with no horizontal scroll, and still reads at 800x480. After changing a page, open it at 640 and at 800 width (Playwright against the running app) and check that no element's right edge passes the viewport and no scroll container's `scrollWidth` exceeds its `clientWidth`; look at a screenshot too.
+- Every page fits 640 CSS px wide (a 1280 px window at 200 %) with no horizontal scroll. After changing a page, open it at 640 width (Playwright against the running app) and check that no element's right edge passes the viewport and no scroll container's `scrollWidth` exceeds its `clientWidth`; look at a screenshot too.
+- One screenshot per state: 640 CSS px wide, the whole page's height in that one shot. No second width, no separate short and long shots of the same screen.
+- When a mock exists, its icons, images and other finished assets go into the app as they are; draw nothing of your own where the mock has one.
 - Wrap early: a row holds one field, one group of choices, or one checkbox. Two fields share a row only when they are one value's parts (width × height, latitude and longitude, power and mass) and fit at 640.
 - A row's label is on its left. In a row of several fields, the row's label names the whole, and each field's own name or unit goes to its right, in the unit's style ("[150] hp [1300] kg", "[48.85] latitude [2.29] longitude"), never before it. The same holds on every page.
 - Nothing in a row breaks or is cut: a label, unit, choice, or button keeps its text on one line and whole. A row that does not fit at 640 gets split into rows, never squeezed.
