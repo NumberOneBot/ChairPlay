@@ -225,11 +225,7 @@ class UiController(
             "gps" to gps?.invoke(),
             "bufferedAudio" to bufferedAudio(),
             "embedded" to embedded,
-            "wifi" to mapOf(
-                "ssid" to values["wifi.ssid"].orEmpty(),
-                "security" to (values["wifi.security"]?.trim()?.ifEmpty { null } ?: "WPA_WPA2"),
-                "passphraseSet" to !values["wifi.passphrase"].isNullOrEmpty(),
-            ),
+            "wifi" to wifiState(values),
             "windows" to WINDOWS.associateWith { name ->
                 val window = windows[name]?.takeIf { it.available }
                 mapOf("available" to (window != null), "visible" to (window?.visible ?: false))
@@ -244,16 +240,7 @@ class UiController(
             "about" to places.aboutPage,
             "reconnectPending" to state.reconnectPending.sorted(),
             "restartPending" to state.restartPending.sorted(),
-            "setup" to linkedMapOf(
-                "mfiFolder" to setup.mfiDirectory.toString(),
-                "mfiPresent" to (checks?.snapshot?.mfiPresent ?: false),
-                "firewall" to (checks?.snapshot?.firewall ?: setup.firewall).name.lowercase(),
-                "pairedIphone" to checks?.snapshot?.pairedIphone,
-                "pcWifi" to checks?.snapshot?.pcWifi,
-                *networkSetupFields(checks?.snapshot, values["network.ethernet.adapter"].orEmpty()),
-                "firewallCommands" to setup.firewallCommands,
-                "settingsFile" to setup.settingsFile.toString(),
-            ),
+            "setup" to setupState(setup, checks, values),
         )
     }
 
