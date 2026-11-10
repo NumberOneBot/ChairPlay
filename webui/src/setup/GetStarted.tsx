@@ -29,7 +29,7 @@ function Tick() {
  * One step: its number, or a tick once done, its title and note; what to do shows while it is the open one, or while
  * [open] keeps a step done open for a change. [action] sits at the line's end, before the note.
  */
-function Step(props: {
+export function Step(props: {
   n: number
   state: StepState
   title: string

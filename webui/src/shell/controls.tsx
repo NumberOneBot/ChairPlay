@@ -157,7 +157,7 @@ export function Switch(props: {
  * error; [children] go on the grid below, a field in the wide column and its button beside it, or a line of actions.
  */
 export function Message(props: {
-  tone: 'bad' | 'warn'
+  tone: 'bad' | 'warn' | 'info'
   head: string
   text: ReactNode
   at?: string
@@ -165,7 +165,7 @@ export function Message(props: {
   children?: ReactNode
 }) {
   return (
-    <div className={`alert ${props.tone}`} role="alert" title={props.title}>
+    <div className={`alert ${props.tone}`} role={props.tone === 'info' ? 'status' : 'alert'} title={props.title}>
       <div className="head">
         {props.head} <span>{props.text}</span>
       </div>

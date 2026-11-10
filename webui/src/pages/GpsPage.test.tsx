@@ -86,19 +86,20 @@ describe('GPS page', () => {
   it('turns the GPS on', async () => {
     const backend = await gps(appState(live), gpsBackend(false))
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Enable spoofing' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable signal simulation' }))
 
-    await waitFor(() => expect(backend.saved).toEqual([{ 'gps.enabled': 'true' }]))
+    // The switch is a command to the output, never a settings save (gps.enabled is the coordinator's).
+    await waitFor(() => expect(backend.gpsCommands).toEqual(['gps-enabled true']))
+    expect(backend.saved).toEqual([])
   })
 
   // Off, the GPS has nothing to set: the rest waits for it, as the AltScreen's page does.
   it('holds the rest while the GPS is off', async () => {
     await gps(appState(live), gpsBackend(false))
 
-    const held = screen.getByRole('textbox', { name: 'latitude' }).closest('[inert]') as HTMLElement
-    expect(held).not.toBeNull()
-    expect(held.contains(screen.getByRole('textbox', { name: 'Power' }))).toBe(true)
-    expect(held.contains(screen.getByRole('switch', { name: 'Enable spoofing' }))).toBe(false)
+    expect(screen.getByRole('textbox', { name: 'latitude' }).closest('[inert]')).not.toBeNull()
+    expect(screen.getByRole('textbox', { name: 'Power' }).closest('[inert]')).not.toBeNull()
+    expect(screen.getByRole('switch', { name: 'Enable signal simulation' }).closest('[inert]')).toBeNull()
   })
 
   it('saves what car it is', async () => {

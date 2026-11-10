@@ -46,6 +46,7 @@ export type WindowsPlace =
   | 'logs'
   | 'screenshots'
   | 'developer-tools'
+  | 'apple-devices'
 
 /** What the controls window shows beside its buttons (UiControls in Main.kt). */
 export interface ControlsState {

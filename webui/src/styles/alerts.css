@@ -21,8 +21,16 @@
   background: #3a2a10;
 }
 
+.shell .alert.info {
+  background: #162435;
+}
+
 .shell .alert .head {
   font: 600 13px/18px var(--ui);
+}
+
+.shell .alert.info .head {
+  color: #8bc7ff;
 }
 
 .shell .alert.bad .head {
@@ -89,6 +97,9 @@
 }
 .shell .alert.warn .btn {
   background-color: #553f17;
+}
+.shell .alert.info .btn {
+  background-color: #23476b;
 }
 
 /* A link: a button that reads as one */

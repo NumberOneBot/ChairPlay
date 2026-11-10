@@ -1,0 +1,109 @@
+/* The GPS page's USB part: the window's notices, the locked window, and the USB setup */
+
+/* The section's pane: notices that belong to the window over the page, which scrolls on its own below them */
+.shell .pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+
+.shell .global-notices:empty {
+  display: none;
+}
+
+.shell .global-notices .alert {
+  margin: 12px 18px 0;
+}
+
+.shell .page-inner > .locked {
+  min-width: 0;
+}
+
+/* The USB setup's header is the group header of the page, with the way back in it */
+.shell .grp.back {
+  padding: 0;
+}
+
+.shell .grp.back button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 0 6px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+  cursor: default;
+}
+
+.shell .grp.back button:hover {
+  color: var(--text);
+}
+
+.shell .grp.back svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+/* The header's own line is the first step's top */
+.shell .usb-setup .step:first-of-type {
+  border-top: 0;
+}
+
+.shell .usb-setup .step .st .note {
+  white-space: nowrap;
+}
+
+.shell .step .acts progress {
+  flex: none;
+  width: 160px;
+  height: 6px;
+  accent-color: var(--accent);
+}
+
+/* A step's error: the triangle and its reason in red, as large as the information sign */
+.shell .step-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--red);
+  font-weight: 400;
+}
+
+.shell .step-error .error-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.shell .step .checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+}
+
+.shell .step .checks li::before {
+  content: '✓';
+  margin-right: 8px;
+  color: var(--green);
+}
+
+/* Cancel and the final action stay in reach at the foot of a long step */
+.shell .setup-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg);
+}

@@ -87,6 +87,23 @@ describe('Experiments page', () => {
     expect(backend.opened).toEqual(['logs', 'screenshots'])
   })
 
+  // The developer tools folder is there once the app reports a downloaded package, with its real size.
+  it('shows the developer tools folder only once the app reports it, and opens it', async () => {
+    const without = new FakeBackend()
+    await experiments(appState(live), without)
+    await waitFor(() => expect(without.folderSizeReads).toBe(1))
+    expect(screen.queryByRole('button', { name: 'Developer tools' })).toBeNull()
+    cleanup()
+
+    const backend = new FakeBackend()
+    backend.sizes = { logs: 1536, developerTools: 16_680_000 }
+    await experiments(appState(live), backend)
+    expect(await screen.findByText('15.9 MB')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Developer tools' }))
+
+    expect(backend.opened).toEqual(['developer-tools'])
+  })
+
   // Under each folder button, what the folder holds; an empty or missing one shows nothing.
   it("shows a folder's size, none for an empty one", async () => {
     const backend = new FakeBackend()

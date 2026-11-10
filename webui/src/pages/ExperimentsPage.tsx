@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { AppState, Backend, DemoKind, FolderSizes } from '../api'
 import { keyLabel } from '../ControlsScreen'
+import { PhoneIcon } from '../gps/icons'
 import { Group, Row, Segmented, Switch, type Choice } from '../shell/controls'
 import { LogsIcon, ScreenshotsIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
@@ -103,6 +104,21 @@ export function ExperimentsPage({
           </button>
           {sizes.screenshots ? <span className="folder-size">{byteSize(sizes.screenshots)}</span> : null}
         </span>
+        {/* Only once a package of developer tools is downloaded: the app reports a size then. */}
+        {sizes.developerTools !== undefined && (
+          <span className="folder">
+            <button
+              type="button"
+              className="btn small"
+              title="Open the developer tools folder in File Explorer"
+              onClick={() => backend.open('developer-tools')}
+            >
+              <PhoneIcon />
+              Developer tools
+            </button>
+            {sizes.developerTools ? <span className="folder-size">{byteSize(sizes.developerTools)}</span> : null}
+          </span>
+        )}
       </Row>
       <Group title="Integrations" note="With other apps on this PC" />
       <Row
