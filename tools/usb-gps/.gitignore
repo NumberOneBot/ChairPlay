@@ -1,0 +1,5 @@
+# The development Python and what Python and PyInstaller leave behind.
+.venv/
+__pycache__/
+build/
+dist/
