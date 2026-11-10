@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.ui
 import io.github.numberonebot.chairplay.bluetooth.pairedIphoneName
 import io.github.numberonebot.chairplay.carplay.CarPlayConfig
 import io.github.numberonebot.chairplay.config.DesktopConfig
+import io.github.numberonebot.chairplay.gps.GpsCommands
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.SetupStore
 import io.github.numberonebot.chairplay.input.ControlsConfig
@@ -76,6 +77,8 @@ class ChairPlayUi(
     /** The GPS car's calls: drive mode, the car driven by a script, and the CarPlay screens saved. */
     private val driving: UiDriving? = null,
     bufferedAudio: () -> Map<String, Any>? = { null },
+    /** The GPS output's commands, once the app made them. */
+    private val gpsCommands: () -> GpsCommands? = { null },
 ) : Closeable, UiSessions {
     val model = UiModel(config.wifi != null, config.autoconnect, config.autoshow, setupDone = SetupStore(dir).done())
     private val settingsFile = SettingsFile(dir.resolve(DesktopConfig.SETTINGS_FILE))
@@ -146,7 +149,10 @@ class ChairPlayUi(
     /** Saves [changes] from one of the app's own keys, as a page saves them: the app and an open page hear of it alike. */
     fun saveSettings(changes: Map<String, String>) = controller.saveSettings(changes)
 
-    private val api = AppUiApi(controller, { updates.check() }, checks) { driving }
+    /** The GPS output coordinator's own save of gps.method, gps.enabled and gps.usb.device. */
+    fun saveGps(changes: Map<String, String>) = controller.saveGps(changes)
+
+    private val api = AppUiApi(controller, { updates.check() }, checks, gpsCommands) { driving }
 
     private val server = UiServer(
         api,

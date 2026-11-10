@@ -123,6 +123,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // Looks at the system theme for CarPlay's look, at the GPS car for its page, and for a game's telemetry.
     val themeWatch = Executors.newSingleThreadScheduledExecutor { Thread(it, "theme-watch").apply { isDaemon = true } }
     val theme = CarPlayTheme(config.theme, themeWatch, touchSender, active::get)
+    val gps = AtomicReference<AppGps?>()
     val ui = ChairPlayUi(dir, config, { Platforms.current.firewall.check(CarPlayConfig.PORT, config.uiServer.firewallPort, appLog) }, object : UiActions {
         override fun connect() = Thread({
             lockReady.await()
@@ -162,8 +163,12 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
             // A saved turn card moves at once, as Shift+F11 moves it.
             saved["altscreen.cards"]?.let(altView::cardsSaved)
         },
-        demo = altView.demos, gps = driving::state, driving = uiDriving(driving, window, ::screenshots, ::log),
-        bufferedAudio = audio::bufferedAudio)
+        demo = altView.demos, gps = { gps.get()?.state() ?: driving.state() }, driving = uiDriving(driving, window, ::screenshots, ::log),
+        bufferedAudio = audio::bufferedAudio, gpsCommands = { gps.get()?.coordinator })
+    // The GPS output: CarPlay's and USB's channels for the car, and their one coordinator (gps/).
+    val appGps = AppGps(dir, driving, { ui.saveGps(it) }, { ui.saveSettings(it) }, { active.get() != null }, ::log)
+    appGps.coordinator.changed = ui::gpsChanged
+    gps.set(appGps)
     altView.onWindowsChanged = { ui.windowsChanged() }
     // The CarPlay page offers Actual size while the window's size differs from the picture's.
     window.onResize = { ui.windowsChanged() }
@@ -197,10 +202,12 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         // The HUD's waiting line and the session's parts rise and fade as the session comes and goes.
         if (altscreen.hud) altscreen.repaint()
         if (active.get() == null) altView.sessionGone()
+        appGps.carplay.onChanged()
     }
     // The GPS page follows the car four times a second, on the status tick below, told only when what it shows changed;
     // the car's place goes into gps.start and gps.heading as it stops.
     driving.saveTo { place -> ui.saveSettings(place) }
+    appGps.start()
     // A session the iPhone went quiet on says so in both windows' titles until it speaks or ends.
     val silence = LinkSilence(active::get) { silent ->
         listOf(window, altscreen).forEach { it.titleNotice(if (silent) "iPhone not responding" else null) }
@@ -213,7 +220,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
     // CarPlay: the iPhone's sound and screens, its route, song, call and battery messages, its GPS, and the connection.
     val sessions = SessionListener(active, ui, window, title, theme, ::sessionChanged)
-    val carPlay = CarPlayProtocol(dir, config, audio, appControls.textInput, driving, sessions::carButton)
+    val carPlay = CarPlayProtocol(dir, config, audio, appControls.textInput, driving, appGps.carplay.gate, sessions::carButton)
     // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it. An incoming
     // call flashes the CarPlay window's taskbar button, and brings the window forward with window.front.on.call.
     appControls.playing = { active.get() != null && carPlay.bus.snapshot().nowPlaying?.playing == true }
@@ -250,11 +257,14 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         }
         now.altscreenWarnings.forEach { appLog.log(LogLevel.WARNING, it) }
         altView.connected(now)
+        appGps.carplay.identified(now.gps.carPlayGps)
     }
     Runtime.getRuntime().addShutdownHook(Thread {
         // The window is gone at once; the sound fades over the seconds the session takes to end.
         audio.fadeOut()
         appControls.close()
+        // A USB simulation ends as an explicit stop's does, within its budget; the switch stays saved.
+        appGps.close()
         driving.close()
         ui.close()
         themeWatch.shutdownNow()

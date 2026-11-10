@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.ui
 
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.WindowSize
+import io.github.numberonebot.chairplay.gps.GpsCommands
 import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.media.AudioDevices
 import io.github.numberonebot.chairplay.media.DefaultAudioDevices
@@ -241,6 +242,9 @@ interface UiApi {
 
     /** The GPS page's Drive mode switch, as F10 turns it; false while the GPS is off, which keeps it off. */
     fun driveMode(on: Boolean): Boolean = false
+
+    /** The GPS output's commands ([GpsCommands]); null without one, which refuses them. */
+    fun gpsCommands(): GpsCommands? = null
 
     /**
      * The Keyboard page's bindings: each action's keys, defaults and fixed keys, and the wheel and repeat settings as

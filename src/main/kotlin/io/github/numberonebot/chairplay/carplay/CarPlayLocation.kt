@@ -37,6 +37,8 @@ class CarPlayLocation(
     private val settings: () -> GpsSettings = { GpsSettings(enabled = true, rate = 1) },
     /** Runs the action every period, read again each time, until closed. */
     private val schedule: (period: () -> Long, action: () -> Unit) -> AutoCloseable = ::repeatEvery,
+    /** What it sends through: the GPS output's coordinator opens it while CarPlay's method sends. */
+    private val gate: SendGate = SendGate(open = true),
 ) : Iap2LocationProvider, PacedLocation, LocationLink {
     /**
      * The app's car for a connection that identified with the GPS on: its clock, place and settings; it becomes the
@@ -47,8 +49,9 @@ class CarPlayLocation(
         log: (String) -> Unit,
         wallMillis: () -> Long = System::currentTimeMillis,
         schedule: (period: () -> Long, action: () -> Unit) -> AutoCloseable = ::repeatEvery,
+        gate: SendGate = SendGate(open = true),
     ) : this(driving.drive, log, driving.nanoTime, wallMillis, placed = { driving.placed },
-        settings = { driving.settings }, schedule = schedule) {
+        settings = { driving.settings }, schedule = schedule, gate = gate) {
         driving.location = this
     }
 
@@ -94,13 +97,15 @@ class CarPlayLocation(
     }
 
     /** DiPlay's once-a-second update: nothing while this sends on its own. */
-    override fun latestNmea(): String? = if (sending()) null else compose()?.also { sent++ }
+    override fun latestNmea(): String? = if (sending()) null else gate.pass { compose()?.also { sent++ } }
 
     override fun status() = LocationStatus(listening, requested, sent)
 
     private fun sending() = synchronized(lock) { sender != null }
 
-    private fun tick(link: (List<String>) -> Unit) {
+    private fun tick(link: (List<String>) -> Unit) = gate.pass { send(link) }
+
+    private fun send(link: (List<String>) -> Unit) {
         val nmea = compose() ?: return
         try {
             // gps.framing: one string as DiPlay sends it, a message for each sentence, or a parameter for each.

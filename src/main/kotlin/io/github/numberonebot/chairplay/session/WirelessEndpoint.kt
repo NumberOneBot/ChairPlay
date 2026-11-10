@@ -30,8 +30,8 @@ internal fun desktopIdentification(
     hardwareVersion = "1.0",
     // Only the wired transport reads this; the value matches DiPlay's head-unit build.
     carPlayUsbInterfaceNumber = 3,
-    locationInformationEnabled = gps.enabled,
-    vehicleSpeedEnabled = gps.enabled && gps.wheelSpeed,
+    locationInformationEnabled = gps.carPlayGps,
+    vehicleSpeedEnabled = gps.carPlayGps && gps.wheelSpeed,
     bootstrapRouteGuidance = bootstrapRouteGuidance(),
     carPlayAvailabilityEnabled = carPlayAvailability(),
 )

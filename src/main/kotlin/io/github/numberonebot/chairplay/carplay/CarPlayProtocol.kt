@@ -23,6 +23,8 @@ internal class CarPlayProtocol(
     audio: AppAudio,
     textInput: CarPlayTextInput,
     driving: Driving,
+    /** What the GPS sends through: the GPS output's coordinator opens it while CarPlay's method sends. */
+    gpsGate: SendGate,
     carButton: () -> Unit,
 ) : Closeable {
     private val sink = CarPlayMediaSink(audio.screens, audio.renderer, ::log, audio.microphone, config.echoCancellation,
@@ -30,7 +32,7 @@ internal class CarPlayProtocol(
     private val data = CarPlayDataFeed(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
     private val bootstrap = WirelessBootstrap(config, sink, textInput.listener(carPlaySessions(carButton)), data).apply {
         // The iPhone's GPS for each connection that identifies with the GPS on, as the settings have it then: the car.
-        newLocation = { _ -> CarPlayLocation(driving, ::log) }
+        newLocation = { _ -> CarPlayLocation(driving, ::log, gate = gpsGate) }
     }
 
     /** The iPhone's data for the HUD, the AltScreen and the controls window, while a session runs. */

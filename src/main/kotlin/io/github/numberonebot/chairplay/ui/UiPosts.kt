@@ -5,6 +5,7 @@ package io.github.numberonebot.chairplay.ui
  * [route] is one UiServer takes posts on.
  */
 internal fun postRoute(api: UiApi, route: String, body: Map<*, *>): Pair<Int, Map<String, Any?>> {
+    gpsPost(api, route, body)?.let { return it }
     var answer: Pair<Int, Map<String, Any?>> = 404 to mapOf("error" to "no such API")
     fun json(status: Int, reply: Map<String, Any?>) {
         answer = status to reply

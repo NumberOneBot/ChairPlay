@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
+import io.github.numberonebot.chairplay.gps.DeveloperToolsStore
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.platform.SystemPage
@@ -54,7 +55,9 @@ internal class UiPlaces(
         "xcertplay" -> "https://github.com/shilapi/xcertplay"
         "livi" -> "https://github.com/f-io/LIVI"
         "rgi" -> "https://github.com/luka-dev/mib2q-carplay-rgi"
+        "apple-devices" -> "https://apps.microsoft.com/detail/9NP83LWLPZ9K"
         "logs", "screenshots" -> Files.createDirectories(setup.settingsFile.resolveSibling(place)).toString()
+        "developer-tools" -> Files.createDirectories(developerTools).toString()
         else -> Files.createDirectories(setup.mfiDirectory).toString()
     }
 
@@ -62,15 +65,23 @@ internal class UiPlaces(
      * The logs and screenshots folders' sizes in bytes, the files in their subfolders too; a missing folder is 0 and
      * stays unmade, and a file that goes while they are added up counts nothing.
      */
-    fun folderSizes(): Map<String, Long> = listOf("logs", "screenshots").associateWith { name ->
-        val folder = setup.settingsFile.resolveSibling(name)
-        if (!Files.isDirectory(folder)) 0L
-        else runCatching {
-            Files.walk(folder).use { files ->
-                files.filter(Files::isRegularFile).mapToLong { file -> runCatching { Files.size(file) }.getOrDefault(0L) }.sum()
-            }
-        }.getOrDefault(0L)
-    }
+    fun folderSizes(): Map<String, Long> = listOf("logs", "screenshots").associateWith { size(setup.settingsFile.resolveSibling(it)) } +
+        // Developer tools only once a package is published in the store (its manifest is written last).
+        (if (published()) mapOf("developerTools" to size(developerTools)) else emptyMap())
+
+    // The USB GPS developer tools' store: cache/developer-tools beside the settings, as the helper uses it.
+    private val developerTools get() = DeveloperToolsStore.root(setup.settingsFile.parent)
+
+    private fun published(): Boolean = runCatching {
+        Files.list(developerTools).use { folders -> folders.anyMatch { Files.isRegularFile(it.resolve(DeveloperToolsStore.MANIFEST)) } }
+    }.getOrDefault(false)
+
+    // Links are not followed: a size never counts what lies outside the folder.
+    private fun size(folder: java.nio.file.Path): Long = if (!Files.isDirectory(folder)) 0L else runCatching {
+        Files.walk(folder).use { files ->
+            files.filter(Files::isRegularFile).mapToLong { file -> runCatching { Files.size(file) }.getOrDefault(0L) }.sum()
+        }
+    }.getOrDefault(0L)
 
     /**
      * What a report needs to say which ChairPlay it is about: the release version (or a development build) and its commit,
@@ -90,7 +101,7 @@ internal class UiPlaces(
         val PLACES = listOf(
             "bluetooth", "wifi", "firewall", "firewall-rules", "mfi-folder", "location",
             "issues", "discussions", "pull-requests", "author", "source", "releases", "notices", "diplay", "xcertplay", "livi", "rgi",
-            "logs", "screenshots", "buy-me-a-coffee",
+            "logs", "screenshots", "buy-me-a-coffee", "developer-tools", "apple-devices",
         )
 
         /** The project's home on GitHub. */

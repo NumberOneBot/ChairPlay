@@ -46,6 +46,9 @@ data class GpsSettings(
         redlineRpm = design.redlineRpm ?: car.redlineRpm,
     )
 
+    /** Whether a CarPlay connection identifies with the GPS: on, with CarPlay's method. */
+    val carPlayGps: Boolean get() = enabled && method == GpsMethod.CARPLAY
+
     companion object {
         /** Fixes a second the car's position may go at: the iPhone asks for 4, and 20 is one each 50 ms. */
         val RATE = 1..20

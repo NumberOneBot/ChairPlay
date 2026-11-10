@@ -1,5 +1,7 @@
 package io.github.numberonebot.chairplay.ui
 
+import io.github.numberonebot.chairplay.gps.GpsCommands
+
 /**
  * The controller's API, with the GPS car's calls, which only the app's windows and car can answer, and the setup
  * [checks] as a page asks for them. A named class, not an anonymous object in [ChairPlayUi]: a changed [UiApi] then
@@ -9,8 +11,11 @@ internal class AppUiApi(
     private val controller: UiController,
     private val updateCheck: () -> Boolean = { false },
     private val checks: SetupChecks? = null,
+    private val gps: () -> GpsCommands? = { null },
     private val driving: () -> UiDriving?,
 ) : UiApi by controller {
+    override fun gpsCommands(): GpsCommands? = gps()
+
     override fun checkUpdates(): Boolean = updateCheck()
 
     override fun checkSetup() {

@@ -187,7 +187,7 @@ class WirelessBootstrap internal constructor(
             val runtimeIdentification = identification.forWirelessLink(Iap2WirelessLinkRole.RUNTIME_TUNNEL, wireless)
             val endpoint = buildEndpoint(info, host, advertised.port, advertised, config.identity)
             media.setIapTunnelHandler { tunnel ->
-                val location = if (now.gps.enabled) newLocation(now.gps) else null
+                val location = if (now.gps.carPlayGps) newLocation(now.gps) else null
                 startTunnelControl(stack, tunnel, runtimeIdentification, endpoint, location)
             }
             stack.own(AutoCloseable { media.setIapTunnelHandler(null) })
