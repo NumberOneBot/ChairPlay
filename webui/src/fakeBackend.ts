@@ -14,6 +14,7 @@ import type {
   WindowsLocation,
   WindowsPlace,
 } from './api'
+import type { CommandOutcome, GpsMethod, SetupAction, SetupIntent, SetupStep } from './gpsApi'
 import { controlsData } from './testing'
 
 export class FakeBackend implements Backend {
@@ -93,6 +94,31 @@ export class FakeBackend implements Backend {
 
   async windowsLocation() {
     return this.location
+  }
+
+  /** The GPS output's commands as sent, "gps-method usb 3", "gps-enabled true", "usb-setup open enable", "usb-setup 7 retry tools". */
+  gpsCommands: string[] = []
+  /** What the next GPS command answers. */
+  gpsOutcome: CommandOutcome = 'accepted'
+
+  async gpsMethod(method: GpsMethod, generation: number) {
+    this.gpsCommands.push(`gps-method ${method} ${generation}`)
+    return this.gpsOutcome
+  }
+
+  async gpsEnabled(enabled: boolean) {
+    this.gpsCommands.push(`gps-enabled ${enabled}`)
+    return this.gpsOutcome
+  }
+
+  async openUsbSetup(intent: SetupIntent) {
+    this.gpsCommands.push(`usb-setup open ${intent}`)
+    return this.gpsOutcome
+  }
+
+  async usbSetupAction(operationId: number, action: SetupAction, step?: SetupStep) {
+    this.gpsCommands.push(['usb-setup', operationId, action, step].filter((part) => part !== undefined).join(' '))
+    return this.gpsOutcome
   }
 
   /** Drive mode as the GPS page turned it. */

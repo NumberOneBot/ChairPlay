@@ -16,6 +16,7 @@ import type {
   WindowsLocation,
   WindowsPlace,
 } from './api'
+import type { CommandOutcome, GpsMethod, SetupAction, SetupIntent, SetupStep } from './gpsApi'
 
 export class ApiError extends Error {}
 
@@ -64,6 +65,27 @@ export class Api implements Backend {
 
   async checkUpdates(): Promise<boolean> {
     return (await this.request('POST', 'check-updates', {})).status === 200
+  }
+
+  // The GPS output's commands answer {outcome} (gpsApi.ts), with 200 for accepted, no-change and setup-opened.
+  private async command(path: string, body: unknown): Promise<CommandOutcome> {
+    return ((await this.request('POST', path, body)).data as { outcome?: CommandOutcome }).outcome ?? 'invalid'
+  }
+
+  async gpsMethod(method: GpsMethod, generation: number): Promise<CommandOutcome> {
+    return this.command('gps-method', { method, generation })
+  }
+
+  async gpsEnabled(enabled: boolean): Promise<CommandOutcome> {
+    return this.command('gps-enabled', { enabled })
+  }
+
+  async openUsbSetup(intent: SetupIntent): Promise<CommandOutcome> {
+    return this.command('usb-setup', { action: 'open', intent })
+  }
+
+  async usbSetupAction(operationId: number, action: SetupAction, step?: SetupStep): Promise<CommandOutcome> {
+    return this.command('usb-setup', step ? { action, operationId, step } : { action, operationId })
   }
 
   async driveMode(on: boolean): Promise<boolean> {

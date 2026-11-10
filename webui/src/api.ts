@@ -1,4 +1,5 @@
 // The app's API (UiServer.kt): what it sends and takes, and what the screens need from it; the client is apiClient.ts.
+import type { GpsBackend, GpsOutput, UsbSetupView } from './gpsApi'
 
 export type Phase = 'setup' | 'idle' | 'starting' | 'calling' | 'joining' | 'active' | 'retrying'
 export type Screen = 'start' | 'settings' | 'carplay'
@@ -44,6 +45,7 @@ export type WindowsPlace =
   | 'rgi'
   | 'logs'
   | 'screenshots'
+  | 'developer-tools'
 
 /** What the controls window shows beside its buttons (UiControls in Main.kt). */
 export interface ControlsState {
@@ -101,6 +103,9 @@ export interface GpsState {
   sentences: string[] | null
   /** Position updates sent in this connection. */
   sent: number
+  /** The output: method, saved switch, availability, operation (gpsApi.ts); absent from an app before USB GPS. */
+  output?: GpsOutput
+  usbSetup?: UsbSetupView
 }
 
 /** A window is available while its feature is on; only then can it be shown or hidden. */
@@ -218,10 +223,10 @@ export type SaveOutcome = { ok: true; applies: Record<string, Applies> } | { ok:
 export type WindowsLocation = { latitude: number; longitude: number } | { error: 'denied' | 'unknown' }
 
 /** The logs and screenshots folders' sizes in bytes, by folder. */
-export type FolderSizes = Partial<Record<'logs' | 'screenshots', number>>
+export type FolderSizes = Partial<Record<'logs' | 'screenshots' | 'developerTools', number>>
 
 /** What the screens need from the app; tests pass a fake. */
-export interface Backend {
+export interface Backend extends GpsBackend {
   settings(): Promise<SettingsData>
   save(changes: Record<string, string>): Promise<SaveOutcome>
   /** The saved Wi-Fi password, for the eye beside it; null when none is saved. Nothing else carries it. */

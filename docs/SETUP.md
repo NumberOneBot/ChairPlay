@@ -206,6 +206,12 @@ Besides the picture and the sound, the iPhone tells the car about the drive and 
 
 `link` says which iAP2 link carried it (`bluetooth` while CarPlay starts, `wifi` once it runs over Wi-Fi). A parameter the app does not know yet is listed under `unknown` as `"<id>:<hex>"`, and a message it cannot decode is written as `hex`. Only these data messages are written: the Wi-Fi passphrase, the MFi certificate and its challenges never reach the file. The file grows by a line or two a second while music plays, and holds the names and numbers of callers; delete it when it is no longer needed.
 
+## Location after GPS simulation
+
+After GPS simulation stops, your iPhone and navigation apps may take time to update their location. A navigation app can keep showing the last simulated position even when the iPhone has already returned to its real location. The delay varies; there is no guaranteed recovery time.
+
+If a map still shows the simulated position, check your location in Compass or another navigation app. If those show your real location, close and reopen the app that still shows the simulated position. Different navigation apps can update at different times.
+
 ## Keyboard bindings
 
 See the table in the README for the defaults, and the Keyboard page to change them. `controls.properties` lists every action with its keys and a description; each line is `action = keys`, keys separated by commas, with `Shift+`, `Ctrl+` and `Alt+` modifiers, key names after their place on a US keyboard (so letters work in any layout) or a raw GLFW code such as `#290`.
