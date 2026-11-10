@@ -146,6 +146,32 @@ class GpsLifecycleTest {
         assertTrue(h.output().enabledIntent)
         assertEquals(GpsReason.NO_POSITION, h.output().reason)
         assertFalse(h.calls.any { it.startsWith("usb.start") })
+
+        // L-09: once the user places the car, USB starts from there without the switch again.
+        h.car.at = GpsHarness.HOME
+        h.reconcile()
+        h.reconcile()
+        assertEquals(1, h.calls.count { it.startsWith("usb.start 49.84") })
+    }
+
+    // The same through the wizard's final Enable, whose closing does not arm a resume.
+    @Test
+    fun `USB enabled by the wizard with the car nowhere starts once the car is placed`() {
+        val h = GpsHarness(GpsSettings(enabled = false, method = GpsMethod.USB))
+        h.usb.state = attached
+        h.car.at = null
+        h.setup.open(SetupIntent.ENABLE)
+        h.reconcile()
+        h.setup.finish(enable = true)
+        h.idle()
+        h.reconcile()
+        assertEquals(GpsReason.NO_POSITION, h.output().reason)
+
+        h.car.at = GpsHarness.HOME
+        h.reconcile()
+        h.reconcile()
+
+        assertEquals(1, h.calls.count { it.startsWith("usb.start 49.84") })
     }
 
     // L-01, L-02: off stops the stream, returns the iPhone to Windows, clears and closes; the car stays.

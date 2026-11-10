@@ -124,7 +124,12 @@ class GpsCoordinator(
     /** The wizard's ENABLE or DONE, its readiness just checked: the prepared iPhone is saved, and ENABLE starts USB. */
     private fun finishSetup(operationId: Long, device: UsbDevice, enable: Boolean): CommandOutcome {
         flows.store.save(mapOf("gps.usb.device" to device.udid))
-        if (!enable) return CommandOutcome.ACCEPTED.also { poke() }
+        if (!enable) {
+            // Prepared now: a "setup needed" from before goes; the next reconcile says what holds USB, if anything.
+            synchronized(flows.lock) { flows.reason = null }
+            poke()
+            return CommandOutcome.ACCEPTED
+        }
         val (from, operation) = synchronized(flows.lock) {
             val from = flows.selected
             val kind = if (from == GpsMethod.USB) OperationKind.ENABLE else OperationKind.SWITCH
@@ -186,7 +191,9 @@ class GpsCoordinator(
             synchronized(flows.lock) { flows.reason = GpsReason.USB_NOT_CONNECTED }
             return
         }
-        if (!flows.resumeArmed) return
+        // An explicit Enable that waited for the car's place goes once the user places it (L-09), armed or not.
+        val placedSince = flows.reason == GpsReason.NO_POSITION && flows.hasPosition()
+        if (!flows.resumeArmed && !placedSince) return
         flows.resumeArmed = false
         begin(OperationKind.RESUME) { flows.resume(it) }
     }

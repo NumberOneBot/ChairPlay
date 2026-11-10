@@ -43,6 +43,8 @@ internal class GpsFlows(
 
     fun channel(method: GpsMethod) = if (method == GpsMethod.USB) usb else carplay
 
+    fun hasPosition() = car.position() != null
+
     /** S-01…S-09: the old writer stops first, the car goes to Windows' place when there is one, then the new one starts. */
     fun switch(operation: GpsOperation, from: GpsMethod) {
         val old = channel(from)
@@ -56,7 +58,7 @@ internal class GpsFlows(
         if (from == GpsMethod.USB && (wasSending || journal.dirty() != null)) letGo(operation, back)
         if (!ops.live(operation)) return
         ops.stage(operation, OperationStage.START)
-        startSelected(wizardBounds = true)
+        startSelected(wizardBounds = true, operation = operation)
     }
 
     /** L-01: stream off, Windows' place once, clear, close; the car stays where it is (L-02). */
@@ -72,7 +74,7 @@ internal class GpsFlows(
         if (journal.dirty() != null) letGo(operation, null)
         if (!ops.live(operation)) return
         ops.stage(operation, OperationStage.START)
-        startSelected(wizardBounds = true)
+        startSelected(wizardBounds = true, operation = operation)
     }
 
     /** V49, V50: an iPhone this app left simulating is back while nothing of ours sends: its clear, nothing else. */
@@ -90,7 +92,7 @@ internal class GpsFlows(
      * Starts the selected channel when the switch is on and the car is somewhere; else records why not. With
      * [wizardBounds], an open USB wizard keeps USB from starting: its final button does (F-14).
      */
-    fun startSelected(wizardBounds: Boolean) {
+    fun startSelected(wizardBounds: Boolean, operation: GpsOperation? = null) {
         val (method, on) = synchronized(lock) { selected to enabled }
         if (!on) {
             synchronized(lock) { reason = null }
@@ -107,7 +109,10 @@ internal class GpsFlows(
             return
         }
         if (wizardBounds && setup.view().open) return
-        when (val ready = setup.readiness()) {
+        val ready = setup.readiness()
+        // An operation the deadline ended while readiness was asked starts nothing more.
+        if (operation != null && !ops.live(operation)) return
+        when (ready) {
             is UsbReadiness.NotReady -> synchronized(lock) { reason = ready.reason }
             is UsbReadiness.Ready -> startUsb(seed, ready.device)
         }
