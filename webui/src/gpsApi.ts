@@ -11,12 +11,11 @@ export type GpsReason =
   | 'carplay-reconnect-needed'
   | 'usb-setup-needed'
   | 'usb-not-connected'
-  | 'usb-several'
   | 'usb-not-ready'
   | 'usb-helper-failed'
   | 'no-position'
 
-export type GpsOperationKind = 'switch' | 'enable' | 'disable' | 'resume' | 'restore' | 'shutdown'
+export type GpsOperationKind = 'enable' | 'disable' | 'resume' | 'shutdown'
 export type GpsOperationStage = 'quiesce' | 'locate' | 'return' | 'clear' | 'close' | 'start'
 
 /** The one operation running; while there is one, the whole app is held (S-09). */
@@ -30,23 +29,19 @@ export interface GpsOperation {
   startedAt: number
 }
 
-export type GpsCleanup = 'clean' | 'needed' | 'attempting' | 'unconfirmed'
-
 export type NoticeTone = 'info' | 'warn' | 'bad'
 
 export type GpsNoticeCode =
   | 'reset-sent'
   | 'windows-unavailable'
   | 'usb-unavailable'
-  | 'cleanup-unconfirmed'
   | 'reconnect-needed'
-  | 'start-failed'
 
 export interface GpsNotice {
   id: number
   tone: NoticeTone
   code: GpsNoticeCode
-  /** windows-unavailable: reason 'denied' | 'unknown' | 'timeout'; start-failed: reason, a GpsReason or UsbErrorCode. */
+  /** windows-unavailable: reason 'denied' | 'unknown' | 'timeout'. */
   args: Record<string, string>
   /** Epoch milliseconds it goes at; null stays until the app drops it. */
   expiresAt: number | null
@@ -59,7 +54,10 @@ export interface UsbDevice {
 }
 
 export interface GpsOutput {
+  /** What the user chose: saved at once, in force from the next CarPlay reconnect. */
   selected: GpsMethod
+  /** The method in force until then; the two differ while a reconnect is needed. */
+  applied: GpsMethod
   /** The saved Enable signal simulation: kept while the phone is away (checked and disabled, P-06). */
   enabledIntent: boolean
   activeMethod: GpsMethod | null
@@ -75,7 +73,6 @@ export interface GpsOutput {
   /** Sent back with gps-method, so a stale page's choice is refused. */
   generation: number
   operation: GpsOperation | null
-  cleanup: GpsCleanup
   notices: GpsNotice[]
 }
 
@@ -84,7 +81,7 @@ export type SetupStep = 'usb' | 'trust' | 'developer-mode' | 'tools' | 'ready'
 export type StepStatus = 'unknown' | 'checking' | 'waiting' | 'action' | 'working' | 'done' | 'error'
 
 /**
- * detail by step — usb: no-device, drivers-missing, apple-devices-closed, several-devices, locked; trust:
+ * detail by step — usb: no-device, drivers-missing, apple-devices-closed, locked; trust:
  * trust-prompt, locked; developer-mode: hidden, revealed, link-lost; tools: missing, downloading, cached, connecting,
  * unsupported-ios. error: a UsbErrorCode (download-failed, disk-full, mount-failed, service-unavailable, …).
  */

@@ -95,13 +95,6 @@ function UsbBody({ detail, ask }: { detail: string | null; ask: Ask }) {
         </div>
       </>
     )
-  if (detail === 'several-devices')
-    return (
-      <>
-        <span>Several iPhones are connected. Disconnect all but one.</span>
-        <Wait>Waiting for one iPhone…</Wait>
-      </>
-    )
   if (detail === 'locked')
     return (
       <>

@@ -1,11 +1,10 @@
 import type { GpsState } from '../api'
 import type { GpsOutput } from '../gpsApi'
-import { operationText } from './noticeText'
+import { operationHead } from './noticeText'
 
 const REASON_TEXT: Partial<Record<NonNullable<GpsOutput['reason']>, string>> = {
   'usb-setup-needed': 'Setup required',
   'usb-not-connected': 'Not connected over USB',
-  'usb-several': 'Several iPhones connected over USB',
   'usb-not-ready': 'Not ready, open USB setup',
   'usb-helper-failed': 'The USB service stopped',
   'no-position': 'Waiting for a position',
@@ -32,6 +31,6 @@ function carplayStatus(car: GpsState | null): string {
 
 /** The iPhone row, last in the GPS section: the operation while one runs, else by the selected method. */
 export function iphoneStatus(output: GpsOutput, car: GpsState | null): string {
-  if (output.operation) return operationText(output.operation, output.selected).head
+  if (output.operation) return operationHead(output.operation)
   return output.selected === 'usb' ? usbStatus(output) : carplayStatus(car)
 }

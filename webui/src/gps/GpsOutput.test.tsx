@@ -22,19 +22,31 @@ describe('GPS page, the switch and the method', () => {
   })
 
   it('sends the chosen method with the generation the page saw, and nothing for the one chosen', async () => {
-    const { backend } = await openSection(gpsState(outputs.reconnectNeeded))
+    const { backend } = await openSection(gpsState(outputs.carplayOn))
     fireEvent.click(method('CarPlay'))
     fireEvent.click(method('USB'))
 
-    await waitFor(() => expect(backend.gpsCommands).toEqual(['gps-method usb 2']))
+    await waitFor(() => expect(backend.gpsCommands).toEqual(['gps-method usb 1']))
     expect(backend.saved).toEqual([])
   })
 
-  // While the switch runs the page is what it will be when it ends: the method chosen is the one lit.
-  it('shows the method being switched to as the chosen one', async () => {
-    await openSection(gpsState(outputs.switchingToUsb))
+  // D8: the choice is saved at once and lights at once; the method in force changes at the next reconnect.
+  it('follows the method chosen, not the one in force, until CarPlay reconnects', async () => {
+    await openSection(gpsState(outputs.reconnectNeeded))
     expect(method('USB').getAttribute('aria-checked')).toBe('true')
-    expect(method('CarPlay').getAttribute('aria-checked')).toBe('false')
+    expect(screen.getByRole('button', { name: 'USB setup' })).toBeTruthy()
+    expect(screen.queryByRole('switch', { name: 'Send the vehicle speed' })).toBeNull()
+  })
+
+  it('keeps the position open while the old method still runs', async () => {
+    await openSection(gpsState(outputs.reconnectNeeded))
+    expect(inert(screen.getByRole('textbox', { name: 'latitude' }))).toBe(false)
+  })
+
+  it('holds the switch while an operation runs, and no other control', async () => {
+    await openSection(gpsState(outputs.stoppingUsb))
+    expect((enable()).disabled).toBe(true)
+    expect(inert(method('CarPlay'))).toBe(false)
   })
 
   it('has no rate or satellites to choose', async () => {

@@ -9,7 +9,6 @@ import { GpsPage } from '../pages/GpsPage'
 import { ConnectionPage } from '../pages/ConnectionPage'
 import { KeyboardPage } from '../pages/KeyboardPage'
 import { GlobalNotices } from '../gps/GpsNotices'
-import { isLocked } from '../gps/output'
 import { GetStarted } from '../setup/GetStarted'
 import { setupSteps } from '../setup/steps'
 import { Message } from './controls'
@@ -41,8 +40,6 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
   const guiding = guide === 'shown' || (guide === 'auto' && !state.setupDone)
   const steps = guiding ? setupSteps(state, joinFailureSeen) : null
   const showGuide = () => setGuide('shown')
-  // An operation of the GPS output holds the whole window (the toolbar, the sections, the page) until it ends.
-  const locked = isLocked(state.gps?.output)
   // The connection reads the CarPlay and AltScreen pages as it is made: changed meanwhile, which value it took is
   // anyone's guess. While it connects they wait, off; the pages that apply at once, and Connection, stay live.
   const connecting = (CONNECTING_PHASES as readonly string[]).includes(state.phase)
@@ -54,17 +51,17 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
   }, [state.setupDone])
 
   // F11, F12 and the app's other keys work over the settings as over CarPlay.
-  useKeysToApp(backend, false, !locked)
+  useKeysToApp(backend, false)
   useKeyboardFocus(backend, state.controls?.globalKeyboard?.enabled === true)
 
   useEffect(() => {
-    if (!showable || locked) return
+    if (!showable) return
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && !event.defaultPrevented) backend.show('carplay')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [backend, showable, locked])
+  }, [backend, showable])
 
   // Connecting on its own the app waits, black, instead of showing the settings, until CarPlay covers it.
   if (state.waiting) return <Waiting state={state} backend={backend} />
@@ -74,9 +71,9 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
 
   return (
     <div className={`shell ${away ? 'away' : ''}`}>
-      <Toolbar state={state} backend={backend} guide={steps} locked={locked} />
+      <Toolbar state={state} backend={backend} guide={steps} />
       {steps ? (
-        <div className="body setup-body" inert={locked} aria-busy={locked || undefined}>
+        <div className="body setup-body">
           {settings.data && (
             <GetStarted
               state={state}
@@ -90,14 +87,7 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
         </div>
       ) : (
         <div className="body">
-          <nav
-            className="nav"
-            role="tablist"
-            aria-orientation="vertical"
-            aria-label="Settings"
-            inert={locked}
-            aria-busy={locked || undefined}
-          >
+          <nav className="nav" role="tablist" aria-orientation="vertical" aria-label="Settings">
             {SECTIONS.map(({ id, title, icon }) => (
               <button
                 key={id}
@@ -117,13 +107,9 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
             ))}
           </nav>
           <div className="pane">
-            <GlobalNotices output={state.gps?.output} backend={backend} onGps={section === 'gps'} />
+            <GlobalNotices output={state.gps?.output} backend={backend} />
             <div className="page" role="tabpanel" id={`${ids}-page`} aria-labelledby={`${ids}-tab-${section}`}>
-              <div
-                className="page-inner"
-                inert={locked && section !== 'gps'}
-                aria-busy={(locked && section !== 'gps') || undefined}
-              >
+              <div className="page-inner">
                 {settings.loadError && (
                   <Message tone="bad" head="Couldn't read the settings." text={settings.loadError} />
                 )}
