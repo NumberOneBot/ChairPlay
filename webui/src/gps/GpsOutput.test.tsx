@@ -93,6 +93,23 @@ describe('GPS page, what each method shows', () => {
     expect(screen.getByRole('radiogroup', { name: 'City presets' })).toBeTruthy()
   })
 
+  it('opens the setup to resume when the simulation is on, to prepare when it is off', async () => {
+    const { backend } = await openSection(gpsState(outputs.usbOn))
+    fireEvent.click(screen.getByRole('button', { name: 'USB setup' }))
+    await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup open resume']))
+  })
+
+  // With no place for the car, Position is how it gets one, whatever the switch (L-09).
+  it('leaves the position open with no place for the car, though the simulation is off', async () => {
+    const backend = gpsBackend()
+    backend.data.values['gps.start'] = ''
+    const state = gpsState(outputs.usbUnprepared)
+    state.gps = { ...state.gps!, position: null }
+    await openSection(state, backend)
+    expect(inert(screen.getByRole('textbox', { name: 'latitude' }))).toBe(false)
+    expect(inert(screen.getByRole('textbox', { name: 'Power' }))).toBe(true)
+  })
+
   it('opens the setup for preparing from its button', async () => {
     const { backend } = await openSection(gpsState(outputs.usbUnprepared))
     fireEvent.click(screen.getByRole('button', { name: 'USB setup' }))

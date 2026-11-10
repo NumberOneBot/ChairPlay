@@ -92,6 +92,17 @@ describe('USB setup', () => {
     await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 retry usb']))
   })
 
+  it('shows several iPhones as a state of the step as well as an error', async () => {
+    await wizard({ ...setups.connect, steps: { ...setups.connect.steps, usb: { status: 'waiting', detail: 'several-devices', error: null } } })
+    expect(screen.queryByText(/Connect a data-capable/)).toBeNull()
+  })
+
+  it('shows the operation above the setup, readable', async () => {
+    await wizard(setups.readyEnable, outputs.switchingToUsb)
+    const status = screen.getAllByRole('status').find((each) => each.closest('.usb-setup') === null && each.textContent)!
+    expect(status.closest('[inert]')).toBeNull()
+  })
+
   it('does not ask a stale or missing operation for anything', async () => {
     const { backend } = await wizard({ ...setups.developerHidden, operationId: null })
     expect((screen.getByRole('button', { name: 'Show Developer Mode' }) as HTMLButtonElement).disabled).toBe(true)
@@ -114,6 +125,14 @@ describe('USB setup, ready', () => {
     click('Done')
     await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 done']))
     expect(backend.saved).toEqual([])
+  })
+
+  // F-12/F-14: with the simulation on, the final action starts USB GPS; Done would start nothing.
+  it('enables from the final action whenever the simulation is on', async () => {
+    const { backend } = await wizard(setups.ready, { ...outputs.usbUnprepared, enabledIntent: true })
+    expect(button('Done')).toBeNull()
+    click('Enable USB GPS')
+    await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 enable']))
   })
 
   it('has no final action before it is ready', async () => {

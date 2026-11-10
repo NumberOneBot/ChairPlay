@@ -28,13 +28,22 @@ export function OperationNotice({ output }: { output: GpsOutput }) {
 }
 
 /** One notice as a block; Reconnect is the action of the one that asks for it. */
-export function NoticeBlock({ notice, backend }: { notice: GpsNotice; backend: Backend }) {
+export function NoticeBlock({
+  notice,
+  backend,
+  busy = false,
+}: {
+  notice: GpsNotice
+  backend: Backend
+  /** An operation holds the window: the action waits. */
+  busy?: boolean
+}) {
   const { head, text } = noticeText(notice)
   return (
     <Message tone={notice.tone} head={head} text={text}>
       {notice.code === 'reconnect-needed' && (
         <div className="acts">
-          <button type="button" className="btn small" title="End the session and connect again" onClick={() => void backend.reconnect()}>
+          <button type="button" className="btn small" title={busy ? 'Wait for the operation to end' : 'End the session and connect again'} disabled={busy} onClick={() => void backend.reconnect()}>
             Reconnect
           </button>
         </div>
@@ -52,7 +61,7 @@ export function GpsNotices({ output, backend }: { output: GpsOutput; backend: Ba
       {notices
         .filter(({ code }) => code !== 'usb-unavailable')
         .map((notice) => (
-          <NoticeBlock key={notice.id} notice={notice} backend={backend} />
+          <NoticeBlock key={notice.id} notice={notice} backend={backend} busy={output.operation !== null} />
         ))}
     </>
   )

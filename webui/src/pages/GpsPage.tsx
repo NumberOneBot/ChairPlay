@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import type { AppState, Backend } from '../api'
-import { GpsNotices } from '../gps/GpsNotices'
+import { GpsNotices, OperationNotice } from '../gps/GpsNotices'
 import { iphoneStatus } from '../gps/iphoneStatus'
 import { Locked } from '../gps/Locked'
 import { EnableRow, MethodRows } from '../gps/MethodRows'
@@ -39,9 +39,12 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
 
   if (setup?.open) {
     return (
-      <Locked locked={locked}>
-        <UsbSetupWizard setup={setup} backend={backend} />
-      </Locked>
+      <>
+        <OperationNotice output={output} />
+        <Locked locked={locked}>
+          <UsbSetupWizard setup={setup} backend={backend} enabled={output.enabledIntent} />
+        </Locked>
+      </>
     )
   }
 
@@ -49,7 +52,9 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
   // a position too, while the position itself is what is missing, and stays open.
   const off = !output.enabledIntent
   const notSending = usb && output.availability !== 'ready'
-  const positionHeld = off || (notSending && output.reason !== 'no-position')
+  // With no place for the car at all, Position is how it gets one: it stays open whatever the switch says (L-09).
+  const placed = placeOf(state.gps, value('gps.start')) !== null
+  const positionHeld = placed && (off || (notSending && output.reason !== 'no-position'))
   const carHeld = off || notSending
   const holdTitle = (held: boolean) =>
     !held

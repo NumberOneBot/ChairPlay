@@ -14,8 +14,9 @@ function typesHere(target: EventTarget | null): boolean {
  * about; over the settings the app takes only its own keys. A key the page used (preventDefault) is the page's, and
  * so is a character typed in a field.
  */
-export function useKeysToApp(backend: Backend, everything: boolean) {
+export function useKeysToApp(backend: Backend, everything: boolean, enabled = true) {
   useEffect(() => {
+    if (!enabled) return
     const held = new Map<string, string>()
     const release = () => {
       for (const name of held.values()) void backend.key(name, 'release', everything)
@@ -49,5 +50,5 @@ export function useKeysToApp(backend: Backend, everything: boolean) {
       window.removeEventListener('blur', release)
       release()
     }
-  }, [backend, everything])
+  }, [backend, everything, enabled])
 }

@@ -95,7 +95,9 @@ describe('GPS page', () => {
 
   // Off, the GPS has nothing to set: the rest waits for it, as the AltScreen's page does.
   it('holds the rest while the GPS is off', async () => {
-    await gps(appState(live), gpsBackend(false))
+    const backend = gpsBackend(false)
+    backend.data.values['gps.start'] = '48.8738, 2.2950'
+    await gps(appState(live), backend)
 
     expect(screen.getByRole('textbox', { name: 'latitude' }).closest('[inert]')).not.toBeNull()
     expect(screen.getByRole('textbox', { name: 'Power' }).closest('[inert]')).not.toBeNull()
