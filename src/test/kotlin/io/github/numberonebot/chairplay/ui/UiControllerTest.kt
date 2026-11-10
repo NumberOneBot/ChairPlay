@@ -53,6 +53,8 @@ class UiControllerTest : UiControllerFixture() {
         assertTrue(ui.demo("lanes"))
         assertEquals("lanes", (ui.state()["demo"] as Map<*, *>)["playing"])
         assertTrue(ui.version > before)
+        assertTrue(ui.demo("gauges"))
+        assertEquals("gauges", (ui.state()["demo"] as Map<*, *>)["playing"])
         assertTrue(ui.demo(null))
         assertEquals(null, (ui.state()["demo"] as Map<*, *>)["playing"])
 

@@ -3,14 +3,12 @@ package io.github.numberonebot.chairplay.drive
 import io.github.numberonebot.chairplay.drive.GaugeStyle.BLACK
 import io.github.numberonebot.chairplay.drive.GaugeStyle.BOLD
 import io.github.numberonebot.chairplay.drive.GaugeStyle.REGULAR
-import io.github.numberonebot.chairplay.drive.GaugeStyle.GREEN
 import io.github.numberonebot.chairplay.drive.GaugeStyle.EDGE
 import io.github.numberonebot.chairplay.drive.GaugeStyle.FACE
 import io.github.numberonebot.chairplay.drive.GaugeStyle.FACE_LIGHT
 import io.github.numberonebot.chairplay.drive.GaugeStyle.ITALIC
 import io.github.numberonebot.chairplay.drive.GaugeStyle.OPAQUE
 import io.github.numberonebot.chairplay.drive.GaugeStyle.PANEL
-import io.github.numberonebot.chairplay.drive.GaugeStyle.RED
 import io.github.numberonebot.chairplay.drive.GaugeStyle.WIDE
 import io.github.numberonebot.chairplay.media.WindowOverlay
 import org.lwjgl.nanovg.NanoVG.*
@@ -24,10 +22,11 @@ import kotlin.math.roundToInt
 
 /**
  * The GPS car's tachometer and speedometer over the AltScreen, as Audi's Virtual Cockpit lays them out: the engine on
- * the left, the speed on the right, each a round [GaugeDial]. Each sits in a well finished as the controls window's
- * knob: a smooth rim round a knurled ring round a dark face lit from above. The speedometer's open bottom shows a small
- * wheel following steering input or heading beside both pedals as bars, the tachometer's the car's coordinates. Nothing is drawn
- * while [view] is null.
+ * the left, the speed on the right (British, the other way round), each a round [GaugeDial]. Each sits in a well
+ * finished as the controls window's knob: a smooth rim round a knurled ring round a dark face lit from above, graduated
+ * as gps.gauges.style has it ([GaugeDesign]). The gap each scale leaves shows its inset: the tachometer's the car's
+ * coordinates, the speedometer's a small wheel and both pedals as bars ([positionInset], [controlsInset]). Nothing is
+ * drawn while [view] is null.
  */
 class GaugePainter(
     private val view: () -> GaugeView?,
@@ -99,22 +98,34 @@ class GaugePainter(
         val small = smallScale(w, h)
         val scale = GaugeLayout.scale(GaugeMotion.sized(motion.smallness), small)
         val (cornerX, cornerY) = GaugeLayout.corner(w, h, small)
+        val needle = now.design.needle ?: accent
+        val fill = now.design.fill ?: (0x59000000 or needle)
+        // Each dial with its inset: the tachometer's single digits half as large again as the speedometer's three.
+        val engine = { x: Float ->
+            dial.draw(
+                x, cy, face, now.tachometer, LABEL_SIZE * 1.5f, now.rpm / 1000, now.gear, "×1000 rpm", needle, fill,
+                now.design.redZone, now.design.reading, now.design.caption,
+            )
+            positionInset(pen, now, x, cy, face, now.tachometer.sweep)
+        }
+        val speed = { x: Float ->
+            dial.draw(
+                x, cy, face, now.speedometer, LABEL_SIZE, now.speed, now.speed.roundToInt().toString(), now.units.symbol,
+                needle, fill, reading = now.design.reading, caption = now.design.caption,
+            )
+            controlsInset(pen, now, x, cy, face, now.speedometer.sweep)
+        }
+        val swapped = now.design.tachometerOnRight
         nvgBeginFrame(pen.vg, w, h, 1f)
         // Both wells come in and go out together, about the screen's middle.
         moving(pen.vg, frame, w / 2, h / 2) {
             scaled(pen.vg, cornerX, cornerY, scale) {
                 well(pen, left, cy, r, face)
-                // The tachometer's single digits half as large again as the speedometer's three.
-                dial.draw(left, cy, face, now.tachometer, LABEL_SIZE * 1.5f, now.rpm / 1000, now.gear, "×1000 rpm")
-                gaugePosition(pen, left, cy + face * 0.625f, face * 0.3f, now.position, now.headingDegrees, now.wheelMode == WheelMode.STEERING)
+                if (swapped) speed(left) else engine(left)
             }
             scaled(pen.vg, w - cornerX, cornerY, scale) {
                 well(pen, right, cy, r, face)
-                dial.draw(right, cy, face, now.speedometer, LABEL_SIZE, now.speed, now.speed.roundToInt().toString(), now.units.symbol)
-                // Under the speed the wheel, turned by the heading or the steering, and beside it both pedals, the throttle over the brake.
-                wheel(pen, right - face * 0.2f, cy + face * 0.76f, face * 0.112f, wheelTurn(now.wheelMode, now.headingDegrees, now.steer))
-                pedalBar(pen, right + face * 0.18f, cy + face * 0.72f, face * 0.38f, face * 0.025f, now.throttle, GREEN)
-                pedalBar(pen, right + face * 0.18f, cy + face * 0.80f, face * 0.38f, face * 0.025f, now.brake, RED)
+                if (swapped) engine(right) else speed(right)
             }
         }
         nvgEndFrame(pen.vg)
@@ -210,50 +221,6 @@ class GaugePainter(
         nvgFill(vg)
     }
 
-    /** A pedal's travel: a track filled and edged as the wheel is, filled in colour as far as the pedal is pressed. */
-    private fun pedalBar(pen: NanoPen, cx: Float, cy: Float, width: Float, height: Float, pressed: Double, rgb: Int) {
-        val vg = pen.vg
-        nvgBeginPath(vg)
-        nvgRoundedRect(vg, cx - width / 2, cy - height / 2, width, height, height / 2)
-        pen.fill(WHEEL)
-        if (pressed > 0) {
-            nvgBeginPath(vg)
-            nvgRoundedRect(vg, cx - width / 2, cy - height / 2, maxOf(height, width * pressed.toFloat()), height, height / 2)
-            pen.fill(rgb)
-        }
-        nvgBeginPath(vg)
-        nvgRoundedRect(vg, cx - width / 2, cy - height / 2, width, height, height / 2)
-        nvgStrokeWidth(vg, 1.25f)
-        pen.stroke(WHEEL_EDGE)
-    }
-
-    /**
-     * A schematic three-spoke steering wheel, dark and thin, turned by [turn] radians with its red centre mark on it: a
-     * round rim, spokes to the left, the right and down, and a broad pad, each edged a shade lighter to stand off the
-     * face.
-     */
-    private fun wheel(pen: NanoPen, cx: Float, cy: Float, radius: Float, turn: Double) {
-        val vg = pen.vg
-        val rim = radius * 0.86f
-        val thick = radius * 0.13f
-        fun shape(widen: Float, argb: Int) {
-            nvgLineCap(vg, NVG_ROUND)
-            nvgBeginPath(vg)
-            nvgCircle(vg, cx, cy, rim)
-            for (spoke in listOf(0.0, PI / 2, PI)) pen.ray(cx, cy, spoke + turn, radius * 0.3f, rim)
-            nvgStrokeWidth(vg, thick + widen)
-            pen.stroke(argb)
-            nvgBeginPath(vg)
-            nvgCircle(vg, cx, cy, radius * 0.36f + widen / 2)
-            pen.fill(argb)
-        }
-        // The lighter shape a little wider under the dark one leaves an edge round it.
-        shape(2.5f, WHEEL_EDGE)
-        shape(0f, WHEEL)
-        nvgLineCap(vg, NVG_BUTT)
-        pen.arc(cx, cy, rim, -PI / 2 + turn - 0.085, -PI / 2 + turn + 0.085, thick + 2.5f, RED)
-    }
-
     private companion object {
         /** The speedometer's numbers, in the face's radius. */
         const val LABEL_SIZE = 0.13f
@@ -263,8 +230,5 @@ class GaugePainter(
         /** The rim's edges and its crest: dark steel lit to a soft grey. */
         const val RIM_EDGE = 0xFF141416.toInt()
         const val RIM_CREST = 0xFF6A6A72.toInt()
-        /** The heading wheel and its edge. */
-        const val WHEEL = 0xFF1C1C1F.toInt()
-        const val WHEEL_EDGE = 0xFF55555C.toInt()
     }
 }

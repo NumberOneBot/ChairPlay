@@ -33,8 +33,9 @@ describe('Experiments page', () => {
 
     fireEvent.click(button('Maneuvers'))
     fireEvent.click(button('Lane changes'))
+    fireEvent.click(button('Gauges'))
 
-    await waitFor(() => expect(backend.demos).toEqual(['maneuvers', 'lanes']))
+    await waitFor(() => expect(backend.demos).toEqual(['maneuvers', 'lanes', 'gauges']))
   })
 
   it('stops the demo playing', async () => {

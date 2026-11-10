@@ -36,17 +36,14 @@ class InstallerScriptTest {
         assertTrue(appId, Regex("""\{\{[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}}""").matches(appId))
     }
 
-    // Besides the program folders, the WebView2 cache earlier versions kept outside the app folder: the folder it was in
-    // goes only when nothing else is left there.
+    // Only the program folders: the user's data stays, and nothing an earlier version left is cleaned up.
     @Test
-    fun `clears only the program folders and the old WebView2 cache before an update`() {
+    fun `clears only the program folders before an update`() {
         val entries = sections["installdelete"].orEmpty().map { param(it, "Name") to param(it, "Type") }
         assertEquals(
             setOf(
                 "{app}\\app" to "filesandordirs",
                 "{app}\\runtime" to "filesandordirs",
-                "{localappdata}\\ChairPlay\\WebView2" to "filesandordirs",
-                "{localappdata}\\ChairPlay" to "dirifempty",
             ),
             entries.toSet(),
         )

@@ -39,12 +39,7 @@ const LOOK_KEYS = [
 /** The picture CarPlay draws: its size and frame rate, how large it is, its look, and the safe area. */
 export function CarPlayPage({ state, backend, settings }: { state: AppState; backend: Backend; settings: Settings }) {
   const pending = pendingOf(state)
-  // 1.0.x files say windows for the system theme, as the app still reads it: shown as system, the file left as it is.
-  const value = (key: string) => {
-    const stored = settings.value(key)
-    return key === 'display.theme' && stored.trim().toLowerCase() === 'windows' ? 'system' : stored
-  }
-  const { field, choice, note } = parts({ ...settings, value }, pending)
+  const { field, choice, note } = parts(settings, pending)
   const displayFallback = settings.data?.display ?? { width: 1280, height: 720 }
   return (
     <>

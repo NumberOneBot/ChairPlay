@@ -137,24 +137,28 @@ class DisplayConfigTest {
         }
     }
 
-    // The value was called windows before system; a file that still says so follows the system theme as it did.
+    // A choice the app does not know, as windows that older files have for the system theme, reads as the default.
     @Test
-    fun `an old windows theme reads as system`() {
+    fun `an unknown theme reads as the default`() {
         assertEquals(Theme.SYSTEM, configWith("display.theme=windows").theme)
-        assertEquals(configWith("display.theme=system").theme, configWith("display.theme=windows").theme)
+        assertEquals(Theme.SYSTEM, configWith("display.theme=sepia").theme)
     }
 
     @Test
     fun `rejects screen layout values the iPhone cannot use`() {
         for (bad in listOf(
-            "display.theme=sepia", "display.right.hand.drive=maybe", "display.dock=top", "display.corners=round", "display.touch=pen",
-            "display.safe.top=-1", "display.safe.left=700", "display.safe.draw.outside=1",
+            "display.right.hand.drive=maybe", "display.safe.top=-1", "display.safe.left=700", "display.safe.draw.outside=1",
         )) {
             val extra = if (bad.startsWith("display.safe.left")) arrayOf("display.safe.right=600") else emptyArray()
             val error = runCatching { configWith(bad, *extra).airPlay }.exceptionOrNull()
             assertTrue("$bad was accepted", error is IllegalArgumentException)
             assertTrue("$bad: ${error?.message}", bad.substringBefore('=') in error!!.message!!)
         }
+        // A choice the app does not know reads as the default and stops nothing.
+        assertEquals(
+            configWith().display.screen,
+            configWith("display.dock=top", "display.corners=round", "display.touch=pen").display.screen,
+        )
     }
 
     @Test

@@ -18,7 +18,7 @@ class CarPlayLocationDrivingTest {
     @Test
     fun `a car with no start sends no position`() {
         val driving = driving(GpsSettings(true))
-        val location = CarPlayLocation(driving, false, {})
+        val location = CarPlayLocation(driving, {})
         location.onRequested(setOf(1, 2))
         location.start()
         assertNull(location.latestNmea())
@@ -31,8 +31,8 @@ class CarPlayLocationDrivingTest {
     @Test
     fun `the GPS page reads the location the last connection made`() {
         val driving = driving(GpsSettings(true, start = kyiv))
-        CarPlayLocation(driving, false, {})
-        val location = CarPlayLocation(driving, false, {})
+        CarPlayLocation(driving, {})
+        val location = CarPlayLocation(driving, {})
         location.onRequested(setOf(1, 2, 4))
         location.start()
         location.latestNmea()
@@ -48,7 +48,7 @@ class CarPlayLocationDrivingTest {
     fun `the GPS page is told on the status tick, only of a change`() {
         val driving = driving(GpsSettings(true, start = kyiv, rate = 10))
         var send: (() -> Unit)? = null
-        val location = CarPlayLocation(driving, false, {}, schedule = { _, action -> send = action; AutoCloseable {} })
+        val location = CarPlayLocation(driving, {}, schedule = { _, action -> send = action; AutoCloseable {} })
         location.attach {}
         location.onRequested(setOf(1))
         location.start()

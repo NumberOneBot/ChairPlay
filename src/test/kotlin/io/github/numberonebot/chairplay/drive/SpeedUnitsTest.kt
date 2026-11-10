@@ -10,7 +10,7 @@ class SpeedUnitsTest {
     @Test fun `speed units default to metric and accept imperial`() {
         assertEquals("metric", configWith().gps.units.key)
         assertEquals("imperial", configWith("gps.units=imperial").gps.units.key)
-        assertThrows(IllegalArgumentException::class.java) { configWith("gps.units=unknown").gps }
+        assertEquals("metric", configWith("gps.units=unknown").gps.units.key)
         assertTrue(EditableSettings.validate(mapOf("gps.units" to "imperial"), emptyMap()).isEmpty())
         assertTrue(EditableSettings.validate(mapOf("gps.units" to "unknown"), emptyMap()).containsKey("gps.units"))
         assertEquals(Applies.NOW, EditableSettings.applies("gps.units"))

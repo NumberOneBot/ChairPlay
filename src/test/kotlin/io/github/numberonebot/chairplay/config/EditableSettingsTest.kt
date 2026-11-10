@@ -53,14 +53,14 @@ class EditableSettingsTest {
     @Test
     fun `the GPS settings can change, the car's at once`() {
         val result = errors(
-            "gps.enabled" to "true", "gps.wheel.speed" to "false", "gps.satellites" to "true",
+            "gps.enabled" to "true", "gps.wheel.speed" to "false",
             "gps.start" to "https://www.google.com/maps/@50.4501,30.5234,15z", "gps.heading" to "90.5",
             "gps.car.power.hp" to "300", "gps.car.mass.kg" to "1600",
         )
         assertEquals(emptyMap<String, String>(), result)
         // Blank is the default, as the app reads it and the page shows it.
         assertEquals(emptyMap<String, String>(), errors("gps.start" to "", "gps.heading" to "", "gps.car.power.hp" to "", "gps.car.mass.kg" to ""))
-        for (key in listOf("gps.enabled", "gps.wheel.speed", "gps.satellites")) assertEquals(Applies.RECONNECT, EditableSettings.applies(key))
+        for (key in listOf("gps.enabled", "gps.wheel.speed")) assertEquals(Applies.RECONNECT, EditableSettings.applies(key))
         assertEquals(emptyMap<String, String>(), errors("gps.rate" to "10", "gps.nmea" to "modern"))
         assertTrue("gps.rate" in errors("gps.rate" to "3"))
         assertTrue("gps.nmea" in errors("gps.nmea" to "ancient"))

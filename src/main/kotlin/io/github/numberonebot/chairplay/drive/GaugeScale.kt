@@ -3,12 +3,17 @@ package io.github.numberonebot.chairplay.drive
 import kotlin.math.ceil
 
 /**
- * A round dial's scale, as Audi's: 280 degrees from the lower left, clockwise over the top to the lower right, its
- * [numbers] evenly apart with a tick halfway between each two and fine ones at the tenths, and a red zone from [redFrom],
- * dashed from [warnFrom]. Numbers that do not step evenly change the scale between them, as a fast car's speedometer
- * does past 140.
+ * A round dial's scale over its [sweep] (Audi's: 280 degrees from the lower left, clockwise over the top to the lower
+ * right), its [numbers] evenly apart with a tick halfway between each two and fine ones at the tenths, and a red zone
+ * from [redFrom], dashed from [warnFrom]. Numbers that do not step evenly change the scale between them, as a fast car's
+ * speedometer does past 140.
  */
-data class GaugeScale(val numbers: List<Double>, val redFrom: Double? = null, val warnFrom: Double? = null) {
+data class GaugeScale(
+    val numbers: List<Double>,
+    val redFrom: Double? = null,
+    val warnFrom: Double? = null,
+    val sweep: Sweep = Sweep.GERMAN,
+) {
     /** A numbered tick, the one halfway between two numbers, or one of the fine tenths between them. */
     enum class TickSize { MAJOR, MIDDLE, FINE }
 
@@ -23,7 +28,7 @@ data class GaugeScale(val numbers: List<Double>, val redFrom: Double? = null, va
         val v = value.coerceIn(numbers.first(), max)
         val i = numbers.indices.last { it == 0 || numbers[it] <= v }.coerceAtMost(numbers.size - 2)
         val along = i + (v - numbers[i]) / (numbers[i + 1] - numbers[i])
-        return Math.toRadians(START_DEGREES + SWEEP_DEGREES * along / (numbers.size - 1))
+        return Math.toRadians(sweep.startDegrees + sweep.degrees * along / (numbers.size - 1))
     }
 
     fun ticks(): List<Tick> = numbers.zipWithNext { a, b ->
@@ -42,9 +47,10 @@ data class GaugeScale(val numbers: List<Double>, val redFrom: Double? = null, va
         const val SWEEP_DEGREES = 280.0
 
         /** Dense at low speeds: km/h by 20 to 140, then 40 to 300; mph by 10 to 60, then 20 to 180. */
-        fun speedometer(units: SpeedUnits = SpeedUnits.METRIC): GaugeScale = GaugeScale(
+        fun speedometer(units: SpeedUnits = SpeedUnits.METRIC, sweep: Sweep = Sweep.GERMAN): GaugeScale = GaugeScale(
             if (units == SpeedUnits.IMPERIAL) listOf(0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 80.0, 100.0, 120.0, 140.0, 160.0, 180.0)
             else listOf(0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 120.0, 140.0, 180.0, 220.0, 260.0, 300.0),
+            sweep = sweep,
         )
 
         fun tachometer(spec: CarSpec): GaugeScale = tachometer(spec.redlineRpm)
@@ -53,9 +59,9 @@ data class GaugeScale(val numbers: List<Double>, val redFrom: Double? = null, va
          * The tachometer of an engine red from [redlineRpm], the GPS car's or a game's: thousands of rpm, half a thousand
          * past the red line and up to the next whole, the red zone from the red line, dashed half a thousand before it.
          */
-        fun tachometer(redlineRpm: Double): GaugeScale {
+        fun tachometer(redlineRpm: Double, sweep: Sweep = Sweep.GERMAN): GaugeScale {
             val redline = redlineRpm / 1000
-            return GaugeScale((0..ceil(redline + 0.5).toInt()).map { it.toDouble() }, redFrom = redline, warnFrom = redline - 0.5)
+            return GaugeScale((0..ceil(redline + 0.5).toInt()).map { it.toDouble() }, redFrom = redline, warnFrom = redline - 0.5, sweep = sweep)
         }
     }
 }
@@ -77,6 +83,8 @@ data class GaugeView(
     val steer: Double = 0.0,
     val wheelMode: WheelMode = WheelMode.STEERING,
     val units: SpeedUnits = SpeedUnits.METRIC,
+    /** gps.gauges.style: the scales' sweeps are in [speedometer] and [tachometer]; the needles and insets go by it. */
+    val design: GaugeDesign = GaugeDesign.GERMAN,
 ) {
     val speed: Double get() = units.fromKmh(speedKmh)
 }

@@ -37,6 +37,16 @@ class UiControllerSettingsTest : UiControllerFixture() {
         assertEquals(emptyList<String>(), ui.state()["reconnectPending"])
     }
 
+    // A choice the app does not know reads as the default, so the pages get it blank and show the default too.
+    @Test
+    fun `a choice the app does not know goes to the pages blank`() {
+        val ui = controller(settings = "display.theme=windows\nlog.level=Debug\n")
+
+        val values = ui.settings()["values"] as Map<*, *>
+        assertEquals("", values["display.theme"])
+        assertEquals("Debug", values["log.level"])
+    }
+
     // Get started owns the first Connect: a network saved before the password must not start a bring-up without it.
     @Test
     fun `the first Wi-Fi network waits for Connect while Get started is open`() {

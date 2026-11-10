@@ -8,51 +8,107 @@ import org.lwjgl.nanovg.NanoVG.*
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/** Position and heading inset in the tachometer, with the same arrow as the GPS page's compass. */
-internal fun gaugePosition(pen: NanoPen, centerX: Float, y: Float, height: Float, position: GeoPoint, headingDegrees: Double, compass: Boolean) {
-    val vg = pen.vg
+private val POINTS = listOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+
+/**
+ * The position inset's width at [height]: the widest possible coordinate and heading, rather than the current
+ * readings, so it keeps its size as they change.
+ */
+internal fun gaugePositionWidth(pen: NanoPen, height: Float): Float {
     val size = height * 0.24f
-    val degrees = (headingDegrees.roundToInt() % 360 + 360) % 360
-    val points = listOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
-    val point = points[((degrees + 22.5) / 45).toInt() % points.size]
-    val lines = listOf(position.latitude, position.longitude).map { String.format(Locale.ROOT, "%.5f", it) }
-    val arrowWidth = size * 0.6f
-    val reserved = arrowWidth + size * 0.4f
-    // Reserve the widest possible coordinate and heading, rather than measuring the current readings.
-    val digit = ('0'..'9').maxBy { pen.textWidth(it.toString(), size, REGULAR) }.toString()
-    val coordinateWidth = pen.textWidth("-${digit.repeat(3)}.${digit.repeat(5)}", size, REGULAR)
-    val pointSize = size * 0.65f
+    val reserved = size * 0.6f + size * 0.4f
+    val digit = widestDigit(pen, size)
+    val coordinateWidth = coordinateWidth(pen, size)
     val degreesWidth = pen.textWidth("${digit.repeat(3)}°", size, REGULAR)
-    val pointWidth = points.maxOf { pen.textWidth(it, pointSize, REGULAR) }
-    val gap = size * 0.25f
-    val headingWidth = degreesWidth + gap + pointWidth
-    val width = maxOf(coordinateWidth, headingWidth + reserved) + height * 0.26f
-    val x = centerX - width / 2
+    val pointWidth = POINTS.maxOf { pen.textWidth(it, size * 0.65f, REGULAR) }
+    val headingWidth = degreesWidth + size * 0.25f + pointWidth
+    return maxOf(coordinateWidth, headingWidth + reserved) + height * 0.26f
+}
+
+private fun widestDigit(pen: NanoPen, size: Float) = ('0'..'9').maxBy { pen.textWidth(it.toString(), size, REGULAR) }.toString()
+
+/** The widest coordinate at [size]: a sign, three degrees, and five decimals. */
+private fun coordinateWidth(pen: NanoPen, size: Float): Float {
+    val digit = widestDigit(pen, size)
+    return pen.textWidth("-${digit.repeat(3)}.${digit.repeat(5)}", size, REGULAR)
+}
+
+/**
+ * A dark box set into the dial at [x], [y], [width] x [height]: filled [fill], shaded inward from its edges, and edged;
+ * its [outline] (given its x, y, width and height) a rounded rectangle unless another is given.
+ */
+internal fun insetBox(
+    pen: NanoPen, x: Float, y: Float, width: Float, height: Float, fill: Int = HUB_FILL,
+    outline: ((Float, Float, Float, Float) -> Unit)? = null,
+) {
+    val vg = pen.vg
     val corner = height * 0.12f
     nvgBeginPath(vg)
-    nvgRoundedRect(vg, x, y, width, height, corner)
-    pen.fill(HUB_FILL)
+    if (outline != null) outline(x, y, width, height) else nvgRoundedRect(vg, x, y, width, height, corner)
+    pen.fill(fill)
     nvgBoxGradient(vg, x, y + height * 0.1f, width, height, corner, height * 0.3f, pen.rgba(0, pen.inner), pen.rgba(0xCC000000.toInt(), pen.outer), pen.paint)
     nvgFillPaint(vg, pen.paint)
     nvgFill(vg)
     nvgStrokeWidth(vg, 1.5f)
     pen.stroke(EDGE)
+}
+
+/**
+ * Position and heading inset in the tachometer, with the same arrow as the GPS page's compass, set by [height] about
+ * [centerX] and on an [insetBox] [boxWidth] wide from [boxX] (the text's own width about [centerX] unless given), [pad]
+ * taller above and below, filled [fill], with its [outline]. The arrow goes before the heading, or,
+ * [compassBeside], larger beside all three lines, in the middle of their height.
+ */
+internal fun gaugePosition(
+    pen: NanoPen, centerX: Float, y: Float, height: Float, position: GeoPoint, headingDegrees: Double, compass: Boolean,
+    fill: Int = HUB_FILL, boxWidth: Float? = null, boxX: Float? = null, pad: Float = 0f,
+    outline: ((Float, Float, Float, Float) -> Unit)? = null, compassBeside: Boolean = false,
+) {
+    val size = height * 0.24f
+    val degrees = (headingDegrees.roundToInt() % 360 + 360) % 360
+    val point = POINTS[((degrees + 22.5) / 45).toInt() % POINTS.size]
+    val lines = listOf(position.latitude, position.longitude).map { String.format(Locale.ROOT, "%.5f", it) }
+    val arrowWidth = size * 0.6f
+    val reserved = arrowWidth + size * 0.4f
+    val pointSize = size * 0.65f
+    val gap = size * 0.25f
+    val width = boxWidth ?: gaugePositionWidth(pen, height)
+    insetBox(pen, boxX ?: (centerX - width / 2), y - pad, width, height + 2 * pad, fill, outline)
+    // Beside, the lines and the larger arrow share the middle: the lines' column to the left of the arrow.
+    val beside = compass && compassBeside
+    val bigArrow = arrowWidth * BESIDE_ARROW
+    val textX = if (beside) centerX - (gap * 2 + bigArrow) / 2 else centerX
     for ((i, line) in lines.withIndex()) {
-        pen.text(line, centerX, y + height * (0.24f + 0.29f * i), size, CAPTION, REGULAR)
+        pen.text(line, textX, y + height * (0.24f + 0.29f * i), size, CAPTION, REGULAR)
     }
     val angle = "$degrees°"
     val angleWidth = pen.textWidth(angle, size, REGULAR)
     val labelWidth = pen.textWidth(point, pointSize, REGULAR)
-    val arrowSpace = if (compass) reserved else 0f
-    val rowX = centerX - (arrowSpace + angleWidth + gap + labelWidth) / 2
+    val arrowSpace = if (compass && !beside) reserved else 0f
+    val rowX = textX - (arrowSpace + angleWidth + gap + labelWidth) / 2
     val headingX = rowX + arrowSpace
     pen.text(angle, headingX, y + height * 0.82f, size, CAPTION, REGULAR, NVG_ALIGN_LEFT)
     pen.text(point, headingX + angleWidth + gap, y + height * 0.82f, pointSize, CAPTION, REGULAR, NVG_ALIGN_LEFT)
     if (!compass) return
+    val arrowX = textX + coordinateWidth(pen, size) / 2 + gap * 2 + bigArrow / 2
+    if (beside) compassArrow(pen, arrowX, y + height / 2, size * BESIDE_ARROW, headingDegrees, aboutMiddle = true)
+    else compassArrow(pen, rowX + arrowWidth / 2, y + height * 0.79f, size, headingDegrees)
+}
+
+/** How much larger the arrow is beside the lines than before the heading. */
+private const val BESIDE_ARROW = 1.8f
+
+/**
+ * The compass arrow, [size] as the text beside it, at [x], [y], pointing [headingDegrees]; [aboutMiddle], its own
+ * middle there (it lies 1.1 of its 20 units above the point it otherwise turns about).
+ */
+private fun compassArrow(pen: NanoPen, x: Float, y: Float, size: Float, headingDegrees: Double, aboutMiddle: Boolean = false) {
+    val vg = pen.vg
     nvgSave(vg)
-    nvgTranslate(vg, rowX + arrowWidth / 2, y + height * 0.79f)
+    nvgTranslate(vg, x, y)
     nvgRotate(vg, Math.toRadians(headingDegrees).toFloat())
     nvgScale(vg, size / 20f, size / 20f)
+    if (aboutMiddle) nvgTranslate(vg, 0f, 1.1f)
     nvgBeginPath(vg)
     nvgMoveTo(vg, 0f, -8.5f)
     nvgLineTo(vg, 4.5f, 6.3f)

@@ -21,11 +21,11 @@ enum class Applies {
  * checks match [DesktopConfig]'s, so a saved value never stops the next start, and add what a Wi-Fi network allows.
  */
 object EditableSettings {
-    /** [caseless]: a switch or a choice, saved in lower case as the app reads it. */
-    private class Setting(val applies: Applies, val caseless: Boolean = false, val check: (String) -> String?)
+    /** [caseless]: a switch or a choice, saved in lower case as the app reads it; [choices]: a choice's names. */
+    private class Setting(val applies: Applies, val caseless: Boolean = false, val choices: Set<String>? = null, val check: (String) -> String?)
 
     private fun switch(applies: Applies) = Setting(applies, caseless = true, check = ::checkBoolean)
-    private fun choice(vararg values: String, applies: Applies = Applies.RESTART) = Setting(applies, caseless = true) { value ->
+    private fun choice(vararg values: String, applies: Applies = Applies.RESTART) = Setting(applies, caseless = true, choices = values.toSet()) { value ->
         if (value.trim().lowercase() in values) null else "Must be one of ${values.joinToString()}"
     }
 
@@ -112,7 +112,6 @@ object EditableSettings {
         // The iPhone learns which sentences the GPS sends as it connects; the car is placed and changed at once.
         "gps.enabled" to switch(Applies.RECONNECT),
         "gps.wheel.speed" to switch(Applies.RECONNECT),
-        "gps.satellites" to switch(Applies.RECONNECT),
         "gps.start" to Setting(Applies.NOW, check = ::checkStart),
         "gps.heading" to Setting(Applies.NOW) {
             if (it.isBlank() || GpsSettings.heading(it) != null) null else "Enter a heading from 0 to 359 degrees"
@@ -123,6 +122,7 @@ object EditableSettings {
         "gps.car.mass.kg" to Setting(Applies.NOW) { checkNumber(it, GpsSettings.MASS_KG, "a mass", "kg") },
         "gps.car.handling" to choice("gentle", "normal", "sharp", applies = Applies.NOW),
         "gps.gauges" to choice("large", "small", applies = Applies.NOW),
+        "gps.gauges.style" to choice("german", "italian", "british", applies = Applies.NOW),
         "gps.wheel" to choice("heading", "steering", applies = Applies.NOW),
         "gps.units" to choice("metric", "imperial", applies = Applies.NOW),
         // The next fix goes so.
@@ -139,6 +139,8 @@ object EditableSettings {
 
     /** Whether [key], one of [keys], is a switch or a choice, saved in lower case. */
     fun caseless(key: String): Boolean = settings[key]?.caseless ?: false
+    /** [value] of [key] as the pages show it: a choice the app does not know is blank, as the app reads its default. */
+    fun shown(key: String, value: String): String = settings[key]?.choices?.let { if (value.trim().lowercase() in it) value else "" } ?: value
 
     /**
      * [value] of [key] as it is saved: trimmed, a switch or a choice in lower case, a custom rectangle on the grid as the

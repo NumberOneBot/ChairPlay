@@ -10,7 +10,6 @@ import io.github.numberonebot.chairplay.drive.CarInput
 import io.github.numberonebot.chairplay.drive.Drive
 import io.github.numberonebot.chairplay.drive.DriveSnapshot
 import io.github.numberonebot.chairplay.drive.Driving
-import io.github.numberonebot.chairplay.drive.GeoPoint
 import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.drive.LocationLink
 import io.github.numberonebot.chairplay.drive.LocationStatus
@@ -23,38 +22,33 @@ import kotlin.math.abs
 
 /**
  * The spoofed car as the iPhone's GPS, for iAP2 LocationInformation: its place, speed and course in the sentences
- * gps.nmea picks; predicted $GPGSV at its current position, once a second when asked and [satellites] is on; and $PASCD, its
- * wheel speed ten times a second, when asked, for the iPhone to reckon between the fixes. A car not [placed] anywhere
- * yet sends no position, only its wheel speed.
+ * gps.nmea picks; and $PASCD, its wheel speed ten times a second, when asked, for the iPhone to reckon between the fixes.
+ * A car not [placed] anywhere yet sends no position, only its wheel speed.
  *
  * [attach]ed to the tunnel, it sends on its own at gps.rate fixes a second (the iPhone asks for one every 250 ms), each
  * with its own time, and DiPlay's once-a-second update sends nothing; unattached, it answers that update.
  */
 class CarPlayLocation(
     private val drive: Drive,
-    private val satellites: Boolean,
     private val log: (String) -> Unit = {},
     private val nanoTime: () -> Long = System::nanoTime,
     private val wallMillis: () -> Long = System::currentTimeMillis,
     private val placed: () -> Boolean = { true },
-    private val settings: () -> GpsSettings = { GpsSettings(enabled = true, satellites = satellites, rate = 1) },
+    private val settings: () -> GpsSettings = { GpsSettings(enabled = true, rate = 1) },
     /** Runs the action every period, read again each time, until closed. */
     private val schedule: (period: () -> Long, action: () -> Unit) -> AutoCloseable = ::repeatEvery,
-    /** Calculated from the same position and UTC as the fix; null while fresh orbital data is unavailable. */
-    private val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
 ) : Iap2LocationProvider, PacedLocation, LocationLink {
     /**
-     * The app's car for a connection that identified with the GPS on: its clock, place, settings and sky; it becomes the
+     * The app's car for a connection that identified with the GPS on: its clock, place and settings; it becomes the
      * link [driving]'s GPS page reads, the updates sent counted there.
      */
     constructor(
         driving: Driving,
-        satellites: Boolean,
         log: (String) -> Unit,
         wallMillis: () -> Long = System::currentTimeMillis,
         schedule: (period: () -> Long, action: () -> Unit) -> AutoCloseable = ::repeatEvery,
-    ) : this(driving.drive, satellites, log, driving.nanoTime, wallMillis, placed = { driving.placed },
-        settings = { driving.settings }, schedule = schedule, satelliteSentences = driving.satelliteSentences) {
+    ) : this(driving.drive, log, driving.nanoTime, wallMillis, placed = { driving.placed },
+        settings = { driving.settings }, schedule = schedule) {
         driving.location = this
     }
 
@@ -64,7 +58,6 @@ class CarPlayLocation(
     @Volatile private var send: ((List<String>) -> Unit)? = null
     private val lock = Any()
     private var sender: AutoCloseable? = null
-    private var lastSkyNanos: Long? = null
     // A minute of what went, for the log.
     private var windowStart = -1L
     private var windowSent = 0
@@ -124,7 +117,7 @@ class CarPlayLocation(
         }
     }
 
-    /** One update: the position, the sky once a second, and the wheel speed since the last. */
+    /** One update: the position and the wheel speed since the last. */
     private fun compose(): String? {
         val now = settings()
         val car = drive.snapshot()
@@ -139,20 +132,10 @@ class CarPlayLocation(
             }
             NmeaSentences.position(NmeaFix(car.position, abs(car.car.speed), course), wall, now.nmea)
         } else null
-        val sky = if (hasPosition && satellites && now.satellites && SATELLITES_IN_VIEW in requested && skyDue())
-            satelliteSentences(car.position, wall) else null
         val reading = if (Iap2LocationMessages.VEHICLE_SPEED_DATA in requested) wheelSpeed(car) else null
         record(position != null, reading?.samples?.size ?: 0, now)
-        val text = listOfNotNull(position, sky, reading?.let(PascdEncoder::encode)).joinToString("")
+        val text = listOfNotNull(position, reading?.let(PascdEncoder::encode)).joinToString("")
         return text.ifEmpty { null }
-    }
-
-    private fun skyDue(): Boolean {
-        val now = nanoTime()
-        val last = lastSkyNanos
-        if (last != null && now - last < SKY_NANOS) return false
-        lastSkyNanos = now
-        return true
     }
 
     // Parked with the loop idle, nothing was sampled: one sample at the standstill keeps the wheel speed going.
@@ -184,11 +167,8 @@ class CarPlayLocation(
     }
 
     private companion object {
-        /** 0xFFFA's selector for $GPGSV, identification field 19; [Iap2LocationMessages.VEHICLE_SPEED_DATA] is 4 for 20. */
-        const val SATELLITES_IN_VIEW = Iap2LocationMessages.VEHICLE_SPEED_DATA - 1
-        const val SKY_NANOS = 1_000_000_000L
         const val SUMMARY_MILLIS = 60_000L
-        val NAMES = mapOf(1 to "GGA", 2 to "RMC", 3 to "GSV", 4 to "PASCD")
+        val NAMES = mapOf(1 to "GGA", 2 to "RMC", 4 to "PASCD")
 
         /** The sentence types among 0xFFFA's parameters; the others (0, and 0x8001 on with a number each) as they are. */
         fun components(requested: Set<Int>) = requested.sorted().joinToString(", ") { NAMES[it] ?: "#$it" }

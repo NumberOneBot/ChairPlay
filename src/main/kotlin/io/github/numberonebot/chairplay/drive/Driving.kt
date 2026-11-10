@@ -9,8 +9,8 @@ import kotlin.math.*
 
 /**
  * The spoofed GPS's car for the app: placed at gps.start facing gps.heading, driven by [control] from the window loop,
- * sent to the phone by the [location] each connection makes from it (its [drive], [placed], [settings], [nanoTime] and
- * [satelliteSentences]), and shown on the GPS page by [state], which the status tick watches ([showPage]).
+ * sent to the phone by the [location] each connection makes from it (its [drive], [placed], [settings] and [nanoTime]),
+ * and shown on the GPS page by [state], which the status tick watches ([showPage]).
  * Its place goes back into gps.start and gps.heading ([savePlace]) as it stops and as the app closes, so the settings
  * always say where the car is and the next start begins there. A GPS on with no start starts where the platform locates the
  * PC ([locate], run by [lookup]), as the app opens and as the GPS is turned on.
@@ -20,8 +20,6 @@ class Driving(
     private val log: (String) -> Unit = {},
     gamepad: () -> FloatArray? = GlfwGamepad::axes,
     val nanoTime: () -> Long = System::nanoTime,
-    /** The $GPGSV at a place and UTC, as the fix goes; null while fresh orbital data is unavailable. */
-    val satelliteSentences: (GeoPoint, Long) -> String? = { _, _ -> null },
     private val locate: () -> LocationResult = Platforms.current.location::read,
     private val lookup: (Runnable) -> Unit = { Thread(it, "gps-start").apply { isDaemon = true }.start() },
     /** A fresh reader of a game's telemetry, made each time gps.external comes into force. */
@@ -251,22 +249,7 @@ class Driving(
     fun gauges(): GaugeView? {
         if (!settings.enabled || !control.keyboard) return null
         val snapshot = drive.snapshot()
-        val car = snapshot.car
-        return GaugeView(
-            speedKmh = car.speedKmh,
-            rpm = car.rpm,
-            gear = car.gearName,
-            throttle = snapshot.input.throttle,
-            brake = snapshot.input.brake,
-            headingDegrees = car.headingDegrees,
-            speedometer = GaugeScale.speedometer(settings.units),
-            tachometer = GaugeScale.tachometer(gameRedline ?: drive.spec.redlineRpm),
-            position = snapshot.position,
-            size = settings.gauges,
-            steer = snapshot.input.steer,
-            wheelMode = settings.wheel,
-            units = settings.units,
-        )
+        return gaugeView(settings, snapshot, snapshot, gameRedline ?: drive.spec.redlineRpm, settings.gauges)
     }
 
     /** Saves where the car is for the next start; the app calls it as it closes. */
@@ -283,7 +266,7 @@ class Driving(
 
     private companion object {
         /** 0xFFFA's selectors, identification fields 17 to 20 less 16. */
-        val SENTENCES = mapOf(1 to "GGA", 2 to "RMC", 3 to "GSV", 4 to "PASCD")
+        val SENTENCES = mapOf(1 to "GGA", 2 to "RMC", 4 to "PASCD")
         /** What remakes the car: its own settings, and the units, whose speedometer's end it runs to. */
         val CAR_KEYS = setOf("gps.car.power.hp", "gps.car.mass.kg", "gps.car.handling", "gps.units")
         /** Degrees apart within the five decimals the place is saved with. */

@@ -2,14 +2,13 @@ package io.github.numberonebot.chairplay.drive
 
 /**
  * gps.*: whether the iPhone navigates by the spoofed car, and what it is told besides its place ([wheelSpeed] for
- * $PASCD, [satellites] for $GPGSV); where the car is ([start], null until set; the car saves it as it stops) and which
+ * $PASCD); where the car is ([start], null until set; the car saves it as it stops) and which
  * way it faces ([headingDegrees], sent as the course when [sendHeading]); the car itself; and the experiments in how
  * the fixes go ([rate], [nmea], [framing]).
  */
 data class GpsSettings(
     val enabled: Boolean,
     val wheelSpeed: Boolean = true,
-    val satellites: Boolean = false,
     val start: GeoPoint? = null,
     val headingDegrees: Double = 0.0,
     /** gps.heading.send: whether the car's heading goes as the course in the position sentences. */
@@ -21,6 +20,8 @@ data class GpsSettings(
     val framing: NmeaFraming = NmeaFraming.PARAMETERS,
     /** How large drive mode's gauges show, gps.gauges. */
     val gauges: GaugeSize = GaugeSize.LARGE,
+    /** How the gauges are graduated and their needles coloured, gps.gauges.style. */
+    val design: GaugeDesign = GaugeDesign.GERMAN,
     /** What the gauges' steering wheel shows, gps.wheel: the car's heading, or its steering input. */
     val wheel: WheelMode = WheelMode.STEERING,
     /** gps.units: the speedometer scale and speed readouts; applied immediately. */

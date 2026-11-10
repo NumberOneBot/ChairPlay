@@ -42,12 +42,14 @@ class BufferedMusicConfigTest {
         assertTrue(EditableSettings.validate(mapOf("audio.music.mode" to "buffered"), emptyMap()).isEmpty())
         assertTrue("audio.music.mode" in EditableSettings.validate(mapOf("audio.music.mode" to "unsupported"), emptyMap()))
         assertTrue(configWith("audio.music.mode= Buffered ").airPlay.mainBufferedAudio)
-        assertThrows(IllegalArgumentException::class.java) { configWith("audio.music.mode=unsupported") }
+        // A mode the app does not know reads as the default, buffered.
+        assertTrue(configWith("audio.music.mode=standard").airPlay.mainBufferedAudio.not())
+        assertTrue(configWith("audio.music.mode=unsupported").airPlay.mainBufferedAudio)
     }
 
     @Test fun `spatial is not a music mode`() {
         assertTrue("audio.music.mode" in EditableSettings.validate(mapOf("audio.music.mode" to "spatial"), emptyMap()))
-        assertThrows(IllegalArgumentException::class.java) { configWith("audio.music.mode=spatial") }
+        assertTrue(configWith("audio.music.mode=spatial").airPlay.mainBufferedAudio)
     }
 
     @Test fun `standard never offers spatial audio`() {

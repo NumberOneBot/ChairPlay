@@ -77,7 +77,7 @@ class WirelessBootstrapDataTest : WirelessBootstrapFixture() {
                 attached = true
             }
         }
-        Harness(settings = "gps.enabled=true\ngps.satellites=true", location = gps).use { harness ->
+        Harness(settings = "gps.enabled=true", location = gps).use { harness ->
             val port = harness.nextPort()
             RtspClient(harness.loopback, port).use { client ->
                 assertOk(client.request("RECORD", "*"))
@@ -92,7 +92,6 @@ class WirelessBootstrapDataTest : WirelessBootstrapFixture() {
                 assertSame(gps, tunnel.second)
                 assertTrue(tunnel.first.locationInformationEnabled)
                 assertTrue(tunnel.first.vehicleSpeedEnabled)
-                assertTrue(tunnel.first.satellitesInViewEnabled)
                 assertTrue(attached)
             }
         }

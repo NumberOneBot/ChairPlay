@@ -32,7 +32,6 @@ internal fun desktopIdentification(
     carPlayUsbInterfaceNumber = 3,
     locationInformationEnabled = gps.enabled,
     vehicleSpeedEnabled = gps.enabled && gps.wheelSpeed,
-    satellitesInViewEnabled = gps.enabled && gps.satellites,
     bootstrapRouteGuidance = bootstrapRouteGuidance(),
     carPlayAvailabilityEnabled = carPlayAvailability(),
 )

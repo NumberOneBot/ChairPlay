@@ -191,8 +191,8 @@ internal val SETTINGS_TEMPLATE = listOf(
     SettingBlock(
         "Spoofed GPS: the iPhone navigates by a car this app drives (F10 or a gamepad), 'true' or 'false' (the\n" +
             "iPhone learns of it when it connects); whether it also gets the car's wheel speed for its dead\n" +
-            "reckoning, and a sky of satellites in view: 'true' or 'false'.",
-        "gps.enabled" to "false", "gps.wheel.speed" to "true", "gps.satellites" to "false",
+            "reckoning: 'true' or 'false'.",
+        "gps.enabled" to "false", "gps.wheel.speed" to "true",
     ),
     SettingBlock(
         "Whether the position, heading, and speed another app on this PC sends drive the GPS car instead\n" +
@@ -210,9 +210,11 @@ internal val SETTINGS_TEMPLATE = listOf(
             "'sharp'; drive mode's gauges, 'large' or 'small' in the window's lower corners (Shift+F10); and what the\n" +
             "gauges' wheel shows, 'steering' (the car up, turning with the input like a real wheel, for a track-up\n" +
             "map like Google Maps) or 'heading' (north up, for a north-up map like Apple Maps). Speed units are\n" +
-            "'metric' (km/h) or 'imperial' (mph), for the gauges and speed readouts only.",
+            "'metric' (km/h) or 'imperial' (mph), for the gauges and speed readouts only. The gauges' style:\n" +
+            "'german' (both clockwise over the top), 'italian' (both from 6 o'clock to 3, yellow needles) or\n" +
+            "'british' (the tachometer from 5 o'clock to 2, the speedometer back from 7 to 10, green needles).",
         "gps.car.power.hp" to "300", "gps.car.mass.kg" to "1500", "gps.car.handling" to "normal", "gps.gauges" to "large",
-        "gps.wheel" to "steering", "gps.units" to "metric",
+        "gps.wheel" to "steering", "gps.units" to "metric", "gps.gauges.style" to "german",
     ),
     SettingBlock(
         "Experiments in what the iPhone takes from the GPS: fixes a second, '1', '4' (as the iPhone asks) or '10';\n" +

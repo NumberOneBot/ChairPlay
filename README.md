@@ -54,7 +54,7 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.10 r
 - **Controls:** mouse, keyboard, and on-screen car controls. Type in CarPlay fields and use global shortcuts while another app has focus. See [Controls](#controls).
 - **Audio:** music, calls, and Siri through your chosen speakers and microphone, with independent volume and buffered music playback.
 - **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
-- **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation. See the [GPS guide](docs/GPS.md).
+- **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation.
 - **Integrations** (experimental): another app on this PC can show the CarPlay picture from a shared texture and drive the GPS car with its own position and speed. See [Integrations](docs/INTEGRATIONS.md).
 
 Settings are in the app and in any browser on the PC at http://localhost:7529 (or from the local network when allowed), and save as you change them. Tested on Windows 11 with an iPhone 15 on iOS 18.6 and iOS 27.2.

@@ -66,7 +66,7 @@ internal fun UiMainWindow.sizes(display: WindowSize): Map<String, Int> {
     )
 }
 
-/** The HUD's demos on the AltScreen, for the Experiments page: "maneuvers" or "lanes", one at a time. Safe from any thread. */
+/** The demos on the AltScreen, for the Experiments page: the HUD's "maneuvers" or "lanes", or "gauges", one at a time. Safe from any thread. */
 interface UiDemo {
     /** The demo playing, or null. */
     val playing: String?

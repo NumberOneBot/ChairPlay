@@ -54,7 +54,7 @@ internal class UiSettings(
     fun settings(): Map<String, Any?> {
         val values = settings.read()
         return linkedMapOf(
-            "values" to EditableSettings.keys.filter { it != PASSPHRASE }.associateWith { values[it].orEmpty() },
+            "values" to EditableSettings.keys.filter { it != PASSPHRASE }.associateWith { EditableSettings.shown(it, values[it].orEmpty()) },
             "passphraseSet" to !values[PASSPHRASE].isNullOrEmpty(),
             "applies" to EditableSettings.keys.associateWith { appliesName(EditableSettings.applies(it)) },
             "display" to mapOf("width" to setup.displayWidth, "height" to setup.displayHeight),

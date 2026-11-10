@@ -23,23 +23,36 @@ import kotlin.math.sin
 
 /**
  * One dial on its face, as Audi's: the needle's sweep and the red zone (dashed where it begins) thin along the rim,
- * short ticks with italic numbers inside them, the needle in the accent colour, and a dark hub with the reading upright
- * in its middle.
+ * short ticks with italic numbers inside them, the needle in the accent colour or the style's, and a dark hub with the
+ * reading upright in its middle.
  */
 internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
     private val vg = pen.vg
 
-    /** [face] is the face's radius, and [labelSize] the numbers' size in it. */
-    fun draw(cx: Float, cy: Float, face: Float, scale: GaugeScale, labelSize: Float, value: Double, digits: String, unit: String) {
+    /**
+     * [face] is the face's radius, and [labelSize] the numbers' size in it; [needle] the needle's colour, 0xRRGGBB,
+     * [fill] the scale's up to it and [redZone] the red zone's (the red unless given), 0xAARRGGBB; [reading] the size
+     * of the hub's reading and [caption] of its unit, in the face's radius.
+     */
+    fun draw(
+        cx: Float, cy: Float, face: Float, scale: GaugeScale, labelSize: Float, value: Double, digits: String, unit: String,
+        needle: Int = accent,
+        fill: Int = 0x59000000 or needle,
+        redZone: Int? = null,
+        reading: Float = 0.40f,
+        caption: Float = 0.114f,
+    ) {
         // Just inside the knurled ring.
         val track = face * 0.975f
         val band = face * BAND
         nvgLineCap(vg, NVG_BUTT)
-        if (value > 0) pen.arc(cx, cy, track, scale.angle(0.0), scale.angle(value), band, 0x59000000 or accent)
+        if (value > 0) pen.arc(cx, cy, track, scale.angle(0.0), scale.angle(value), band, fill)
         scale.redFrom?.let { red ->
-            pen.arc(cx, cy, track, scale.angle(red), scale.angle(scale.max), band, RED_ZONE)
-            scale.warnFrom?.let { dashes(cx, cy, track, scale.angle(it), scale.angle(red), band, face) }
+            pen.arc(cx, cy, track, scale.angle(red), scale.angle(scale.max), band, redZone ?: RED_ZONE)
+            scale.warnFrom?.let { dashes(cx, cy, track, scale.angle(it), scale.angle(red), band, face, redZone ?: RED_ZONE) }
         }
+        // The red zone's ticks and numbers in its own colour, solid.
+        val redMark = redZone?.let { it or OPAQUE } ?: RED
         for (tick in scale.ticks()) {
             val angle = scale.angle(tick.value)
             val red = scale.redFrom?.let { tick.value >= it } == true
@@ -51,25 +64,23 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
             nvgBeginPath(vg)
             pen.ray(cx, cy, angle, face * from, face * TICKS_TO)
             nvgStrokeWidth(vg, face * width)
-            pen.stroke(if (red) RED else if (tick.major) WHITE else TICK)
-            if (tick.major) label(tick.value.roundToInt().toString(), cx, cy, angle, face * MAJOR_FROM, face * labelSize, if (red) RED else LABEL)
+            pen.stroke(if (red) redMark else if (tick.major) WHITE else TICK)
+            if (tick.major) label(tick.value.roundToInt().toString(), cx, cy, angle, face * MAJOR_FROM, face * labelSize, if (red) redMark else LABEL)
         }
-        needle(cx, cy, face, scale.angle(value))
+        needle(cx, cy, face, scale.angle(value), needle)
         nvgBeginPath(vg)
         nvgCircle(vg, cx, cy, face * HUB)
         pen.fill(HUB_FILL)
         nvgStrokeWidth(vg, 1.5f)
         pen.stroke(EDGE)
         // The reading in the hub's very middle, its unit below.
-        pen.text(digits, cx, cy, face * 0.40f, WHITE, BOLD)
-        pen.text(unit, cx, cy + face * 0.28f, face * 0.114f, CAPTION, REGULAR)
+        pen.text(digits, cx, cy, face * reading, WHITE, BOLD)
+        pen.text(unit, cx, cy + face * 0.28f, face * caption, CAPTION, REGULAR)
     }
 
-    /** The red zone's start, dashed from [from] to [to]: dashes and gaps of even length, a dash at each end. */
-    private fun dashes(cx: Float, cy: Float, radius: Float, from: Double, to: Double, width: Float, face: Float) {
-        val count = maxOf(2, ((to - from) * radius / (face * DASH * 2)).roundToInt())
-        val part = (to - from) / (2 * count - 1)
-        for (i in 0 until count) pen.arc(cx, cy, radius, from + 2 * i * part, from + (2 * i + 1) * part, width, RED_ZONE)
+    /** The red zone's start, dashed from [from] to [to] in [argb]. */
+    private fun dashes(cx: Float, cy: Float, radius: Float, from: Double, to: Double, width: Float, face: Float, argb: Int) {
+        for ((start, end) in redZoneDashes(from, to, radius, face * DASH)) pen.arc(cx, cy, radius, start, end, width, argb)
     }
 
     /**
@@ -92,8 +103,8 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
         pen.text(text, x, y, size, argb, ITALIC)
     }
 
-    /** A needle from the hub's rim to the scale, tapering, in the accent colour with a faint glow. */
-    private fun needle(cx: Float, cy: Float, face: Float, angle: Double) {
+    /** A needle from the hub's rim to the scale, tapering, in [rgb] with a faint glow. */
+    private fun needle(cx: Float, cy: Float, face: Float, angle: Double, rgb: Int) {
         val dx = cos(angle).toFloat()
         val dy = sin(angle).toFloat()
         val base = face * (HUB + 0.02f)
@@ -103,7 +114,7 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
         nvgMoveTo(vg, cx + dx * base, cy + dy * base)
         nvgLineTo(vg, cx + dx * tip, cy + dy * tip)
         nvgStrokeWidth(vg, face * 0.05f)
-        pen.stroke(0x40000000 or accent)
+        pen.stroke(0x40000000 or rgb)
         val wide = face * 0.018f
         val narrow = face * 0.004f
         nvgBeginPath(vg)
@@ -112,7 +123,7 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
         nvgLineTo(vg, cx + dx * tip + dy * narrow, cy + dy * tip - dx * narrow)
         nvgLineTo(vg, cx + dx * base + dy * wide, cy + dy * base - dx * wide)
         nvgClosePath(vg)
-        pen.fill(OPAQUE or accent)
+        pen.fill(OPAQUE or rgb)
         nvgLineCap(vg, NVG_BUTT)
     }
 
@@ -133,6 +144,16 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
         /** The numbers' black outline, in their size. */
         const val OUTLINE = 0.11f
     }
+}
+
+/**
+ * The red zone's dashed start from the angle [from] to [to] (radians, either way round) on a circle of [radius]: dashes
+ * and gaps of even length, about [dash] long each, a dash at each end, at least two.
+ */
+internal fun redZoneDashes(from: Double, to: Double, radius: Float, dash: Float): List<Pair<Double, Double>> {
+    val count = maxOf(2, (abs(to - from) * radius / (dash * 2)).roundToInt())
+    val part = (to - from) / (2 * count - 1)
+    return (0 until count).map { i -> (from + 2 * i * part) to (from + (2 * i + 1) * part) }
 }
 
 /** What the gauges share: their fonts, their face and hub, and their colours, the controls window's knob's among them. */

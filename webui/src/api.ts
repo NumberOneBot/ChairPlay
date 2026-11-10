@@ -17,8 +17,11 @@ export type KeyPhase = 'press' | 'repeat' | 'release'
 export type AltscreenContent = 'hud' | 'map' | 'map-card' | 'card'
 
 /** The Windows pages, folder, and web pages a link can open (UiController.PLACES). */
-/** The HUD's demos the Experiments page plays: a made-up route, and the lanes switching under one maneuver. */
-export type DemoKind = 'maneuvers' | 'lanes'
+/**
+ * The demos the Experiments page plays on the AltScreen: the HUD's made-up route and lanes switching under one maneuver,
+ * and the gauges run up and down.
+ */
+export type DemoKind = 'maneuvers' | 'lanes' | 'gauges'
 
 export type WindowsPlace =
   | 'bluetooth'
@@ -94,7 +97,7 @@ export interface GpsState {
   gamepad: boolean
   /** The iPhone asked for the position in this connection. */
   listening: boolean
-  /** The sentences it asked for: GGA, RMC, GSV, PASCD; null before it asked. */
+  /** The sentences it asked for: GGA, RMC, PASCD; null before it asked. */
   sentences: string[] | null
   /** Position updates sent in this connection. */
   sent: number

@@ -30,7 +30,7 @@ internal class CarPlayProtocol(
     private val data = CarPlayDataFeed(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
     private val bootstrap = WirelessBootstrap(config, sink, textInput.listener(carPlaySessions(carButton)), data).apply {
         // The iPhone's GPS for each connection that identifies with the GPS on, as the settings have it then: the car.
-        newLocation = { gps -> CarPlayLocation(driving, gps.satellites, ::log) }
+        newLocation = { _ -> CarPlayLocation(driving, ::log) }
     }
 
     /** The iPhone's data for the HUD, the AltScreen and the controls window, while a session runs. */

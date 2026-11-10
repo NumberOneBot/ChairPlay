@@ -13,7 +13,6 @@ offline-mfi/
 *.pk8
 *.p7b
 identity.properties
-gps-almanac.yuma
 
 # Local notes and agent working files, kept out of the repository.
 desktop-docs/

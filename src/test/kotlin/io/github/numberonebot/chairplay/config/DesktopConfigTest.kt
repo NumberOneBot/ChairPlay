@@ -208,13 +208,13 @@ class DesktopConfigTest {
 
     // The app's log tells what happens without DiPlay's packet-by-packet lines unless asked for.
     @Test
-    fun `the log level defaults to the build's, a set level is read, and an unknown one is refused`() {
+    fun `the log level defaults to the build's, a set level is read, and an unknown one reads as the default`() {
         // A new settings file carries the level of its build: warning in a release, info in a development build.
         val default = defaultLogLevel(BuildInfo.load().version)
         assertEquals(default, configWith().logLevel.key)
         assertEquals(LogLevel.TRACE, configWith("log.level=Trace").logLevel)
         assertTrue(DesktopConfig.defaultSettingsText().contains("\nlog.level=$default\n"))
-        assertTrue(runCatching { configWith("log.level=loud").logLevel }.exceptionOrNull() is IllegalArgumentException)
+        assertEquals(LogLevel.INFO, configWith("log.level=loud").logLevel)
     }
 
     // The name the iPhone shows for the car, in CarPlay settings, /info and the Bonjour service; the window

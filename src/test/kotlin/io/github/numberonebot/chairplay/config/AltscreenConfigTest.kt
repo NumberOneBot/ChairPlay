@@ -248,7 +248,7 @@ class AltscreenConfigTest {
     fun `Shift+F11 goes auto, left, right, top`() {
         assertEquals(listOf("auto", "left", "right", "top"), AltscreenCards.entries.map { it.key })
         assertEquals(AltscreenCards.AUTO, AltscreenCards.TOP.next())
-        assertTrue(runCatching { configWith("altscreen.enabled=true", "altscreen.cards=off") }.exceptionOrNull() is IllegalArgumentException)
+        assertEquals(AltscreenCards.TOP, configWith("altscreen.enabled=true", "altscreen.cards=off").altscreen!!.cards)
     }
 
     // Every start is on the settings' view, whatever view the AltScreen was left on (an older version remembered it).
@@ -277,10 +277,7 @@ class AltscreenConfigTest {
     }
 
     @Test
-    fun `an unknown altscreen content stops the start with the setting named`() {
-        val error = assertThrows(IllegalArgumentException::class.java) {
-            configWith("altscreen.enabled=true", "altscreen.content=radio")
-        }
-        assertTrue(error.message, error.message!!.contains("altscreen.content"))
+    fun `an unknown altscreen content reads as the default`() {
+        assertEquals(AltscreenContent.MAP_CARD, configWith("altscreen.enabled=true", "altscreen.content=radio").altscreen!!.content)
     }
 }

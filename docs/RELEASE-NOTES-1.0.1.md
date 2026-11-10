@@ -12,7 +12,7 @@ This update refreshes the settings interface, shortens setup when MFi files are 
 - **GPS satellite reports.** Turn on **Send satellites in view** and reconnect to try predicted satellites for the virtual car's position and current time. The app downloads an almanac in the background and caches it for offline use. If usable almanac data is unavailable, position and wheel-speed updates continue without satellite reports.
 - **A longer top gear.** The default virtual car reaches about 268 km/h, and the speedometer now goes to 300 km/h.
 
-Satellite reports remain experimental and off by default. Signal strengths are simulated, and the feature has not been shown to extend the distance over which the iPhone accepts a spoofed position. [Read about satellite reports](https://github.com/NumberOneBot/ChairPlay/blob/main/docs/GPS.md).
+Satellite reports remain experimental and off by default. Signal strengths are simulated, and the feature has not been shown to extend the distance over which the iPhone accepts a spoofed position. [Read about satellite reports](https://github.com/NumberOneBot/ChairPlay/blob/v1.0.1/docs/GPS.md).
 
 ## Install or update
 

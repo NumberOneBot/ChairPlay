@@ -17,7 +17,6 @@ import io.github.numberonebot.chairplay.log.routeAllOutput
 import io.github.numberonebot.chairplay.log.routeFfmpegLog
 import io.github.numberonebot.chairplay.media.runWindows
 import io.github.numberonebot.chairplay.drive.Driving
-import io.github.numberonebot.chairplay.drive.AlmanacCache
 import io.github.numberonebot.chairplay.media.saveScreenshot
 import io.github.numberonebot.chairplay.media.titleNotice
 import io.github.numberonebot.chairplay.phone.PhoneLink
@@ -104,8 +103,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     val bindings = AtomicReference(controlsConfig)
     // The spoofed GPS's car (gps.*): driven on the window loop by a gamepad, or by the arrows in drive mode (F10); each
     // connection with gps.enabled sends it to the iPhone.
-    val almanac = AlmanacCache(dir.resolve("gps-almanac.yuma"), ::log)
-    val driving = Driving(config.gps, ::log, satelliteSentences = almanac::sentences)
+    val driving = Driving(config.gps, ::log)
     // Ctrl+R: set once the bootstrap exists; closing a session talks to the network, so not on the GL thread.
     val restartBootstrap = AtomicReference<() -> Unit> {}
     // Reconnect retires the session unheard: set below, this ends it on the screens as a lost one would, CarPlay giving
@@ -258,7 +256,6 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         audio.fadeOut()
         appControls.close()
         driving.close()
-        almanac.close()
         ui.close()
         themeWatch.shutdownNow()
         carPlay.close()

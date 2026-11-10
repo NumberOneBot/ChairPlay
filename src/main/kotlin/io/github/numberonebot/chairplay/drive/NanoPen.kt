@@ -25,9 +25,10 @@ internal class NanoPen(val vg: Long) {
         nvgStroke(vg)
     }
 
+    /** The arc between the angles [from] and [to], whichever way a scale runs between them. */
     fun arc(cx: Float, cy: Float, radius: Float, from: Double, to: Double, width: Float, argb: Int) {
         nvgBeginPath(vg)
-        nvgArc(vg, cx, cy, radius, from.toFloat(), to.toFloat(), NVG_CW)
+        nvgArc(vg, cx, cy, radius, minOf(from, to).toFloat(), maxOf(from, to).toFloat(), NVG_CW)
         nvgStrokeWidth(vg, width)
         stroke(argb)
     }

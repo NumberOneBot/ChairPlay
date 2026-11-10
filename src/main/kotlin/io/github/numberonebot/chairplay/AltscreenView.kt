@@ -13,6 +13,7 @@ import io.github.numberonebot.chairplay.config.fittedTo
 import io.github.numberonebot.chairplay.config.hudShowsSession
 import io.github.numberonebot.chairplay.data.PhoneDataBus
 import io.github.numberonebot.chairplay.drive.Driving
+import io.github.numberonebot.chairplay.drive.GaugeDemo
 import io.github.numberonebot.chairplay.drive.GaugeMotion
 import io.github.numberonebot.chairplay.drive.GaugePainter
 import io.github.numberonebot.chairplay.hud.HudDemo
@@ -28,7 +29,6 @@ import io.github.numberonebot.chairplay.phone.AltscreenCards
 import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.phone.PhoneLink
 import io.github.numberonebot.chairplay.session.AltscreenUi
-import io.github.numberonebot.chairplay.ui.UiDemo
 import java.nio.file.Path
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -268,31 +268,11 @@ internal class AltscreenView(
             HudView(demo != null || active() != null, state, snapshot.artwork, gaugeMotion.there, gaugeMotion.smallness)
         }, ::log, window::repaint, accent)
         bus.addListener { if (window.hud) window.repaint() }
-        window.topLayer = GaugePainter(driving::gauges, ::log, accent, gaugeMotion, ::smallWellScale)
+        // The gauges' demo in place of drive mode's gauges while it plays.
+        val gaugeDemo = GaugeDemo(driving).also { demos.gauges = it }
+        window.topLayer = GaugePainter({ gaugeDemo.view() ?: driving.gauges() }, ::log, accent, gaugeMotion, ::smallWellScale)
     }
 
-    /**
-     * The Experiments page's HUD demos: one at a time, on the AltScreen's HUD, which shows it as it plays and goes back
-     * to its view after; none while the AltScreen is off.
-     */
-    val demos = object : UiDemo {
-        override val playing get() = hudDemo.get()?.first
-        override val available get() = on
-
-        override fun play(kind: String?): Boolean {
-            if (kind != null && !on) return false
-            hudDemo.getAndSet(null)?.second?.stop()
-            if (kind != null) {
-                hudDemo.set(kind to HudDemo(withMedia = false, lanes = kind == "lanes").start(window::repaint) {})
-                window.showView(true)
-                window.setShown(true)
-            } else {
-                // Back to the AltScreen's view, which waits on black for the iPhone's picture as any change does.
-                window.showView(content == AltscreenContent.HUD)
-                show(active())
-            }
-            window.repaint()
-            return true
-        }
-    }
+    /** The Experiments page's demos: the HUD's and the gauges'. */
+    val demos = AltscreenDemos(this, window, active)
 }

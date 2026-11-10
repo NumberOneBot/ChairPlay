@@ -6,18 +6,15 @@ import io.github.numberonebot.chairplay.bridge.TelemetrySource
 import io.github.numberonebot.chairplay.drive.CarSpec
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.GeoPoint
-import io.github.numberonebot.chairplay.drive.GpsAlmanac
 import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.drive.LocationStatus
 import io.github.numberonebot.chairplay.drive.NmeaDialect
 import io.github.numberonebot.chairplay.drive.NmeaFraming
-import io.github.numberonebot.chairplay.drive.SatelliteGeometry
 import io.github.numberonebot.chairplay.platform.LocationResult
-import io.github.numberonebot.chairplay.drive.almanacFixture
-import io.github.numberonebot.chairplay.drive.almanacTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.nio.ByteBuffer
+import java.time.Instant
 
 /**
  * Characterization: one scripted drive of the GPS car, nowhere and then placed, by the gamepad through park, drive and
@@ -26,22 +23,22 @@ import java.nio.ByteBuffer
  * expected transcript (iap2/location-transcript.txt) was recorded from DriveLocation, built as Driving.location built
  * it, before it moved here as CarPlayLocation: the move changed nothing the iPhone is sent. From "a game drives" on it
  * was recorded again once the status tick, not the window loop, looked for a game: the car follows it a tick later.
+ * Its $GPGSV went with the satellites in view, the rest unchanged.
  */
 class CarPlayLocationTranscriptTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
     private val paris = GeoPoint(48.85, 2.29)
     private val frame = 16_666_667L
     private var now = 0L
-    private val wall: Long get() = almanacTime + now / 1_000_000
+    private val start = Instant.parse("2026-10-26T16:57:18Z").toEpochMilli()
+    private val wall: Long get() = start + now / 1_000_000
     private val lines = ArrayList<String>()
     private val log: (String) -> Unit = { lines += "  log $it" }
     // GLFW's axes: the left stick's X first, the left and right triggers last, -1 let go.
     private var axes = floatArrayOf(0f, 0f, 0f, 0f, -1f, -1f)
     private val source = FakeSource()
-    private val almanac = GpsAlmanac.parse(almanacFixture())
-    private val sky: (GeoPoint, Long) -> String? = { point, millis -> SatelliteGeometry.gsv(SatelliteGeometry.visible(almanac, point, millis)) }
-    private var settings = GpsSettings(true, satellites = true, headingDegrees = 30.0, car = CarSpec(reverse = true))
-    private val driving = Driving(settings, log, gamepad = { axes }, nanoTime = { now }, satelliteSentences = sky,
+    private var settings = GpsSettings(true, headingDegrees = 30.0, car = CarSpec(reverse = true))
+    private val driving = Driving(settings, log, gamepad = { axes }, nanoTime = { now },
         locate = { LocationResult.Found(kyiv) }, lookup = { it.run() }, telemetry = { TelemetryInput(source, log) { now } })
     private val schedule = FakeSchedule()
     private var failing = false
@@ -78,7 +75,7 @@ class CarPlayLocationTranscriptTest {
     }
 
     // The location as the app makes it from the car, with the wall clock and the schedule the script's.
-    private fun location() = CarPlayLocation(driving, true, log, wallMillis = { wall }, schedule = schedule::start)
+    private fun location() = CarPlayLocation(driving, log, wallMillis = { wall }, schedule = schedule::start)
 
     private fun record(speed: Double, gear: Int?, paused: Boolean = false) = TelemetryRecord(
         counter = 0, paused = paused, gear = gear, speed = speed, headingDegrees = 135.0,
@@ -111,7 +108,7 @@ class CarPlayLocationTranscriptTest {
             lines += "  sent " + parameters.joinToString(" | ") { it.replace("\r\n", "\\r\\n") }
         }
         lines += "> start"
-        location.onRequested(setOf(1, 2, 3, 4))
+        location.onRequested(setOf(1, 2, 4))
         location.start()
         lines += "  period ${schedule.period!!()}"
         ticks("nowhere", 2)
@@ -149,7 +146,7 @@ class CarPlayLocationTranscriptTest {
 
         lines += "> once a second, unattached"
         val once = location()
-        once.onRequested(setOf(1, 2, 3, 4))
+        once.onRequested(setOf(1, 2, 4))
         once.start()
         repeat(2) {
             now += 1_000_000_000L

@@ -34,6 +34,7 @@ const LEVELS: readonly Choice[] = [
 const DEMOS: readonly (readonly [kind: DemoKind, label: string, title: string])[] = [
   ['maneuvers', 'Maneuvers', "Play a made-up route on the AltScreen's HUD"],
   ['lanes', 'Lane changes', "Switch the lanes under one maneuver on the AltScreen's HUD"],
+  ['gauges', 'Gauges', "Run the gauges up and down on the AltScreen, large, in the style set on the GPS page"],
 ]
 
 /**

@@ -40,7 +40,6 @@ function gpsBackend(on: boolean) {
       ...backend.data.applies,
       'gps.enabled': 'reconnect',
       'gps.wheel.speed': 'reconnect',
-      'gps.satellites': 'reconnect',
       'gps.start': 'now',
       'gps.heading': 'now',
       'gps.car.power.hp': 'now',
@@ -248,6 +247,18 @@ describe('GPS page', () => {
     fireEvent.click(within(gauges).getByRole('radio', { name: 'Small' }))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'gps.car.handling': 'sharp' }, { 'gps.gauges': 'small' }]))
+  })
+
+  // The gauges' style: German until set.
+  it('sets the gauges style', async () => {
+    const backend = await gps()
+
+    const style = screen.getByRole('radiogroup', { name: 'Gauge style' })
+    expect(within(style).getByRole('radio', { name: 'German' }).getAttribute('aria-checked')).toBe('true')
+    fireEvent.click(within(style).getByRole('radio', { name: 'Italian' }))
+    fireEvent.click(within(style).getByRole('radio', { name: 'British' }))
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'gps.gauges.style': 'italian' }, { 'gps.gauges.style': 'british' }]))
   })
 
   // The gauges can change from outside the page (Shift+F10 saves gps.gauges): the app bumps the settings version and

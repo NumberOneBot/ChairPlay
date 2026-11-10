@@ -294,6 +294,6 @@ class UiController(
         /** The windows the page has triggers for, each in the state whether it is there or not. */
         val WINDOWS = listOf("altscreen", "controls")
         /** The HUD demos the Experiments page plays: the made-up route, and the lanes switching under one maneuver. */
-        val DEMOS = listOf("maneuvers", "lanes")
+        val DEMOS = listOf("maneuvers", "lanes", "gauges")
     }
 }

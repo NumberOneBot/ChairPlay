@@ -8,7 +8,7 @@ import { Changed, parts, pendingOf } from './parts'
 import { WindowsLocationButton } from './WindowsLocationButton'
 
 /** What the iPhone learns as it connects: whether there is a GPS, and what it sends besides the position. */
-const LINK_KEYS = ['gps.enabled', 'gps.wheel.speed', 'gps.satellites']
+const LINK_KEYS = ['gps.enabled', 'gps.wheel.speed']
 
 /** gps.rate: fixes a second on the tunnel; the iPhone asks for one every 250 ms. */
 const RATES: readonly Choice[] = [
@@ -28,6 +28,13 @@ const HANDLING: readonly Choice[] = [
 const GAUGES: readonly Choice[] = [
   ['large', 'Large'],
   ['small', 'Small'],
+]
+
+/** gps.gauges.style: how the dials are graduated and their needles colored. */
+const GAUGE_STYLES: readonly Choice[] = [
+  ['german', 'German', 'Both dials clockwise over the top, the needles in the accent color'],
+  ['italian', 'Italian', 'Both dials from 6 o’clock to 3, with yellow needles'],
+  ['british', 'British', 'The dials turn apart, the tachometer from 5 o’clock to 2 and the speedometer back from 7 to 10, with green needles'],
 ]
 
 /** gps.wheel: what the gauges' steering wheel shows. */
@@ -101,13 +108,6 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           'gps.heading.send',
           'Send the heading',
           'The car heading as the course in the position sentences, so the iPhone can face its arrow the way the car goes',
-          true,
-        )}
-        {check(
-          'gps.satellites',
-          'Send satellites in view',
-          'Predicted satellites for the current position and time, using a downloaded almanac; signal levels are simulated',
-          false,
           true,
         )}
         {/* Experiment in what the iPhone takes, from the next fix: how often the position goes. */}
@@ -208,6 +208,14 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
             <br />
             Heading — north-up maps (Apple Maps): the wheel shows the car's course.
           </span>
+        </Row>
+        <Row label="Gauge style" title="How drive mode's dials are graduated and their needles colored">
+          <Segmented
+            label="Gauge style"
+            value={value('gps.gauges.style') || 'german'}
+            options={GAUGE_STYLES}
+            onChange={(style) => save({ 'gps.gauges.style': style })}
+          />
         </Row>
       </div>
     </>

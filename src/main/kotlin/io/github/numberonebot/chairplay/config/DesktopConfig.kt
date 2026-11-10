@@ -189,7 +189,7 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     val logLevel: LogLevel = settings.choiceSetting("log.level", LogLevel.INFO, LogLevel.entries.associateBy { it.key })
 
     /** system follows the system's dark mode, as windows, its old name, does; phone sends nothing and leaves it to the iPhone. */
-    val theme: Theme = settings.choiceSetting("display.theme", Theme.SYSTEM, Theme.entries.associateBy { it.name.lowercase() }, mapOf("windows" to Theme.SYSTEM))
+    val theme: Theme = settings.choiceSetting("display.theme", Theme.SYSTEM, Theme.entries.associateBy { it.name.lowercase() })
 
     /**
      * ui.accent: the accent colour of the screens, the controls window, and the HUD, written #rrggbb; every lighter or
