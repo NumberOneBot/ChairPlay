@@ -5,7 +5,7 @@ const ERRORS: Record<string, readonly [reason: string, instruction: string]> = {
   'verification-failed': ['The download did not pass verification', 'Download it again.'],
   'mount-failed': ['Could not connect the package', 'Unlock your iPhone and keep it on the cable, then try again.'],
   'service-unavailable': ['The developer service is unavailable', 'Restart your iPhone, then try again.'],
-  'store-unavailable': ['Microsoft Store is unavailable', 'Check your Internet connection, then try again.'],
+  'store-unavailable': ['ChairPlay cannot write to its folder', 'Check that the ChairPlay folder can be written to, then try again.'],
   'several-devices': ['Several iPhones are connected', 'Disconnect all but one, then try again.'],
   'unsupported-ios': ['This iOS version is not supported', 'Update your iPhone, then try again.'],
   timeout: ['Your iPhone did not answer', 'Unlock your iPhone, then try again.'],
