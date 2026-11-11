@@ -37,7 +37,7 @@ enum class OperationKind(val key: String) {
 }
 
 enum class OperationStage(val key: String) {
-    QUIESCE("quiesce"), CLEAR("clear"), CLOSE("close"), START("start"),
+    QUIESCE("quiesce"), CLOSE("close"), START("start"),
 }
 
 /** The one operation running; while there is one the switch waits and the car stands (D9). */
@@ -53,8 +53,6 @@ data class GpsOperation(
 enum class NoticeTone(val key: String) { INFO("info"), WARN("warn"), BAD("bad") }
 
 enum class NoticeCode(val key: String) {
-    /** Return, clear and close all went; info, gone after 10 s (UI-21, UI-21a). */
-    RESET_SENT("reset-sent"),
     /** usb + enabled saved, no phone: the warning above Settings' content (UI-23); stays until it changes. */
     USB_UNAVAILABLE("usb-unavailable"),
 }

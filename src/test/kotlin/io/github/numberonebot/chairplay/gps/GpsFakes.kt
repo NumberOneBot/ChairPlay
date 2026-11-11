@@ -13,7 +13,7 @@ class Calls : CopyOnWriteArrayList<String>()
 class FakeChannel(override val method: GpsMethod, private val calls: Calls) : GpsChannel {
     var state = ChannelState(null)
     var startFails: GpsReason? = null
-    var release = Release(StepOutcome.DONE, StepOutcome.DONE)
+    var release = StepOutcome.DONE
     /** Run inside quiesce, for a test that needs time to pass there. */
     var onQuiesce: () -> Unit = {}
     override var running = false
@@ -34,9 +34,9 @@ class FakeChannel(override val method: GpsMethod, private val calls: Calls) : Gp
         running = false
     }
 
-    override fun release(onStage: (OperationStage) -> Unit): Release {
+    override fun release(onStage: (OperationStage) -> Unit): StepOutcome {
         calls += "${method.key}.release"
-        onStage(OperationStage.CLEAR)
+        onStage(OperationStage.CLOSE)
         return release
     }
 

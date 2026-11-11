@@ -35,6 +35,5 @@ internal class GpsNotices(private val clock: () -> Long) {
 data class GpsTiming(
     val operationMillis: Long = 30_000,
     val tickMillis: Long = 1_000,
-    val resetNoticeMillis: Long = 10_000,
     val shutdownMillis: Long = 10_000,
 )

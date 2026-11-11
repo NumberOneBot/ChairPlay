@@ -31,15 +31,14 @@ class FakeLauncher(
     fun of(role: HelperRole) = launched.filter { it.first == role }.map { it.second }
 }
 
-/** A session helper that opens, applies every set at once, and answers return, clear and close. */
+/** A session helper that opens, applies every set at once, and answers close. */
 fun FakeHelper.sessionStandard(request: Map<String, Any?>) {
     if (standard(request)) return
     when (request["op"]) {
         "open" -> reply(request, mapOf("session" to request["session"]))
         "set" -> reply(request, mapOf("applied" to true, "acknowledged" to requests.count { it["op"] == "set" }.toLong()))
-        "return", "clear" -> reply(request)
         "close" -> {
-            reply(request, mapOf("cleanup" to "done"))
+            reply(request)
             exit()
         }
     }

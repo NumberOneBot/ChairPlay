@@ -17,8 +17,6 @@ data class HelperTimeouts(
     val openMillis: Long = 35_000,
     /** A set's reply; past it the helper is taken as hung (its own bound is 5 s). */
     val setMillis: Long = 7_000,
-    /** return and clear: a set in flight may finish first (5 s), then their own RPC (5 s). */
-    val priorityMillis: Long = 12_000,
     /** close's reply: with exitGraceMillis inside the 10 s shutdown budget. */
     val closeMillis: Long = 8_000,
     val exitGraceMillis: Long = 2_000,

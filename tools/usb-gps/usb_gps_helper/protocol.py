@@ -92,8 +92,7 @@ _COMMON = {'hello': {'protocol': _protocol}, 'ping': {}}
 OPERATIONS = {
     'control': {**_COMMON, 'components': {}, 'discover': {}, 'probe': _DEVICE, 'reveal': _DEVICE,
                 'tools-status': _DEVICE, 'prepare': _DEVICE, 'cancel': {'target': _name}},
-    'session': {**_COMMON, 'open': {**_DEVICE, **_SESSION}, 'set': {**_SESSION, **_POINT},
-                'clear': _SESSION, 'close': _SESSION},
+    'session': {**_COMMON, 'open': {**_DEVICE, **_SESSION}, 'set': {**_SESSION, **_POINT}, 'close': _SESSION},
 }
 
 

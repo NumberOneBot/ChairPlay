@@ -70,10 +70,6 @@ export const outputs = {
     selected: 'usb', applied: 'usb', usbPrepared: true, device: PHONE, rateHz: 10,
     operation: { id: 5, generation: 1, kind: 'disable', stage: 'close', target: null, startedAt: NOW },
   }),
-  resetSent: gpsOutput({
-    selected: 'usb', applied: 'usb', usbPrepared: true, device: PHONE, rateHz: 10,
-    notices: [notice('reset-sent', 'info', { expiresAt: NOW + 10_000 })],
-  }),
 } satisfies Record<string, GpsOutput>
 
 /** The wizard's states, step by step (02 §3). */

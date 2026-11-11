@@ -15,7 +15,7 @@ import org.junit.Test
 class ProcessUsbSessionTest {
     private val udid = "00008030-001A2D3E0C38802E"
     private val launcher = FakeLauncher()
-    private val timeouts = HelperTimeouts(helloMillis = 2_000, setMillis = 600, priorityMillis = 1_000, closeMillis = 300,
+    private val timeouts = HelperTimeouts(helloMillis = 2_000, setMillis = 600, closeMillis = 300,
         exitGraceMillis = 200, heartbeatMillis = 150)
     private val helper = ProcessUsbHelper(launcher, timeouts = timeouts)
     private val held = CopyOnWriteArrayList<Map<String, Any?>>()
@@ -60,26 +60,27 @@ class ProcessUsbSessionTest {
         val (session, fake) = open()
         session.offer(GeoPoint(1.0, 2.0))
         eventually { fake.sets().isNotEmpty() }
-        assertEquals(UsbResult.Ok(Unit), session.clear())
+        session.close()
         val open = fake.requests.first { it["op"] == "open" }
-        fake.requests.filter { it["op"] in setOf("set", "clear") }.forEach {
-            assertEquals(listOf(session.id, open["generation"]), listOf(it["session"], it["generation"]))
-        }
+        val named = fake.requests.filter { it["op"] in setOf("set", "close") }
+        assertEquals(setOf("set", "close"), named.map { it["op"] }.toSet())
+        named.forEach { assertEquals(listOf(session.id, open["generation"]), listOf(it["session"], it["generation"])) }
     }
 
+    // D14: the close drops the point that waited, and nothing but the close follows the sets.
     @Test
-    fun `clear drops the point that waited`() {
+    fun `close drops the point that waited and sends no clear`() {
         holdSets()
         val (session, fake) = open()
         session.offer(GeoPoint(1.0, 0.0))
         eventually { held.size == 1 }
         session.offer(GeoPoint(2.0, 0.0))
-        val clearing = Thread { session.clear() }.apply { start() }
-        eventually { fake.ops().contains("clear") }
+        val closing = Thread { session.close() }.apply { start() }
+        eventually { fake.ops().contains("close") }
         fake.reply(held[0], mapOf("applied" to true, "acknowledged" to 1))
-        clearing.join(2_000)
-        Thread.sleep(100)
+        closing.join(2_000)
         assertEquals(listOf(1.0), fake.sets())
+        assertEquals(listOf("set", "close"), fake.ops().filter { it == "set" || it == "close" || it == "clear" })
     }
 
     @Test
@@ -92,7 +93,9 @@ class ProcessUsbSessionTest {
         eventually { !fake.alive() }
         assertEquals(listOf(UsbErrorCode.LINK_LOST), lost.map { it.first })
         assertTrue(!lost[0].second.endsWith("-reader"))
-        assertEquals(UsbErrorCode.LINK_LOST, (session.clear() as UsbResult.Failed).code)
+        session.offer(GeoPoint(1.0, 0.0))
+        Thread.sleep(50)
+        assertTrue(fake.sets().isEmpty())
     }
 
     @Test
@@ -128,7 +131,7 @@ class ProcessUsbSessionTest {
     }
 
     @Test
-    fun `close asks the helper to clean up, ends it, and is bounded when it stays silent`() {
+    fun `close asks the helper to end the session, ends it, and is bounded when it stays silent`() {
         val (session, fake) = open()
         session.close()
         assertTrue(fake.ops().contains("close"))

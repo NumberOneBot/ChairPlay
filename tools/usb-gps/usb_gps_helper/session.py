@@ -1,13 +1,12 @@
 """The one location simulation session of a session helper.
 
 Points are latest-wins: at most one set is in flight, and while it is, only the newest offered point waits; an older
-waiting one is answered {"applied": false}. After a slow set no burst follows, just that newest point. return, clear
-and close go first: they drop the waiting point, wait (bounded) for the set in flight, then run. return and close end
-the stream; later sets are refused with "cancelled", so nothing overwrites the return point.
+waiting one is answered {"applied": false}. After a slow set no burst follows, just that newest point. close goes
+first: it drops the waiting point, waits (bounded) for the set in flight, then ends the stream; later sets are refused
+with "cancelled". Nothing clears the simulated position: the session only ends.
 
-[dirty] is set before a set goes out and cleared only by a clear the service took: a set whose reply was lost still
-leaves cleanup needed. Each request must name the open session and its generation, so a late clear meant for an
-older session is refused instead of reaching this one.
+Each request must name the open session and its generation, so a late request meant for an older session is refused
+instead of reaching this one.
 """
 import asyncio
 from contextlib import AsyncExitStack, suppress
@@ -37,9 +36,7 @@ class SimulationSession:
         self.udid = None
         self.state = 'idle'  # idle -> open -> lost | closed
         self.fenced = False
-        self.dirty = False
         self.acknowledged = 0
-        self._cleanup_result = 'not-needed'
         self._driver = None
         self._stack = None
         self._slot = None
@@ -87,30 +84,18 @@ class SimulationSession:
         else:
             self._start(request)
 
-    async def clear(self, request):
-        self._check_owner(request)
-        self._check_live()
-
-        async def action():
-            self._check_live()
-            await self._rpc(lambda: self._driver.clear())
-            self.dirty = False
-            return {}
-        return await self._first(False, action)
-
     async def close(self, request):
         self._check_owner(request)
         if self.state == 'closed':
-            return {'cleanup': self._cleanup_result}
+            return {}
 
         async def action():
-            self._cleanup_result = await self._cleanup()
             await self._teardown()
-            return {'cleanup': self._cleanup_result}
+            return {}
         return await self._first(True, action)
 
     async def shutdown(self, reason):
-        """End of input, a watchdog or a signal: a bounded cleanup attempt, then the session's end."""
+        """End of input, a watchdog or a signal: the set in flight is given its bounded time, then the session ends."""
         if self.state in ('open', 'lost'):
             self.fenced = True
             self._waiting += 1
@@ -118,13 +103,12 @@ class SimulationSession:
             try:
                 async with asyncio.timeout(self.shutdown_budget):
                     await self._drain()
-                    self._cleanup_result = await self._cleanup()
             except TimeoutError:
-                self._cleanup_result = 'unconfirmed' if self.dirty else 'not-needed'
+                pass
             finally:
                 self._waiting -= 1
             await self._teardown()
-        self.write(protocol.event('bye', reason=reason, cleanup=self._cleanup_result))
+        self.write(protocol.event('bye', reason=reason))
 
     def _check_owner(self, request):
         fields = request.fields
@@ -149,7 +133,6 @@ class SimulationSession:
 
     async def _run_set(self, request):
         fields = request.fields
-        self.dirty = True
         try:
             await self._rpc(lambda: self._driver.set(fields['latitude'], fields['longitude']))
         except HelperError as error:
@@ -198,18 +181,6 @@ class SimulationSession:
             if failure.code == 'link-lost':
                 self._lose('link-lost')
             raise failure from error
-
-    async def _cleanup(self):
-        if not self.dirty:
-            return 'not-needed'
-        if self.state != 'open':
-            return 'unconfirmed'
-        try:
-            await self._rpc(lambda: self._driver.clear())
-        except HelperError:
-            return 'unconfirmed'
-        self.dirty = False
-        return 'done'
 
     def _lose(self, code):
         if self.state != 'open':

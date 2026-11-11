@@ -64,7 +64,6 @@ class HelperProcessTest {
             Thread.sleep(20)
         }
         eventually(5_000) { session.acknowledged > 0 }
-        assertEquals(UsbResult.Ok(Unit), session.clear())
         session.close()
         assertTrue(helper.openSession(udid) is UsbResult.Ok)
     }

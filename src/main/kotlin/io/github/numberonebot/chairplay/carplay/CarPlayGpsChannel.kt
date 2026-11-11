@@ -7,7 +7,7 @@ import io.github.numberonebot.chairplay.gps.GpsChannel
 import io.github.numberonebot.chairplay.gps.GpsMethod
 import io.github.numberonebot.chairplay.gps.GpsReason
 import io.github.numberonebot.chairplay.gps.OperationStage
-import io.github.numberonebot.chairplay.gps.Release
+import io.github.numberonebot.chairplay.gps.StepOutcome
 import io.github.numberonebot.chairplay.gps.UsbDevice
 
 /**
@@ -65,7 +65,7 @@ class CarPlayGpsChannel(
 
     override fun quiesce() = gate.close()
 
-    override fun release(onStage: (OperationStage) -> Unit) = Release.NOTHING
+    override fun release(onStage: (OperationStage) -> Unit) = StepOutcome.SKIPPED
 
     override val running: Boolean get() = gate.isOpen && session()
 

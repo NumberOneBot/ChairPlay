@@ -4,7 +4,7 @@
     helper --role session [--idle-timeout 30]                      one location simulation session
 
 --fake <scenario.json> runs either role against a fake phone and a fake package server (a dry run; see fake.py).
-The process ends at the end of its input, a session's close, or the session watchdog, after a bounded cleanup.
+The process ends at the end of its input, a session's close, or the session watchdog, within a bounded time.
 """
 import argparse
 import asyncio
@@ -34,7 +34,7 @@ def parser():
     root.add_argument('--store', type=Path, help='The developer tools folder (control role).')
     root.add_argument('--fake', type=Path, help='A fake phone scenario, for dry runs.')
     root.add_argument('--idle-timeout', type=_seconds, default=30.0,
-                      help='Session role: end with a cleanup when the app is silent this long (0: never).')
+                      help='Session role: end the session when the app is silent this long (0: never).')
     return root
 
 

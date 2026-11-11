@@ -20,11 +20,6 @@ interface Scene {
   pending?: string[]
 }
 
-const later = Date.now() + 3_600_000
-const resetSent: GpsOutput = {
-  ...outputs.resetSent,
-  notices: outputs.resetSent.notices.map((each) => ({ ...each, expiresAt: later })),
-}
 const prepared = outputs.usbUnprepared
 const starting: GpsOutput = {
   ...outputs.stoppingUsb,
@@ -56,7 +51,6 @@ export const SCENES: Record<string, Scene> = {
   'ready-enable': { output: prepared, setup: setups.readyEnable },
   starting: { output: starting },
   stopping: { output: outputs.stoppingUsb },
-  'reset-sent': { output: resetSent },
   'startup-missing': { output: outputs.usbStartupMissing, connected: false },
   'startup-missing-carplay': { output: outputs.usbStartupMissing, connected: true },
   'experiments-empty': { output: outputs.carplayOff, section: 'Experiments' },

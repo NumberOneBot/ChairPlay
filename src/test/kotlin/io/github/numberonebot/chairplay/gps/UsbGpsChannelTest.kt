@@ -12,7 +12,6 @@ class UsbGpsChannelTest {
     private val log = CopyOnWriteArrayList<String>()
     private val phone = UsbDevice("UDID-1", "iPhone", "27.2")
     private var devices: UsbResult<List<UsbDevice>> = UsbResult.Ok(listOf(phone))
-    private var clearResult: UsbResult<Unit> = UsbResult.Ok(Unit)
     private var sessions = 0
 
     private inner class Session : UsbSession {
@@ -20,7 +19,6 @@ class UsbGpsChannelTest {
         override val acknowledged get() = log.count { it.startsWith("$id.offer") }.toLong()
         override var onLost: (UsbErrorCode) -> Unit = {}
         override fun offer(point: GeoPoint) { log += "$id.offer" }
-        override fun clear() = clearResult.also { log += "$id.clear" }
         override fun close() { log += "$id.close" }
     }
 
@@ -75,29 +73,28 @@ class UsbGpsChannelTest {
         assertTrue(channel.running)
     }
 
-    // L-01: clear and close, the close whatever the clear did; the session ends.
+    // L-01, D14: release only closes the session; nothing clears the simulated position.
     @Test
-    fun `release clears and closes the session`() {
+    fun `release closes the session and sends nothing more`() {
         channel.start(GeoPoint(1.0, 2.0), phone)
-        clearResult = UsbResult.Failed(UsbErrorCode.LINK_LOST)
         val stages = mutableListOf<OperationStage>()
 
         val release = channel.release { stages += it }
 
-        assertEquals(Release(StepOutcome.FAILED, StepOutcome.DONE), release)
-        assertEquals(listOf(OperationStage.CLEAR, OperationStage.CLOSE), stages)
-        assertEquals(listOf("s1.clear", "s1.close"), log.filter { !it.contains("offer") && !it.startsWith("open") })
+        assertEquals(StepOutcome.DONE, release)
+        assertEquals(listOf(OperationStage.CLOSE), stages)
+        assertEquals(listOf("s1.close"), log.filter { !it.contains("offer") && !it.startsWith("open") })
         assertFalse(channel.running)
     }
 
-    // V49, V50: what an earlier run left is cleared through a session of its own; with no iPhone nothing is tried.
+    // With no session, the iPhone attached or not, nothing is tried (D12).
     @Test
     fun `release without a session tries nothing, the iPhone attached or not (D12)`() {
-        assertEquals(Release.NOTHING, channel.release {})
+        assertEquals(StepOutcome.SKIPPED, channel.release {})
         channel.start()
         Thread.sleep(100)
 
-        assertEquals(Release.NOTHING, channel.release {})
+        assertEquals(StepOutcome.SKIPPED, channel.release {})
         assertEquals(emptyList<String>(), log.toList())
         channel.close()
     }

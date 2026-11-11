@@ -27,9 +27,7 @@ class FakeDriver:
     def __init__(self):
         self.calls = []
         self.set_delay = 0
-        self.clear_delay = 0
         self.fail_set = None
-        self.fail_clear = None
         self.active = 0
         self.most_active = 0
 
@@ -47,9 +45,6 @@ class FakeDriver:
 
     async def set(self, latitude, longitude):
         await self._call(('set', latitude, longitude), self.set_delay, self.fail_set)
-
-    async def clear(self):
-        await self._call(('clear',), self.clear_delay, self.fail_clear)
 
 
 class FakeBackend:

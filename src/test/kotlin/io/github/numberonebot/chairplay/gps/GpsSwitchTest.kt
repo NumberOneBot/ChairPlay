@@ -48,7 +48,7 @@ class GpsSwitchTest {
         assertEquals(listOf("usb.quiesce", "usb.release", "carplay.start 40.7,-74.0"), h.calls)
         val out = h.output()
         assertEquals(GpsMethod.CARPLAY, out.applied)
-        assertTrue(out.notices.any { it.code == NoticeCode.RESET_SENT })
+        assertEquals(emptyList<GpsNotice>(), out.notices)
         assertEquals(0, h.hold.held)
     }
 

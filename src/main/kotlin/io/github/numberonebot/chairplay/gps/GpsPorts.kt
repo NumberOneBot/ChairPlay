@@ -7,14 +7,8 @@ import io.github.numberonebot.chairplay.drive.GpsSettings
 // return point when USB stops, and the car's hold. The coordinator owns these calls; the app implements the ports, the
 // tests fake them.
 
-/** One step of letting a USB simulation go: done, failed (or no reply), or not tried (no channel to try it on). */
+/** Letting a USB simulation go: done, failed (or no reply), or not tried (no session to close). */
 enum class StepOutcome { DONE, FAILED, SKIPPED }
-
-data class Release(val cleared: StepOutcome, val closed: StepOutcome) {
-    companion object {
-        val NOTHING = Release(StepOutcome.SKIPPED, StepOutcome.SKIPPED)
-    }
-}
 
 /**
  * Whether a channel could start now ([reason] null when it could). [sessionGps]: for CarPlay, whether the connected
@@ -40,10 +34,10 @@ interface GpsChannel {
     fun quiesce()
 
     /**
-     * USB: clears and closes its session, each bounded, the close tried whatever the clear did; the iPhone finds its
-     * own place again (D13). With no session, [Release.NOTHING] (D12). CarPlay: [Release.NOTHING].
+     * USB: closes its session, bounded; nothing clears the simulated position (D14). With no session, and for CarPlay,
+     * [StepOutcome.SKIPPED].
      */
-    fun release(onStage: (OperationStage) -> Unit): Release
+    fun release(onStage: (OperationStage) -> Unit): StepOutcome
 
     val running: Boolean
 

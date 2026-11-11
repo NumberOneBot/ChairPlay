@@ -13,9 +13,7 @@ internal class GpsFlows(
     val carplay: GpsChannel,
     val usb: GpsChannel,
     val setup: UsbSetupPort,
-    val notices: GpsNotices,
     val ops: GpsOperations,
-    private val timing: GpsTiming,
     private val log: (String) -> Unit,
 ) {
     val lock = Any()
@@ -62,7 +60,7 @@ internal class GpsFlows(
         startSelected(wizardBounds = true, operation = operation)
     }
 
-    /** L-01: stream off, clear, close; the iPhone finds its own place again (D13), the car stays where it is (L-02). */
+    /** L-01: stream off, then close; nothing clears the simulated position (D14), the car stays where it is (L-02). */
     fun stopUsb(operation: GpsOperation) {
         ops.stage(operation, OperationStage.QUIESCE)
         usb.quiesce()
@@ -118,12 +116,9 @@ internal class GpsFlows(
         log(if (why == null) "GPS: USB simulation started" else "GPS: USB simulation did not start: ${why.key}")
     }
 
-    /** Clear and close, the close tried whatever the clear did (L-01); a clear sent is all there is to know (D10). */
+    /** The session's close, and no more (D14). */
     private fun letGo(operation: GpsOperation) {
-        val release = usb.release { ops.stage(operation, it) }
-        log("GPS: USB let go: clear ${release.cleared}, close ${release.closed}")
-        if (release.cleared == StepOutcome.DONE) {
-            notices.show(NoticeCode.RESET_SENT, NoticeTone.INFO, forMillis = timing.resetNoticeMillis)
-        }
+        val closed = usb.release { ops.stage(operation, it) }
+        log("GPS: USB let go: close $closed")
     }
 }

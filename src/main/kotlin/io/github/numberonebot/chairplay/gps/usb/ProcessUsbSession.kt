@@ -7,16 +7,15 @@ import io.github.numberonebot.chairplay.gps.UsbSession
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 /**
  * One simulation session in a session helper of its own. [offer] only stores the newest point and wakes the sender
  * thread, which keeps at most one set in flight and sends the newest point when that set's reply is in: latest-wins,
- * no burst after a stall. [clear] and [close] go first: they drop the waiting point and are written
- * under the same lock the sender checks, so no point taken before them reaches the helper after them; the helper
- * then runs them after the set in flight. Every request names this session and generation, so nothing of it can act
- * on a later session.
+ * no burst after a stall. [close] goes first: it drops the waiting point and is written under the same lock the
+ * sender checks, so no point taken before it reaches the helper after it; the helper then runs it after the set in
+ * flight. Nothing clears the simulated position (D14). Every request names this session and generation, so nothing of
+ * it can act on a later session.
  *
  * [onLost] runs once, on a thread of its own (never the reader's: its owner may be waiting on this session's reply
  * under the lock its handler takes), when the helper reports the phone gone, the helper ends, or a set's reply never
@@ -37,7 +36,6 @@ internal class ProcessUsbSession(
     private val latest = AtomicReference<GeoPoint?>()
     private val wake = ArrayBlockingQueue<Unit>(1)
     private val sendLock = Any()
-    private val priority = AtomicInteger()
     private val closing = AtomicBoolean()
     private val lost = AtomicBoolean()
     @Volatile private var fenced = false
@@ -66,8 +64,6 @@ internal class ProcessUsbSession(
         wake.offer(Unit)
     }
 
-    override fun clear(): UsbResult<Unit> = first("clear", emptyMap(), fence = false)
-
     override fun close() {
         if (!closing.compareAndSet(false, true)) return
         fenced = true
@@ -76,7 +72,7 @@ internal class ProcessUsbSession(
         if (!lost.get() && connection.alive()) {
             val request = synchronized(sendLock) { connection.send("close", tag) }
             when (val result = request.await(timeouts.closeMillis)) {
-                is UsbResult.Ok -> log("USB GPS session $generation closed: ${result.value["cleanup"]}, $acks sets, $replaced replaced")
+                is UsbResult.Ok -> log("USB GPS session $generation closed: $acks sets, $replaced replaced")
                 is UsbResult.Failed -> log("USB GPS session $generation close: ${result.code.key}")
             }
         }
@@ -86,31 +82,12 @@ internal class ProcessUsbSession(
     /** Ends this session's helper within [millis], whatever its state: before a new session may start. */
     fun awaitExit(millis: Long) = connection.close(millis)
 
-    private fun first(op: String, fields: Map<String, Any?>, fence: Boolean): UsbResult<Unit> {
-        if (closing.get()) return UsbResult.Failed(UsbErrorCode.CANCELLED, "the session is closed")
-        if (lost.get()) return UsbResult.Failed(UsbErrorCode.LINK_LOST, "the session is lost")
-        priority.incrementAndGet()
-        try {
-            if (fence) fenced = true
-            latest.set(null)
-            val request = synchronized(sendLock) { connection.send(op, tag + fields) }
-            lastRequest = System.nanoTime()
-            return when (val result = request.await(timeouts.priorityMillis)) {
-                is UsbResult.Ok -> UsbResult.Ok(Unit)
-                is UsbResult.Failed -> result
-            }
-        } finally {
-            priority.decrementAndGet()
-            wake.offer(Unit)
-        }
-    }
-
     private fun pump() {
         while (!finished) {
             wake.poll(timeouts.heartbeatMillis, TimeUnit.MILLISECONDS)
             if (finished) break
             val request = synchronized(sendLock) {
-                if (priority.get() > 0 || fenced) null
+                if (fenced) null
                 else latest.getAndSet(null)?.let { point ->
                     connection.send("set", tag + mapOf("latitude" to point.latitude, "longitude" to point.longitude))
                 }

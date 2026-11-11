@@ -16,7 +16,7 @@ export type GpsReason =
   | 'no-position'
 
 export type GpsOperationKind = 'apply' | 'enable' | 'disable' | 'resume' | 'shutdown'
-export type GpsOperationStage = 'quiesce' | 'clear' | 'close' | 'start'
+export type GpsOperationStage = 'quiesce' | 'close' | 'start'
 
 /** The one operation running; while there is one, the whole app is held (S-09). */
 export interface GpsOperation {
@@ -31,9 +31,7 @@ export interface GpsOperation {
 
 export type NoticeTone = 'info' | 'warn' | 'bad'
 
-export type GpsNoticeCode =
-  | 'reset-sent'
-  | 'usb-unavailable'
+export type GpsNoticeCode = 'usb-unavailable'
 
 export interface GpsNotice {
   id: number

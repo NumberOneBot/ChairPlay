@@ -2,7 +2,7 @@
 
 The end comes with the end of input (also what a dead parent leaves), the session's close, a watchdog when the
 parent stays silent for [idle_timeout], or a refused protocol version. Requests still running get a bounded time to
-finish, then the handlers' shutdown runs its own bounded cleanup.
+finish, then the handlers' shutdown runs, bounded too.
 """
 import asyncio
 
@@ -122,8 +122,7 @@ class SessionHandlers:
         if request.op == 'set':
             session.offer(request)
             return None
-        return {'open': session.open, 'clear': session.clear,
-                'close': session.close}[request.op](request)
+        return {'open': session.open, 'close': session.close}[request.op](request)
 
     async def shutdown(self, reason):
         await self.session.shutdown(reason)

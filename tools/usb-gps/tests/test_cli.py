@@ -74,15 +74,14 @@ class CliTests(unittest.TestCase):
         self.assertEqual('invalid-coordinates', helper.reply('b')['error']['code'])
         code, rest = helper.finish()
         self.assertEqual(0, code)
-        self.assertEqual([('bye', 'eof', 'done')], [(e['event'], e['reason'], e['cleanup']) for e in rest
-                                                    if e['type'] == 'event'])
+        self.assertEqual([('bye', 'eof')], [(e['event'], e['reason']) for e in rest if e['type'] == 'event'])
 
     def test_close_ends_the_session_helper(self):
         helper = Helper('--role', 'session', '--fake', str(self.scenario))
         helper.send('h', 'hello', protocol=2)
         helper.send('o', 'open', udid=UDID, session='s', generation=1)
         helper.send('c', 'close', session='s', generation=1)
-        self.assertEqual({'cleanup': 'not-needed'}, helper.reply('c')['result'])
+        self.assertEqual({}, helper.reply('c')['result'])
         started = time.monotonic()
         self.assertEqual(0, helper.process.wait(timeout=10))
         self.assertLess(time.monotonic() - started, 10)

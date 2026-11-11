@@ -86,7 +86,7 @@ class UsbGpsChannel(
 
     @Synchronized
     override fun quiesce() {
-        // Offers no more; the session's clear or close drops what it still holds.
+        // Offers no more; the session's close drops what it still holds.
         stopPump()
     }
 
@@ -96,16 +96,14 @@ class UsbGpsChannel(
     }
 
     @Synchronized
-    override fun release(onStage: (OperationStage) -> Unit): Release {
+    override fun release(onStage: (OperationStage) -> Unit): StepOutcome {
         stopPump()
-        val own = session ?: return Release.NOTHING
-        onStage(OperationStage.CLEAR)
-        val cleared = outcome(own.clear())
+        val own = session ?: return StepOutcome.SKIPPED
         onStage(OperationStage.CLOSE)
         val closed = runCatching { own.close() }.fold({ StepOutcome.DONE }, { StepOutcome.FAILED })
         lastSends = own.acknowledged
         session = null
-        return Release(cleared, closed)
+        return closed
     }
 
     override val running: Boolean get() = session != null
@@ -116,8 +114,6 @@ class UsbGpsChannel(
         watch?.cancel(false)
         scheduler.shutdownNow()
     }
-
-    private fun outcome(result: UsbResult<Unit>) = if (result is UsbResult.Ok) StepOutcome.DONE else StepOutcome.FAILED
 
     companion object {
         private val UNREACHABLE = setOf(UsbErrorCode.USBMUX_UNAVAILABLE, UsbErrorCode.DRIVERS_MISSING)

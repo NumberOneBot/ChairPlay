@@ -171,9 +171,9 @@ class GpsLifecycleTest {
         assertEquals(1, h.calls.count { it.startsWith("usb.start 49.84") })
     }
 
-    // L-01, L-02: off stops the stream, returns the iPhone to Windows, clears and closes; the car stays.
+    // L-01, L-02, D14: off stops the stream and closes the session, with no notice; the car stays.
     @Test
-    fun `turning USB off returns the iPhone and leaves the car where it is`() {
+    fun `turning USB off closes the session and leaves the car where it is`() {
         val h = GpsHarness(usbOn)
         h.usb.state = attached
         h.reconcile()
@@ -184,7 +184,7 @@ class GpsLifecycleTest {
 
         assertEquals(listOf("save gps.enabled=false", "usb.quiesce", "usb.release"), h.calls)
         assertFalse(h.output().enabledIntent)
-        assertTrue(h.output().notices.any { it.code == NoticeCode.RESET_SENT })
+        assertEquals(emptyList<GpsNotice>(), h.output().notices)
     }
 
     // D4: no reconnect by the app; a session that identified without the GPS sends nothing until the user's reconnect.
@@ -213,19 +213,5 @@ class GpsLifecycleTest {
         assertTrue(h.gps.carLive())
         assertTrue(GpsHarness(GpsSettings(enabled = true)).gps.carLive())
         assertFalse(GpsHarness(GpsSettings(enabled = false)).gps.carLive())
-    }
-
-    // UI-21: the reset notice goes after 10 s.
-    @Test
-    fun `the reset notice goes after ten seconds`() {
-        val h = GpsHarness(usbOn)
-        h.usb.state = attached
-        h.reconcile()
-        h.gps.setEnabled(false)
-        h.idle()
-
-        h.now += 10_000
-
-        assertTrue(h.output().notices.none { it.code == NoticeCode.RESET_SENT })
     }
 }

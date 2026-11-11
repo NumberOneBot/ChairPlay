@@ -133,7 +133,7 @@ class Library:
             raise self.service_error
         self.log.append('location')
         try:
-            yield SimpleNamespace(set=None, clear=None)
+            yield SimpleNamespace(set=None)
         finally:
             self.log.append('location-close')
 

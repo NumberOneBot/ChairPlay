@@ -75,16 +75,16 @@ class ServerTests(unittest.IsolatedAsyncioTestCase):
     async def test_an_id_still_waiting_for_its_reply_cannot_be_reused(self):
         self.backend.driver.set_delay = .1
         lines = [hello(), op('o', 'open', udid=UDID, **SESSION),
-                 op('a', 'set', latitude=1, longitude=2, **SESSION), op('a', 'clear', **SESSION)]
+                 op('a', 'set', latitude=1, longitude=2, **SESSION), op('a', 'close', **SESSION)]
         await self.run_server(Input(*lines))
         a_replies = [line for line in self.wire.lines if line.get('id') == 'a']
         self.assertEqual('protocol', a_replies[0]['error']['code'])
 
-    async def test_end_of_input_cleans_up_and_says_bye(self):
+    async def test_end_of_input_closes_and_says_bye(self):
         lines = [hello(), op('o', 'open', udid=UDID, **SESSION), op('a', 'set', latitude=1, longitude=2, **SESSION)]
         code = await self.run_server(Input(*lines))
         self.assertEqual(0, code)
-        self.assertEqual([('set', 1.0, 2.0), ('clear',)], self.backend.driver.calls)
+        self.assertEqual([('set', 1.0, 2.0)], self.backend.driver.calls)
         self.assertEqual('eof', self.wire.events('bye')[0]['reason'])
         self.assertEqual(1, self.backend.closed)
 
@@ -93,13 +93,13 @@ class ServerTests(unittest.IsolatedAsyncioTestCase):
         code = await self.run_server(Input(*lines, then_wait=True), idle_timeout=.2)
         self.assertEqual(0, code)
         self.assertEqual('watchdog', self.wire.events('bye')[0]['reason'])
-        self.assertEqual(('clear',), self.backend.driver.calls[-1])
+        self.assertEqual(1, self.backend.closed)
 
     async def test_close_answers_then_ends_the_helper(self):
         lines = [hello(), op('o', 'open', udid=UDID, **SESSION), op('c', 'close', **SESSION), op('q', 'ping')]
         code = await self.run_server(Input(*lines, then_wait=True))
         self.assertEqual(0, code)
-        self.assertEqual({'cleanup': 'not-needed'}, self.wire.replies()['c']['result'])
+        self.assertEqual({}, self.wire.replies()['c']['result'])
         self.assertNotIn('q', self.wire.replies())
 
 

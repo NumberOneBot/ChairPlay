@@ -42,16 +42,16 @@ class ParseTests(unittest.TestCase):
         self.assertEqual('protocol', self.code(line(id='r', op='set', session='s', generation=1, latitude=1, longitude=2, speed=3)))
 
     def test_missing_fields_are_refused(self):
-        self.assertEqual('protocol', self.code(line(id='r', op='clear', session='s')))
+        self.assertEqual('protocol', self.code(line(id='r', op='close', session='s')))
         self.assertEqual('protocol', self.code(line(id='r', op='probe'), role='control'))
 
     def test_ids_sessions_generations_and_udids_are_bounded(self):
         self.assertEqual('protocol', self.code(line(id='x' * 41, op='ping')))
         self.assertEqual('protocol', self.code(line(id='a b', op='ping')))
         self.assertEqual('protocol', self.code(line(id=7, op='ping')))
-        self.assertEqual('protocol', self.code(line(id='r', op='clear', session='s', generation=-1)))
-        self.assertEqual('protocol', self.code(line(id='r', op='clear', session='s', generation=1.5)))
-        self.assertEqual('protocol', self.code(line(id='r', op='clear', session='s', generation=2 ** 53)))
+        self.assertEqual('protocol', self.code(line(id='r', op='close', session='s', generation=-1)))
+        self.assertEqual('protocol', self.code(line(id='r', op='close', session='s', generation=1.5)))
+        self.assertEqual('protocol', self.code(line(id='r', op='close', session='s', generation=2 ** 53)))
         self.assertEqual('protocol', self.code(line(id='r', op='probe', udid='../x'), role='control'))
         parse_request(line(id='r', op='probe', udid='00008030-001A2D3E0C38802E'), 'control')
 
@@ -61,7 +61,8 @@ class ParseTests(unittest.TestCase):
 
     def test_each_role_accepts_only_its_operations(self):
         self.assertEqual('protocol', self.code(line(id='r', op='prepare', udid='abc'), role='session'))
-        self.assertEqual('protocol', self.code(line(id='r', op='clear', session='s', generation=1), role='control'))
+        self.assertEqual('protocol', self.code(line(id='r', op='close', session='s', generation=1), role='control'))
+        self.assertEqual('protocol', self.code(line(id='r', op='clear', session='s', generation=1)))
         for op in ('hello', 'ping'):
             fields = {'protocol': 2} if op == 'hello' else {}
             parse_request(line(id='r', op=op, **fields), 'control')

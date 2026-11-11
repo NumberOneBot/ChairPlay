@@ -1,7 +1,6 @@
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { GpsNotice } from '../gpsApi'
-import { gpsOutput, outputs } from '../gpsFixtures'
+import { outputs } from '../gpsFixtures'
 import { gpsState, openSection } from './gpsTesting'
 
 afterEach(cleanup)
@@ -10,33 +9,12 @@ const inert = (element: HTMLElement) => element.closest('[inert]') !== null
 const page = () => screen.getByRole('tabpanel')
 const blocks = () => within(page()).queryAllByRole('status')
 
-/** A notice of [code] that stays, or goes at [expiresAt]. */
-function notice(code: GpsNotice['code'], tone: GpsNotice['tone'], expiresAt: number | null = null): GpsNotice {
-  return { id: 1, code, tone, args: {}, expiresAt }
-}
-
 describe('GPS notices', () => {
   // An operation under way shows no block: the switch waiting is all it needs.
   it('shows no block for an operation under way', async () => {
     const { update } = await openSection(gpsState(outputs.stoppingUsb))
     expect(blocks()).toHaveLength(0)
     update(gpsState({ ...outputs.stoppingUsb, operation: { ...outputs.stoppingUsb.operation!, kind: 'enable' } }))
-    expect(blocks()).toHaveLength(0)
-  })
-
-  // Reset command sent goes at its time (10 seconds in the app).
-  it('drops the reset result at its time', async () => {
-    const output = gpsOutput({
-      selected: 'usb', usbPrepared: true,
-      notices: [{ ...notice('reset-sent', 'info', Date.now() + 400), id: 1 }],
-    })
-    await openSection(gpsState(output))
-    expect(blocks()).toHaveLength(1)
-    await waitFor(() => expect(blocks()).toHaveLength(0))
-  })
-
-  it('does not show a reset result that has already gone', async () => {
-    await openSection(gpsState(gpsOutput({ notices: [notice('reset-sent', 'info', Date.now() - 1)] })))
     expect(blocks()).toHaveLength(0)
   })
 
