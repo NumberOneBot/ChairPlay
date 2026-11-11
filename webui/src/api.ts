@@ -1,4 +1,5 @@
 // The app's API (UiServer.kt): what it sends and takes, and what the screens need from it; the client is apiClient.ts.
+import type { TrackAction, TrackState } from './gps/trackApi'
 import type { GpsBackend, GpsOutput, UsbSetupView } from './gpsApi'
 
 export type Phase = 'setup' | 'idle' | 'starting' | 'calling' | 'joining' | 'active' | 'retrying'
@@ -108,6 +109,8 @@ export interface GpsState {
   /** The output: method, saved switch, availability, operation (gpsApi.ts); absent from an app before USB GPS. */
   output?: GpsOutput
   usbSetup?: UsbSetupView
+  /** The recording track playback has loaded (gps/trackApi.ts); null or absent while none is. */
+  track?: TrackState | null
 }
 
 /** A window is available while its feature is on; only then can it be shown or hidden. */
@@ -241,6 +244,8 @@ export interface Backend extends GpsBackend {
   windowsLocation(): Promise<WindowsLocation>
   /** Turns drive mode on or off, as F10 does; false while the GPS is off. */
   driveMode(on: boolean): Promise<boolean>
+  /** Track playback's Open…, Play, Pause, or Stop; 'open' shows the Windows Open dialog, its outcome comes as state. */
+  track(action: TrackAction): Promise<boolean>
   /** Null when connecting started, else why not. */
   connect(): Promise<string | null>
   reconnect(): Promise<void>

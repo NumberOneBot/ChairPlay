@@ -1,5 +1,22 @@
 // Fakes for the tests: app states, and the key bindings of a fresh controls.properties; the backend is fakeBackend.ts.
+// Also how the tests find a control: by its data-testid, never by the words it shows (CLAUDE.md).
+import { screen } from '@testing-library/react'
 import type { AppState, ControlsData } from './api'
+
+/**
+ * The element with data-testid [testId], checked to be a [role] the page exposes, so the control stays reachable.
+ * Throws rather than calling expect: fakeBackend.ts brings this file into the dev previews, where vitest cannot run.
+ */
+export function control(testId: string, role: string): HTMLElement {
+  const element = screen.getByTestId(testId)
+  if (!screen.getAllByRole(role).includes(element)) throw new Error(`${testId} is not a ${role} the page exposes`)
+  return element
+}
+
+/** Whether the page has no element with data-testid [testId]. */
+export function absent(testId: string): boolean {
+  return screen.queryByTestId(testId) === null
+}
 
 export function appState(overrides: Partial<AppState> = {}): AppState {
   return {

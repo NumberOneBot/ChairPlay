@@ -14,6 +14,7 @@ import type {
   WindowsLocation,
   WindowsPlace,
 } from './api'
+import type { TrackAction } from './gps/trackApi'
 import type { CommandOutcome, GpsMethod, SetupAction, SetupIntent, SetupStep } from './gpsApi'
 import { controlsData } from './testing'
 
@@ -126,6 +127,14 @@ export class FakeBackend implements Backend {
 
   async driveMode(on: boolean) {
     this.driveModes.push(on)
+    return true
+  }
+
+  /** Track playback's commands, as the GPS page sent them. */
+  trackActions: TrackAction[] = []
+
+  async track(action: TrackAction) {
+    this.trackActions.push(action)
     return true
   }
 

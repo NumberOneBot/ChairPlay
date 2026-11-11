@@ -11,5 +11,8 @@ export function noticeText(notice: GpsNotice): NoticeText {
   switch (notice.code) {
     case 'usb-unavailable':
       return { head: 'USB GPS unavailable', text: 'Connect your iPhone with a USB cable to resume simulation.' }
+    case 'track-unreadable':
+      // The reason is the file reader's own sentence ("It has no GPS track."), which no code could list ahead.
+      return { head: "Can't play this file", text: notice.args.reason ?? '' }
   }
 }

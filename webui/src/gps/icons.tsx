@@ -1,5 +1,28 @@
-// The USB GPS screens' icons, each the mock's own drawing as it is (desktop-docs/mockups/usb-gps: views.js and
-// experiments.js), its attributes written for JSX.
+// The USB GPS screens' icons, each the mock's own drawing as it is (desktop-docs/mockups/usb-gps: views.js,
+// experiments.js, and track-playback.js), its attributes written for JSX.
+
+/** A treasure map's route, a dashed way from a start dot to a cross, on Open… (the mock's trackIcon). */
+export function TrackIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M4.4 13.6C6.5 13.6 8 14.4 10.4 13.9C13.6 13.1 13.4 8.9 10.4 8.7C8.6 8.6 7.4 9.8 5.6 9.4C2.4 8.7 2.6 4.1 5.6 3.6C7.2 3.4 8.6 4.1 10.2 3.8"
+        fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeDasharray="1.8 1.6"
+      />
+      <circle cx="2.9" cy="13.6" r="1.8" fill="currentColor" />
+      <path d="M11.3 1.5l3.2 3.2M14.5 1.5l-3.2 3.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/** A square, the track's Stop key (the mock's stop glyph). */
+export function StopIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="9" height="9" fill="currentColor" />
+    </svg>
+  )
+}
 
 /** The USB trident, on USB setup (the mock's usbIcon). */
 export function UsbIcon() {

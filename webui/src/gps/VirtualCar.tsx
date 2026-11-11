@@ -48,17 +48,22 @@ function going(state: AppState, imperial: boolean): string | undefined {
   return [speed, `${car.rpm} rpm`, car.gear, car.gamepad ? 'Gamepad connected' : 'No gamepad'].join(' · ')
 }
 
-/** The car itself and its gauges. [held] says why it waits, or null when it does not. */
+/**
+ * The car itself and its gauges. [held] says why it waits, or null when it does not; [driveHeld] why Drive mode alone
+ * does (a track drives the car), or null.
+ */
 export function VirtualCar({
   state,
   backend,
   settings,
   held,
+  driveHeld,
 }: {
   state: AppState
   backend: Backend
   settings: Settings
   held: string | null
+  driveHeld: string | null
 }) {
   const { value, save } = settings
   const { field } = parts(settings)
@@ -69,16 +74,23 @@ export function VirtualCar({
     <>
       <Group title="Virtual car" note={going(state, value('gps.units') === 'imperial')} />
       <div className={held ? 'held' : undefined} inert={held !== null} title={held ?? undefined}>
-        <Row
-          title={`Drive the GPS car with the arrow keys and show its speedometer and tachometer on the AltScreen${driveKey ? ` (${keyLabel(driveKey)})` : ''}. Up and Down are the pedals, Left and Right steer, and the arrows stop moving through CarPlay until drive mode is off.`}
+        <div
+          className={driveHeld ? 'held' : undefined}
+          inert={driveHeld !== null}
+          title={driveHeld ?? undefined}
+          data-testid="drive-mode-hold"
         >
-          <Switch
-            label="Drive mode"
-            checked={state.gps?.keyboard ?? false}
-            onChange={(on) => void backend.driveMode(on)}
-          />
-          <span className="exp fun">Extra fun</span>
-        </Row>
+          <Row
+            title={`Drive the GPS car with the arrow keys and show its speedometer and tachometer on the AltScreen${driveKey ? ` (${keyLabel(driveKey)})` : ''}. Up and Down are the pedals, Left and Right steer, and the arrows stop moving through CarPlay until drive mode is off.`}
+          >
+            <Switch
+              label="Drive mode"
+              checked={state.gps?.keyboard ?? false}
+              onChange={(on) => void backend.driveMode(on)}
+            />
+            <span className="exp fun">Extra fun</span>
+          </Row>
+        </div>
         <Row label="Power and mass" title="The car's power and mass, which set how it pulls and how fast it goes">
           {field('gps.car.power.hp', 'Power', '300')}
           <span className="unit">hp</span>
@@ -124,6 +136,7 @@ export function VirtualCar({
         >
           <Segmented
             label="Gauges"
+            testId="gps-gauges"
             value={value('gps.gauges') || 'large'}
             options={GAUGES}
             onChange={(size) => save({ 'gps.gauges': size })}

@@ -31,7 +31,8 @@ export interface GpsOperation {
 
 export type NoticeTone = 'info' | 'warn' | 'bad'
 
-export type GpsNoticeCode = 'usb-unavailable'
+/** track-unreadable: the file Open… chose cannot be played, args.reason saying why (shown in Track playback). */
+export type GpsNoticeCode = 'usb-unavailable' | 'track-unreadable'
 
 export interface GpsNotice {
   id: number

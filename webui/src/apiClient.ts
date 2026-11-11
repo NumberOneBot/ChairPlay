@@ -16,6 +16,7 @@ import type {
   WindowsLocation,
   WindowsPlace,
 } from './api'
+import type { TrackAction } from './gps/trackApi'
 import type { CommandOutcome, GpsMethod, SetupAction, SetupIntent, SetupStep } from './gpsApi'
 
 export class ApiError extends Error {}
@@ -90,6 +91,10 @@ export class Api implements Backend {
 
   async driveMode(on: boolean): Promise<boolean> {
     return (await this.request('POST', 'drive-mode', { on })).status === 200
+  }
+
+  async track(action: TrackAction): Promise<boolean> {
+    return (await this.request('POST', 'track', { action })).status === 200
   }
 
   async showAltscreenFrame(view?: string): Promise<boolean> {
