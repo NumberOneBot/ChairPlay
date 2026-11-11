@@ -1,6 +1,7 @@
 /* The settings and controls windows' styles, in the order they cascade */
 
 @import './base.css';
+@import './tints.css';
 @import './controls-screen.css';
 @import './controls-knob.css';
 @import './controls-wings.css';

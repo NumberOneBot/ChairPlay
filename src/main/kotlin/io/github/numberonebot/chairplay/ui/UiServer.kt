@@ -53,7 +53,7 @@ class UiServer(
     /** The page's address. */
     val url: String get() = "http://127.0.0.1:$port/"
 
-    /** The address people see and a browser opens: localhost, as the Connection page shows it. */
+    /** The address people see and a browser opens: localhost, as the Application page shows it. */
     val browserUrl: String get() = "http://localhost:$port"
 
     fun start() {
@@ -150,7 +150,7 @@ class UiServer(
     private fun lanUrls(): List<String> = if (network) addresses().map { "http://${it.hostAddress}:$port" } else emptyList()
 
     /**
-     * The app's state, which port this server took (the Connection page says when it is not ui.port's), and with
+     * The app's state, which port this server took (the Application page says when it is not ui.port's), and with
      * ui.network on, the addresses another device opens it at.
      */
     private fun state(): Map<String, Any?> =

@@ -1,5 +1,21 @@
 // Fakes for the tests: app states, and the key bindings of a fresh controls.properties; the backend is fakeBackend.ts.
+import { screen } from '@testing-library/react'
 import type { AppState, ControlsData } from './api'
+
+/**
+ * The element with data-testid [testId], which must be one the page exposes with [role], so it stays reachable by
+ * keyboard and screen reader. It throws rather than calling vitest's expect: the dev previews load this file too.
+ */
+export function control(testId: string, role: string): HTMLElement {
+  const element = screen.getByTestId(testId)
+  if (!screen.getAllByRole(role).includes(element)) throw new Error(`${testId} is not a ${role} the page exposes`)
+  return element
+}
+
+/** Whether the page has no element with data-testid [testId]. */
+export function absent(testId: string): boolean {
+  return screen.queryByTestId(testId) === null
+}
 
 export function appState(overrides: Partial<AppState> = {}): AppState {
   return {
@@ -27,6 +43,8 @@ export function appState(overrides: Partial<AppState> = {}): AppState {
     controlsKeys: false,
     setupDone: true,
     accent: '#52c4ff',
+    tint: 'black',
+    controlsTint: 'black',
     about: {
       version: null,
       app: { commit: '4e6d50df', date: '2026-10-23' },

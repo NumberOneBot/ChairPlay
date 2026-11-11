@@ -15,7 +15,7 @@
   border: 1px solid transparent;
   /* Capsules: the 26 px track and the 20 px plates rounded by half their height */
   border-radius: 13px;
-  background: rgb(118 118 128 / 24%);
+  background: color-mix(in srgb, var(--fill) 24%, transparent);
 }
 
 /* Plates line up from row to row: 80 px on a narrow page, 90 px on a wider one (see .seg.wide below) */

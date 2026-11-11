@@ -31,7 +31,13 @@
   position: absolute;
   inset: 9px;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 28%, #29292d, var(--raised) 62%, var(--panel));
+  /* In sRGB, as with hex stops: a stop made from a token would turn it to Oklab */
+  background: radial-gradient(
+    circle at 50% 28% in srgb,
+    rgb(from var(--line) calc(r - 1) calc(g - 1) calc(b - 1)),
+    var(--raised) 62%,
+    var(--panel)
+  );
   box-shadow:
     0 0 0 1px #000,
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
@@ -145,7 +151,12 @@
   border: 1px solid var(--line);
   border-radius: 50%;
   font-size: 13.4px;
-  background: radial-gradient(circle at 50% 22%, #2e2e33, var(--raised) 58%, #161618);
+  background: radial-gradient(
+    circle at 50% 22% in srgb,
+    rgb(from var(--line) calc(r + 4) calc(g + 4) calc(b + 5)),
+    var(--raised) 58%,
+    rgb(from var(--ground) calc(r + 4) calc(g + 4) calc(b + 4))
+  );
   box-shadow:
     0 0 0 7px var(--bg),
     0 0 0 8px var(--line),
@@ -155,7 +166,12 @@
 
 .controls-screen .key.select:hover {
   border-color: var(--line);
-  background: radial-gradient(circle at 50% 22%, #38383e, #27272c 58%, #1b1b1e);
+  background: radial-gradient(
+    circle at 50% 22% in srgb,
+    rgb(from var(--edge) calc(r - 2) calc(g - 2) calc(b - 1)),
+    rgb(from var(--line) calc(r - 3) calc(g - 3) calc(b - 2)) 58%,
+    rgb(from var(--raised) calc(r - 1) calc(g - 1) calc(b - 1))
+  );
 }
 
 .controls-screen .key.select.down {

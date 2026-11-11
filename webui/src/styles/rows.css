@@ -42,7 +42,7 @@
 .shell .held select {
   /* A held segmented group's track and text, at its 0.45 opacity */
   border-color: transparent;
-  background-color: rgb(118 118 128 / 11%);
+  background-color: color-mix(in srgb, var(--fill) 11%, transparent);
   color: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
@@ -63,7 +63,13 @@
   text-transform: uppercase;
 }
 
-.shell .grp:first-child {
+/*
+ * Only the page's own first group starts at the top: first in the page, in the page's root, or in the hold around
+ * it. A group first in a block further in (the Keyboard's key groups, a section) keeps the space between groups.
+ */
+.shell .page-inner > .grp:first-child,
+.shell .page-inner > :first-child > .grp:first-child,
+.shell .page-inner > :first-child > :first-child > .grp:first-child {
   padding-top: 0;
 }
 
@@ -154,7 +160,7 @@
 }
 
 .shell .mono {
-  color: #c9c9cf;
+  color: rgb(from var(--text) calc(r - 32) calc(g - 32) calc(b - 28));
   font:
     12px Consolas,
     monospace;

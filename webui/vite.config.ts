@@ -10,7 +10,7 @@ const appPort = process.env.CHAIRPLAY_UI_PORT ?? '7529'
 // The app's font files, which the HUD (HudStyle.kt) draws with and the stylesheet takes as @fonts/<file>: the build
 // copies the ones it uses into its assets, so the repository holds each once.
 const fonts = fileURLToPath(new URL('../src/main/resources/fonts', import.meta.url))
-// The window icons, which the About page shows as @icons/<file>, for the same reason.
+// The window icons, which the Application page shows as @icons/<file>, for the same reason.
 const icons = fileURLToPath(new URL('../src/main/resources/icons', import.meta.url))
 
 export default defineConfig({

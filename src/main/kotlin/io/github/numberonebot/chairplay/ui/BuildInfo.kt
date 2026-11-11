@@ -7,7 +7,7 @@ import java.util.Properties
 data class Commit(val id: String, val date: String)
 
 /**
- * Which build this is, for the About page: this repository's commit and the DiPlay core's (the upstream submodule),
+ * Which build this is, for the Application page: this repository's commit and the DiPlay core's (the upstream submodule),
  * as the build's buildInfo task wrote them into build-info.properties, and the release [version] (X.Y.Z) when the build was
  * given one. Each is null when the build did not record it.
  */
@@ -35,7 +35,7 @@ fun BuildInfo.startLine(): String {
     return "$build, commit ${app?.let { "${it.id} (${it.date})" } ?: "not recorded"}"
 }
 
-/** The About page's part of the UI state: the version, both commits as `{commit, date}`, and the report [details]. */
+/** The Application page's build and help part of the UI state: the version, both commits as `{commit, date}`, and the report [details]. */
 fun BuildInfo.toPage(details: String): Map<String, Any?> {
     fun commit(commit: Commit?) = commit?.let { mapOf("commit" to it.id, "date" to it.date) }
     return mapOf("version" to version, "app" to commit(app), "core" to commit(core), "details" to details)

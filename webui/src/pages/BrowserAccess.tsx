@@ -1,4 +1,4 @@
-// The Connection page's "Settings browser" group: the address the settings open at on this PC, its port (ui.port)
+// The Application page's "Settings browser" group: the address the settings open at on this PC, its port (ui.port)
 // applying at the next start, and Open (the window's page only), which opens the default browser there;
 // a word when ui.port was taken at start and this run serves them on another port; and ui.network, which opens them
 // to the local network at this PC's addresses (listed, as links, while this run listens on them).
@@ -31,6 +31,7 @@ export function BrowserAccess({ state, backend, settings }: { state: AppState; b
           placeholder="7529"
           error={settings.error('ui.port')}
           onCommit={(text) => settings.save({ 'ui.port': text })}
+          testId="browser-port"
         />
         <Changed keys={['ui.port']} pending={pendingOf(state)} />
         {/* A tab is in a browser already. */}
@@ -39,6 +40,7 @@ export function BrowserAccess({ state, backend, settings }: { state: AppState; b
             type="button"
             className="btn small"
             title="Open the settings in the default browser"
+            data-testid="browser-open"
             onClick={() => void backend.openInBrowser()}
           >
             <BrowserIcon />
@@ -51,6 +53,7 @@ export function BrowserAccess({ state, backend, settings }: { state: AppState; b
           label="Allow access from the local network"
           checked={settings.value('ui.network') === 'true'}
           onChange={(checked) => settings.save({ 'ui.network': String(checked) })}
+          testId="browser-network"
         />
         <Changed keys={['ui.network']} pending={pendingOf(state)} />
       </Row>

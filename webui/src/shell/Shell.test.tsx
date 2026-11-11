@@ -130,6 +130,16 @@ describe('Shell toolbar', () => {
     expect(sectionOf('keyboard.text.input')).toBe('keyboard')
   })
 
+  // The bar names Application for the settings browser's port and network, which wait for a restart.
+  it("puts the app's own settings on Application", () => {
+    for (const key of ['ui.tint', 'ui.port', 'ui.network', 'updates.check.on.start', 'window.always.on.top',
+      'window.front.on.call', 'altscreen.always.on.top']) {
+      expect(sectionOf(key)).toBe('application')
+    }
+    expect(sectionOf('window.width')).toBe('carplay')
+    expect(sectionOf('altscreen.width')).toBe('altscreen')
+  })
+
   it('has no Restart needed while nothing waits for one', () => {
     render(<Shell state={appState(live)} backend={new FakeBackend()} />)
 

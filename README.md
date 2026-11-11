@@ -108,7 +108,7 @@ ChairPlay is a hobby project I build and test on real hardware in my spare time.
 
 ## Report a problem
 
-Open an [issue](https://github.com/NumberOneBot/ChairPlay/issues/new): About → **Report a problem** fills in the version for you. For a connection problem, set **Log level** to **Info** on the Experiments page, try again, and attach the log: the **Logs** button on that page opens its folder. ChairPlay keeps your Wi-Fi password out of the log, but look it over before sending.
+Open an [issue](https://github.com/NumberOneBot/ChairPlay/issues/new): Application → **Report a problem** fills in the version for you. For a connection problem, set **Log level** to **Info** on the Experiments page, try again, and attach the log: the **Logs** button on that page opens its folder. ChairPlay keeps your Wi-Fi password out of the log, but look it over before sending.
 
 Ideas and fixes are welcome too: see the [roadmap](ROADMAP.md), then open an issue or a pull request, or write to me at [alex.strelets@gmail.com](mailto:alex.strelets@gmail.com).
 

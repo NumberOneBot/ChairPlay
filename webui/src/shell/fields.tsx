@@ -20,6 +20,7 @@ export function Field(props: {
   /** False where the reason goes elsewhere, as under the safe-area frame: the field only turns red. */
   showReason?: boolean
   disabled?: boolean
+  testId?: string
 }) {
   const [draft, setDraft] = useState(props.value)
   const [dirty, setDirty] = useState(false)
@@ -60,6 +61,7 @@ export function Field(props: {
         value={shown}
         placeholder={props.placeholder}
         disabled={props.disabled}
+        data-testid={props.testId}
         autoComplete={props.type === 'password' ? 'new-password' : 'off'}
         spellCheck={false}
         onChange={(event) => {
@@ -143,7 +145,7 @@ export function PasswordField(props: {
   )
 }
 
-/** A drop-down list: the value saved and the text shown for each choice. */
+/** A drop-down list: the value saved and the text shown for each choice; its wrapper draws the caret in the tint. */
 export function Select(props: {
   label: string
   value: string
@@ -152,17 +154,19 @@ export function Select(props: {
   className?: string
 }) {
   return (
-    <select
-      className={`t ${props.className ?? ''}`}
-      aria-label={props.label}
-      value={props.value}
-      onChange={(event) => props.onChange(event.target.value)}
-    >
-      {props.options.map(([value, text]) => (
-        <option key={value} value={value}>
-          {text}
-        </option>
-      ))}
-    </select>
+    <span className="caret">
+      <select
+        className={`t ${props.className ?? ''}`}
+        aria-label={props.label}
+        value={props.value}
+        onChange={(event) => props.onChange(event.target.value)}
+      >
+        {props.options.map(([value, text]) => (
+          <option key={value} value={value}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </span>
   )
 }

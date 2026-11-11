@@ -45,6 +45,7 @@ object EditableSettings {
         "updates.check.on.start" to switch(Applies.NOW),
         "ui.autoshow" to switch(Applies.NOW),
         "ui.controls.keys" to switch(Applies.NOW),
+        "ui.tint" to choice(*TINTS.toTypedArray(), applies = Applies.NOW),
         "ui.network" to switch(Applies.RESTART),
         "ui.port" to Setting(Applies.RESTART) { if (it.trim().toIntOrNull() in 1..65535) null else "Enter a port from 1 to 65535" },
         "keyboard.text.input" to switch(Applies.RECONNECT),

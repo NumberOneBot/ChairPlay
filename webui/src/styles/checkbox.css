@@ -20,7 +20,7 @@
   margin: 0;
   border: 0;
   border-radius: 9px;
-  background: rgb(118 118 128 / 32%);
+  background: color-mix(in srgb, var(--fill) 32%, transparent);
   transition: background-color 0.15s;
   cursor: default;
 }
@@ -39,7 +39,7 @@
 }
 
 .shell .chk input:not(:disabled):hover {
-  background: rgb(118 118 128 / 44%);
+  background: color-mix(in srgb, var(--fill) 44%, transparent);
 }
 
 .shell .chk input:checked {

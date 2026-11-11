@@ -140,6 +140,7 @@ export function Switch(props: {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
+  testId?: string
 }) {
   return (
     <label className="chk">
@@ -148,6 +149,7 @@ export function Switch(props: {
         role="switch"
         checked={props.checked}
         disabled={props.disabled}
+        data-testid={props.testId}
         onChange={(event) => props.onChange(event.target.checked)}
       />
       {props.label}

@@ -11,10 +11,8 @@
   src: url('@fonts/RedditSans-Variable.ttf') format('truetype');
 }
 
+/* The greys are the tint's, ui.tint (tints.css). */
 :root {
-  --bg: #000;
-  --text: #fff;
-  --muted: #9a9aa0;
   /*
    * The accent, ui.accent in settings.properties, which the page sets here (accent.ts); every lighter, darker, or
    * fainter shade of it is made from it, on both pages.
@@ -77,7 +75,7 @@ html {
 ::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 4px;
-  background: #38383c padding-box;
+  background: rgb(from var(--edge) calc(r - 2) calc(g - 2) calc(b - 3)) padding-box;
 }
 
 /* The controls window's page fits its window and never scrolls. */

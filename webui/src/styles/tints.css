@@ -1,0 +1,95 @@
+/*
+ * The interface's tint, ui.tint, which the page sets as the root's data-tint (accent.ts): the greys of the settings and
+ * the controls window. Every other grey in the stylesheets is made from these, so it follows the tint: a fill is
+ * --fill made translucent, a shade a token's channels moved by the black palette's offsets.
+ */
+
+/* Black, the default: the HUD's black ground */
+:root {
+  --bg: #000;
+  --panel: #111113;
+  --raised: #1c1c1f;
+  --bar: #212125;
+  --field: #08080a;
+  /* A light ground in the fields and under the segmented groups, so they read as places to type and choose */
+  --ground: #121214;
+  --line: #2a2a2e;
+  --edge: #3a3a3f;
+  --text: #fff;
+  --muted: #9a9aa0;
+  --dim: #5c5c63;
+  /* The grey the fields, switches, and segmented groups are filled with, made translucent there */
+  --fill: rgb(118 118 128);
+}
+
+/* Black's settings text a shade softer than the controls window's white */
+.shell {
+  --text: #e9e9eb;
+  --muted: #8b8b92;
+}
+
+:root[data-tint='graphite'] {
+  --bg: #0f0f11;
+  --panel: #161619;
+  --raised: #212125;
+  --bar: #26262b;
+  --field: #0b0b0d;
+  --ground: #17171a;
+  --line: #2e2e33;
+  --edge: #3e3e44;
+  --text: #e9e9eb;
+  --muted: #8d8d94;
+  --dim: #5e5e66;
+}
+
+:root[data-tint='slate'] {
+  --bg: #0d1117;
+  --panel: #131922;
+  --raised: #1c2430;
+  --bar: #212a37;
+  --field: #0a0e13;
+  --ground: #121821;
+  --line: #273140;
+  --edge: #364253;
+  --text: #e6ebf2;
+  --muted: #8a94a3;
+  --dim: #5a6474;
+}
+
+:root[data-tint='teal'] {
+  --bg: #0b1213;
+  --panel: #111a1b;
+  --raised: #1a2526;
+  --bar: #1f2b2c;
+  --field: #081011;
+  --ground: #101a1b;
+  --line: #253334;
+  --edge: #344546;
+  --text: #e4eded;
+  --muted: #869696;
+  --dim: #576869;
+}
+
+:root[data-tint='warm'] {
+  --bg: #12100e;
+  --panel: #191714;
+  --raised: #24211d;
+  --bar: #2a2621;
+  --field: #0e0c0a;
+  --ground: #1a1714;
+  --line: #312c27;
+  --edge: #413b34;
+  --text: #ece8e3;
+  --muted: #9a938a;
+  --dim: #6a635a;
+}
+
+/* A tint's text is the same on both pages, and its fill sits between its muted and dim greys */
+:root[data-tint]:not([data-tint='black']) {
+  --fill: color-mix(in srgb, var(--muted) 55%, var(--dim));
+}
+
+:root[data-tint]:not([data-tint='black']) .shell {
+  --text: inherit;
+  --muted: inherit;
+}

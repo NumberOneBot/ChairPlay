@@ -242,6 +242,7 @@ export function GetStarted(props: {
         type="button"
         className="skip"
         title="Open the settings; this guide comes back until an iPhone has connected"
+        data-testid="setup-skip"
         onClick={props.onSkip}
       >
         Skip to settings

@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, describe, expect, it } from 'vitest'
 import type { AppState } from '../api'
 import { Shell } from '../shell/Shell'
-import { appState } from '../testing'
+import { absent, appState, control } from '../testing'
 import { FakeBackend } from '../fakeBackend'
 
 afterEach(cleanup)
@@ -232,16 +232,15 @@ describe('Add the rule', () => {
 })
 
 describe('Show again', () => {
-  it('opens Get started from the About page once the setup is done', async () => {
+  it('opens Get started from the Application page once the setup is done', async () => {
     render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={new FakeBackend()} />)
-    await screen.findByRole('textbox', { name: 'Network' })
-    expect(screen.queryByRole('button', { name: 'Show again' })).toBeNull()
+    await screen.findAllByRole('switch')
+    expect(absent('app-show-guide')).toBe(true)
 
-    fireEvent.click(screen.getByRole('tab', { name: 'About' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Show again' }))
+    fireEvent.click(control('tab-application', 'tab'))
+    fireEvent.click(control('app-show-guide', 'button'))
 
-    expect(await screen.findByRole('heading', { name: 'Get started' })).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Skip to settings' }))
-    expect(screen.getByRole('tab', { name: 'Connection' })).toBeTruthy()
+    fireEvent.click(control('setup-skip', 'button'))
+    expect(control('tab-connection', 'tab')).toBeTruthy()
   })
 })
