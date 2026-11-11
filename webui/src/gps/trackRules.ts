@@ -1,11 +1,7 @@
-// When Track playback shows, waits, owns the car, and can stop (desktop-docs/gps-track-playback-ui-spec.md §1, §6, §8).
+// When Track playback waits, owns the car, and can stop (desktop-docs/gps-track-playback-ui-spec.md §1, §6, §8); when it
+// shows is usbGpsReady (output.ts), shared with the city presets.
 import type { GpsOutput } from '../gpsApi'
 import type { TrackState } from './trackApi'
-
-/** Only a USB GPS in force, set up, and with its iPhone on the cable plays a track. */
-export function trackShown(o: GpsOutput): boolean {
-  return o.selected === 'usb' && o.applied === 'usb' && o.usbPrepared && o.device !== null && o.availability === 'ready'
-}
 
 /** Why the whole section waits, or null when it does not. */
 export function trackHeld(o: GpsOutput): string | null {

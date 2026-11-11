@@ -20,6 +20,7 @@ export function CityPresets({
       <Segmented
         label="City presets"
         className="rows cities"
+        testId="city-preset"
         value={(place && cityAt(`${place.latitude}, ${place.longitude}`)?.code) ?? ''}
         options={CITIES.map((city) => [city.code, city.code, `${city.name}: ${city.road}`])}
         onChange={(code) => {

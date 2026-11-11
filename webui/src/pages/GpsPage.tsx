@@ -3,9 +3,9 @@ import type { AppState, Backend } from '../api'
 import { GpsNotices } from '../gps/GpsNotices'
 import { iphoneStatus } from '../gps/iphoneStatus'
 import { EnableRow, MethodRows } from '../gps/MethodRows'
-import { outputOf } from '../gps/output'
+import { outputOf, usbGpsReady } from '../gps/output'
 import { TrackPlayback } from '../gps/TrackPlayback'
-import { trackOwnsCar, trackShown } from '../gps/trackRules'
+import { trackOwnsCar } from '../gps/trackRules'
 import { UsbSetupWizard } from '../gps/UsbSetupWizard'
 import { VirtualCar } from '../gps/VirtualCar'
 import { Group, Row } from '../shell/controls'
@@ -45,7 +45,8 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
   const placed = placeOf(state.gps, value('gps.start')) !== null
   const positionHeld = placed && (off || (notSending && output.reason !== 'no-position'))
   const carHeld = off || notSending
-  const presetsHeld = usb && output.applied !== 'usb'
+  // The city presets and Track playback show for a ready USB GPS only, held with the rest while the switch is off.
+  const usbReady = usbGpsReady(output)
   const holdTitle = (held: boolean) =>
     !held
       ? null
@@ -57,7 +58,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
   // A recording playing or paused drives the car: what moves it waits for Stop, Position whole and Drive mode (§8);
   // only while the section and its Stop are on the page.
   const trackDrives =
-    trackShown(output) && trackOwnsCar(state.gps?.track) ? 'Stop track playback to move the car yourself' : null
+    usbReady && trackOwnsCar(state.gps?.track) ? 'Stop track playback to move the car yourself' : null
   const positionHold = holdTitle(positionHeld) ?? trackDrives
   // CarPlay's GPS sends the car's speed and heading too: gps.wheel.speed and gps.heading.send, on by default and a
   // hand edit only (owner, 2026-11-11).
@@ -86,16 +87,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           >
             <PositionFields settings={settings} car={state.gps} heading={heading} />
           </Row>
-          {usb && (
-            // USB chosen but not in force until CarPlay reconnects (D8): its presets wait for it.
-            <div
-              className={presetsHeld ? 'held' : undefined}
-              inert={presetsHeld}
-              title={presetsHeld ? 'Reconnect CarPlay to start USB GPS first' : undefined}
-            >
-              <CityPresets settings={settings} place={placeOf(state.gps, value('gps.start'))} />
-            </div>
-          )}
+          {usbReady && <CityPresets settings={settings} place={placeOf(state.gps, value('gps.start'))} />}
           {!usb && value('gps.heading.send') !== 'false' && (
             <Row
               label="Heading"
@@ -107,7 +99,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
             </Row>
           )}
         </div>
-        {trackShown(output) && <TrackPlayback output={output} track={state.gps?.track ?? null} backend={backend} />}
+        {usbReady && <TrackPlayback output={output} track={state.gps?.track ?? null} backend={backend} />}
         <VirtualCar
           state={state}
           backend={backend}

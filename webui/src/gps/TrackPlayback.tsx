@@ -27,7 +27,7 @@ function recordingLine(track: TrackState): string {
 /**
  * Track playback, between Position and Virtual car on the GPS page (desktop-docs/gps-track-playback-ui-spec.md): Open…
  * asks the app for the Windows Open dialog, the recording it loaded and where the player is come back as state, and
- * the keys play, pause, and stop it. Shown for a ready USB GPS only (trackShown); while simulation is off it waits whole.
+ * the keys play, pause, and stop it. Shown for a ready USB GPS only (usbGpsReady); while simulation is off it waits whole.
  * A file it could not play is said here, under the header, rather than at the top of the page.
  */
 export function TrackPlayback({
