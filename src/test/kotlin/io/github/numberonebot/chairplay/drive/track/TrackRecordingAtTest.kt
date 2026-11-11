@@ -60,9 +60,9 @@ class TrackRecordingAtTest {
         val s = one(
             point(0.0, 10.0, 20.0),
             point(10.0, 10.0, 20.0),
-            point(20.0, 10.001, 20.0),
+            point(20.0, 10.0, 20.001),
         ).at(5.0)
-        assertEquals(0.0, s.heading, 1e-3)
+        assertEquals(90.0, s.heading, 1e-3)
     }
 
     @Test
@@ -73,7 +73,7 @@ class TrackRecordingAtTest {
 
     @Test
     fun `a time in the gap between segments is the last point of the first segment, stopped`() {
-        val last = point(10.0, 10.001, 20.0)
+        val last = point(10.0, 10.0, 20.001)
         val r = TrackRecording(
             "t",
             listOf(
@@ -84,7 +84,7 @@ class TrackRecordingAtTest {
         val s = r.at(50.0)
         assertEquals(last.position, s.position)
         assertEquals(0.0, s.speed, 0.0)
-        assertEquals(0.0, s.heading, 1e-3)
+        assertEquals(90.0, s.heading, 1e-3)
     }
 
     @Test
