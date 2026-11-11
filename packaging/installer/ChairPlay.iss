@@ -10,6 +10,10 @@
 #ifndef AppVersion
   #error Pass the version: ISCC /DAppVersion=X.Y.Z
 #endif
+; The setup file's own version takes numbers only: a pre-release (1.1.0-rc1) passes its X.Y.Z here.
+#ifndef AppNumericVersion
+  #define AppNumericVersion AppVersion
+#endif
 #ifndef SourceDir
   #error Pass the app image: ISCC /DSourceDir=<build\jpackage\ChairPlay>
 #endif
@@ -25,6 +29,7 @@
 AppId={{25CBBAE6-C3C2-48CB-AB46-25D3386168D8}
 AppName=ChairPlay
 AppVersion={#AppVersion}
+VersionInfoVersion={#AppNumericVersion}
 AppPublisher=Oleksiy Strelets
 ; Per user and without admin rights: the app writes its data into its own folder.
 DefaultDirName={localappdata}\Programs\ChairPlay

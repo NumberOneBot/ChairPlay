@@ -1,7 +1,8 @@
 // The installer: build/installer/ChairPlay-<version>-setup.exe, which Inno Setup 6 makes from the app image with
 // packaging/installer/ChairPlay.iss. Apply it after gradle/package.gradle.kts, whose image and data list it uses.
 
-// The release version (chairplay.version, X.Y.Z), set in build.gradle.kts; null in a development build.
+// The release version (chairplay.version, X.Y.Z or a pre-release such as 1.1.0-rc1), set in build.gradle.kts; null in a
+// development build. Inno Setup takes the full version, file names and Installed apps showing it.
 val appVersion = project.extra["appVersion"] as String?
 // The files and folders the app writes next to its exe, set in gradle/package.gradle.kts.
 @Suppress("UNCHECKED_CAST")
@@ -67,6 +68,7 @@ val installer by tasks.registering(Exec::class) {
         commandLine(listOf(
             iscc().path,
             "/DAppVersion=${requireVersion()}",
+            "/DAppNumericVersion=${requireVersion().substringBefore('-')}",
             "/DSourceDir=${dir.path}",
             "/DOutputDir=${outDir.get().asFile.path}",
             // What the uninstaller deletes when the user asks it to: the data deploy keeps, as file and folder names.

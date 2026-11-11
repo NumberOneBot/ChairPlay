@@ -77,7 +77,8 @@ val jpackageImage by tasks.registering(Exec::class) {
             launcher.get().metadata.installationPath.file("bin/jpackage.exe").asFile.path,
             "--type", "app-image",
             "--name", "ChairPlay",
-            "--app-version", appVersion ?: "0.0.0",
+            // The exe's file version takes numbers only: a pre-release (1.1.0-rc1) goes in as 1.1.0.
+            "--app-version", project.extra["appNumericVersion"] as String? ?: "0.0.0",
             "--vendor", "Oleksiy Strelets",
             "--input", installDir.get().dir("lib").asFile.path,
             "--main-jar", "chairplay.jar",

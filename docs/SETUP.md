@@ -129,7 +129,9 @@ A release is a tag `vX.Y.Z` on `main`. Create it and push it:
 
 `git tag v0.1.0` then `git push origin v0.1.0`
 
-The workflow in `.github/workflows/release.yml` runs the tests, builds `ChairPlay-X.Y.Z-setup.exe` with `gradlew installer`, and drafts a GitHub release with the installer attached. Write the release notes, then publish the draft. Versions that start with 0 are marked as pre-releases. A tag that is not `vX.Y.Z` fails the workflow before it builds anything. To run the workflow again for the same tag, delete its draft release first: the workflow does not replace one.
+A pre-release is a tag `vX.Y.Z-<label><n>`, such as `v1.1.0-rc1` or `v1.1.0-beta2`. It builds the same way, with the full version in the file names and in About, and Windows shows `X.Y.Z` as the exe's file version.
+
+The workflow in `.github/workflows/release.yml` runs the tests, builds `ChairPlay-X.Y.Z-setup.exe` with `gradlew installer`, and drafts a GitHub release with the installer attached. Write the release notes, then publish the draft. Pre-releases and versions that start with 0 are marked as pre-releases on GitHub, and the update check never offers them; a pre-release's user is offered the next stable release, such as 1.1.0 after 1.1.0-rc1. A tag that is neither `vX.Y.Z` nor a pre-release tag fails the workflow before it builds anything. To run the workflow again for the same tag, delete its draft release first: the workflow does not replace one.
 
 For a dry run without a tag, run the workflow from the Actions tab (Run workflow): it runs the same tests and builds `ChairPlay-0.0.0-setup.exe`, kept as the run's artifact, and drafts no release.
 

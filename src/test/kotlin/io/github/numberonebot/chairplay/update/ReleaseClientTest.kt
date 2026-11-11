@@ -13,9 +13,21 @@ class ReleaseClientTest {
             assertTrue(ReleaseVersion.parse(newer) > ReleaseVersion.parse(older))
         }
         assertEquals(ReleaseVersion.parse("1.0.5"), ReleaseVersion.parse("v1.0.5"))
-        for (invalid in listOf("", "1.0", "1.0.6-beta", "garbage", "1.0.5.1", "-1.0.0")) {
+        for (invalid in listOf("", "1.0", "1.0.6-beta", "1.0.6-", "1.0.6-RC1", "1.0.6-rc1.2", "garbage", "1.0.5.1", "-1.0.0")) {
             assertThrows(IllegalArgumentException::class.java) { ReleaseVersion.parse(invalid) }
         }
+    }
+
+    // A pre-release (1.1.0-rc1) comes after the release before it and before its own release, so an RC's user is
+    // offered the final 1.1.0 and no older one.
+    @Test fun `a pre-release sits between the release before it and its own release`() {
+        val rc1 = ReleaseVersion.parse("v1.1.0-rc1")
+        assertTrue(rc1 > ReleaseVersion.parse("1.0.11"))
+        assertTrue(rc1 < ReleaseVersion.parse("1.1.0"))
+        assertTrue(rc1 < ReleaseVersion.parse("1.1.0-rc2"))
+        assertTrue(ReleaseVersion.parse("1.1.0-rc10") > ReleaseVersion.parse("1.1.0-rc9"))
+        assertTrue(ReleaseVersion.parse("1.1.0-beta2") < rc1)
+        assertEquals("1.1.0-rc1", rc1.toString())
     }
 
     @Test fun `GitHub response is validated and HTTP failures are not up to date`() {

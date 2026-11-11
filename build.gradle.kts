@@ -85,13 +85,15 @@ sourceSets {
 // date, in build-info.properties (BuildInfo). The commits move without a file Gradle watches, so the task runs every
 // build; it writes the file only when that changes, which leaves the jar up to date otherwise.
 val buildInfoResources = layout.buildDirectory.dir("generated/build-info")
-// The release version, X.Y.Z, from -Pchairplay.version=...; a build without it is a development build.
+// The release version from -Pchairplay.version=...: X.Y.Z, or a pre-release X.Y.Z-<label><n> such as 1.1.0-rc1; a build
+// without it is a development build. Windows wants numbers in an exe's version: appNumericVersion is X.Y.Z alone.
 val appVersion: String? = providers.gradleProperty("chairplay.version").orNull?.also {
-    require(Regex("""\d+\.\d+\.\d+""").matches(it)) {
-        "chairplay.version must be three numbers separated by dots, like 0.1.0 (without a v); got '$it'"
+    require(Regex("""\d+\.\d+\.\d+(-[a-z]+\d+)?""").matches(it)) {
+        "chairplay.version must be X.Y.Z or a pre-release such as 1.1.0-rc1 (without a v); got '$it'"
     }
 }
 extra["appVersion"] = appVersion
+extra["appNumericVersion"] = appVersion?.substringBefore('-')
 val buildInfo by tasks.registering {
     group = "build"
     description = "Writes the app's version and the app's and the DiPlay core's commits for the About page."
