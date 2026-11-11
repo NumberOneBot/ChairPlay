@@ -48,6 +48,8 @@ export function Segmented(props: {
   disabled?: boolean
   className?: string
   columns?: number
+  /** Each choice's data-testid is this and its value: `${testId}-${value}`. */
+  testId?: string
 }) {
   const columns = props.columns ?? Math.ceil(props.options.length / 2)
   return (
@@ -70,6 +72,7 @@ export function Segmented(props: {
             className={chosen ? 'on' : ''}
             title={title}
             disabled={props.disabled}
+            data-testid={props.testId && `${props.testId}-${value}`}
             onClick={() => {
               if (!chosen) props.onChange(value)
             }}
@@ -163,9 +166,15 @@ export function Message(props: {
   at?: string
   title?: string
   children?: ReactNode
+  testId?: string
 }) {
   return (
-    <div className={`alert ${props.tone}`} role={props.tone === 'info' ? 'status' : 'alert'} title={props.title}>
+    <div
+      className={`alert ${props.tone}`}
+      role={props.tone === 'info' ? 'status' : 'alert'}
+      title={props.title}
+      data-testid={props.testId}
+    >
       <div className="head">
         {props.head} <span>{props.text}</span>
       </div>

@@ -178,10 +178,6 @@
   line-height: 16px;
 }
 
-.shell .hint .exp {
-  margin-right: 6px;
-}
-
 /* A tag for what is there for the joy of it */
 .shell .exp.fun {
   border-color: rgba(48, 209, 88, 0.5);

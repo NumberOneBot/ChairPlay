@@ -8,7 +8,6 @@ import { ExperimentsPage } from '../pages/ExperimentsPage'
 import { GpsPage } from '../pages/GpsPage'
 import { ConnectionPage } from '../pages/ConnectionPage'
 import { KeyboardPage } from '../pages/KeyboardPage'
-import { GlobalNotices } from '../gps/GpsNotices'
 import { GetStarted } from '../setup/GetStarted'
 import { setupSteps } from '../setup/steps'
 import { Message } from './controls'
@@ -99,6 +98,7 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
                 className={section === id ? 'sel' : ''}
                 aria-label={title}
                 title={title}
+                data-testid={`tab-${id}`}
                 onClick={() => setSection(id)}
               >
                 {icon}
@@ -106,33 +106,30 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
               </button>
             ))}
           </nav>
-          <div className="pane">
-            <GlobalNotices output={state.gps?.output} backend={backend} />
-            <div className="page" role="tabpanel" id={`${ids}-page`} aria-labelledby={`${ids}-tab-${section}`}>
-              <div className="page-inner">
-                {settings.loadError && (
-                  <Message tone="bad" head="Couldn't read the settings." text={settings.loadError} />
-                )}
-                {settings.data && section === 'connection' && (
-                  <ConnectionPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />
-                )}
-                {/* Only around the pages it may hold: before any other, it would take its first group's place. */}
-                {settings.data && (section === 'carplay' || section === 'altscreen') && (
-                  <div className={held ? 'held' : undefined} inert={held}>
-                    {section === 'carplay' && <CarPlayPage state={state} backend={backend} settings={settings} />}
-                    {section === 'altscreen' && <AltScreenPage state={state} backend={backend} settings={settings} />}
-                  </div>
-                )}
-                {settings.data && section === 'keyboard' && <KeyboardPage state={state} backend={backend} settings={settings} />}
-                {settings.data && section === 'audio' && (
-                  <AudioPage state={state} backend={backend} settings={settings} />
-                )}
-                {settings.data && section === 'gps' && <GpsPage state={state} backend={backend} settings={settings} />}
-                {settings.data && section === 'experiments' && (
-                  <ExperimentsPage state={state} backend={backend} settings={settings} />
-                )}
-                {section === 'about' && <AboutPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />}
-              </div>
+          <div className="page" role="tabpanel" id={`${ids}-page`} aria-labelledby={`${ids}-tab-${section}`}>
+            <div className="page-inner">
+              {settings.loadError && (
+                <Message tone="bad" head="Couldn't read the settings." text={settings.loadError} />
+              )}
+              {settings.data && section === 'connection' && (
+                <ConnectionPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />
+              )}
+              {/* Only around the pages it may hold: before any other, it would take its first group's place. */}
+              {settings.data && (section === 'carplay' || section === 'altscreen') && (
+                <div className={held ? 'held' : undefined} inert={held}>
+                  {section === 'carplay' && <CarPlayPage state={state} backend={backend} settings={settings} />}
+                  {section === 'altscreen' && <AltScreenPage state={state} backend={backend} settings={settings} />}
+                </div>
+              )}
+              {settings.data && section === 'keyboard' && <KeyboardPage state={state} backend={backend} settings={settings} />}
+              {settings.data && section === 'audio' && (
+                <AudioPage state={state} backend={backend} settings={settings} />
+              )}
+              {settings.data && section === 'gps' && <GpsPage state={state} backend={backend} settings={settings} />}
+              {settings.data && section === 'experiments' && (
+                <ExperimentsPage state={state} backend={backend} settings={settings} />
+              )}
+              {section === 'about' && <AboutPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />}
             </div>
           </div>
         </div>

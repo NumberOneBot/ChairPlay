@@ -34,30 +34,40 @@ describe('GPS notices', () => {
   })
 })
 
-describe('GPS warning over the window (USB unavailable)', () => {
-  // On every section, outside the scrolling page, so the next section's content does not hide it (UI-23, V35).
-  it('is on every section, outside the page that scrolls', async () => {
-    const { backend } = await openSection(gpsState(outputs.usbStartupMissing))
-    expect(page().contains(screen.getByRole('alert'))).toBe(false)
+describe('GPS warning (USB unavailable)', () => {
+  const warnings = () => screen.queryAllByTestId('gps-notice-usb-unavailable')
+  const tab = (id: string) => {
+    const found = screen.getByTestId(`tab-${id}`)
+    expect(found.getAttribute('role')).toBe('tab')
+    return found
+  }
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
-    expect(screen.getByRole('alert')).toBeTruthy()
-    fireEvent.click(screen.getByRole('tab', { name: 'About' }))
-    expect(screen.getByRole('alert')).toBeTruthy()
+  // On the GPS page alone, inside it as a section's own warning is; no other section shows it (owner, 2026-11-11).
+  it('is on the GPS page, inside it, and on no other section', async () => {
+    const { backend } = await openSection(gpsState(outputs.usbStartupMissing))
+    expect(warnings()).toHaveLength(1)
+    expect(warnings()[0].getAttribute('role')).toBe('alert')
+    expect(page().contains(warnings()[0])).toBe(true)
+
+    fireEvent.click(tab('experiments'))
+    expect(warnings()).toHaveLength(0)
+    fireEvent.click(tab('about'))
+    expect(warnings()).toHaveLength(0)
     expect(backend.gpsCommands).toEqual([])
   })
 
-  it('goes with the notice, and is not on the GPS page twice', async () => {
+  it('goes with the notice', async () => {
     const { update } = await openSection(gpsState(outputs.usbStartupMissing))
-    expect(screen.getAllByRole('alert')).toHaveLength(1)
     update(gpsState(outputs.carplayOff))
-    expect(screen.queryByRole('alert')).toBeNull()
+    expect(warnings()).toHaveLength(0)
   })
 
   it('leaves the choice of the method open, with no button of its own for CarPlay', async () => {
     await openSection(gpsState(outputs.usbStartupMissing))
-    expect(within(screen.getByRole('alert')).queryAllByRole('button')).toHaveLength(0)
-    expect((screen.getByRole('radio', { name: 'CarPlay' }) as HTMLButtonElement).disabled).toBe(false)
+    expect(within(warnings()[0]).queryAllByRole('button')).toHaveLength(0)
+    const carplay = screen.getByTestId('gps-method-carplay')
+    expect(carplay.getAttribute('role')).toBe('radio')
+    expect((carplay as HTMLButtonElement).disabled).toBe(false)
   })
 })
 

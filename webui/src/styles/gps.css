@@ -1,20 +1,4 @@
-/* The GPS page's USB part: the window's notices, the locked window, and the USB setup */
-
-/* The section's pane: notices that belong to the window over the page, which scrolls on its own below them */
-.shell .pane {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  min-width: 0;
-  min-height: 0;
-}
-
-.shell .global-notices:empty {
-  display: none;
-}
-
-.shell .global-notices .alert {
-  margin: 12px 18px 0;
-}
+/* The GPS page's USB part: the locked window and the USB setup */
 
 .shell .page-inner > .locked {
   min-width: 0;

@@ -23,29 +23,20 @@ export function useLiveNotices(notices: GpsNotice[]): GpsNotice[] {
 /** One notice as a block. A reconnect that waits is the settings' own mark, not a notice. */
 export function NoticeBlock({ notice }: { notice: GpsNotice; backend?: Backend }) {
   const { head, text } = noticeText(notice)
-  return <Message tone={notice.tone} head={head} text={text} />
+  return <Message tone={notice.tone} head={head} text={text} testId={`gps-notice-${notice.code}`} />
 }
 
 /**
- * Above the GPS switch: the results; the USB warning is the window's (GlobalNotices). An operation under way shows
- * nothing: the switch waits for it.
+ * Under the GPS group's header, above the switch, as a section's own warning is (the Wi-Fi network's on Connection):
+ * the USB warning there alone, never over other sections. An operation under way shows nothing: the switch waits for it.
  */
 export function GpsNotices({ output, backend }: { output: GpsOutput; backend: Backend }) {
   const notices = useLiveNotices(output.notices)
   return (
     <>
-      {notices
-        .filter(({ code }) => code !== 'usb-unavailable')
-        .map((notice) => (
-          <NoticeBlock key={notice.id} notice={notice} backend={backend} />
-        ))}
+      {notices.map((notice) => (
+        <NoticeBlock key={notice.id} notice={notice} backend={backend} />
+      ))}
     </>
   )
-}
-
-/** Over the content of whichever section is open, outside its scroll: the warning that USB GPS waits for the cable. */
-export function GlobalNotices({ output, backend }: { output?: GpsOutput; backend: Backend }) {
-  const notices = useLiveNotices(output?.notices ?? [])
-  const usb = notices.find(({ code }) => code === 'usb-unavailable')
-  return <div className="global-notices">{usb && <NoticeBlock notice={usb} backend={backend} />}</div>
 }

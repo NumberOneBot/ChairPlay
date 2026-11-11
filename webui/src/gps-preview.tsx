@@ -55,7 +55,6 @@ export const SCENES: Record<string, Scene> = {
   'startup-missing-carplay': { output: outputs.usbStartupMissing, connected: true },
   'experiments-empty': { output: outputs.carplayOff, section: 'Experiments' },
   'experiments-cached': { output: outputs.carplayOff, section: 'Experiments', tools: 16_680_000 },
-  'startup-missing-experiments': { output: outputs.usbStartupMissing, section: 'Experiments', tools: 16_680_000 },
 }
 
 function Preview() {

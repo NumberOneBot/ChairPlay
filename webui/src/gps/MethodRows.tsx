@@ -11,7 +11,12 @@ const METHODS: readonly Choice[] = [
 
 /** USB saved as the method and the switch as on, with the phone off the cable: the switch holds, checked, until it is back. */
 export function waitsForCable(output: GpsOutput): boolean {
-  return output.enabledIntent && output.selected === 'usb' && output.availability !== 'ready' && output.reason === 'usb-not-connected'
+  return (
+    output.enabledIntent &&
+    output.selected === 'usb' &&
+    output.availability !== 'ready' &&
+    output.reason === 'usb-not-connected'
+  )
 }
 
 /** The one Enable signal simulation switch, whichever method carries it. */
@@ -44,8 +49,11 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
           label="GPS method"
           value={output.selected}
           options={METHODS}
+          testId="gps-method"
           onChange={(method) => void backend.gpsMethod(method as GpsOutput['selected'], output.generation)}
         />
+        {/* USB's tag beside the choice, as a control's own tag is (AltScreen, Audio); CarPlay's has none. */}
+        {output.selected === 'usb' && <span className="exp">Advanced</span>}
         {/* A method chosen applies at the next connection (D8), marked as any such setting. */}
         <Changed keys={['gps.method']} pending={pending} />
       </Row>
@@ -61,8 +69,8 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
         <>
           <Row className="hint-row above">
             <span className="hint">
-              <span className="exp">Advanced feature</span> Requires enabling Developer Mode and downloading additional
-              developer tools. CarPlay stays connected over Wi-Fi; GPS coordinates are sent over USB.
+              Requires enabling Developer Mode and downloading additional developer tools. CarPlay stays connected
+              over Wi-Fi; GPS coordinates are sent over USB.
             </span>
           </Row>
           <Row>
