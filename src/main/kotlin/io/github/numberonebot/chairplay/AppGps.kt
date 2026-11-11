@@ -35,9 +35,11 @@ internal class AppGps(
 
     private val usb = UsbGpsChannel({ helper }, position, { driving.settings.usbRate }, log)
 
+    // Windows' place, asked once at a time for the setup and the coordinator alike (V47).
+    private val locator = DeadlineLocator(log, Platforms.current.location::read)
+
     private val setup = UsbSetupController(
-        helper ?: UnavailableUsbHelper, Platforms.current.location::read, { driving.placed }, { driving.settings.usbDevice },
-        ThreadSetupExecutor(log),
+        helper ?: UnavailableUsbHelper, locator, { driving.placed }, { driving.settings.usbDevice }, ThreadSetupExecutor(log),
     )
 
     val coordinator = GpsCoordinator(
@@ -51,7 +53,7 @@ internal class AppGps(
         carplay = carplay,
         usb = usb,
         setup = setup,
-        locator = DeadlineLocator(Platforms.current.location::read),
+        locator = locator,
         // The window loop's next pass puts a hold, or its end, in force on the car.
         hold = object : InputHold {
             override fun hold() = driving.wake()

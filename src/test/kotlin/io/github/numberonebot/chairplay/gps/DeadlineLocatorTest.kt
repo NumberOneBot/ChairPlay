@@ -30,7 +30,9 @@ class DeadlineLocatorTest {
     }
 
     @Test
-    fun `denied reads as denied`() {
-        assertEquals(ReturnPoint.Unavailable("denied"), DeadlineLocator { LocationResult.Denied }.locate(1_000))
+    fun `denied reads as denied, and the log says why there is no place`() {
+        val log = mutableListOf<String>()
+        assertEquals(ReturnPoint.Unavailable("denied"), DeadlineLocator(log::add) { LocationResult.Denied }.locate(1_000))
+        assertTrue(log.single().contains("denied"))
     }
 }

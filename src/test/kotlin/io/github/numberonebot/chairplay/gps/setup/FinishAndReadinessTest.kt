@@ -31,6 +31,12 @@ class FinishAndReadinessTest {
         assertEquals(1, h.finishes.size)
     }
 
+    // The app's one Windows locator, with the coordinator's 5 s: no reads of its own piling up as the wizard reopens.
+    @Test fun `Windows' place is asked of the shared locator with its deadline`() {
+        h.open()
+        assertEquals(listOf(5_000L), h.locateDeadlines)
+    }
+
     @Test fun `a late Windows answer is ignored`() {
         h.exec.late = true
         h.open()

@@ -10,7 +10,8 @@ import io.github.numberonebot.chairplay.gps.UsbErrorCode
 import io.github.numberonebot.chairplay.gps.UsbHelper
 import io.github.numberonebot.chairplay.gps.UsbProbe
 import io.github.numberonebot.chairplay.gps.UsbResult
-import io.github.numberonebot.chairplay.platform.LocationResult
+import io.github.numberonebot.chairplay.gps.ReturnLocator
+import io.github.numberonebot.chairplay.gps.ReturnPoint
 
 /** What a run starts from: Retry re-checks one step, not the ones before it. */
 internal enum class Stage { USB, PROBE, TOOLS, READY }
@@ -24,7 +25,7 @@ internal class SetupFlow(
     private val helper: UsbHelper,
     private val store: SetupStore,
     private val executor: SetupExecutor,
-    private val locate: () -> LocationResult,
+    private val locator: ReturnLocator,
     private val positionValid: () -> Boolean,
     private val locateDeadlineMillis: Long,
 ) {
@@ -199,8 +200,8 @@ internal class SetupFlow(
     // ---- Ready ----
 
     private fun checkReady(s: SetupSession) {
-        // A late Windows answer is dropped: no return point is a warning, never a wait.
-        val found = executor.within(locateDeadlineMillis) { locate() } is LocationResult.Found
+        // The app's one locator answers within its deadline: no return point is a warning, never a wait.
+        val found = locator.locate(locateDeadlineMillis) is ReturnPoint.Found
         val valid = positionValid()
         store.mutate(s) {
             windowsWarning = !found

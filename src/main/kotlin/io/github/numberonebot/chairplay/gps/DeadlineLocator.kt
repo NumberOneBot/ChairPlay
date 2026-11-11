@@ -10,10 +10,17 @@ import java.util.concurrent.TimeoutException
  * one at a time; a locate while one is out waits for that one rather than starting another, and an answer after the
  * deadline is dropped. A finished read is never reused: each locate asks anew.
  */
-class DeadlineLocator(private val read: () -> LocationResult) : ReturnLocator {
+class DeadlineLocator(
+    /** Says why there was no place (denied, unknown, timeout), for a report that shows it. */
+    private val log: (String) -> Unit = {},
+    private val read: () -> LocationResult,
+) : ReturnLocator {
     private var pending: CompletableFuture<LocationResult>? = null
 
-    override fun locate(deadlineMillis: Long): ReturnPoint {
+    override fun locate(deadlineMillis: Long): ReturnPoint =
+        ask(deadlineMillis).also { if (it is ReturnPoint.Unavailable) log("GPS: no Windows location (${it.reason})") }
+
+    private fun ask(deadlineMillis: Long): ReturnPoint {
         val future = synchronized(this) {
             pending?.takeIf { !it.isDone } ?: CompletableFuture.supplyAsync(read, { Thread(it, "gps-locate").apply { isDaemon = true }.start() })
                 .also { pending = it }
