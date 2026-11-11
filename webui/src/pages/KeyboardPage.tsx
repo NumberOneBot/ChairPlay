@@ -8,57 +8,7 @@ import type { Settings } from '../shell/useSettings'
 import { bindingName, isModifier } from './keyNames'
 import { TextInputSettings } from './TextInputSettings'
 import { GlobalShortcuts } from './GlobalShortcuts'
-
-/** The actions by group, in the page's order: each setting, the name the page gives it, and its tooltip. */
-const GROUPS: [group: string, actions: [key: string, label: string, title?: string][]][] = [
-  [
-    'CarPlay',
-    [
-      ['key.knob.left', 'Left', 'Tilt the knob left to move the focus left'],
-      ['key.knob.right', 'Right', 'Tilt the knob right'],
-      ['key.knob.up', 'Up', 'Tilt the knob up'],
-      ['key.knob.down', 'Down', 'Tilt the knob down'],
-      ['key.knob.next', 'Turn forward', 'Turn the knob one step forward'],
-      ['key.knob.previous', 'Turn back', 'Turn the knob one step back'],
-      ['key.select', 'Select', 'Press the knob'],
-      ['key.back', 'Back'],
-      ['key.home', 'Home', 'CarPlay home screen'],
-      ['key.siri', 'Siri'],
-    ],
-  ],
-  [
-    'Media and calls',
-    [
-      ['key.media.previous', 'Previous track'],
-      ['key.media.playpause', 'Play or pause'],
-      ['key.media.next', 'Next track'],
-      ['key.volume.up', 'Volume up', "ChairPlay's own volume; the Windows volume stays"],
-      ['key.volume.down', 'Volume down'],
-      ['key.volume.mute', 'Mute'],
-      ['key.call.answer', 'Answer call'],
-      ['key.call.end', 'End call'],
-    ],
-  ],
-  [
-    'AltScreen',
-    [
-      ['key.altscreen.content', 'HUD or map', 'Switch the AltScreen between the HUD and the map view picked last'],
-      ['key.altscreen.cards', 'Move cards', 'Auto, left, right, top'],
-      ['key.altscreen.zoom.in', 'Zoom in', 'Zoom the AltScreen map in'],
-      ['key.altscreen.zoom.out', 'Zoom out', 'Zoom the AltScreen map out'],
-    ],
-  ],
-  [
-    'ChairPlay',
-    [
-      ['key.reconnect', 'Reconnect', 'End the CarPlay session gracefully and connect again'],
-      ['key.screenshot', 'Screenshot', 'Save the CarPlay screen as a PNG file in the screenshots folder'],
-      ['key.fullscreen', 'Full screen', 'Toggle full screen for the focused CarPlay or AltScreen window'],
-      ['key.drive', 'Drive mode', 'Drive the GPS car with the arrow keys instead of moving through CarPlay, until pressed again'],
-      ['key.gauges', 'Gauge size', "Switch the GPS car's gauges between large and small"],
-    ],
-  ],
-]
+import { KEY_GROUPS } from './keyGroups'
 
 /** Why a fixed key stays where it is. */
 const FIXED_REASON: Record<string, string> = { escape: 'Esc always goes back', enter: 'Enter always selects' }
@@ -148,6 +98,7 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
     return <Message tone="warn" head="No key bindings." text="This ChairPlay has no controls.properties to change." />
 
   const value = (key: string) => data.settings[key] ?? ''
+  const changedActions = Object.entries(data.actions).filter(([, action]) => action.keys.join() !== action.defaults.join())
   const numberField = (key: string, label: string) => (
     <Field
       label={label}
@@ -284,12 +235,27 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
         {numberField('key.zoom.repeat.every', 'AltScreen zoom')}
         <span className="unit">repeats per step</span>
       </Row>
-      {GROUPS.map(([group, actions]) => (
+      {KEY_GROUPS.map(([group, actions]) => (
         <div key={group}>
           <Group title={group} />
           {actions.map(actionRow)}
         </div>
       ))}
+      {/* Every action's keys back to the defaults in one save, as each row's Reset does for its own (owner). */}
+      <Row>
+        <button
+          type="button"
+          className="btn small"
+          data-testid="keys-reset-all"
+          disabled={changedActions.length === 0}
+          title={changedActions.length === 0 ? 'All keys are the defaults' : 'Use the default keys for every action'}
+          onClick={() =>
+            void save(Object.fromEntries(changedActions.map(([key, action]) => [key, action.defaults.join(', ')])))
+          }
+        >
+          Reset all keys
+        </button>
+      </Row>
     </div>
   )
 }
