@@ -35,7 +35,7 @@ data class GpsSettings(
     /** gps.usb.device: the UDID of the iPhone USB setup prepared; null before one was. */
     val usbDevice: String? = null,
     /** gps.usb.rate: positions a second over USB, a hand edit only. */
-    val usbRate: Int = 10,
+    val usbRate: Int = 4,
 ) {
     /**
      * The car as it drives: [car], running to the end of the speedometer in its [units] and no further, and revving as

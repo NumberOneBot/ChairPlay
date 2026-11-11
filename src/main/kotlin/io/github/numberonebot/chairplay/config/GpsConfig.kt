@@ -39,5 +39,5 @@ internal fun Properties.gpsSettings() = GpsSettings(
     external = booleanSetting("gps.external", false),
     method = choiceSetting("gps.method", GpsMethod.CARPLAY, GpsMethod.entries.associateBy { it.key }),
     usbDevice = getProperty("gps.usb.device")?.trim()?.ifEmpty { null },
-    usbRate = wholeSetting("gps.usb.rate", 10, GpsSettings.RATE),
+    usbRate = wholeSetting("gps.usb.rate", 4, GpsSettings.RATE),
 )

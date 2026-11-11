@@ -199,7 +199,7 @@ internal val SETTINGS_TEMPLATE = listOf(
             "location simulation over a USB cable, after USB setup on the GPS page), which the GPS page sets; the\n" +
             "iPhone USB setup prepared, which the app writes; and positions a second over USB, a whole number from\n" +
             "1 to 20.",
-        "gps.method" to "carplay", "gps.usb.device" to "", "gps.usb.rate" to "10",
+        "gps.method" to "carplay", "gps.usb.device" to "", "gps.usb.rate" to "4",
     ),
     SettingBlock(
         "Whether the position, heading, and speed another app on this PC sends drive the GPS car instead\n" +
