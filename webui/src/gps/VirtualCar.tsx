@@ -34,6 +34,12 @@ const WHEEL: readonly Choice[] = [
   ['heading', 'Heading'],
 ]
 
+/** The hint under Wheel, for the choice made only, as GPS method's is. */
+const WHEEL_HINTS: Readonly<Record<string, string>> = {
+  steering: 'Track-up maps (Google Maps): the wheel follows input, car fixed up.',
+  heading: 'North-up maps (Apple Maps): the wheel shows the car’s course.',
+}
+
 /** How the car goes and what drives it, for the Virtual car group's note. */
 function going(state: AppState, imperial: boolean): string | undefined {
   const car = state.gps
@@ -58,6 +64,7 @@ export function VirtualCar({
   const { field } = parts(settings)
   const driveKey = state.controls?.keys.drive
   const gaugesKey = state.controls?.keys.gauges
+  const wheel = value('gps.wheel') || 'steering'
   return (
     <>
       <Group title="Virtual car" note={going(state, value('gps.units') === 'imperial')} />
@@ -103,17 +110,13 @@ export function VirtualCar({
         >
           <Segmented
             label="Wheel"
-            value={value('gps.wheel') || 'steering'}
+            value={wheel}
             options={WHEEL}
-            onChange={(wheel) => save({ 'gps.wheel': wheel })}
+            onChange={(choice) => save({ 'gps.wheel': choice })}
           />
         </Row>
         <Row className="hint-row">
-          <span className="hint">
-            Steering — track-up maps (Google Maps): the wheel follows input, car fixed up.
-            <br />
-            Heading — north-up maps (Apple Maps): the wheel shows the car's course.
-          </span>
+          <span className="hint">{WHEEL_HINTS[wheel] ?? WHEEL_HINTS.steering}</span>
         </Row>
         <Row
           label="Gauges"
