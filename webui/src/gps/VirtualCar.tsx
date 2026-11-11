@@ -21,7 +21,11 @@ const GAUGES: readonly Choice[] = [
 const GAUGE_STYLES: readonly Choice[] = [
   ['german', 'German', 'Both dials clockwise over the top, the needles in the accent color'],
   ['italian', 'Italian', 'Both dials from 6 o’clock to 3, with yellow needles'],
-  ['british', 'British', 'The dials turn apart, the speedometer from 5 o’clock to 1 and the tachometer back from 7 to 11, with green needles'],
+  [
+    'british',
+    'British',
+    'The dials turn apart, the speedometer from 5 o’clock to 1 and the tachometer back from 7 to 11, with green needles',
+  ],
 ]
 
 /** gps.wheel: what the gauges' steering wheel shows. */
@@ -66,7 +70,6 @@ export function VirtualCar({
             checked={state.gps?.keyboard ?? false}
             onChange={(on) => void backend.driveMode(on)}
           />
-          <span className="exp">Experimental</span>
           <span className="exp fun">Extra fun</span>
         </Row>
         <Row label="Power and mass" title="The car's power and mass, which set how it pulls and how fast it goes">
