@@ -62,7 +62,7 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
           <Row className="hint-row above">
             <span className="hint">
               <span className="exp">Advanced feature</span> Requires enabling Developer Mode, downloading additional
-              developer tools, and trusting this computer on your iPhone. CarPlay stays connected over Wi-Fi; GPS
+              developer tools, and confirming “Trust this computer” on your iPhone. CarPlay stays connected over Wi-Fi; GPS
               coordinates are sent over USB.
             </span>
           </Row>
