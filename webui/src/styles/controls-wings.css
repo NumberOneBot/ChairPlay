@@ -42,7 +42,13 @@
   position: absolute;
   inset: 0;
   border-radius: 16px 0 0 0;
-  background: linear-gradient(150deg, #2e2e33, var(--raised) 50%, var(--panel));
+  /* In sRGB, as with hex stops: a stop made from a token would turn it to Oklab */
+  background: linear-gradient(
+    150deg in srgb,
+    rgb(from var(--line) calc(r + 4) calc(g + 4) calc(b + 5)),
+    var(--raised) 50%,
+    var(--panel)
+  );
   -webkit-mask: radial-gradient(circle at 99px 99px, transparent 102px, #000 102.5px);
   mask: radial-gradient(circle at 99px 99px, transparent 102px, #000 102.5px);
 }
@@ -113,7 +119,12 @@
 }
 
 .controls-screen .key.wing:not(:disabled):not(.down):hover::before {
-  background: linear-gradient(150deg, #3a3a40, #27272c 50%, #1a1a1d);
+  background: linear-gradient(
+    150deg in srgb,
+    rgb(from var(--edge) r g calc(b + 1)),
+    rgb(from var(--line) calc(r - 3) calc(g - 3) calc(b - 2)) 50%,
+    rgb(from var(--raised) calc(r - 2) calc(g - 2) calc(b - 2))
+  );
 }
 
 /* A wing pressed as a quarter of the pad is: its surface tinted blue, its sign blue */
@@ -125,7 +136,12 @@
 .controls-screen .key.wing.down::before {
   background:
     linear-gradient(var(--accent-tint), var(--accent-tint)),
-    linear-gradient(150deg, #2e2e33, var(--raised) 50%, var(--panel));
+    linear-gradient(
+      150deg in srgb,
+      rgb(from var(--line) calc(r + 4) calc(g + 4) calc(b + 5)),
+      var(--raised) 50%,
+      var(--panel)
+    );
 }
 
 /* A wing's key beside its sign, toward the knob's middle */

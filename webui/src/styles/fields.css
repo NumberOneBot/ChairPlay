@@ -8,7 +8,7 @@
   border: 1px solid transparent;
   border-radius: 12px;
   outline: 0;
-  background: rgb(118 118 128 / 24%);
+  background: rgb(from var(--fill) r g b / 24%);
   color: var(--text);
   font: 12px var(--ui);
 }
@@ -18,7 +18,7 @@
 }
 
 .shell input.t:hover:not(:disabled) {
-  background-color: rgb(118 118 128 / 32%);
+  background-color: rgb(from var(--fill) r g b / 32%);
 }
 
 .shell input.t:focus {
@@ -77,7 +77,7 @@
   border: 1px solid transparent;
   border-radius: 12px;
   outline: 0;
-  background: rgb(118 118 128 / 24%)
+  background: rgb(from var(--fill) r g b / 24%)
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='4'%3E%3Cpath d='M0 0h8L4 4z' fill='%238b8b92'/%3E%3C/svg%3E")
     no-repeat right 9px center;
   color: var(--text);
@@ -87,12 +87,12 @@
 
 /* The open list: WebView2 draws it light under a translucent field, so its choices get the dark of iOS's menus */
 .shell select.t option {
-  background-color: #2c2c2e;
+  background-color: rgb(from var(--line) calc(r + 2) calc(g + 2) b);
   color: var(--text);
 }
 
 .shell select.t:hover {
-  background-color: rgb(118 118 128 / 32%);
+  background-color: rgb(from var(--fill) r g b / 32%);
 }
 
 .shell select.t:focus-visible {

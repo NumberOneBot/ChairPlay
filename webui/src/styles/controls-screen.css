@@ -7,11 +7,7 @@
  */
 .controls-screen {
   --ui: 'Reddit Sans', 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
-  --raised: #1c1c1f;
-  --panel: #111113;
-  --edge: #3a3a3f;
-  --line: #2a2a2e;
-  --dim: #5c5c63;
+  /* The greys are the tint's, as the settings' are (tints.css) */
   --accent-tint: color-mix(in srgb, var(--accent) 16%, transparent);
   --accent-fill: linear-gradient(180deg, var(--accent-light), var(--accent) 55%, var(--accent-dark));
   box-sizing: border-box;
@@ -46,9 +42,15 @@
   justify-content: center;
   gap: 4px;
   padding: 0;
-  border: 1px solid #2c2c31;
+  border: 1px solid rgb(from var(--line) calc(r + 2) calc(g + 2) calc(b + 3));
   border-radius: 4px;
-  background: linear-gradient(180deg, #26262a, var(--raised) 50%, #151517);
+  /* In sRGB, as with hex stops: a stop made from a token would turn it to Oklab */
+  background: linear-gradient(
+    180deg in srgb,
+    rgb(from var(--line) calc(r - 4) calc(g - 4) calc(b - 4)),
+    var(--raised) 50%,
+    rgb(from var(--ground) calc(r + 3) calc(g + 3) calc(b + 3))
+  );
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.03),
     0 2px 6px rgba(0, 0, 0, 0.6);
@@ -65,8 +67,13 @@
  * either, which have hovers of their own: a wing's button is the square its mask cuts the wing from.
  */
 .controls-screen .key:hover:not(:disabled):not(.down):not([aria-pressed='true']):not(.tilt):not(.wing):not(.select) {
-  border-color: #3c3c42;
-  background: linear-gradient(180deg, #36363c, #26262b 50%, #19191c);
+  border-color: rgb(from var(--edge) calc(r + 2) calc(g + 2) calc(b + 3));
+  background: linear-gradient(
+    180deg in srgb,
+    rgb(from var(--edge) calc(r - 4) calc(g - 4) calc(b - 3)),
+    rgb(from var(--line) calc(r - 4) calc(g - 4) calc(b - 3)) 50%,
+    rgb(from var(--raised) calc(r - 3) calc(g - 3) calc(b - 3))
+  );
 }
 
 .controls-screen .key.down,

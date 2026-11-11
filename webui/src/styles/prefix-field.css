@@ -7,7 +7,7 @@
   padding: 0 10px 0 9px;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: rgb(118 118 128 / 24%);
+  background: rgb(from var(--fill) r g b / 24%);
   color: var(--muted);
   font: 12px var(--ui);
   white-space: nowrap;
@@ -15,7 +15,7 @@
 }
 
 .shell .pre:hover {
-  background-color: rgb(118 118 128 / 32%);
+  background-color: rgb(from var(--fill) r g b / 32%);
 }
 
 .shell .pre:focus-within {

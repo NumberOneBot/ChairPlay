@@ -28,7 +28,15 @@
 .shell .slider::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(to right, var(--accent) var(--level), rgb(118 118 128 / 32%) var(--level));
+  /*
+   * In sRGB, as with hex stops (a stop made from a token would turn it to Oklab), and the fill's 32 % as the 8 bits a
+   * gradient kept of a hex colour's alpha, 82/255
+   */
+  background: linear-gradient(
+    to right in srgb,
+    var(--accent) var(--level),
+    rgb(from var(--fill) r g b / calc(82 / 255)) var(--level)
+  );
 }
 
 /* The pin: white, lifted by its shadow; hover and drag widen the shadow, focus rings it in the accent */
