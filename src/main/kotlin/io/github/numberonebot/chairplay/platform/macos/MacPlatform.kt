@@ -58,6 +58,8 @@ internal class MacPlatform : Platform {
     override fun webView(userData: Path, debug: Boolean): WebViewBackend = notReady()
 
     override fun updateDialog(result: UpdateResult): Boolean = notReady()
+
+    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = notReady()
 }
 
 private object MacWindows : WindowHooks {

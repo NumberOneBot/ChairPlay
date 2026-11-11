@@ -41,4 +41,7 @@ internal class WindowsPlatform : Platform {
     override fun webView(userData: Path, debug: Boolean): WebViewBackend = WindowsWebView(userData, debug)
 
     override fun updateDialog(result: UpdateResult): Boolean = WindowsUpdateDialog.show(result)
+
+    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? =
+        WindowsOpenFile.show(title, filterName, patterns)
 }

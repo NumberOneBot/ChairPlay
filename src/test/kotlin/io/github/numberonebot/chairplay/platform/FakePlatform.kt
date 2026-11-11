@@ -55,6 +55,8 @@ internal class FakePlatform(
         shownUpdates += result
         return updateAnswer
     }
+
+    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = null
 }
 
 /** A global keyboard that counts its starts and closes and is ready when started. */
