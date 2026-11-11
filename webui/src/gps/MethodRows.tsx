@@ -51,15 +51,19 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
       </Row>
       {output.selected === 'carplay' && (
         <Row className="hint-row">
-          <span className="hint">CarPlay GPS works only within about 80 km (50 mi) of your iPhone’s real location.</span>
+          <span className="hint">
+            In a real car, CarPlay GPS refines the iPhone’s position with the car’s stronger antenna, so the iPhone
+            accepts it only within about 80 km (50 mi) of its real location.
+          </span>
         </Row>
       )}
       {output.selected === 'usb' && (
         <>
           <Row className="hint-row above">
             <span className="hint">
-              Advanced feature: requires enabling Developer Mode, downloading additional developer tools, and confirming
-              “Trust This Computer” on your iPhone. CarPlay stays connected over Wi-Fi; GPS coordinates are sent over USB.
+              <span className="exp">Advanced feature</span> Requires enabling Developer Mode, downloading additional
+              developer tools, and trusting this computer on your iPhone. CarPlay stays connected over Wi-Fi; GPS
+              coordinates are sent over USB.
             </span>
           </Row>
           <Row>
