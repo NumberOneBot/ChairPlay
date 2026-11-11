@@ -5,7 +5,7 @@ import threading
 import time
 import unittest
 
-from tests.fakes import UDID, FakeBackend, Wire, request
+from tests.fakes import UDID, FakeBackend, FakeDevice, Wire, request
 from tests.packaging_fakes import FakeRemote
 from usb_gps_helper import packages
 from usb_gps_helper.control import ControlOps
@@ -151,7 +151,7 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([], self.remote.fetched)
 
     async def test_an_old_ios_is_unsupported(self):
-        self.device.ios = '26.4'
+        self.device.ios = '16.7'
         self.assertEqual('unsupported-ios', await self.code('prepare', udid=UDID))
         self.assertEqual('unsupported-ios', await self.code('tools-status', udid=UDID))
 
@@ -182,6 +182,13 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual('mount-failed', await self.code('prepare', udid=UDID))
         self.assertIsNotNone(self.store.find(packages.CRYPTEX))
 
+    # D15: iOS 17.4 to 26.x downloads and mounts the PersonalizedDMG into the same store.
+    async def test_a_phone_on_18_gets_the_personalized_image(self):
+        self.backend.devices = {UDID: FakeDevice(ios='18.1')}
+        self.remote.__init__(packages.PERSONALIZED)
+        result = await self.call('prepare', udid=UDID)
+        self.assertEqual(f'personalized-{packages.EXPECTED_BUILD}', result['packageId'])
+        self.assertIn(('mount', packages.PERSONALIZED, result['packageId']), self.backend.calls)
 
 
 if __name__ == '__main__':

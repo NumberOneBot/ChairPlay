@@ -90,7 +90,9 @@ def _control(args, backend, components, write):
     store = Store(args.store)
     if args.fake is not None:
         from .fake_remote import FakeRemote
+        from .packages import PERSONALIZED
         remote = FakeRemote()
+        remote.serve(PERSONALIZED)
         downloads = Downloads(store, head=remote.head, fetch=remote.fetch)
     else:
         downloads = Downloads(store)

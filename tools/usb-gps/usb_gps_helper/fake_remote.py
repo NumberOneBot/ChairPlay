@@ -1,4 +1,4 @@
-"""A fake package server: small made-up files laid out like the real package, for the tests and the dry run."""
+"""A fake package server: small made-up files laid out like the real packages, for the tests and the dry run."""
 import plistlib
 
 from . import packages
@@ -19,17 +19,26 @@ def cryptex_manifest(build=packages.EXPECTED_BUILD, paths=CRYPTEX_PATHS):
     return plistlib.dumps({'ProductBuildVersion': build, 'BuildIdentities': [other, identity]})
 
 
+def personalized_manifest(build=packages.EXPECTED_BUILD):
+    return plistlib.dumps({'ProductBuildVersion': build, 'BuildIdentities': []})
+
+
 class FakeRemote:
     """Serves a package's files by their published name, as raw.githubusercontent.com would."""
 
-    def __init__(self, build=packages.EXPECTED_BUILD):
-        manifest = cryptex_manifest(build)
+    def __init__(self, kind=packages.CRYPTEX, build=packages.EXPECTED_BUILD):
+        manifest = cryptex_manifest(build) if kind == packages.CRYPTEX else personalized_manifest(build)
         self.files = {packages.MANIFEST_NAME: manifest}
-        for name, _ in packages.layout(packages.CRYPTEX, manifest):
+        for name, _ in packages.layout(kind, manifest):
             self.files[name] = (name * 50).encode()
         self.fetched = []
         self.fail = {}
         self.chunk_hook = None
+
+    def serve(self, kind):
+        """Adds the other kind's files, so one fake serves both."""
+        other = FakeRemote(kind)
+        self.files.update({name: data for name, data in other.files.items() if name not in self.files})
 
     @staticmethod
     def name(url):

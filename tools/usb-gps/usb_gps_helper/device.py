@@ -11,12 +11,22 @@ import tempfile
 from contextlib import AsyncExitStack, asynccontextmanager, suppress
 from pathlib import Path
 
+from packaging.version import InvalidVersion, Version
+
 from . import library, packages
 from .errors import classify
 from .protocol import HelperError
 from .tunnel import developer_services
 
 CLOSE_TIMEOUT = 3.0
+CRYPTEX_SERVICE_FROM = Version('26.4')
+
+
+def _cryptex_capable(ios):
+    try:
+        return Version(ios) >= CRYPTEX_SERVICE_FROM
+    except (InvalidVersion, TypeError):
+        return False
 
 
 def _named(error, name):
@@ -66,7 +76,9 @@ class UsbBackend:
     async def _mounted(self, client, rsd):
         if await self.deps.image_mounted(client):
             return True
-        return bool(await self.deps.ddi_installed(rsd))
+        if _cryptex_capable(client.product_version):
+            return bool(await self.deps.ddi_installed(rsd))
+        return False
 
     async def _service(self, rsd):
         try:
@@ -116,7 +128,7 @@ class UsbBackend:
         except Exception as error:
             if classify(error).code == 'locked':
                 result['locked'] = True
-            result['imageMounted'] = True if listed else None
+            result['imageMounted'] = True if listed else (None if _cryptex_capable(client.product_version) else False)
 
     async def reveal(self, udid):
         async with self._lockdown(udid) as client:
@@ -128,8 +140,13 @@ class UsbBackend:
         async with self._lockdown(udid) as client:
             await self._require(client)
             try:
-                async with developer_services(self.deps, client) as rsd:
-                    await self.deps.install_cryptex(rsd, package.path)
+                if kind == packages.PERSONALIZED:
+                    folder = package.path
+                    await self.deps.mount_personalized(client, folder / 'Image.dmg', folder / packages.MANIFEST_NAME,
+                                                       folder / 'Image.dmg.trustcache')
+                else:
+                    async with developer_services(self.deps, client) as rsd:
+                        await self.deps.install_cryptex(rsd, package.path)
             except Exception as error:
                 if not _named(error, 'AlreadyMountedError'):
                     raise

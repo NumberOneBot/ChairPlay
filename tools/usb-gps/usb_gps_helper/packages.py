@@ -1,8 +1,10 @@
-"""The developer-tools package the helper downloads, and where its files go.
+"""The two developer-tools package kinds the helper downloads, and where their files go.
 
-USB GPS supports iOS 27 and later (D12), which installs the Cryptex1 DeveloperDiskImage over cryptexd; an older iOS
-is unsupported-ios. The package is the files pymobiledevice3 would fetch into its home folder, from the same
-repository; the helper fetches them itself, into the store the app names.
+A phone on iOS 27 or later installs the Cryptex1 DeveloperDiskImage over cryptexd; from 17.4 to 26.x it mounts the
+PersonalizedDMG over the image mounter (pymobiledevice3 11.45.0's own choice, by the same versions; D15, not yet
+tried on a phone). Below 17.4 the USB developer tunnel this helper uses does not exist. Both packages are the files
+pymobiledevice3 would fetch into its home folder, from the same repository; the helper fetches them itself, into the
+store the app names.
 """
 import plistlib
 from pathlib import Path
@@ -18,12 +20,16 @@ from pymobiledevice3.services.mobile_image_mounter import LATEST_DDI_BUILD_ID
 from .protocol import HelperError
 
 CRYPTEX = 'cryptex'
+PERSONALIZED = 'personalized'
+KINDS = (CRYPTEX, PERSONALIZED)
 EXPECTED_BUILD = LATEST_DDI_BUILD_ID
 MANIFEST_NAME = 'BuildManifest.plist'
 SOURCE = f'doronz88/DeveloperDiskImage@{DEFAULT_REF}'
 
-MIN_IOS = Version('27.0')
-_ROOTS = {CRYPTEX: CRYPTEX_IMAGE_ROOT}
+MIN_IOS = Version('17.4')
+CRYPTEX_FROM = Version('27.0')
+_ROOTS = {CRYPTEX: CRYPTEX_IMAGE_ROOT, PERSONALIZED: 'PersonalizedImages/Xcode_iOS_DDI_Personalized'}
+_PERSONALIZED_FILES = ('Image.dmg', 'Image.dmg.trustcache')
 
 
 def kind_for(ios_version):
@@ -32,8 +38,8 @@ def kind_for(ios_version):
     except (InvalidVersion, TypeError):
         raise HelperError('unsupported-ios', 'The iOS version is unknown.') from None
     if version < MIN_IOS:
-        raise HelperError('unsupported-ios', 'USB GPS needs iOS 27 or later.')
-    return CRYPTEX
+        raise HelperError('unsupported-ios', 'USB GPS needs iOS 17.4 or later.')
+    return CRYPTEX if version >= CRYPTEX_FROM else PERSONALIZED
 
 
 def remote_url(kind, name):
@@ -60,6 +66,8 @@ def build_of(manifest_bytes):
 def layout(kind, manifest_bytes):
     """(published file name, path inside the package) for every file but the manifest itself."""
     manifest = _parse(manifest_bytes)
+    if kind == PERSONALIZED:
+        return [(name, name) for name in _PERSONALIZED_FILES]
     identity = next((item for item in manifest['BuildIdentities'] if isinstance(item, dict)
                      and str(item.get('Info', {}).get('Variant', '')).endswith(CRYPTEX_VARIANT_SUFFIX)), None)
     if identity is None:
