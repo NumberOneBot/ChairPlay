@@ -63,7 +63,13 @@
   text-transform: uppercase;
 }
 
-.shell .grp:first-child {
+/*
+ * Only the page's own first group starts at the top: first in the page, in the page's root, or in the hold around
+ * it. A group first in a block further in (the Keyboard's key groups, a section) keeps the space between groups.
+ */
+.shell .page-inner > .grp:first-child,
+.shell .page-inner > :first-child > .grp:first-child,
+.shell .page-inner > :first-child > :first-child > .grp:first-child {
   padding-top: 0;
 }
 
