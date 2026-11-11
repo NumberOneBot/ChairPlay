@@ -4,7 +4,9 @@ import coffeeButton from '../assets/buy-me-a-coffee-dark.png'
 import type { ReactNode } from 'react'
 import type { AppState, Backend, BuildCommit, WindowsPlace } from '../api'
 import { Group, Row } from '../shell/controls'
+import type { Settings } from '../shell/useSettings'
 import { CopyButton } from './messages'
+import { UpdateSettings } from './UpdateSettings'
 
 function Commit({ commit }: { commit: BuildCommit | null }) {
   if (!commit) return <span className="hint">Not recorded</span>
@@ -26,16 +28,13 @@ export function AboutHead() {
   )
 }
 
-/** The Application page's last groups: which build this is, whose work it is built on, and where to get help. */
-export function About({ state, backend, onShowGuide }: { state: AppState; backend: Backend; onShowGuide: () => void }) {
-  // The links open in the browser, or the notices in Notepad; they are buttons that read as links.
-  const link = (place: WindowsPlace, text: string, title?: string): ReactNode => (
-    <button type="button" className="link" title={title} data-testid={`app-open-${place}`}
-      onClick={() => backend.open(place)}>
-      {text}
-    </button>
-  )
-  // The first header outside the rows' block: as its first child it would lose the space above it (rows.css).
+/*
+ * Each group's header stays outside its rows' block (.about, where a row's text wraps as text): as the block's first
+ * child it would lose the space above it (rows.css).
+ */
+
+/** The Application page's first group: which build this is, and the update checks. */
+export function Version({ state, backend, settings }: { state: AppState; backend: Backend; settings: Settings }) {
   return (
     <>
       <Group title="Version" />
@@ -47,7 +46,25 @@ export function About({ state, backend, onShowGuide }: { state: AppState; backen
         <Row label="DiPlay core">
           <Commit commit={state.about.core} />
         </Row>
-        <Group title="Credits" />
+        <UpdateSettings backend={backend} settings={settings} />
+      </div>
+    </>
+  )
+}
+
+/** The Application page's last groups: whose work it is built on, and where to get help. */
+export function About({ state, backend, onShowGuide }: { state: AppState; backend: Backend; onShowGuide: () => void }) {
+  // The links open in the browser, or the notices in Notepad; they are buttons that read as links.
+  const link = (place: WindowsPlace, text: string, title?: string): ReactNode => (
+    <button type="button" className="link" title={title} data-testid={`app-open-${place}`}
+      onClick={() => backend.open(place)}>
+      {text}
+    </button>
+  )
+  return (
+    <>
+      <Group title="Credits" />
+      <div className="about">
         <Row label="Author" className="author-credit">
           {link('author', 'Oleksiy Strelets', "Open the author's GitHub profile")}
           <button type="button" className="coffee-button" title="Open Buy Me a Coffee in your browser"

@@ -1,9 +1,8 @@
 import type { AppState, Backend } from '../api'
 import { Group, Row, Segmented, type Choice } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
-import { About, AboutHead } from './About'
+import { About, AboutHead, Version } from './About'
 import { BrowserAccess } from './BrowserAccess'
-import { UpdateSettings } from './UpdateSettings'
 import { WindowSettings } from './WindowSettings'
 
 /** ui.tint's palettes (styles/tints.css), black the default. */
@@ -16,9 +15,10 @@ const TINTS: readonly Choice[] = [
 ]
 
 /**
- * The app's own settings and what it is: its look, its windows, the settings browser and updates, then the build,
- * the credits, and where to get help. These settings all apply at once but the settings browser's, which mark their
- * own. The settings wait for the app's answer; which build this is, and help, never do.
+ * What the app is and its own settings: the build with the update checks, its windows, its look, and the settings
+ * browser, then the credits and where to get help. These settings all apply at once but the settings browser's, which
+ * mark their own. The settings wait for the app's answer; which build this is, and help, never do (the update switch
+ * is off until the settings are in).
  */
 export function ApplicationPage({
   state,
@@ -34,8 +34,10 @@ export function ApplicationPage({
   return (
     <>
       <AboutHead />
+      <Version state={state} backend={backend} settings={settings} />
       {settings.data && (
         <>
+          <WindowSettings settings={settings} />
           <Group title="Appearance" />
           <Row label="Tint">
             <Segmented
@@ -46,12 +48,9 @@ export function ApplicationPage({
               testId="app-tint"
             />
           </Row>
-          <WindowSettings settings={settings} />
           <BrowserAccess state={state} backend={backend} settings={settings} />
         </>
       )}
-      <Group title="Updates" />
-      <UpdateSettings backend={backend} settings={settings} />
       <About state={state} backend={backend} onShowGuide={onShowGuide} />
     </>
   )

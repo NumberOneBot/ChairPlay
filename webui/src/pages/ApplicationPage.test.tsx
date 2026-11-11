@@ -39,6 +39,19 @@ describe('Application page', () => {
     expect(control('app-tint-warm', 'radio').getAttribute('aria-checked')).toBe('true')
   })
 
+  // Which build this is, the update checks, and help never wait for the settings; the update switch does.
+  it('shows the build, the update checks, and help before the settings are in', () => {
+    const backend = new FakeBackend()
+    backend.settings = () => new Promise(() => {})
+    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={backend} />)
+    fireEvent.click(control('tab-application', 'tab'))
+
+    expect((control('app-updates-at-start', 'switch') as HTMLInputElement).disabled).toBe(true)
+    expect((control('app-updates-check', 'button') as HTMLButtonElement).disabled).toBe(false)
+    expect(control('app-copy-details', 'button')).toBeTruthy()
+    expect(absent('app-tint-black')).toBe(true)
+  })
+
   it('defaults startup checks on and saves the preference independently of manual checks', async () => {
     const backend = await application()
     const toggle = control('app-updates-at-start', 'switch') as HTMLInputElement
