@@ -12,6 +12,7 @@ export function PrefixField(props: {
   onCommit: (value: string) => unknown
   error?: string
   placeholder?: string
+  testId?: string
 }) {
   return (
     <>
@@ -24,6 +25,7 @@ export function PrefixField(props: {
           error={props.error}
           showReason={false}
           onCommit={props.onCommit}
+          testId={props.testId}
         />
       </label>
       {props.error && <span className="errtext">{props.error}</span>}

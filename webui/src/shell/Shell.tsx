@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import type { AppState, Backend } from '../api'
-import { AboutPage } from '../pages/AboutPage'
 import { AltScreenPage } from '../pages/AltScreenPage'
+import { ApplicationPage } from '../pages/ApplicationPage'
 import { AudioPage } from '../pages/AudioPage'
 import { CarPlayPage } from '../pages/CarPlayPage'
 import { ExperimentsPage } from '../pages/ExperimentsPage'
@@ -98,6 +98,7 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
                 className={section === id ? 'sel' : ''}
                 aria-label={title}
                 title={title}
+                data-testid={`tab-${id}`}
                 onClick={() => setSection(id)}
               >
                 {icon}
@@ -128,7 +129,9 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
               {settings.data && section === 'experiments' && (
                 <ExperimentsPage state={state} backend={backend} settings={settings} />
               )}
-              {section === 'about' && <AboutPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />}
+              {section === 'application' && (
+                <ApplicationPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />
+              )}
             </div>
           </div>
         </div>

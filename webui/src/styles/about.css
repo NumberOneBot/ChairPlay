@@ -1,6 +1,6 @@
-/* The About page */
+/* The Application page's head and its last groups, which say what the app is (About.tsx) */
 
-/* About: the app's icon, then its name over what it is, on the property grid */
+/* The app's icon, then its name over what it is, on the property grid */
 .shell .about-head {
   display: grid;
   grid-template-columns: var(--label-width) minmax(0, 1fr);

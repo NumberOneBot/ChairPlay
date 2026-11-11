@@ -20,6 +20,7 @@ export function Field(props: {
   /** False where the reason goes elsewhere, as under the safe-area frame: the field only turns red. */
   showReason?: boolean
   disabled?: boolean
+  testId?: string
 }) {
   const [draft, setDraft] = useState(props.value)
   const [dirty, setDirty] = useState(false)
@@ -60,6 +61,7 @@ export function Field(props: {
         value={shown}
         placeholder={props.placeholder}
         disabled={props.disabled}
+        data-testid={props.testId}
         autoComplete={props.type === 'password' ? 'new-password' : 'off'}
         spellCheck={false}
         onChange={(event) => {

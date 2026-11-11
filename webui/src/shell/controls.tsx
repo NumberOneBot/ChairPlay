@@ -48,6 +48,8 @@ export function Segmented(props: {
   disabled?: boolean
   className?: string
   columns?: number
+  /** Each choice's data-testid is this and its value: `${testId}-${value}`. */
+  testId?: string
 }) {
   const columns = props.columns ?? Math.ceil(props.options.length / 2)
   return (
@@ -70,6 +72,7 @@ export function Segmented(props: {
             className={chosen ? 'on' : ''}
             title={title}
             disabled={props.disabled}
+            data-testid={props.testId && `${props.testId}-${value}`}
             onClick={() => {
               if (!chosen) props.onChange(value)
             }}
@@ -137,6 +140,7 @@ export function Switch(props: {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
+  testId?: string
 }) {
   return (
     <label className="chk">
@@ -145,6 +149,7 @@ export function Switch(props: {
         role="switch"
         checked={props.checked}
         disabled={props.disabled}
+        data-testid={props.testId}
         onChange={(event) => props.onChange(event.target.checked)}
       />
       {props.label}

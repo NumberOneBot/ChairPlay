@@ -4,7 +4,7 @@ import type { AppState } from '../api'
 import { FakeBackend } from '../fakeBackend'
 import { Shell } from '../shell/Shell'
 import type { Settings } from '../shell/useSettings'
-import { appState } from '../testing'
+import { absent, appState, control } from '../testing'
 import { BrowserAccess } from './BrowserAccess'
 
 afterEach(cleanup)
@@ -17,7 +17,28 @@ const uiServer = (overrides: Partial<AppState['uiServer']>): AppState['uiServer'
 const browserAccess = (overrides: Partial<AppState['uiServer']>) =>
   render(<BrowserAccess state={appState({ uiServer: uiServer(overrides) })} backend={new FakeBackend()} settings={settings} />)
 
+/** The shell on the Application page, where the settings browser is, once the settings are in. */
+async function onApplication(backend = new FakeBackend(), server = uiServer({})) {
+  render(<Shell state={appState({ phase: 'active', canShowCarPlay: true, uiServer: server })} backend={backend} />)
+  fireEvent.click(control('tab-application', 'tab'))
+  await screen.findByTestId('browser-port')
+  return backend
+}
+
 describe('Settings browser', () => {
+  // It moved to Application: nothing on Connection opens the settings to the network any more.
+  it('is not on the Connection page', async () => {
+    const backend = new FakeBackend()
+    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={backend} />)
+    await screen.findAllByRole('switch')
+
+    for (const toggle of screen.getAllByRole('switch')) fireEvent.click(toggle)
+
+    await waitFor(() => expect(backend.saved.length).toBeGreaterThan(0))
+    expect(backend.saved.flatMap(Object.keys)).not.toContain('ui.network')
+    expect(absent('browser-port')).toBe(true)
+  })
+
   it('says when the port in the settings was taken', () => {
     browserAccess({ port: 51234, configuredPort: 7529 })
     expect(screen.getByRole('alert')).toBeTruthy()
@@ -35,11 +56,9 @@ describe('Settings browser', () => {
   })
 
   it('saves the local network switch', async () => {
-    const backend = new FakeBackend()
-    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={backend} />)
-    await screen.findByRole('textbox', { name: 'Network' })
+    const backend = await onApplication()
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Allow access from the local network' }))
+    fireEvent.click(control('browser-network', 'switch'))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'ui.network': 'true' }]))
   })
@@ -48,15 +67,14 @@ describe('Settings browser', () => {
   it('shows the saved port', async () => {
     const backend = new FakeBackend()
     backend.data.values['ui.port'] = '8080'
-    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true, uiServer: uiServer({ port: 51234, configuredPort: 8080 }) })} backend={backend} />)
+    await onApplication(backend, uiServer({ port: 51234, configuredPort: 8080 }))
 
-    expect((await screen.findByRole('textbox', { name: 'Port' }) as HTMLInputElement).value).toBe('8080')
+    expect((control('browser-port', 'textbox') as HTMLInputElement).value).toBe('8080')
   })
 
   it('saves a port typed in, or keeps a refused one marked', async () => {
-    const backend = new FakeBackend()
-    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={backend} />)
-    const port = await screen.findByRole('textbox', { name: 'Port' }) as HTMLInputElement
+    const backend = await onApplication()
+    const port = control('browser-port', 'textbox') as HTMLInputElement
 
     fireEvent.change(port, { target: { value: '8080' } })
     fireEvent.keyDown(port, { key: 'Enter' })

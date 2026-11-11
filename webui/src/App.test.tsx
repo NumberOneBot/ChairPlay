@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from './api'
 import { App } from './App'
 import { FakeBackend } from './fakeBackend'
-import { appState } from './testing'
+import { absent, appState, control } from './testing'
 
 afterEach(() => {
   cleanup()
@@ -73,12 +73,15 @@ describe('the window and a browser tab', () => {
 
   it('Open asks the app to open the browser, from the window only', async () => {
     const fromWindow = open('/?window', appState(live))
-    fireEvent.click(await screen.findByRole('button', { name: 'Open' }))
+    fireEvent.click(control('tab-application', 'tab'))
+    await screen.findByTestId('browser-open')
+    fireEvent.click(control('browser-open', 'button'))
     expect(fromWindow).toEqual(['/api/open-in-browser'])
     cleanup()
 
     open('/', appState(live))
-    await screen.findByRole('switch', { name: 'Allow access from the local network' })
-    expect(screen.queryByRole('button', { name: 'Open' })).toBeNull()
+    fireEvent.click(control('tab-application', 'tab'))
+    await screen.findByTestId('browser-network')
+    expect(absent('browser-open')).toBe(true)
   })
 })
