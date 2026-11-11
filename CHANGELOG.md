@@ -2,6 +2,34 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.1.0 RC1 - 2026-11-11
+
+### Added
+
+- **USB GPS** (**Settings > GPS > GPS method > USB**) sets the iPhone's location over a USB cable while CarPlay stays on Wi-Fi, with no 80 km limit around the iPhone's real place. It needs iOS 17.4 or later. A method chosen while CarPlay is connected applies at the next connection.
+- **USB setup** gets an iPhone ready for USB GPS once, step by step, checking each step itself and going on when it is done:
+  1. **Connect iPhone** asks for a data-capable USB cable and an unlocked iPhone. It checks for Apple's USB drivers: without them it opens **Apple Devices** in the Microsoft Store (iTunes works too); with Apple Devices installed but not running, it opens it.
+  2. **Trust this computer** waits for **Trust** and the passcode on the iPhone.
+  3. **Turn on Developer Mode**: on recent iOS versions **Show Developer Mode** makes it appear in **Settings > Privacy & Security** on the iPhone. The iPhone then restarts, and after it **Turn On** confirms it.
+  4. **Install developer tools** downloads the developer disk image for the iPhone's iOS version from the public DeveloperDiskImage repository on GitHub, keeps it in the app folder's `cache\developer-tools`, and mounts it on the iPhone. A package already downloaded is reused.
+  5. **Finish setup** starts USB GPS, or just ends the setup while the simulation is off.
+
+  ChairPlay talks to the iPhone through Apple Mobile Device Service, which Apple Devices or iTunes installs, and a helper in the app's `helper` folder. Nothing else is installed on the PC.
+- **City presets** put the USB GPS car on a busy road in one of ten cities.
+- **Track playback** (**Settings > GPS**, with USB GPS) opens a GPX recording and plays it as the GPS car: Play, Pause, Stop, and the recording's time and distance. While it plays, the arrow keys and the gamepad don't move the car, and with **Drive mode** on the gauges show the recording's speed.
+- **Settings > Application > Tint** gives the settings a shade: Black, as before, Graphite, Slate, Teal, or Warm. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
+- The mouse's back button goes back in the CarPlay and AltScreen windows.
+
+### Changed
+
+- **Application** takes the place of **Experiments** and holds the app's own settings: both windows' **Always on top** and **Bring to front on a call**, **Tint**, the settings browser, logs, integrations, and the HUD demo.
+- A new install asks the iPhone for H.264 video. **Settings > CarPlay > Video codec** can still offer H.265, and settings from an earlier version keep their codec.
+- Global shortcuts leave Enter and Escape to the app that has the focus.
+- The GPS page no longer has the **Updates** row or the speed and heading switches. CarPlay GPS sends the position 4 times a second with the speed and heading. `gps.rate` and `gps.usb.rate` take any number from 1 to 20 as a hand edit, and `gps.wheel.speed` and `gps.heading.send` stay in settings.properties.
+- Every gauge style shows the heading arrow, whatever the wheel shows.
+
+[Release notes](docs/RELEASE-NOTES-1.1.0.md) · [Changes since v1.0.11](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.11...v1.1.0-rc1)
+
 ## 1.0.11 - 2026-11-10
 
 ### Added
