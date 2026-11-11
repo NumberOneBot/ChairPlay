@@ -56,11 +56,11 @@ internal fun insetBox(
 /**
  * Position and heading inset in the tachometer, with the same arrow as the GPS page's compass, set by [height] about
  * [centerX] and on an [insetBox] [boxWidth] wide from [boxX] (the text's own width about [centerX] unless given), [pad]
- * taller above and below, filled [fill], with its [outline]. The arrow goes before the heading, or,
+ * taller above and below, filled [fill], with its [outline]. The arrow, whatever the wheel shows, goes before the heading, or,
  * [compassBeside], larger beside all three lines, in the middle of their height. Without [box], on what is there.
  */
 internal fun gaugePosition(
-    pen: NanoPen, centerX: Float, y: Float, height: Float, position: GeoPoint, headingDegrees: Double, compass: Boolean,
+    pen: NanoPen, centerX: Float, y: Float, height: Float, position: GeoPoint, headingDegrees: Double,
     fill: Int = HUB_FILL, boxWidth: Float? = null, boxX: Float? = null, pad: Float = 0f,
     outline: ((Float, Float, Float, Float) -> Unit)? = null, compassBeside: Boolean = false, box: Boolean = true,
 ) {
@@ -75,7 +75,7 @@ internal fun gaugePosition(
     val width = boxWidth ?: gaugePositionWidth(pen, height)
     if (box) insetBox(pen, boxX ?: (centerX - width / 2), y - pad, width, height + 2 * pad, fill, outline)
     // Beside, the lines and the larger arrow share the middle: the lines' column to the left of the arrow.
-    val beside = compass && compassBeside
+    val beside = compassBeside
     val bigArrow = arrowWidth * BESIDE_ARROW
     val textX = if (beside) centerX - (gap * 2 + bigArrow) / 2 else centerX
     for ((i, line) in lines.withIndex()) {
@@ -84,12 +84,11 @@ internal fun gaugePosition(
     val angle = "$degrees°"
     val angleWidth = pen.textWidth(angle, size, REGULAR)
     val labelWidth = pen.textWidth(point, pointSize, REGULAR)
-    val arrowSpace = if (compass && !beside) reserved else 0f
+    val arrowSpace = if (beside) 0f else reserved
     val rowX = textX - (arrowSpace + angleWidth + gap + labelWidth) / 2
     val headingX = rowX + arrowSpace
     pen.text(angle, headingX, y + height * 0.82f, size, CAPTION, REGULAR, NVG_ALIGN_LEFT)
     pen.text(point, headingX + angleWidth + gap, y + height * 0.82f, pointSize, CAPTION, REGULAR, NVG_ALIGN_LEFT)
-    if (!compass) return
     val arrowX = textX + coordinateWidth(pen, size) / 2 + gap * 2 + bigArrow / 2
     if (beside) compassArrow(pen, arrowX, y + height / 2, size * BESIDE_ARROW, headingDegrees, aboutMiddle = true)
     else compassArrow(pen, rowX + arrowWidth / 2, y + height * 0.79f, size, headingDegrees)

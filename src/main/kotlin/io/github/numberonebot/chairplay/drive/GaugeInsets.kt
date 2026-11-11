@@ -40,10 +40,9 @@ internal const val WHEEL_EDGE = 0xFF55555C.toInt()
 
 /** The tachometer's inset, in the gap of its [sweep]: the coordinates and heading in a dark box. */
 internal fun positionInset(pen: NanoPen, view: GaugeView, cx: Float, cy: Float, face: Float, sweep: Sweep) {
-    val steering = view.wheelMode == WheelMode.STEERING
     val height = face * 0.3f
     when (view.design) {
-        GaugeDesign.GERMAN -> gaugePosition(pen, cx, cy + face * 0.625f, height, view.position, view.headingDegrees, steering)
+        GaugeDesign.GERMAN -> gaugePosition(pen, cx, cy + face * 0.625f, height, view.position, view.headingDegrees)
         GaugeDesign.BRITISH -> britishPosition(pen, view, cx, cy, face, height, gapSide(sweep))
         GaugeDesign.ITALIAN -> italianPosition(pen, view, cx, cy, face, height)
     }
@@ -64,7 +63,7 @@ private fun britishPosition(pen: NanoPen, view: GaugeView, cx: Float, cy: Float,
     britishScreen(pen, britishScreenX(cx, face, side), cy - height / 2 - pad, height + 2 * pad, cx, cy, face)
     gaugePosition(
         pen, cx + side * BRITISH_SCREEN_MIDDLE * face, cy - height / 2, height, view.position, view.headingDegrees,
-        view.wheelMode == WheelMode.STEERING, boxWidth = BRITISH_SCREEN_WIDTH * face, compassBeside = true, box = false,
+        boxWidth = BRITISH_SCREEN_WIDTH * face, compassBeside = true, box = false,
     )
 }
 

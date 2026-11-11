@@ -72,11 +72,9 @@ internal fun italianPosition(pen: NanoPen, view: GaugeView, cx: Float, cy: Float
     pen.text(angle, left, headingY, size, CAPTION, REGULAR, NVG_ALIGN_LEFT)
     val point = POINTS[((degrees + 22.5) / 45).toInt() % POINTS.size]
     pen.text(point, left + pen.textWidth(angle, size, REGULAR) + size * 0.25f, headingY, size * 0.65f, CAPTION, REGULAR, NVG_ALIGN_LEFT)
-    if (view.wheelMode == WheelMode.STEERING) {
-        // Turning in place about its middle, set in far enough never to cross the lines' left edge.
-        val arrowX = left + arrowReach() * ARROW_SIZE * face
-        compassArrow(pen, arrowX, top + face * (LINE_STEP * 3 + ARROW_SIZE / 2), ARROW_SIZE * face, view.headingDegrees, aboutMiddle = true)
-    }
+    // Whatever the wheel shows; turning in place about its middle, set in far enough never to cross the lines' left edge.
+    val arrowX = left + arrowReach() * ARROW_SIZE * face
+    compassArrow(pen, arrowX, top + face * (LINE_STEP * 3 + ARROW_SIZE / 2), ARROW_SIZE * face, view.headingDegrees, aboutMiddle = true)
 }
 
 /** The cut's width and depth, in the face's radius: from its straight edges to where they meet its circle. */
