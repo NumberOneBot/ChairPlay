@@ -75,13 +75,12 @@ class GpsSwitchTest {
         assertEquals(listOf("save gps.method=usb"), h.calls)
     }
 
-    // S-10: with the switch off, the new method starts nothing at the connection.
+    // With the simulation off nothing sends, whatever the method: a method chosen is in force at once, no reconnect.
     @Test
-    fun `a method applied with the simulation off starts nothing`() {
+    fun `a method chosen with the simulation off is in force at once and starts nothing`() {
         val h = GpsHarness(GpsSettings(enabled = false))
-        h.gps.selectMethod(GpsMethod.USB, h.output().generation)
 
-        h.gps.connected()
+        h.gps.selectMethod(GpsMethod.USB, h.output().generation)
         h.idle()
 
         assertEquals(GpsMethod.USB, h.output().applied)

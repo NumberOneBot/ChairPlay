@@ -128,14 +128,15 @@ internal class UiSettings(
     }
 
     /**
-     * The GPS output's own keys a connection waits for, each on its own: a method chosen since it was made (D8), and the
-     * switch changed since then while CarPlay's method is the one in force (D4); with USB in force the switch acts at once.
+     * The GPS output's own keys a connection waits for, each on its own: a method chosen since it was made while the
+     * simulation was on then and is now (a sending method to swap, D8; off, nothing sends and the method is in force at
+     * once), and the switch changed since then while CarPlay's method is the one in force (D4; USB's acts at once).
      */
     private fun gpsPending(now: Map<String, String>, made: Map<String, String>): List<String> {
         fun method(values: Map<String, String>) = values["gps.method"]?.trim()?.lowercase()?.ifEmpty { null } ?: "carplay"
         fun enabled(values: Map<String, String>) = values["gps.enabled"]?.trim() == "true"
         return listOfNotNull(
-            "gps.method".takeIf { method(now) != method(made) },
+            "gps.method".takeIf { method(now) != method(made) && enabled(now) && enabled(made) },
             "gps.enabled".takeIf { enabled(now) != enabled(made) && method(made) == "carplay" },
         )
     }

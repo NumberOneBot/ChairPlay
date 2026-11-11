@@ -159,6 +159,12 @@ class GpsCoordinator(
             connecting = false
             if (selected != applied) return begin(OperationKind.APPLY) { flows.apply(it, applied) }
         }
+        // Off, nothing sends whatever the method: one chosen is in force at once, with no reconnect.
+        if (!enabled && selected != applied && !flows.carplay.running && !flows.usb.running) {
+            synchronized(flows.lock) { flows.applied = selected }
+            log("GPS: ${selected.key} in force at once, the simulation being off")
+            return reconcile()
+        }
         // One writer: the method not in force never sends.
         flows.channel(if (applied == GpsMethod.USB) GpsMethod.CARPLAY else GpsMethod.USB).takeIf { it.running }?.quiesce()
         val usbState = flows.usb.state()
