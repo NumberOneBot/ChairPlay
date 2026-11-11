@@ -35,7 +35,6 @@ describe('GPS page, the switch and the method', () => {
     await openSection(gpsState(outputs.reconnectNeeded))
     expect(method('USB').getAttribute('aria-checked')).toBe('true')
     expect(screen.getByRole('button', { name: 'USB setup' })).toBeTruthy()
-    expect(screen.queryByRole('switch', { name: 'Vehicle speed' })).toBeNull()
   })
 
   it('keeps the position open while the old method still runs', async () => {
@@ -92,14 +91,11 @@ describe('GPS page, the switch and the method', () => {
 describe('GPS page, what each method shows', () => {
   it('shows the CarPlay options for CarPlay only, and the USB parts for USB only', async () => {
     const { update } = await openSection(gpsState(outputs.carplayOn))
-    expect(screen.getByRole('switch', { name: 'Vehicle speed' })).toBeTruthy()
     expect(screen.getByRole('textbox', { name: 'Heading' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'USB setup' })).toBeNull()
     expect(screen.queryByRole('radiogroup', { name: 'City presets' })).toBeNull()
 
     update(gpsState(outputs.usbOn))
-    expect(screen.queryByRole('switch', { name: 'Vehicle speed' })).toBeNull()
-    expect(screen.queryByRole('switch', { name: 'Heading' })).toBeNull()
     expect(screen.queryByRole('textbox', { name: 'Heading' })).toBeNull()
     expect(screen.getByRole('button', { name: 'USB setup' })).toBeTruthy()
     expect(screen.getByRole('radiogroup', { name: 'City presets' })).toBeTruthy()

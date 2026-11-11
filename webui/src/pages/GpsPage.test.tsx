@@ -207,17 +207,7 @@ describe('GPS page', () => {
     expect(backend.saved).toEqual([])
   })
 
-  // Heading sending, on by default: the switch turns it off, saving the key.
-  it('turns heading sending off', async () => {
-    const backend = await gps()
-
-    expect(screen.getByRole('textbox', { name: 'Heading' })).not.toBeNull()
-    fireEvent.click(screen.getByRole('switch', { name: 'Heading' }))
-
-    await waitFor(() => expect(backend.saved).toEqual([{ 'gps.heading.send': 'false' }]))
-  })
-
-  // Heading sending off: the heading row, its field and the compass are gone.
+  // Heading sending off, a hand edit of gps.heading.send: the heading row, its field and the compass are gone.
   it('hides the heading field and compass when heading sending is off', async () => {
     const backend = gpsBackend(true)
     backend.data.values['gps.heading.send'] = 'false'

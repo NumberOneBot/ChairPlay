@@ -6,15 +6,12 @@ import { EnableRow, MethodRows } from '../gps/MethodRows'
 import { outputOf } from '../gps/output'
 import { UsbSetupWizard } from '../gps/UsbSetupWizard'
 import { VirtualCar } from '../gps/VirtualCar'
-import { Group, Row, Switch } from '../shell/controls'
+import { Group, Row } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
 import { CityPresets } from './CityPresets'
 import { Compass, HeadingField, PositionFields, placeOf } from './gpsFields'
-import { Changed, parts, pendingOf } from './parts'
+import { pendingOf } from './parts'
 import { WindowsLocationButton } from './WindowsLocationButton'
-
-/** What the iPhone learns as it connects: what it is sent besides the position. */
-const LINK_KEYS = ['gps.wheel.speed']
 
 /**
  * The spoofed GPS: whether the iPhone navigates by the car ChairPlay drives, and how the position reaches it (CarPlay
@@ -23,8 +20,7 @@ const LINK_KEYS = ['gps.wheel.speed']
  */
 export function GpsPage({ state, backend, settings }: { state: AppState; backend: Backend; settings: Settings }) {
   const pending = pendingOf(state)
-  const { note } = parts(settings, pending)
-  const { value, save } = settings
+  const { value } = settings
   const output = outputOf(state, settings)
   const usb = output.selected === 'usb'
   const setup = state.gps?.usbSetup
@@ -56,35 +52,15 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
         : output.reason === 'no-position'
           ? 'Set a position first'
           : 'Connect the iPhone first'
-  // What CarPlay's GPS sends besides the place: one "Send" label for the rows it names.
-  const sendRow = (key: string, label: string, title: string, rowLabel?: string) => (
-    <Row label={rowLabel} title={title}>
-      <Switch label={label} checked={value(key) !== 'false'} onChange={(checked) => save({ [key]: String(checked) })} />
-      <Changed keys={[key]} pending={pending} />
-    </Row>
-  )
+  // CarPlay's GPS sends the car's speed and heading too: gps.wheel.speed and gps.heading.send, on by default and a
+  // hand edit only (owner, 2026-11-11).
   return (
     <>
-      <Group title="GPS" note={note(LINK_KEYS)} />
+      <Group title="GPS" />
       <GpsNotices output={output} backend={backend} />
       <>
         <EnableRow output={output} backend={backend} pending={pending} />
         <MethodRows output={output} backend={backend} pending={pending} />
-        {!usb && (
-          <div className={off ? 'held' : undefined} inert={off} title={holdTitle(off) ?? undefined}>
-            {sendRow(
-              'gps.wheel.speed',
-              'Vehicle speed',
-              "The car's speed ten times a second, as a car's wheel sensors give it, so the iPhone moves on smoothly between position updates",
-              'Send',
-            )}
-            {sendRow(
-              'gps.heading.send',
-              'Heading',
-              'The car heading as the course in the position sentences, so the iPhone can face its arrow the way the car goes',
-            )}
-          </div>
-        )}
         <Row label="iPhone">{iphoneStatus(output, state.gps)}</Row>
         {/* Where the car is, apart from the car itself, whose own settings grow. */}
         <Group title="Position" />
