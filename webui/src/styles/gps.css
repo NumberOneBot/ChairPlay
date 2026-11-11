@@ -82,19 +82,6 @@
   height: 14px;
 }
 
-.shell .step .checks {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--muted);
-}
-
-.shell .step .checks li::before {
-  content: '✓';
-  margin-right: 5px;
-  color: var(--green);
-}
-
 /* Cancel and the final action stay in reach at the foot of a long step */
 .shell .setup-foot {
   position: sticky;

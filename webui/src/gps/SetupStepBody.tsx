@@ -184,11 +184,6 @@ function ReadyBody({ setup }: { setup: UsbSetupView }) {
         />
       )}
       <span>Your iPhone is prepared.</span>
-      <ul className="checks">
-        {setup.device && <li>{setup.device.name}</li>}
-        <li>Developer Mode on</li>
-        <li>Developer tools ready</li>
-      </ul>
       {!setup.positionValid && <span>The car needs a position before USB GPS sends. Set one on the GPS page.</span>}
     </>
   )
