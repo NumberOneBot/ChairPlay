@@ -49,21 +49,22 @@ function going(state: AppState, imperial: boolean): string | undefined {
 }
 
 /**
- * The car itself and its gauges. [held] says why it waits, or null when it does not; [driveHeld] why Drive mode alone
- * does (a track drives the car), or null.
+ * The car itself and its gauges. [held] says why it waits, or null when it does not; [modelHeld] why the car's own
+ * driving, its power, mass and handling, does (a track drives the car instead), or null. Drive mode stays free: a track
+ * blocks its keys, not its gauges.
  */
 export function VirtualCar({
   state,
   backend,
   settings,
   held,
-  driveHeld,
+  modelHeld,
 }: {
   state: AppState
   backend: Backend
   settings: Settings
   held: string | null
-  driveHeld: string | null
+  modelHeld: string | null
 }) {
   const { value, save } = settings
   const { field } = parts(settings)
@@ -74,37 +75,38 @@ export function VirtualCar({
     <>
       <Group title="Virtual car" note={going(state, value('gps.units') === 'imperial')} />
       <div className={held ? 'held' : undefined} inert={held !== null} title={held ?? undefined}>
-        <div
-          className={driveHeld ? 'held' : undefined}
-          inert={driveHeld !== null}
-          title={driveHeld ?? undefined}
-          data-testid="drive-mode-hold"
+        <Row
+          title={`Drive the GPS car with the arrow keys and show its speedometer and tachometer on the AltScreen${driveKey ? ` (${keyLabel(driveKey)})` : ''}. Up and Down are the pedals, Left and Right steer, and the arrows stop moving through CarPlay until drive mode is off.`}
         >
-          <Row
-            title={`Drive the GPS car with the arrow keys and show its speedometer and tachometer on the AltScreen${driveKey ? ` (${keyLabel(driveKey)})` : ''}. Up and Down are the pedals, Left and Right steer, and the arrows stop moving through CarPlay until drive mode is off.`}
-          >
-            <Switch
-              label="Drive mode"
-              checked={state.gps?.keyboard ?? false}
-              onChange={(on) => void backend.driveMode(on)}
+          <Switch
+            label="Drive mode"
+            checked={state.gps?.keyboard ?? false}
+            onChange={(on) => void backend.driveMode(on)}
+            testId="drive-mode"
+          />
+          <span className="exp fun">Extra fun</span>
+        </Row>
+        <div
+          className={modelHeld ? 'held' : undefined}
+          inert={modelHeld !== null}
+          title={modelHeld ?? undefined}
+          data-testid="car-model-hold"
+        >
+          <Row label="Power and mass" title="The car's power and mass, which set how it pulls and how fast it goes">
+            {field('gps.car.power.hp', 'Power', '300')}
+            <span className="unit">hp</span>
+            {field('gps.car.mass.kg', 'Mass', '1500')}
+            <span className="unit">kg</span>
+          </Row>
+          <Row label="Handling" title="How fast the car turns standing and slow, and how well it holds a fast corner">
+            <Segmented
+              label="Handling"
+              value={value('gps.car.handling') || 'normal'}
+              options={HANDLING}
+              onChange={(handling) => save({ 'gps.car.handling': handling })}
             />
-            <span className="exp fun">Extra fun</span>
           </Row>
         </div>
-        <Row label="Power and mass" title="The car's power and mass, which set how it pulls and how fast it goes">
-          {field('gps.car.power.hp', 'Power', '300')}
-          <span className="unit">hp</span>
-          {field('gps.car.mass.kg', 'Mass', '1500')}
-          <span className="unit">kg</span>
-        </Row>
-        <Row label="Handling" title="How fast the car turns standing and slow, and how well it holds a fast corner">
-          <Segmented
-            label="Handling"
-            value={value('gps.car.handling') || 'normal'}
-            options={HANDLING}
-            onChange={(handling) => save({ 'gps.car.handling': handling })}
-          />
-        </Row>
         <Row label="Speed units" title="Choose kilometers or miles per hour for the gauges and speed readings">
           <Segmented
             label="Speed units"

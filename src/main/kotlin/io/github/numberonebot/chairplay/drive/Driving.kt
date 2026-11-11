@@ -77,15 +77,15 @@ class Driving(
     @Volatile private var gameTopSpeed: Double? = null
 
     /**
-     * [DriveControl.pass] while the GPS is on, after a track playing or paused ([tracks]) and a game's telemetry with
-     * gps.external on ([external]); off, the telemetry closes ([unfollow]). Off, the car stays put: one driven or moving
-     * as the GPS went off stops where it is, drive mode ends, and one more pass draws the gauges away.
+     * [DriveControl.pass] while the GPS is on, after a track playing or paused ([tracks], drive mode's switch still taking
+     * its gauges) and a game's telemetry with gps.external on ([external]); off, the telemetry closes ([unfollow]). Off,
+     * the car stays put: one driven or moving as the GPS went off stops, drive mode ends, one more pass hides the gauges.
      */
     fun pass(): Double? {
         val settings = settings
         val on = settings.enabled && live()
         if (on && held()) return hold()
-        tracks.driver(on)?.let { return tracks.pass(it) }
+        tracks.driver(on)?.let { control.takeKeyboardRequest(); return tracks.pass(it) }
         if (on && settings.external) return external()
         unfollow()
         if (on) return control.pass().also { ownControls() }

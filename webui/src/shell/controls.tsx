@@ -140,12 +140,15 @@ export function Switch(props: {
   checked: boolean
   onChange: (checked: boolean) => void
   disabled?: boolean
+  /** The switch's data-testid, for the tests (CLAUDE.md: never by its words). */
+  testId?: string
 }) {
   return (
     <label className="chk">
       <input
         type="checkbox"
         role="switch"
+        data-testid={props.testId}
         checked={props.checked}
         disabled={props.disabled}
         onChange={(event) => props.onChange(event.target.checked)}

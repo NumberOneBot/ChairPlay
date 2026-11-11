@@ -62,6 +62,27 @@ class DrivingTrackTest {
         assertTrue(driving.drive.snapshot().car.speed > 10)
     }
 
+    // Drive mode is the keys and the gauges: a track blocks the keys only, so the page's switch works while it plays,
+    // and the gauges show the recording (owner, 2026-11-11).
+    @Test
+    fun `the page's drive mode switch works while a track plays, its gauges showing the recording`() {
+        driving.control.scripted = CarInput(1.0, 0.0, 0.5)
+        playing()
+        drive(1.0)
+
+        driving.driveMode(true)
+        drive(0.5)
+        val sample = recording.at(driving.track!!.time)
+        assertTrue(driving.control.keyboard)
+        assertAt(sample.position, position())
+        assertEquals(sample.speed * 3.6, driving.gauges()!!.speedKmh, 1e-6)
+
+        driving.driveMode(false)
+        drive(0.5)
+        assertTrue(!driving.control.keyboard)
+        assertNull(driving.gauges())
+    }
+
     @Test
     fun `a paused track holds the car where it is, standing`() {
         playing()

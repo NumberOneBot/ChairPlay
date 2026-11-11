@@ -55,8 +55,9 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
         : output.reason === 'no-position'
           ? 'Set a position first'
           : 'Connect the iPhone first'
-  // A recording playing or paused drives the car: what moves it waits for Stop, Position whole and Drive mode (§8);
-  // only while the section and its Stop are on the page.
+  // A recording playing or paused drives the car: Position and the car's own driving (power, mass, handling) wait for
+  // Stop, only while the section and its Stop are on the page; Drive mode stays free, its keys blocked, its gauges
+  // showing the recording (§8, owner).
   const trackDrives =
     usbReady && trackOwnsCar(state.gps?.track) ? 'Stop track playback to move the car yourself' : null
   const positionHold = holdTitle(positionHeld) ?? trackDrives
@@ -105,7 +106,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           backend={backend}
           settings={settings}
           held={carHeld ? holdTitle(true) : null}
-          driveHeld={carHeld ? null : trackDrives}
+          modelHeld={carHeld ? null : trackDrives}
         />
       </>
     </>
