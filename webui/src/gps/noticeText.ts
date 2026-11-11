@@ -1,24 +1,9 @@
 // What the GPS output's operation and notices say: the app reports codes, never English (gpsApi.ts), so the words are here.
-import type { GpsNotice, GpsOperation } from '../gpsApi'
+import type { GpsNotice } from '../gpsApi'
 
 export interface NoticeText {
   head: string
   text: string
-}
-
-/** The one status line of an operation under way: what it is, with no stages. */
-export function operationHead(operation: GpsOperation): string {
-  switch (operation.kind) {
-    case 'enable':
-      return 'Starting USB GPS'
-    case 'resume':
-      return 'Resuming USB GPS'
-    case 'disable':
-    case 'shutdown':
-      return 'Stopping USB GPS'
-    case 'apply':
-      return 'Applying the GPS method'
-  }
 }
 
 /** A notice's words. */

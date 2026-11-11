@@ -16,24 +16,12 @@ function notice(code: GpsNotice['code'], tone: GpsNotice['tone'], expiresAt: num
 }
 
 describe('GPS notices', () => {
-  // One status line for the operation under way, whatever its kind; none without one.
-  it('shows the operation under way as one status line, and none without one', async () => {
+  // An operation under way shows no block: the switch waiting is all it needs.
+  it('shows no block for an operation under way', async () => {
     const { update } = await openSection(gpsState(outputs.stoppingUsb))
-    expect(blocks()).toHaveLength(1)
-    const first = blocks()[0].textContent
-    update(gpsState({ ...outputs.stoppingUsb, operation: { ...outputs.stoppingUsb.operation!, kind: 'enable' } }))
-    expect(blocks()).toHaveLength(1)
-    expect(blocks()[0].textContent).not.toBe(first)
-    update(gpsState(outputs.carplayOff))
     expect(blocks()).toHaveLength(0)
-  })
-
-  it('shows no stage: the status line is the same at every stage', async () => {
-    const operation = outputs.stoppingUsb.operation!
-    const { update } = await openSection(gpsState(outputs.stoppingUsb))
-    const first = blocks()[0].textContent
-    update(gpsState({ ...outputs.stoppingUsb, operation: { ...operation, stage: 'clear' } }))
-    expect(blocks()[0].textContent).toBe(first)
+    update(gpsState({ ...outputs.stoppingUsb, operation: { ...outputs.stoppingUsb.operation!, kind: 'enable' } }))
+    expect(blocks()).toHaveLength(0)
   })
 
   // Reset command sent goes at its time (10 seconds in the app).
