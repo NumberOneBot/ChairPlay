@@ -248,9 +248,9 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
           onChange={(checked) => settings.save({ 'ui.controls.keys': String(checked) })}
         />
       </Row>
-      <Row label="Wheel">
+      <Row label="Mouse wheel">
         <Segmented
-          label="Wheel"
+          label="Mouse wheel"
           value={value('wheel.action')}
           options={[
             ['knob', 'Knob'],
