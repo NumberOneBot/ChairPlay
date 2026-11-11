@@ -248,9 +248,16 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
           onChange={(checked) => settings.save({ 'ui.controls.keys': String(checked) })}
         />
       </Row>
-      <Row label="Mouse wheel">
+      <Row label="Repeat every" title="A held key acts on every Nth repeat">
+        {numberField('key.repeat.every', 'Repeat every')}
+      </Row>
+      <Row label="Zoom repeat every" title="A held AltScreen zoom key acts on every Nth repeat">
+        {numberField('key.zoom.repeat.every', 'Zoom repeat every')}
+      </Row>
+      <Group title="Mouse" />
+      <Row label="Wheel">
         <Segmented
-          label="Mouse wheel"
+          label="Wheel"
           value={value('wheel.action')}
           options={[
             ['knob', 'Knob'],
@@ -269,12 +276,6 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
       <Row label="Wheel step" title="Wheel notches for one knob step">
         {numberField('wheel.notches.per.step', 'Wheel step')}
         <span className="unit">notches</span>
-      </Row>
-      <Row label="Repeat every" title="A held key acts on every Nth repeat">
-        {numberField('key.repeat.every', 'Repeat every')}
-      </Row>
-      <Row label="Zoom repeat every" title="A held AltScreen zoom key acts on every Nth repeat">
-        {numberField('key.zoom.repeat.every', 'Zoom repeat every')}
       </Row>
       {GROUPS.map(([group, actions]) => (
         <div key={group}>
