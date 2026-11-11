@@ -1,10 +1,10 @@
 import { useEffect, useId, useState } from 'react'
 import type { AppState, Backend } from '../api'
 import { AltScreenPage } from '../pages/AltScreenPage'
+import { AboutPage } from '../pages/AboutPage'
 import { ApplicationPage } from '../pages/ApplicationPage'
 import { AudioPage } from '../pages/AudioPage'
 import { CarPlayPage } from '../pages/CarPlayPage'
-import { ExperimentsPage } from '../pages/ExperimentsPage'
 import { GpsPage } from '../pages/GpsPage'
 import { ConnectionPage } from '../pages/ConnectionPage'
 import { KeyboardPage } from '../pages/KeyboardPage'
@@ -126,11 +126,11 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
                 <AudioPage state={state} backend={backend} settings={settings} />
               )}
               {settings.data && section === 'gps' && <GpsPage state={state} backend={backend} settings={settings} />}
-              {settings.data && section === 'experiments' && (
-                <ExperimentsPage state={state} backend={backend} settings={settings} />
+              {settings.data && section === 'application' && (
+                <ApplicationPage state={state} backend={backend} settings={settings} />
               )}
-              {section === 'application' && (
-                <ApplicationPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />
+              {section === 'about' && (
+                <AboutPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />
               )}
             </div>
           </div>

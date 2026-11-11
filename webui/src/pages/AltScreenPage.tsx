@@ -72,7 +72,6 @@ export function AltScreenPage({ state, backend, settings }: { state: AppState; b
           checked={settings.value('altscreen.enabled') === 'true'}
           onChange={(checked) => settings.save({ 'altscreen.enabled': String(checked) })}
         />
-        <span className="exp">Experimental</span>
         <Changed keys={['altscreen.enabled']} pending={pending} />
       </Row>
       {/* Off, the AltScreen has nothing to set: the rest waits for it. */}

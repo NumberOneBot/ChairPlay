@@ -18,18 +18,17 @@ export const SECTIONS = [
   { id: 'keyboard', title: 'Keyboard', icon: <KeyboardIcon /> },
   { id: 'audio', title: 'Audio', icon: <AudioIcon /> },
   { id: 'gps', title: 'GPS', icon: <GpsIcon /> },
-  { id: 'experiments', title: 'Experiments', icon: <FlaskIcon /> },
-  { id: 'application', title: 'Application', icon: <AboutIcon /> },
+  { id: 'application', title: 'Application', icon: <FlaskIcon /> },
+  { id: 'about', title: 'About', icon: <AboutIcon /> },
 ] as const satisfies readonly { id: string; title: string; icon: ReactNode }[]
 
 export type Section = (typeof SECTIONS)[number]['id']
 
-/** The app's own settings, whatever their key starts with: its look, its windows, the settings browser, updates. */
+/** The app's own settings, whatever their key starts with: its windows, its look, the settings browser, its logs. */
 const APPLICATION_KEYS = new Set([
   'ui.tint',
   'ui.port',
   'ui.network',
-  'updates.check.on.start',
   'window.always.on.top',
   'window.front.on.call',
   'altscreen.always.on.top',
@@ -37,8 +36,8 @@ const APPLICATION_KEYS = new Set([
 
 /** The page a setting of settings.properties or controls.properties is on. */
 export function sectionOf(key: string): Section {
-  if (APPLICATION_KEYS.has(key)) return 'application'
-  if (key.startsWith('log.')) return 'experiments'
+  if (key === 'updates.check.on.start') return 'about'
+  if (APPLICATION_KEYS.has(key) || key.startsWith('log.')) return 'application'
   if (key.startsWith('display.') || key.startsWith('window.') || key.startsWith('video.')) return 'carplay'
   if (key.startsWith('altscreen.')) return 'altscreen'
   if (key.startsWith('audio.')) return 'audio'
