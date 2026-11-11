@@ -248,12 +248,6 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
           onChange={(checked) => settings.save({ 'ui.controls.keys': String(checked) })}
         />
       </Row>
-      <Row label="Repeat every" title="A held key acts on every Nth repeat">
-        {numberField('key.repeat.every', 'Repeat every')}
-      </Row>
-      <Row label="Zoom repeat every" title="A held AltScreen zoom key acts on every Nth repeat">
-        {numberField('key.zoom.repeat.every', 'Zoom repeat every')}
-      </Row>
       <Group title="Mouse" />
       <Row label="Wheel">
         <Segmented
@@ -276,6 +270,19 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
       <Row label="Wheel step" title="Wheel notches for one knob step">
         {numberField('wheel.notches.per.step', 'Wheel step')}
         <span className="unit">notches</span>
+      </Row>
+      {/* A held key repeats some 30 times a second: these steps take every Nth repeat (owner, 2026-11-11). */}
+      <Group title="Held keys" />
+      <Row label="Turn" title="Holding Turn forward or Turn back, the knob turns one step every N key repeats; more is slower">
+        {numberField('key.repeat.every', 'Turn')}
+        <span className="unit">repeats per step</span>
+      </Row>
+      <Row
+        label="AltScreen zoom"
+        title="Holding a zoom key, the AltScreen map zooms one step every N key repeats; more is slower, and 0 zooms once a press"
+      >
+        {numberField('key.zoom.repeat.every', 'AltScreen zoom')}
+        <span className="unit">repeats per step</span>
       </Row>
       {GROUPS.map(([group, actions]) => (
         <div key={group}>
