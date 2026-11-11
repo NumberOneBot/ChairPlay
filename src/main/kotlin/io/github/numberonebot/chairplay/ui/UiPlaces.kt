@@ -9,7 +9,7 @@ import java.nio.file.Files
 /**
  * The system pages, folders and web pages the screens link to, by the name the page gives, opened through [launch]:
  * Bluetooth or Wi-Fi in the system settings, the firewall in the system's security page or its console with the rules, location, the MFi,
- * logs, and screenshots folders (made first if they are missing), and the About page's: the project's pages on GitHub
+ * logs, and screenshots folders (made first if they are missing), and the Application page's: the project's pages on GitHub
  * (a new issue with [details] filled in), DiPlay's, xcertplay's, LIVI's, the HUD renderer's, and the third-party notices beside
  * the app ([setup]), in the system's text editor as the file has no extension. [about] and [systemVersion] name the build in a report.
  */
@@ -82,7 +82,7 @@ internal class UiPlaces(
         "${about.startLine()}\n$core\n$windows"
     }
 
-    /** The About page's part of the state ([BuildInfo.toPage]), made once with [details]. */
+    /** The Application page's build and help part of the state ([BuildInfo.toPage]), made once with [details]. */
     val aboutPage: Map<String, Any?> by lazy { about.toPage(details) }
 
     private companion object {
