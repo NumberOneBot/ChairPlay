@@ -96,4 +96,17 @@ class TrackPlayerTest {
         player.advance()
         assertEquals(0.0, player.time, 0.0)
     }
+
+    @Test
+    fun `the state is the phase and the time of one moment`() {
+        player.play()
+        seconds(3)
+        player.advance()
+        assertEquals(TrackPhase.PLAYING to 3.0, player.state())
+        seconds(20)
+        player.advance()
+        assertEquals(TrackPhase.STOPPED to 10.0, player.state())
+        player.stop()
+        assertEquals(TrackPhase.STOPPED to 0.0, player.state())
+    }
 }

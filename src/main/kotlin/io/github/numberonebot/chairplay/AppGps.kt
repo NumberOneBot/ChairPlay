@@ -4,19 +4,24 @@ import io.github.numberonebot.chairplay.carplay.CarPlayGpsChannel
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.GeoPoint
 import io.github.numberonebot.chairplay.drive.GpsSettings
+import io.github.numberonebot.chairplay.drive.track.TrackCommands
+import io.github.numberonebot.chairplay.drive.track.TrackNotices
 import io.github.numberonebot.chairplay.gps.GpsCar
 import io.github.numberonebot.chairplay.gps.GpsCoordinator
 import io.github.numberonebot.chairplay.gps.GpsSettingsStore
 import io.github.numberonebot.chairplay.gps.InputHold
+import io.github.numberonebot.chairplay.gps.NoticeCode
+import io.github.numberonebot.chairplay.gps.NoticeTone
 import io.github.numberonebot.chairplay.gps.UnavailableUsbHelper
 import io.github.numberonebot.chairplay.gps.UsbGpsChannel
 import io.github.numberonebot.chairplay.gps.UsbHelper
 import io.github.numberonebot.chairplay.gps.setup.ThreadSetupExecutor
 import io.github.numberonebot.chairplay.gps.setup.UsbSetupController
+import io.github.numberonebot.chairplay.platform.Platforms
 
 /**
- * The GPS output as the app makes it: CarPlay's and USB's channels around the one [driving] car, the USB setup, and
- * the coordinator that owns them (gps/GpsCoordinator.kt). [saveGps] is the settings' save for the coordinator's own
+ * The GPS output as the app makes it: CarPlay's and USB's channels around the one [driving] car, the USB setup, the
+ * coordinator that owns them (gps/GpsCoordinator.kt), and track playback's commands for the car ([track]). [saveGps] is the settings' save for the coordinator's own
  * keys; [session] says whether a CarPlay session runs.
  */
 internal class AppGps(
@@ -54,6 +59,18 @@ internal class AppGps(
             override fun release() = driving.wake()
         },
         log = log,
+    )
+
+    /** Track playback's commands: Open… shows the platform's Open dialog, and a file it cannot play is the page's notice. */
+    val track = TrackCommands(
+        driving,
+        { Platforms.current.openFile("Open a recording", "GPX files", listOf("*.gpx")) },
+        object : TrackNotices {
+            override fun unreadable(reason: String) =
+                coordinator.showNotice(NoticeCode.TRACK_UNREADABLE, NoticeTone.BAD, mapOf("reason" to reason))
+            override fun clear() = coordinator.dropNotice(NoticeCode.TRACK_UNREADABLE)
+        },
+        log,
     )
 
     init {

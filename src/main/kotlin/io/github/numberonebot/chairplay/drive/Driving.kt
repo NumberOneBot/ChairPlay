@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.drive
 
 import io.github.numberonebot.chairplay.bridge.External
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
+import io.github.numberonebot.chairplay.drive.track.*
 import io.github.numberonebot.chairplay.platform.*
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
@@ -55,6 +56,12 @@ class Driving(
 
     val control = DriveControl(drive, gamepad, onStopped = ::remember, nanoTime = nanoTime)
 
+    private val tracks = DrivingTrack(drive, nanoTime, { placed = true }, ::remember)
+    /** The recording loaded on the GPS page, which drives the car while it plays or pauses ([DrivingTrack]). */
+    val track: TrackPlayer? get() = tracks.player
+    /** Loads [recording] stopped at its start, from any thread; a car the last one had stands on the next pass. */
+    fun load(recording: TrackRecording) = tracks.load(recording).also { wake() }
+
     /** The location the last connection made from the car, which puts itself here for the GPS page. */
     @Volatile var location: LocationLink? = null
 
@@ -71,14 +78,15 @@ class Driving(
     @Volatile private var gameTopSpeed: Double? = null
 
     /**
-     * [DriveControl.pass] while the GPS is on, after a game's telemetry with gps.external on ([external]); off, the
-     * telemetry closes ([unfollow]). Off, the car stays put: one driven or moving as the GPS went off stops
-     * where it is, drive mode ends, and one more pass draws the gauges away.
+     * [DriveControl.pass] while the GPS is on, after a track playing or paused ([tracks]) and a game's telemetry with
+     * gps.external on ([external]); off, the telemetry closes ([unfollow]). Off, the car stays put: one driven or moving
+     * as the GPS went off stops where it is, drive mode ends, and one more pass draws the gauges away.
      */
     fun pass(): Double? {
         val settings = settings
         val on = settings.enabled && live()
         if (on && held()) return hold()
+        tracks.driver(on)?.let { return tracks.pass(it) }
         if (on && settings.external) return external()
         unfollow()
         if (on) return control.pass().also { ownControls() }

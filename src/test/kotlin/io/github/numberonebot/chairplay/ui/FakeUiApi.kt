@@ -84,6 +84,11 @@ internal class FakeUiApi : UiApi {
         return true
     }
 
+    override fun track(action: String): Boolean {
+        calls += "track $action"
+        return true
+    }
+
 
     override fun volume(level: Int): Boolean {
         calls += "volume $level"

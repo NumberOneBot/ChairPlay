@@ -243,6 +243,9 @@ interface UiApi {
     /** The GPS page's Drive mode switch, as F10 turns it; false while the GPS is off, which keeps it off. */
     fun driveMode(on: Boolean): Boolean = false
 
+    /** Track playback's Open… and deck ("open", "play", "pause", "stop"); false for another action or nothing loaded. */
+    fun track(action: String): Boolean = false
+
     /** The GPS output's commands ([GpsCommands]); null without one, which refuses them. */
     fun gpsCommands(): GpsCommands? = null
 

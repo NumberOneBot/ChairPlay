@@ -212,6 +212,18 @@ class GpsCoordinator(
         flows.enabled && (flows.applied == GpsMethod.CARPLAY || flows.usb.running)
     }
 
+    /** Shows a notice another part of the app raises, such as track playback's, and tells the page. */
+    fun showNotice(code: NoticeCode, tone: NoticeTone, args: Map<String, String> = emptyMap()) {
+        notices.show(code, tone, args)
+        changed()
+    }
+
+    /** Takes such a notice away, and tells the page. */
+    fun dropNotice(code: NoticeCode) {
+        notices.drop(code)
+        changed()
+    }
+
     /** Whether an operation runs: the switch waits and the car stands (D9). */
     val holding: Boolean get() = ops.current != null
 

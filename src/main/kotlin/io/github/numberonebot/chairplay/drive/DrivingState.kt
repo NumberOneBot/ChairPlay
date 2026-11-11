@@ -2,7 +2,10 @@ package io.github.numberonebot.chairplay.drive
 
 import kotlin.math.roundToInt
 
-/** What the GPS page shows of [driving]: the car's place and motion, the controls driving it, and what the iPhone asked for. */
+/**
+ * What the GPS page shows of [driving]: the car's place and motion, the controls driving it, what the iPhone asked for,
+ * and the recording loaded for track playback (null while none is).
+ */
 internal fun drivingState(driving: Driving): Map<String, Any?> {
     val snapshot = driving.drive.snapshot()
     val car = snapshot.car
@@ -20,6 +23,17 @@ internal fun drivingState(driving: Driving): Map<String, Any?> {
         "listening" to (status?.listening ?: false),
         "sentences" to status?.requested?.map { SENTENCES[it] ?: "#$it" },
         "sent" to (status?.sent ?: 0L),
+        "track" to driving.track?.let { player ->
+            // One read of both: a stop between two would show the time of one phase with the other.
+            val (phase, time) = player.state()
+            mapOf(
+                "name" to player.recording.name,
+                "phase" to phase.key,
+                "time" to (time * 10).roundToInt() / 10.0,
+                "duration" to player.recording.duration,
+                "distanceKm" to (player.recording.distanceMeters / 10).roundToInt() / 100.0,
+            )
+        },
     )
 }
 

@@ -130,6 +130,14 @@ internal fun postRoute(api: UiApi, route: String, body: Map<*, *>): Pair<Int, Ma
                 else -> json(409, mapOf("error" to "the GPS is off"))
             }
         }
+        "track" -> {
+            val action = body["action"] as? String
+            when {
+                action == null -> json(400, mapOf("error" to "action missing"))
+                api.track(action) -> json(200, mapOf("ok" to true))
+                else -> json(409, mapOf("error" to "no such action, or no recording loaded"))
+            }
+        }
         "screenshot" ->
             if (api.screenshot()) json(200, mapOf("ok" to true)) else json(409, mapOf("error" to "no screens"))
         "firewall-rule" ->

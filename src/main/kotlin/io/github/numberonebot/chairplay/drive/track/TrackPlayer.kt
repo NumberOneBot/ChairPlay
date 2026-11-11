@@ -15,6 +15,10 @@ class TrackPlayer(val recording: TrackRecording, private val nanoTime: () -> Lon
 
     val time: Double @Synchronized get() = currentTime
 
+    /** The phase and the time read together, so a stop on another thread never splits them. */
+    @Synchronized
+    fun state(): Pair<TrackPhase, Double> = currentPhase to currentTime
+
     /** True while the track drives the car: playing or paused. */
     val owns: Boolean @Synchronized get() = currentPhase != TrackPhase.STOPPED
 

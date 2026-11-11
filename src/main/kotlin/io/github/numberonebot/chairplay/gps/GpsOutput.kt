@@ -55,6 +55,8 @@ enum class NoticeTone(val key: String) { INFO("info"), WARN("warn"), BAD("bad") 
 enum class NoticeCode(val key: String) {
     /** usb + enabled saved, no phone: the warning above Settings' content (UI-23); stays until it changes. */
     USB_UNAVAILABLE("usb-unavailable"),
+    /** The file track playback's Open… chose cannot be played, args.reason saying why; stays until the next file. */
+    TRACK_UNREADABLE("track-unreadable"),
 }
 
 data class GpsNotice(

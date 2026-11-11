@@ -12,6 +12,7 @@ internal class AppUiApi(
     private val updateCheck: () -> Boolean = { false },
     private val checks: SetupChecks? = null,
     private val gps: () -> GpsCommands? = { null },
+    private val track: (String) -> Boolean = { false },
     private val driving: () -> UiDriving?,
 ) : UiApi by controller {
     override fun gpsCommands(): GpsCommands? = gps()
@@ -28,4 +29,6 @@ internal class AppUiApi(
     override fun screenshot() = driving()?.screenshot() ?: false
 
     override fun driveMode(on: Boolean) = driving()?.driveMode(on) ?: false
+
+    override fun track(action: String) = track.invoke(action)
 }

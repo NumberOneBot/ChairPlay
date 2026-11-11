@@ -79,6 +79,8 @@ class ChairPlayUi(
     bufferedAudio: () -> Map<String, Any>? = { null },
     /** The GPS output's commands, once the app made them. */
     private val gpsCommands: () -> GpsCommands? = { null },
+    /** Track playback's commands (drive/track/TrackCommands.kt); false before the app made them. */
+    trackCommands: (String) -> Boolean = { false },
     /** The GPS method the coordinator has in force, read without its lock; null before it exists. */
     gpsApplied: () -> String? = { null },
 ) : Closeable, UiSessions {
@@ -155,7 +157,7 @@ class ChairPlayUi(
     /** The GPS output coordinator's own save of gps.method, gps.enabled and gps.usb.device. */
     fun saveGps(changes: Map<String, String>) = controller.saveGps(changes)
 
-    private val api = AppUiApi(controller, { updates.check() }, checks, gpsCommands) { driving }
+    private val api = AppUiApi(controller, { updates.check() }, checks, gpsCommands, trackCommands) { driving }
 
     private val server = UiServer(
         api,

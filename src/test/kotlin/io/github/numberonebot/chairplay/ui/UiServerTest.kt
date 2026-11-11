@@ -97,6 +97,14 @@ class UiServerTest {
         assertEquals(listOf("driveMode true", "driveMode false"), api.calls)
     }
 
+    // Track playback's Open… and its deck.
+    @Test
+    fun `the track is opened and played from the page`() {
+        assertEquals(200, post("/api/track", """{"action":"open"}""").statusCode())
+        assertEquals(400, post("/api/track", """{}""").statusCode())
+        assertEquals(listOf("track open"), api.calls)
+    }
+
     // The Experiments page's Play and Stop: a demo by name, or none to stop it.
     @Test
     fun `a HUD demo is played and stopped`() {
