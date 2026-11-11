@@ -95,13 +95,6 @@
   color: var(--green);
 }
 
-/* The Ready checklist on one line: three short facts do not need three rows */
-.shell .step .checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 14px;
-}
-
 /* Cancel and the final action stay in reach at the foot of a long step */
 .shell .setup-foot {
   position: sticky;
