@@ -63,8 +63,12 @@ internal fun italianPosition(pen: NanoPen, view: GaugeView, cx: Float, cy: Float
         String.format(Locale.ROOT, "%.5f", view.position.latitude),
         String.format(Locale.ROOT, "%.5f", view.position.longitude),
     )
+    // A minus hangs left of the lines' edge, so every line's first digit, and the heading's, start on it.
     for ((i, line) in lines.withIndex()) {
-        pen.text(line, left, top + face * (LINE_SIZE / 2 + LINE_STEP * i), size, CAPTION, REGULAR, NVG_ALIGN_LEFT)
+        val y = top + face * (LINE_SIZE / 2 + LINE_STEP * i)
+        val digits = line.removePrefix("-")
+        if (digits != line) pen.text("-", left, y, size, CAPTION, REGULAR, NVG_ALIGN_RIGHT)
+        pen.text(digits, left, y, size, CAPTION, REGULAR, NVG_ALIGN_LEFT)
     }
     // The heading as the other styles set it: the degrees, then the compass point smaller.
     val angle = "$degrees°"
