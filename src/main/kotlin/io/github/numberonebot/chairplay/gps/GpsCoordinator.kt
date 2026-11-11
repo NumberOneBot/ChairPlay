@@ -19,7 +19,6 @@ class GpsCoordinator(
     carplay: GpsChannel,
     usb: GpsChannel,
     setup: UsbSetupPort,
-    locator: ReturnLocator,
     hold: InputHold = InputHold.NONE,
     private val log: (String) -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis,
@@ -33,7 +32,7 @@ class GpsCoordinator(
     private val notices = GpsNotices(clock)
     // An operation's every step tells the page; its end also asks for a reconcile, which waits while one runs.
     private val ops = GpsOperations(clock, hold, worker, watchdog, timing.operationMillis, log) { changed(); poke() }
-    private val flows = GpsFlows(store, car, carplay, usb, setup, locator, notices, ops, timing, log)
+    private val flows = GpsFlows(store, car, carplay, usb, setup, notices, ops, timing, log)
     private val queued = AtomicBoolean()
     @Volatile private var connecting = false
     private var wizardWasOpen = false

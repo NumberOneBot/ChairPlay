@@ -9,7 +9,6 @@ afterEach(cleanup)
 const inert = (element: HTMLElement) => element.closest('[inert]') !== null
 const page = () => screen.getByRole('tabpanel')
 const blocks = () => within(page()).queryAllByRole('status')
-const alerts = () => within(page()).queryAllByRole('alert')
 
 /** A notice of [code] that stays, or goes at [expiresAt]. */
 function notice(code: GpsNotice['code'], tone: GpsNotice['tone'], expiresAt: number | null = null): GpsNotice {
@@ -60,11 +59,6 @@ describe('GPS notices', () => {
     expect(within(page()).getByTitle('Changed; applies at the next connection')).toBeTruthy()
     expect(blocks()).toHaveLength(0)
     expect(backend.reconnects).toBe(0)
-  })
-
-  it('warns of Windows location unavailable', async () => {
-    await openSection(gpsState(outputs.windowsUnavailable))
-    expect(alerts()).toHaveLength(1)
   })
 
   it('does not put a modal dialog over anything', async () => {

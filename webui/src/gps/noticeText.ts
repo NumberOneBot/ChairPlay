@@ -29,11 +29,6 @@ export function noticeText(notice: GpsNotice): NoticeText {
         head: 'Reset command sent',
         text: 'Your iPhone and navigation apps may take time to update their location. If a navigation app still shows the simulated position, close and reopen it.',
       }
-    case 'windows-unavailable':
-      return {
-        head: 'Windows location unavailable',
-        text: 'Simulation can start from the current virtual position. Automatic return to the Windows location is unavailable.',
-      }
     case 'usb-unavailable':
       return { head: 'USB GPS unavailable', text: 'Connect your iPhone with a USB cable to resume simulation.' }
   }

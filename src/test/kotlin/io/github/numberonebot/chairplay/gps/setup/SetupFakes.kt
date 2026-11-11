@@ -17,9 +17,6 @@ import io.github.numberonebot.chairplay.gps.UsbHelper
 import io.github.numberonebot.chairplay.gps.UsbProbe
 import io.github.numberonebot.chairplay.gps.UsbResult
 import io.github.numberonebot.chairplay.gps.UsbSession
-import io.github.numberonebot.chairplay.gps.ReturnLocator
-import io.github.numberonebot.chairplay.gps.ReturnPoint
-import io.github.numberonebot.chairplay.platform.LocationResult
 
 /** A scripted helper: every answer is a field the test sets; every call is counted. Opening a session fails the test. */
 class FakeUsbHelper : UsbHelper {
@@ -92,7 +89,6 @@ class ManualExecutor : SetupExecutor {
 
 class SetupHarness(
     val helper: FakeUsbHelper = FakeUsbHelper(),
-    var location: () -> LocationResult = { LocationResult.Found(GeoPoint(50.4501, 30.5234)) },
     var position: Boolean = true,
     var prepared: String? = FakeUsbHelper.PHONE.udid,
 ) {
@@ -100,18 +96,7 @@ class SetupHarness(
     val finishes = mutableListOf<Triple<Long, UsbDevice, Boolean>>()
     var finishOutcome = CommandOutcome.ACCEPTED
     var changes = 0
-    /** The deadlines the setup asked Windows' place with. */
-    val locateDeadlines = mutableListOf<Long>()
-    // The app's shared locator, which keeps its own deadline: a late answer is its "timeout".
-    private val locator = ReturnLocator { deadline ->
-        locateDeadlines += deadline
-        if (exec.late) ReturnPoint.Unavailable("timeout") else when (val found = location()) {
-            is LocationResult.Found -> ReturnPoint.Found(found.place)
-            LocationResult.Denied -> ReturnPoint.Unavailable("denied")
-            LocationResult.Unknown -> ReturnPoint.Unavailable("unknown")
-        }
-    }
-    val controller = UsbSetupController(helper, locator, { position }, { prepared }, exec).also { c ->
+    val controller = UsbSetupController(helper, { position }, { prepared }, exec).also { c ->
         c.onFinish = { id, device, enable -> finishes += Triple(id, device, enable); finishOutcome }
         c.onChanged = { changes++ }
     }

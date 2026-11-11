@@ -4,7 +4,6 @@ import io.github.numberonebot.chairplay.carplay.CarPlayGpsChannel
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.GeoPoint
 import io.github.numberonebot.chairplay.drive.GpsSettings
-import io.github.numberonebot.chairplay.gps.DeadlineLocator
 import io.github.numberonebot.chairplay.gps.GpsCar
 import io.github.numberonebot.chairplay.gps.GpsCoordinator
 import io.github.numberonebot.chairplay.gps.GpsSettingsStore
@@ -14,7 +13,6 @@ import io.github.numberonebot.chairplay.gps.UsbGpsChannel
 import io.github.numberonebot.chairplay.gps.UsbHelper
 import io.github.numberonebot.chairplay.gps.setup.ThreadSetupExecutor
 import io.github.numberonebot.chairplay.gps.setup.UsbSetupController
-import io.github.numberonebot.chairplay.platform.Platforms
 
 /**
  * The GPS output as the app makes it: CarPlay's and USB's channels around the one [driving] car, the USB setup, and
@@ -35,11 +33,8 @@ internal class AppGps(
 
     private val usb = UsbGpsChannel({ helper }, position, { driving.settings.usbRate }, log)
 
-    // Windows' place, asked once at a time for the setup and the coordinator alike (V47).
-    private val locator = DeadlineLocator(log, Platforms.current.location::read)
-
     private val setup = UsbSetupController(
-        helper ?: UnavailableUsbHelper, locator, { driving.placed }, { driving.settings.usbDevice }, ThreadSetupExecutor(log),
+        helper ?: UnavailableUsbHelper, { driving.placed }, { driving.settings.usbDevice }, ThreadSetupExecutor(log),
     )
 
     val coordinator = GpsCoordinator(
@@ -53,7 +48,6 @@ internal class AppGps(
         carplay = carplay,
         usb = usb,
         setup = setup,
-        locator = locator,
         // The window loop's next pass puts a hold, or its end, in force on the car.
         hold = object : InputHold {
             override fun hold() = driving.wake()

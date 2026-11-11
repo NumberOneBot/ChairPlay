@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * One simulation session in a session helper of its own. [offer] only stores the newest point and wakes the sender
  * thread, which keeps at most one set in flight and sends the newest point when that set's reply is in: latest-wins,
- * no burst after a stall. [returnTo], [clear] and [close] go first: they drop the waiting point and are written
+ * no burst after a stall. [clear] and [close] go first: they drop the waiting point and are written
  * under the same lock the sender checks, so no point taken before them reaches the helper after them; the helper
  * then runs them after the set in flight. Every request names this session and generation, so nothing of it can act
  * on a later session.
@@ -64,11 +64,6 @@ internal class ProcessUsbSession(
         if (fenced || finished || !valid(point)) return
         latest.set(point)
         wake.offer(Unit)
-    }
-
-    override fun returnTo(point: GeoPoint): UsbResult<Unit> {
-        if (!valid(point)) return UsbResult.Failed(UsbErrorCode.INVALID_COORDINATES, "not a place on Earth")
-        return first("return", mapOf("latitude" to point.latitude, "longitude" to point.longitude), fence = true)
     }
 
     override fun clear(): UsbResult<Unit> = first("clear", emptyMap(), fence = false)

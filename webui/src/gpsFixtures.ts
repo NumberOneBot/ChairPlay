@@ -28,7 +28,7 @@ function steps(current: SetupStep, state: StepState): Record<SetupStep, StepStat
 export function usbSetup(current: SetupStep, state: StepState, overrides: Partial<UsbSetupView> = {}): UsbSetupView {
   return {
     open: true, operationId: 7, generation: 1, intent: 'prepare', device: current === 'usb' ? null : PHONE,
-    steps: steps(current, state), current, download: null, windowsWarning: false, positionValid: true, ...overrides,
+    steps: steps(current, state), current, download: null, positionValid: true, ...overrides,
   }
 }
 
@@ -74,10 +74,6 @@ export const outputs = {
     selected: 'usb', applied: 'usb', usbPrepared: true, device: PHONE, rateHz: 10,
     notices: [notice('reset-sent', 'info', { expiresAt: NOW + 10_000 })],
   }),
-  windowsUnavailable: gpsOutput({
-    enabledIntent: true, activeMethod: 'carplay', running: true,
-    notices: [notice('windows-unavailable', 'warn', { args: { reason: 'denied' } })],
-  }),
 } satisfies Record<string, GpsOutput>
 
 /** The wizard's states, step by step (02 §3). */
@@ -97,6 +93,5 @@ export const setups = {
   connecting: usbSetup('tools', step('working', 'connecting')),
   ready: usbSetup('ready', step('done')),
   readyEnable: usbSetup('ready', step('done'), { intent: 'enable' }),
-  readyWindowsWarning: usbSetup('ready', step('done'), { intent: 'enable', windowsWarning: true }),
   readyNoPosition: usbSetup('ready', step('done'), { intent: 'enable', positionValid: false }),
 } satisfies Record<string, UsbSetupView>

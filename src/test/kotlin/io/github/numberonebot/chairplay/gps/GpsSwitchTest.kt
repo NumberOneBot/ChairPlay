@@ -45,7 +45,7 @@ class GpsSwitchTest {
         h.gps.connected()
         h.idle()
 
-        assertEquals(listOf("usb.quiesce", "locate", "usb.release 49.84,24.03", "carplay.start 40.7,-74.0"), h.calls)
+        assertEquals(listOf("usb.quiesce", "usb.release", "carplay.start 40.7,-74.0"), h.calls)
         val out = h.output()
         assertEquals(GpsMethod.CARPLAY, out.applied)
         assertTrue(out.notices.any { it.code == NoticeCode.RESET_SENT })

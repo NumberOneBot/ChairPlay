@@ -10,9 +10,9 @@ import io.github.numberonebot.chairplay.drive.GpsSettings
 /** One step of letting a USB simulation go: done, failed (or no reply), or not tried (no channel to try it on). */
 enum class StepOutcome { DONE, FAILED, SKIPPED }
 
-data class Release(val returned: StepOutcome, val cleared: StepOutcome, val closed: StepOutcome) {
+data class Release(val cleared: StepOutcome, val closed: StepOutcome) {
     companion object {
-        val NOTHING = Release(StepOutcome.SKIPPED, StepOutcome.SKIPPED, StepOutcome.SKIPPED)
+        val NOTHING = Release(StepOutcome.SKIPPED, StepOutcome.SKIPPED)
     }
 }
 
@@ -40,10 +40,10 @@ interface GpsChannel {
     fun quiesce()
 
     /**
-     * USB: sets [returnTo] once (when given), clears and closes its session, each bounded and tried whatever the one
-     * before did; with no session, [Release.NOTHING] (D12). CarPlay: [Release.NOTHING].
+     * USB: clears and closes its session, each bounded, the close tried whatever the clear did; the iPhone finds its
+     * own place again (D13). With no session, [Release.NOTHING] (D12). CarPlay: [Release.NOTHING].
      */
-    fun release(returnTo: GeoPoint?, onStage: (OperationStage) -> Unit): Release
+    fun release(onStage: (OperationStage) -> Unit): Release
 
     val running: Boolean
 
@@ -64,17 +64,6 @@ interface GpsCar {
 interface GpsSettingsStore {
     fun current(): GpsSettings
     fun save(changes: Map<String, String>)
-}
-
-sealed interface ReturnPoint {
-    data class Found(val point: GeoPoint) : ReturnPoint
-    /** [reason]: denied, unknown or timeout. */
-    data class Unavailable(val reason: String) : ReturnPoint
-}
-
-/** Where Windows locates the PC, asked anew each time, within [deadlineMillis]; a later answer is dropped. */
-fun interface ReturnLocator {
-    fun locate(deadlineMillis: Long): ReturnPoint
 }
 
 /** The car's input while an operation runs: it stands (D9); the window stays live. */

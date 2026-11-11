@@ -182,7 +182,7 @@ class GpsLifecycleTest {
         h.gps.setEnabled(false)
         h.idle()
 
-        assertEquals(listOf("save gps.enabled=false", "usb.quiesce", "locate", "usb.release 49.84,24.03"), h.calls)
+        assertEquals(listOf("save gps.enabled=false", "usb.quiesce", "usb.release"), h.calls)
         assertFalse(h.output().enabledIntent)
         assertTrue(h.output().notices.any { it.code == NoticeCode.RESET_SENT })
     }

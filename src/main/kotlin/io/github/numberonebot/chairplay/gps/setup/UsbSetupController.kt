@@ -16,33 +16,28 @@ import io.github.numberonebot.chairplay.gps.UsbReadiness
 import io.github.numberonebot.chairplay.gps.UsbResult
 import io.github.numberonebot.chairplay.gps.UsbSetupPort
 import io.github.numberonebot.chairplay.gps.UsbSetupView
-import io.github.numberonebot.chairplay.gps.ReturnLocator
 
 /**
  * The USB setup wizard over a [UsbHelper]. Everything the helper is asked runs on [executor]'s one worker; [view] is
  * safe from any thread. It never opens a session or sends a position: the final Enable or Done goes to [onFinish],
  * where the coordinator saves and starts.
  *
- * @param locator Windows' location, only to know whether a return point exists: the app's one locator, which keeps
- *   the deadline and asks once however often it is asked meanwhile.
  * @param positionValid whether the car has a valid place now.
  * @param preparedDevice UDID saved as gps.usb.device, for [readiness].
  */
 class UsbSetupController(
     private val helper: UsbHelper,
-    locator: ReturnLocator,
     private val positionValid: () -> Boolean,
     private val preparedDevice: () -> String?,
     private val executor: SetupExecutor = ThreadSetupExecutor(),
     private val pollMillis: Long = 2_000,
-    locateDeadlineMillis: Long = 5_000,
     private val finishWaitMillis: Long = 30_000,
 ) : UsbSetupPort, AutoCloseable {
     override var onFinish: (operationId: Long, device: UsbDevice, enable: Boolean) -> CommandOutcome = { _, _, _ -> CommandOutcome.INVALID }
     override var onChanged: () -> Unit = {}
 
     private val store = SetupStore { onChanged() }
-    private val flow = SetupFlow(helper, store, executor, locator, positionValid, locateDeadlineMillis)
+    private val flow = SetupFlow(helper, store, executor, positionValid)
     private val quick = QuickReadiness(helper)
 
     override fun view(): UsbSetupView = store.view

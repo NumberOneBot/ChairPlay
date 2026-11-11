@@ -146,20 +146,14 @@ describe('USB setup, ready', () => {
     expect(button('Done')).toBeNull()
   })
 
-  // The Windows location is a warning, never a veto (V43).
-  it('keeps Enable available with the Windows warning, and with no position to start from', async () => {
-    for (const setup of [setups.readyWindowsWarning, setups.readyNoPosition]) {
+  it('keeps Enable available with no position to start from', async () => {
+    for (const setup of [setups.readyNoPosition]) {
       const { backend } = await wizard(setup)
       expect((screen.getByRole('button', { name: 'Enable USB GPS' }) as HTMLButtonElement).disabled).toBe(false)
       click('Enable USB GPS')
       await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 enable']))
       cleanup()
     }
-    await wizard(setups.readyWindowsWarning)
-    expect(screen.getByRole('alert')).toBeTruthy()
-    cleanup()
-    await wizard(setups.readyEnable)
-    expect(screen.queryByRole('alert')).toBeNull()
   })
 })
 

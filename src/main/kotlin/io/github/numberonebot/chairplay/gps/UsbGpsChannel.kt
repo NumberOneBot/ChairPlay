@@ -86,7 +86,7 @@ class UsbGpsChannel(
 
     @Synchronized
     override fun quiesce() {
-        // Offers no more; the session's returnTo or close stops what it still holds.
+        // Offers no more; the session's clear or close drops what it still holds.
         stopPump()
     }
 
@@ -96,20 +96,16 @@ class UsbGpsChannel(
     }
 
     @Synchronized
-    override fun release(returnTo: GeoPoint?, onStage: (OperationStage) -> Unit): Release {
+    override fun release(onStage: (OperationStage) -> Unit): Release {
         stopPump()
         val own = session ?: return Release.NOTHING
-        val returned = if (returnTo == null) StepOutcome.SKIPPED else {
-            onStage(OperationStage.RETURN)
-            outcome(own.returnTo(returnTo))
-        }
         onStage(OperationStage.CLEAR)
         val cleared = outcome(own.clear())
         onStage(OperationStage.CLOSE)
         val closed = runCatching { own.close() }.fold({ StepOutcome.DONE }, { StepOutcome.FAILED })
         lastSends = own.acknowledged
         session = null
-        return Release(returned, cleared, closed)
+        return Release(cleared, closed)
     }
 
     override val running: Boolean get() = session != null

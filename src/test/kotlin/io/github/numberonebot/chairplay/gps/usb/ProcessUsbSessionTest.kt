@@ -68,25 +68,6 @@ class ProcessUsbSessionTest {
     }
 
     @Test
-    fun `return goes after the set in flight, and later offers stay unsent`() {
-        holdSets()
-        val (session, fake) = open()
-        session.offer(GeoPoint(1.0, 0.0))
-        eventually { held.size == 1 }
-        session.offer(GeoPoint(2.0, 0.0))
-        var result: UsbResult<Unit>? = null
-        val returning = Thread { result = session.returnTo(GeoPoint(50.4, 30.2)) }.apply { start() }
-        eventually { fake.ops().contains("return") }
-        fake.reply(held[0], mapOf("applied" to true, "acknowledged" to 1))
-        returning.join(2_000)
-        assertEquals(UsbResult.Ok(Unit), result)
-        session.offer(GeoPoint(3.0, 0.0))
-        Thread.sleep(100)
-        assertEquals(listOf(1.0), fake.sets())
-        assertEquals(listOf("hello", "open", "set", "return"), fake.ops().filter { it != "ping" })
-    }
-
-    @Test
     fun `clear drops the point that waited`() {
         holdSets()
         val (session, fake) = open()
@@ -176,7 +157,6 @@ class ProcessUsbSessionTest {
         session.offer(GeoPoint(91.0, 0.0))
         Thread.sleep(100)
         assertTrue(fake.sets().isEmpty())
-        assertEquals(UsbErrorCode.INVALID_COORDINATES, (session.returnTo(GeoPoint(0.0, 181.0)) as UsbResult.Failed).code)
         val counter = AtomicInteger()
         session.onLost = { counter.incrementAndGet() }
         session.close()

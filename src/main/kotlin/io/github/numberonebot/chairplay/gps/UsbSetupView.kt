@@ -56,8 +56,6 @@ data class UsbSetupView(
     /** The first step not done, the one shown open. */
     val current: SetupStep,
     val download: DownloadProgress?,
-    /** Windows gave no return point: a warning on Ready, Enable USB GPS still works (F-11, UI-17). */
-    val windowsWarning: Boolean,
     /** The car has a valid place; without one Enable waits for the user to set it (L-09). */
     val positionValid: Boolean,
 ) {
@@ -72,7 +70,6 @@ data class UsbSetupView(
         },
         "current" to current.key,
         "download" to download?.let { mapOf("receivedBytes" to it.receivedBytes, "totalBytes" to it.totalBytes) },
-        "windowsWarning" to windowsWarning,
         "positionValid" to positionValid,
     )
 
@@ -81,7 +78,7 @@ data class UsbSetupView(
         fun closed(generation: Long = 0) = UsbSetupView(
             open = false, operationId = null, generation = generation, intent = SetupIntent.PREPARE, device = null,
             steps = SetupStep.entries.associateWith { StepState(StepStatus.UNKNOWN) }, current = SetupStep.USB,
-            download = null, windowsWarning = false, positionValid = false,
+            download = null, positionValid = false,
         )
     }
 }

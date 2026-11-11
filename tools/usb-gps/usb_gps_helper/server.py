@@ -122,7 +122,7 @@ class SessionHandlers:
         if request.op == 'set':
             session.offer(request)
             return None
-        return {'open': session.open, 'return': session.return_to, 'clear': session.clear,
+        return {'open': session.open, 'clear': session.clear,
                 'close': session.close}[request.op](request)
 
     async def shutdown(self, reason):

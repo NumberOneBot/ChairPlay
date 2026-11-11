@@ -13,7 +13,7 @@ class Calls : CopyOnWriteArrayList<String>()
 class FakeChannel(override val method: GpsMethod, private val calls: Calls) : GpsChannel {
     var state = ChannelState(null)
     var startFails: GpsReason? = null
-    var release = Release(StepOutcome.DONE, StepOutcome.DONE, StepOutcome.DONE)
+    var release = Release(StepOutcome.DONE, StepOutcome.DONE)
     /** Run inside quiesce, for a test that needs time to pass there. */
     var onQuiesce: () -> Unit = {}
     override var running = false
@@ -34,8 +34,8 @@ class FakeChannel(override val method: GpsMethod, private val calls: Calls) : Gp
         running = false
     }
 
-    override fun release(returnTo: GeoPoint?, onStage: (OperationStage) -> Unit): Release {
-        calls += "${method.key}.release ${returnTo?.let { "${it.latitude},${it.longitude}" } ?: "-"}"
+    override fun release(onStage: (OperationStage) -> Unit): Release {
+        calls += "${method.key}.release"
         onStage(OperationStage.CLEAR)
         return release
     }
@@ -98,7 +98,6 @@ class CountingHold : InputHold {
 /** A coordinator over fakes, with its thread to wait on. */
 class GpsHarness(
     settings: GpsSettings = GpsSettings(enabled = false),
-    var located: ReturnPoint = ReturnPoint.Found(HOME),
     timing: GpsTiming = GpsTiming(tickMillis = 60_000),
 ) {
     val calls = Calls()
@@ -112,7 +111,7 @@ class GpsHarness(
     private val worker = Executors.newSingleThreadScheduledExecutor()
     private val watchdog = Executors.newSingleThreadScheduledExecutor()
     val gps = GpsCoordinator(
-        store, car, carplay, usb, setup, { _ -> calls += "locate"; located }, hold,
+        store, car, carplay, usb, setup, hold,
         clock = { now }, timing = timing, worker = worker, watchdog = watchdog,
     )
 

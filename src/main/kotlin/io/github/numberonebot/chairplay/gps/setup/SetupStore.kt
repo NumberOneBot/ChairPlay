@@ -36,7 +36,6 @@ internal class SetupSession(val id: Long, val intent: SetupIntent) {
     /** Developer Mode was revealed on this phone in this run. */
     var revealed = false
     var download: DownloadProgress? = null
-    var windowsWarning = false
     var positionValid = false
 
     fun state(step: SetupStep) = steps.getValue(step)
@@ -111,7 +110,7 @@ internal class SetupStore(private val changed: () -> Unit) {
             device = s.device?.view(),
             steps = SetupStep.entries.associateWith { s.state(it) },
             current = s.current(), download = s.download,
-            windowsWarning = s.windowsWarning, positionValid = s.positionValid,
+            positionValid = s.positionValid,
         )
     }
 

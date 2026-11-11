@@ -29,7 +29,7 @@ class ParseTests(unittest.TestCase):
             self.assertEqual('invalid-coordinates', self.code(text), raw)
 
     def test_the_edges_of_the_ranges_are_valid(self):
-        request = parse_request(line(id='r', op='return', session='s', generation=0, latitude=-90, longitude=180), 'session')
+        request = parse_request(line(id='r', op='set', session='s', generation=0, latitude=-90, longitude=180), 'session')
         self.assertEqual((-90.0, 180.0), (request.fields['latitude'], request.fields['longitude']))
 
     def test_malformed_lines_are_protocol_errors(self):

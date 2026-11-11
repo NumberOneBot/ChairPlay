@@ -97,7 +97,7 @@ interface UsbHelper : AutoCloseable {
 
 /**
  * One long-lived simulation session: [offer] keeps only the newest point and at most one set in flight
- * (latest-wins, no burst after a stall); [returnTo], [clear] and [close] go before any offered point.
+ * (latest-wins, no burst after a stall); [clear] and [close] go before any offered point.
  */
 interface UsbSession : AutoCloseable {
     val id: String
@@ -106,9 +106,6 @@ interface UsbSession : AutoCloseable {
     val acknowledged: Long
 
     fun offer(point: GeoPoint)
-
-    /** Stops the stream and sets [point] once, the place to come back to. */
-    fun returnTo(point: GeoPoint): UsbResult<Unit>
 
     /** Clears the simulation; "ok" means the service took the command, not that the phone's maps moved (S-04). */
     fun clear(): UsbResult<Unit>

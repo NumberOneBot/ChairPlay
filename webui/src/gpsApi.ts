@@ -16,7 +16,7 @@ export type GpsReason =
   | 'no-position'
 
 export type GpsOperationKind = 'apply' | 'enable' | 'disable' | 'resume' | 'shutdown'
-export type GpsOperationStage = 'quiesce' | 'locate' | 'return' | 'clear' | 'close' | 'start'
+export type GpsOperationStage = 'quiesce' | 'clear' | 'close' | 'start'
 
 /** The one operation running; while there is one, the whole app is held (S-09). */
 export interface GpsOperation {
@@ -33,14 +33,12 @@ export type NoticeTone = 'info' | 'warn' | 'bad'
 
 export type GpsNoticeCode =
   | 'reset-sent'
-  | 'windows-unavailable'
   | 'usb-unavailable'
 
 export interface GpsNotice {
   id: number
   tone: NoticeTone
   code: GpsNoticeCode
-  /** windows-unavailable: reason 'denied' | 'unknown' | 'timeout'. */
   args: Record<string, string>
   /** Epoch milliseconds it goes at; null stays until the app drops it. */
   expiresAt: number | null
@@ -101,8 +99,6 @@ export interface UsbSetupView {
   steps: Record<SetupStep, StepState>
   current: SetupStep
   download: { receivedBytes: number; totalBytes: number | null } | null
-  /** Windows gave no return point: a warning on Ready; Enable USB GPS still works. */
-  windowsWarning: boolean
   /** The car has a valid place; without one, Enable waits for the user to set it. */
   positionValid: boolean
 }

@@ -10,8 +10,6 @@ import io.github.numberonebot.chairplay.gps.UsbErrorCode
 import io.github.numberonebot.chairplay.gps.UsbHelper
 import io.github.numberonebot.chairplay.gps.UsbProbe
 import io.github.numberonebot.chairplay.gps.UsbResult
-import io.github.numberonebot.chairplay.gps.ReturnLocator
-import io.github.numberonebot.chairplay.gps.ReturnPoint
 
 /** What a run starts from: Retry re-checks one step, not the ones before it. */
 internal enum class Stage { USB, PROBE, TOOLS, READY }
@@ -25,9 +23,7 @@ internal class SetupFlow(
     private val helper: UsbHelper,
     private val store: SetupStore,
     private val executor: SetupExecutor,
-    private val locator: ReturnLocator,
     private val positionValid: () -> Boolean,
-    private val locateDeadlineMillis: Long,
 ) {
     /** True when every check passed and Ready was reached; false when one stopped the run (its step says why). */
     fun run(s: SetupSession, from: Stage): Boolean {
@@ -199,12 +195,10 @@ internal class SetupFlow(
 
     // ---- Ready ----
 
+    // Windows' place is not asked here: without a return point the iPhone comes back to its own in time.
     private fun checkReady(s: SetupSession) {
-        // The app's one locator answers within its deadline: no return point is a warning, never a wait.
-        val found = locator.locate(locateDeadlineMillis) is ReturnPoint.Found
         val valid = positionValid()
         store.mutate(s) {
-            windowsWarning = !found
             positionValid = valid
             steps[SetupStep.READY] = StepState(StepStatus.ACTION)
         }

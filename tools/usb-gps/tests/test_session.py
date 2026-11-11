@@ -37,20 +37,6 @@ class SessionTests(unittest.IsolatedAsyncioTestCase):
         replies = self.wire.replies()
         self.assertEqual([False] * 4, [replies[f'p{i}']['result']['applied'] for i in range(1, 5)])
 
-    async def test_return_goes_before_a_waiting_point_and_ends_the_stream(self):
-        self.driver.set_delay = .05
-        self.set('a', 1)
-        await asyncio.sleep(0)
-        self.set('b', 2)
-        result = await self.session.return_to(request('return', 'ret', latitude=50, longitude=30, **session_fields()))
-        self.assertEqual({}, result)
-        self.set('c', 3)
-        await settle()
-        self.assertEqual([('set', 1, 0.0), ('set', 50.0, 30.0)], self.driver.calls)
-        replies = self.wire.replies()
-        self.assertFalse(replies['b']['result']['applied'])
-        self.assertEqual('cancelled', replies['c']['error']['code'])
-
     async def test_clear_waits_for_the_set_in_flight_and_drops_the_waiting_one(self):
         self.driver.set_delay = .05
         self.set('a', 1)

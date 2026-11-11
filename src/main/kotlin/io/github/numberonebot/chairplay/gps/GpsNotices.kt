@@ -33,7 +33,6 @@ internal class GpsNotices(private val clock: () -> Long) {
 
 /** How long the coordinator waits; engineering defaults (03 §5), not the owner's. */
 data class GpsTiming(
-    val locateMillis: Long = 5_000,
     val operationMillis: Long = 30_000,
     val tickMillis: Long = 1_000,
     val resetNoticeMillis: Long = 10_000,

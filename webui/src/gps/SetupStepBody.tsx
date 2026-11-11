@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import type { Backend } from '../api'
 import type { SetupAction, SetupStep, UsbSetupView } from '../gpsApi'
 import { byteSize } from '../pages/byteSize'
-import { Message } from '../shell/controls'
 import { ErrorIcon, PhoneIcon, StoreIcon } from './icons'
 import { setupError } from './setupErrors'
 
@@ -176,13 +175,6 @@ function ToolsBody({ setup, ask }: { setup: UsbSetupView; ask: Ask }) {
 function ReadyBody({ setup }: { setup: UsbSetupView }) {
   return (
     <>
-      {setup.windowsWarning && (
-        <Message
-          tone="warn"
-          head="Windows location unavailable"
-          text="Simulation can start from the current virtual position. Automatic return to the Windows location is unavailable."
-        />
-      )}
       <span>
         Your iPhone is ready for USB GPS. ChairPlay sends the car’s position to it over the USB cable while signal
         simulation is on.

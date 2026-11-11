@@ -87,18 +87,6 @@ class SimulationSession:
         else:
             self._start(request)
 
-    async def return_to(self, request):
-        self._check_owner(request)
-        self._check_live()
-        point = request.fields['latitude'], request.fields['longitude']
-
-        async def action():
-            self._check_live()
-            self.dirty = True
-            await self._rpc(lambda: self._driver.set(*point))
-            return {}
-        return await self._first(True, action)
-
     async def clear(self, request):
         self._check_owner(request)
         self._check_live()

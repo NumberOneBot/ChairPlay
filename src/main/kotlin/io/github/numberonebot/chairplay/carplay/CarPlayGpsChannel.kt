@@ -65,7 +65,7 @@ class CarPlayGpsChannel(
 
     override fun quiesce() = gate.close()
 
-    override fun release(returnTo: GeoPoint?, onStage: (OperationStage) -> Unit) = Release.NOTHING
+    override fun release(onStage: (OperationStage) -> Unit) = Release.NOTHING
 
     override val running: Boolean get() = gate.isOpen && session()
 

@@ -93,7 +93,7 @@ OPERATIONS = {
     'control': {**_COMMON, 'components': {}, 'discover': {}, 'probe': _DEVICE, 'reveal': _DEVICE,
                 'tools-status': _DEVICE, 'prepare': _DEVICE, 'cancel': {'target': _name}},
     'session': {**_COMMON, 'open': {**_DEVICE, **_SESSION}, 'set': {**_SESSION, **_POINT},
-                'return': {**_SESSION, **_POINT}, 'clear': _SESSION, 'close': _SESSION},
+                'clear': _SESSION, 'close': _SESSION},
 }
 
 

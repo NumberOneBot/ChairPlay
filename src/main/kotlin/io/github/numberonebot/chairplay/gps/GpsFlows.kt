@@ -13,7 +13,6 @@ internal class GpsFlows(
     val carplay: GpsChannel,
     val usb: GpsChannel,
     val setup: UsbSetupPort,
-    private val locator: ReturnLocator,
     val notices: GpsNotices,
     val ops: GpsOperations,
     private val timing: GpsTiming,
@@ -63,12 +62,11 @@ internal class GpsFlows(
         startSelected(wizardBounds = true, operation = operation)
     }
 
-    /** L-01: stream off, Windows' place once, clear, close; the car stays where it is (L-02). */
+    /** L-01: stream off, clear, close; the iPhone finds its own place again (D13), the car stays where it is (L-02). */
     fun stopUsb(operation: GpsOperation) {
         ops.stage(operation, OperationStage.QUIESCE)
         usb.quiesce()
-        ops.stage(operation, OperationStage.LOCATE)
-        letGo(operation, locate())
+        letGo(operation)
     }
 
     /** L-06: the saved USB simulation again, the iPhone back. */
@@ -120,19 +118,10 @@ internal class GpsFlows(
         log(if (why == null) "GPS: USB simulation started" else "GPS: USB simulation did not start: ${why.key}")
     }
 
-    /** Windows' place now, or null with the warning shown; a late answer is the locator's to drop (V47). */
-    private fun locate(): GeoPoint? = when (val back = locator.locate(timing.locateMillis)) {
-        is ReturnPoint.Found -> back.point.also { notices.drop(NoticeCode.WINDOWS_UNAVAILABLE) }
-        is ReturnPoint.Unavailable -> null.also {
-            notices.show(NoticeCode.WINDOWS_UNAVAILABLE, NoticeTone.WARN, mapOf("reason" to back.reason))
-            log("GPS: no Windows position to return to (${back.reason})")
-        }
-    }
-
-    /** Return, clear and close, each tried whatever the one before did (L-01); a clear sent is all there is to know (D10). */
-    private fun letGo(operation: GpsOperation, point: GeoPoint?) {
-        val release = usb.release(point) { ops.stage(operation, it) }
-        log("GPS: USB let go: return ${release.returned}, clear ${release.cleared}, close ${release.closed}")
+    /** Clear and close, the close tried whatever the clear did (L-01); a clear sent is all there is to know (D10). */
+    private fun letGo(operation: GpsOperation) {
+        val release = usb.release { ops.stage(operation, it) }
+        log("GPS: USB let go: clear ${release.cleared}, close ${release.closed}")
         if (release.cleared == StepOutcome.DONE) {
             notices.show(NoticeCode.RESET_SENT, NoticeTone.INFO, forMillis = timing.resetNoticeMillis)
         }
