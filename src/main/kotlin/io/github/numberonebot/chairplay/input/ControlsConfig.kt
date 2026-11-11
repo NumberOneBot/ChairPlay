@@ -100,6 +100,9 @@ class ControlsConfig(
             Fixed(KeyBinding(GLFW_KEY_ENTER, 0), ControlAction.SELECT, "Enter", "Enter always selects"),
         )
 
+        /** The pinned keys, with any modifiers: they act only in ChairPlay's windows, never as global shortcuts. */
+        val PINNED_KEYS: Set<Int> = FIXED.map { it.binding.key }.toSet()
+
         // Lazy: parse needs KEY_NAMES, which is initialised below.
         val DEFAULT: ControlsConfig by lazy { parse(Properties()) }
 

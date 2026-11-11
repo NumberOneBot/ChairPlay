@@ -27,19 +27,36 @@ class AppGlobalKeysTest {
 
     @Test fun `existing bindings execute once and release across focus and modifier changes`() {
         app.pass()
-        key(GLFW_KEY_ENTER, GLFW_PRESS)
+        key(GLFW_KEY_KP_ENTER, GLFW_PRESS)
         app.pass()
         assertTrue((sent.single() as Control.Knob).input.select)
-        key(GLFW_KEY_ENTER, GLFW_REPEAT, GLFW_MOD_SHIFT, false)
-        key(GLFW_KEY_ENTER, GLFW_RELEASE, 0, false)
+        key(GLFW_KEY_KP_ENTER, GLFW_REPEAT, GLFW_MOD_SHIFT, false)
+        key(GLFW_KEY_KP_ENTER, GLFW_RELEASE, 0, false)
         app.pass()
         assertEquals(2, sent.size)
         assertFalse((sent.last() as Control.Knob).input.select)
     }
 
+    // Enter and Escape, the keys pinned to Select and Back, act only in ChairPlay's windows (owner, 2026-11-11).
+    @Test fun `the pinned Enter and Escape never act from another app`() {
+        app.pass()
+        for (pinned in listOf(GLFW_KEY_ENTER, GLFW_KEY_ESCAPE)) {
+            for (mods in listOf(0, GLFW_MOD_SHIFT)) {
+                key(pinned, GLFW_PRESS, mods)
+                assertFalse(app.owns(pinned))
+                key(pinned, GLFW_RELEASE, mods)
+            }
+        }
+        app.pass()
+        assertTrue(sent.isEmpty())
+        key(GLFW_KEY_KP_ENTER, GLFW_PRESS)
+        app.pass()
+        assertTrue((sent.single() as Control.Knob).input.select)
+    }
+
     @Test fun `switch off releases a hold and unregisters without another action`() {
         app.pass()
-        key(GLFW_KEY_ENTER, GLFW_PRESS)
+        key(GLFW_KEY_KP_ENTER, GLFW_PRESS)
         app.pass()
         config = ControlsConfig.DEFAULT
         assertNull(app.pass())
@@ -68,19 +85,19 @@ class AppGlobalKeysTest {
 
     @Test fun `disconnect discards queued controls and releases cannot reach the next session`() {
         app.pass()
-        key(GLFW_KEY_ENTER, GLFW_PRESS)
+        key(GLFW_KEY_KP_ENTER, GLFW_PRESS)
         app.pass()
         key(GLFW_KEY_F8, GLFW_PRESS)
         session = Any()
         app.pass()
-        key(GLFW_KEY_ENTER, GLFW_RELEASE)
+        key(GLFW_KEY_KP_ENTER, GLFW_RELEASE)
         app.pass()
         assertEquals(1, sent.size)
     }
 
     @Test fun `focused settings and capture inhibit background input and release current holds`() {
         app.pass()
-        key(GLFW_KEY_ENTER, GLFW_PRESS)
+        key(GLFW_KEY_KP_ENTER, GLFW_PRESS)
         app.pass()
         app.focus("browser", true)
         app.pass()
@@ -139,9 +156,9 @@ class AppGlobalKeysTest {
 
     @Test fun `an overflowing native source is stopped with its hold released and an error`() {
         app.pass()
-        key(GLFW_KEY_ENTER, GLFW_PRESS)
+        key(GLFW_KEY_KP_ENTER, GLFW_PRESS)
         app.pass()
-        repeat(2000) { key(GLFW_KEY_ENTER, GLFW_REPEAT) }
+        repeat(2000) { key(GLFW_KEY_KP_ENTER, GLFW_REPEAT) }
         app.pass()
         assertFalse((sent.last() as Control.Knob).input.select)
         assertEquals(1, closes)

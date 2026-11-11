@@ -57,7 +57,9 @@ internal class AppGlobalKeys(
                 val callbacks = GlobalKeyboardCallbacks(
                     key = { key, phase, mods, background ->
                         if (generation == current) {
-                            router.key(key, phase, mods, enabled && ready && background && !leases.active())
+                            // Enter and Escape, pinned to Select and Back, stay with the app that has the focus.
+                            val global = background && key !in ControlsConfig.PINNED_KEYS
+                            router.key(key, phase, mods, enabled && ready && global && !leases.active())
                             wake()
                         }
                     },
