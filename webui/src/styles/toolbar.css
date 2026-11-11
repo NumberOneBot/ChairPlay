@@ -84,7 +84,7 @@
   padding: 0 11px;
   border: 1px solid transparent;
   border-radius: 8px;
-  background-color: rgb(from var(--fill) r g b / 24%);
+  background-color: color-mix(in srgb, var(--fill) 24%, transparent);
   color: var(--text);
   font: 13px var(--ui);
   white-space: nowrap;

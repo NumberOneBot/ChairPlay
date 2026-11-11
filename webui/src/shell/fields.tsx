@@ -145,7 +145,7 @@ export function PasswordField(props: {
   )
 }
 
-/** A drop-down list: the value saved and the text shown for each choice. */
+/** A drop-down list: the value saved and the text shown for each choice; its wrapper draws the caret in the tint. */
 export function Select(props: {
   label: string
   value: string
@@ -154,17 +154,19 @@ export function Select(props: {
   className?: string
 }) {
   return (
-    <select
-      className={`t ${props.className ?? ''}`}
-      aria-label={props.label}
-      value={props.value}
-      onChange={(event) => props.onChange(event.target.value)}
-    >
-      {props.options.map(([value, text]) => (
-        <option key={value} value={value}>
-          {text}
-        </option>
-      ))}
-    </select>
+    <span className="caret">
+      <select
+        className={`t ${props.className ?? ''}`}
+        aria-label={props.label}
+        value={props.value}
+        onChange={(event) => props.onChange(event.target.value)}
+      >
+        {props.options.map(([value, text]) => (
+          <option key={value} value={value}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </span>
   )
 }

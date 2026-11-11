@@ -22,7 +22,7 @@
 .shell select:disabled {
   /* A segmented group's track and text at its 0.45 opacity above */
   border-color: transparent;
-  background-color: rgb(from var(--fill) r g b / 11%);
+  background-color: color-mix(in srgb, var(--fill) 11%, transparent);
   color: color-mix(in srgb, var(--muted) 45%, transparent);
   cursor: default;
 }

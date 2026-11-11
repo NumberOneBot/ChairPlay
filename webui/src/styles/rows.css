@@ -42,7 +42,7 @@
 .shell .held select {
   /* A held segmented group's track and text, at its 0.45 opacity */
   border-color: transparent;
-  background-color: rgb(from var(--fill) r g b / 11%);
+  background-color: color-mix(in srgb, var(--fill) 11%, transparent);
   color: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 

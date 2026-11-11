@@ -125,8 +125,8 @@
 }
 
 .shell .step .st .edit:hover {
-  background: rgb(from var(--fill) r g b / 32%);
-  box-shadow: 0 0 0 2px rgb(from var(--fill) r g b / 32%);
+  background: color-mix(in srgb, var(--fill) 32%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--fill) 32%, transparent);
   color: var(--text);
 }
 
