@@ -87,6 +87,19 @@ describe('Track playback, the car', () => {
     expect(inert(control('gps-gauges-small', 'radio'))).toBe(false)
   })
 
+  it('leaves a held Virtual car to its own hold, not the track’s', async () => {
+    await openSection(withTrack(outputs.usbOff, tracks.paused))
+    const drive = screen.getByTestId('drive-mode-hold')
+    expect(drive.getAttribute('inert')).toBeNull()
+    expect(inert(drive)).toBe(true)
+  })
+
+  it('holds nothing once the section is gone, as with CarPlay GPS', async () => {
+    await openSection(withTrack(outputs.carplayOn, tracks.paused))
+    expect(inert(screen.getByTestId('gps-position-hold'))).toBe(false)
+    expect(inert(screen.getByTestId('drive-mode-hold'))).toBe(false)
+  })
+
   it('gives the car back once stopped', async () => {
     await openSection(withTrack(outputs.usbOn, tracks.stoppedAway))
     expect(inert(screen.getByTestId('gps-position-hold'))).toBe(false)

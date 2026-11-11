@@ -54,8 +54,10 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
         : output.reason === 'no-position'
           ? 'Set a position first'
           : 'Connect the iPhone first'
-  // A recording playing or paused drives the car: what moves it waits for Stop, Position whole and Drive mode (§8).
-  const trackDrives = trackOwnsCar(state.gps?.track) ? 'Stop track playback to move the car yourself' : null
+  // A recording playing or paused drives the car: what moves it waits for Stop, Position whole and Drive mode (§8);
+  // only while the section and its Stop are on the page.
+  const trackDrives =
+    trackShown(output) && trackOwnsCar(state.gps?.track) ? 'Stop track playback to move the car yourself' : null
   const positionHold = holdTitle(positionHeld) ?? trackDrives
   // CarPlay's GPS sends the car's speed and heading too: gps.wheel.speed and gps.heading.send, on by default and a
   // hand edit only (owner, 2026-11-11).
@@ -111,7 +113,7 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           backend={backend}
           settings={settings}
           held={carHeld ? holdTitle(true) : null}
-          driveHeld={trackDrives}
+          driveHeld={carHeld ? null : trackDrives}
         />
       </>
     </>

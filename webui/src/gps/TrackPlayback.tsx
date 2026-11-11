@@ -43,7 +43,8 @@ export function TrackPlayback({
   const notices = useLiveNotices(output.notices).filter(({ code }) => code === 'track-unreadable')
   const send = (action: TrackAction) => void backend.track(action)
   const playing = track?.phase === 'playing'
-  const playTitle = held ?? (playing ? 'Pause the recording' : 'Play the recording')
+  // While the section waits, the key's tooltip says why; its name stays what it does.
+  const playName = playing ? 'Pause the recording' : 'Play the recording'
   return (
     <section
       aria-label="Track playback"
@@ -81,8 +82,8 @@ export function TrackPlayback({
             <button
               type="button"
               className="key lead"
-              title={playTitle}
-              aria-label={playTitle}
+              title={held ?? playName}
+              aria-label={playName}
               data-testid="track-play"
               disabled={held !== null}
               onClick={() => send(playing ? 'pause' : 'play')}
