@@ -1,7 +1,26 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { applyAccent } from './accent'
+import { applyAccent, applyTint } from './accent'
 
-afterEach(() => document.documentElement.style.removeProperty('--accent'))
+afterEach(() => {
+  document.documentElement.style.removeProperty('--accent')
+  document.documentElement.removeAttribute('data-tint')
+})
+
+describe('applyTint', () => {
+  // ui.tint picks the palette of greys the stylesheet keeps for each data-tint (tints.css).
+  it('names the tint where the stylesheet reads it', () => {
+    applyTint('slate')
+
+    expect(document.documentElement.dataset.tint).toBe('slate')
+  })
+
+  it('takes black for a tint no palette has', () => {
+    applyTint('slate')
+    applyTint('pink')
+
+    expect(document.documentElement.dataset.tint).toBe('black')
+  })
+})
 
 describe('applyAccent', () => {
   // ui.accent colours both pages: every shade in the stylesheet is made from --accent.

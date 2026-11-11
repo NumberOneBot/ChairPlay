@@ -3,12 +3,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from './api'
 import { App } from './App'
 import { FakeBackend } from './fakeBackend'
-import { appState } from './testing'
+import { absent, appState, control } from './testing'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   history.replaceState(null, '', '/')
+  document.documentElement.removeAttribute('data-tint')
 })
 
 /**
@@ -37,6 +38,24 @@ function open(address: string, state: AppState) {
   return posts
 }
 
+// ui.tint, saved on the Application page, colours the settings; the controls window takes the state's controlsTint,
+// black unless ui.tint.controls lets the tint reach it (owner).
+describe('the tint', () => {
+  it('colours the settings with the state tint', () => {
+    open('/', appState({ tint: 'teal', controlsTint: 'black' }))
+    expect(document.documentElement.dataset.tint).toBe('teal')
+  })
+
+  it('colours the controls window with the state controls tint', () => {
+    open('/controls', appState({ tint: 'teal', controlsTint: 'black' }))
+    expect(document.documentElement.dataset.tint).toBe('black')
+    cleanup()
+
+    open('/controls', appState({ tint: 'teal', controlsTint: 'teal' }))
+    expect(document.documentElement.dataset.tint).toBe('teal')
+  })
+})
+
 // The app's state says what its window shows; ChairPlay's window opens the page at ?window, a browser tab without it.
 describe('the window and a browser tab', () => {
   const live = { phase: 'active', canShowCarPlay: true, embedded: true } as const
@@ -63,12 +82,15 @@ describe('the window and a browser tab', () => {
 
   it('Open asks the app to open the browser, from the window only', async () => {
     const fromWindow = open('/?window', appState(live))
-    fireEvent.click(await screen.findByRole('button', { name: 'Open' }))
+    fireEvent.click(control('tab-application', 'tab'))
+    await screen.findByTestId('browser-open')
+    fireEvent.click(control('browser-open', 'button'))
     expect(fromWindow).toEqual(['/api/open-in-browser'])
     cleanup()
 
     open('/', appState(live))
-    await screen.findByRole('switch', { name: 'Allow access from the local network' })
-    expect(screen.queryByRole('button', { name: 'Open' })).toBeNull()
+    fireEvent.click(control('tab-application', 'tab'))
+    await screen.findByTestId('browser-network')
+    expect(absent('browser-open')).toBe(true)
   })
 })

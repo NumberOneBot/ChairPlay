@@ -41,7 +41,7 @@ class UiController(
     private val elevate: (String) -> Boolean = { false },
     /** Whether Get started is done; null counts it as done. */
     private val setupStore: SetupStore? = null,
-    /** Which build this is, for the About page. */
+    /** Which build this is, for the Application page. */
     private val about: BuildInfo = BuildInfo.load(),
     /** The system's name and version, for the details of a report. */
     private val systemVersion: () -> String = Platforms.current.shell::systemName,
@@ -241,7 +241,7 @@ class UiController(
             "controls" to controls?.state(),
             "controlsKeys" to (values["ui.controls.keys"]?.trim() == "true"),
             "setupDone" to setupDone,
-            "accent" to setup.accent,
+            *settingsApi.appearance(setup.accent),
             "about" to places.aboutPage,
             "reconnectPending" to state.reconnectPending.sorted(),
             "restartPending" to state.restartPending.sorted(),

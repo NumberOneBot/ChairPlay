@@ -22,10 +22,12 @@ export function CopyButton({
   text,
   label = 'Copy',
   title = 'Copy the command',
+  testId,
 }: {
   text: string
   label?: string
   title?: string
+  testId?: string
 }) {
   const [copied, setCopied] = useState(false)
   return (
@@ -33,6 +35,7 @@ export function CopyButton({
       type="button"
       className="btn small"
       title={title}
+      data-testid={testId}
       onClick={async () => {
         await navigator.clipboard.writeText(text)
         setCopied(true)

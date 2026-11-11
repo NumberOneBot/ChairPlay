@@ -33,7 +33,7 @@ internal class UpdateChecks(
         }
     }
 
-    /** Called on the HTTP worker for About, or the startup worker, never the window's event loop. */
+    /** Called on the HTTP worker for Check now, or the startup worker, never the window's event loop. */
     fun check(manual: Boolean = true): Boolean {
         if (closed.get() || !busy.compareAndSet(false, true)) return false
         try {

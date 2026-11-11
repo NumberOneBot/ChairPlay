@@ -11,17 +11,7 @@ html:has(.shell) {
 }
 
 .shell {
-  --panel: #111113;
-  --raised: #1c1c1f;
-  --bar: #212125;
-  --field: #08080a;
-  /* A light ground in the fields and under the segmented groups, so they read as places to type and choose */
-  --ground: #121214;
-  --line: #2a2a2e;
-  --edge: #3a3a3f;
-  --text: #e9e9eb;
-  --muted: #8b8b92;
-  --dim: #5c5c63;
+  /* The greys are the tint's (tints.css) */
   --accent-bg: color-mix(in srgb, var(--accent) 18%, transparent);
   /* Hover lightens a control's own colours with a thin white layer, so a button on an amber message stays amber */
   --lighten: linear-gradient(rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.09));

@@ -1,7 +1,6 @@
 import type { AppState, Backend } from '../api'
-import { Group, Row, Switch } from '../shell/controls'
+import { Group, Row } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
-import { AlwaysOnTop } from './AlwaysOnTop'
 import { ActualSize, Changed, parts, pendingOf, SafeArea, SizeRows } from './parts'
 
 /** Common car and desktop display sizes, the 480 px tall ones first. */
@@ -98,14 +97,6 @@ export function CarPlayPage({ state, backend, settings }: { state: AppState; bac
         <span className="hint">
           Hardware decoding automatically falls back to software if the GPU is unavailable or decoding fails
         </span>
-      </Row>
-      <AlwaysOnTop settings={settings} setting="window.always.on.top" />
-      <Row title="Show the CarPlay window and bring it to the front when a call comes in. Its taskbar button flashes on a call either way.">
-        <Switch
-          label="Bring to front on a call"
-          checked={settings.value('window.front.on.call') === 'true'}
-          onChange={(checked) => settings.save({ 'window.front.on.call': String(checked) })}
-        />
       </Row>
       <Group title="Appearance" note={note(LOOK_KEYS)} />
       <Row label="Theme">

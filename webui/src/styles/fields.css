@@ -8,7 +8,7 @@
   border: 1px solid transparent;
   border-radius: 12px;
   outline: 0;
-  background: rgb(118 118 128 / 24%);
+  background: color-mix(in srgb, var(--fill) 24%, transparent);
   color: var(--text);
   font: 12px var(--ui);
 }
@@ -18,7 +18,7 @@
 }
 
 .shell input.t:hover:not(:disabled) {
-  background-color: rgb(118 118 128 / 32%);
+  background-color: color-mix(in srgb, var(--fill) 32%, transparent);
 }
 
 .shell input.t:focus {
@@ -69,7 +69,7 @@
   width: 280px;
 }
 
-/* A drop-down list drawn as a field, with a small caret at its right end */
+/* A drop-down list drawn as a field, with a small caret at its right end (.caret, its wrapper) */
 .shell select.t {
   appearance: none;
   height: 24px;
@@ -77,22 +77,48 @@
   border: 1px solid transparent;
   border-radius: 12px;
   outline: 0;
-  background: rgb(118 118 128 / 24%)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='4'%3E%3Cpath d='M0 0h8L4 4z' fill='%238b8b92'/%3E%3C/svg%3E")
-    no-repeat right 9px center;
+  background: color-mix(in srgb, var(--fill) 24%, transparent);
   color: var(--text);
   font: 12px var(--ui);
   cursor: default;
 }
 
+/*
+ * The caret, in the tint's muted grey: a list draws nothing after itself, so its wrapper does, the triangle a mask
+ * filled with --muted, 9 px in from the list's padding at the right, centred in it
+ */
+.shell .caret {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+}
+
+/* A flex item would keep its full width in a narrow row: the list still shrinks to the wrapper, as it did alone */
+.shell .caret > select {
+  min-width: 0;
+}
+
+.shell .caret::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 4px;
+  background: var(--muted);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='4'%3E%3Cpath d='M0 0h8L4 4z'/%3E%3C/svg%3E")
+    no-repeat;
+  pointer-events: none;
+}
+
 /* The open list: WebView2 draws it light under a translucent field, so its choices get the dark of iOS's menus */
 .shell select.t option {
-  background-color: #2c2c2e;
+  background-color: rgb(from var(--line) calc(r + 2) calc(g + 2) b);
   color: var(--text);
 }
 
 .shell select.t:hover {
-  background-color: rgb(118 118 128 / 32%);
+  background-color: color-mix(in srgb, var(--fill) 32%, transparent);
 }
 
 .shell select.t:focus-visible {

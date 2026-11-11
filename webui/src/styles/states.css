@@ -3,7 +3,7 @@
 .shell .seg button.on {
   z-index: 1;
   /* A plate raised off the track as iOS's chosen segment, its gray tinted with the accent */
-  background: color-mix(in srgb, var(--accent) 45%, #3a3a3c);
+  background: color-mix(in srgb, var(--accent) 45%, rgb(from var(--edge) r g calc(b - 3)));
   color: #fff;
   box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
 }
@@ -22,7 +22,7 @@
 .shell select:disabled {
   /* A segmented group's track and text at its 0.45 opacity above */
   border-color: transparent;
-  background-color: rgb(118 118 128 / 11%);
+  background-color: color-mix(in srgb, var(--fill) 11%, transparent);
   color: color-mix(in srgb, var(--muted) 45%, transparent);
   cursor: default;
 }

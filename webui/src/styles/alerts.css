@@ -42,7 +42,7 @@
 
 .shell .alert .head span {
   display: block;
-  color: #d2d2d6;
+  color: rgb(from var(--text) calc(r - 23) calc(g - 23) calc(b - 21));
   font: 400 13px/18px var(--ui);
 }
 
@@ -56,7 +56,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #d2d2d6;
+  color: rgb(from var(--text) calc(r - 23) calc(g - 23) calc(b - 21));
 }
 
 .shell .code {
@@ -66,7 +66,7 @@
   border: 1px solid var(--line);
   border-radius: 2px;
   background: var(--field);
-  color: #b8b8be;
+  color: rgb(from var(--text) calc(r - 49) calc(g - 49) calc(b - 45));
   font:
     12px/16px Consolas,
     monospace;

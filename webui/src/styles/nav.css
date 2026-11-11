@@ -69,7 +69,7 @@
 }
 
 .shell .nav button:not(.sel):hover {
-  background: rgb(118 118 128 / 16%);
+  background: color-mix(in srgb, var(--fill) 16%, transparent);
   color: var(--text);
 }
 
