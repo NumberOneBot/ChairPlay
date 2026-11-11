@@ -212,7 +212,7 @@ describe('GPS page', () => {
     const backend = await gps()
 
     expect(screen.getByRole('textbox', { name: 'Heading' })).not.toBeNull()
-    fireEvent.click(screen.getByRole('switch', { name: 'Send the heading' }))
+    fireEvent.click(screen.getByRole('switch', { name: 'Heading' }))
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'gps.heading.send': 'false' }]))
   })

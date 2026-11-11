@@ -77,11 +77,6 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
               USB setup
             </button>
           </Row>
-          {!output.usbPrepared && (
-            <Row className="hint-row">
-              <span className="hint">Complete USB setup before using this connection.</span>
-            </Row>
-          )}
         </>
       )}
     </>

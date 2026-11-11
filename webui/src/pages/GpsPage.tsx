@@ -56,8 +56,9 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
         : output.reason === 'no-position'
           ? 'Set a position first'
           : 'Connect the iPhone first'
-  const sendRow = (key: string, label: string, title: string) => (
-    <Row title={title}>
+  // What CarPlay's GPS sends besides the place: one "Send" label for the rows it names.
+  const sendRow = (key: string, label: string, title: string, rowLabel?: string) => (
+    <Row label={rowLabel} title={title}>
       <Switch label={label} checked={value(key) !== 'false'} onChange={(checked) => save({ [key]: String(checked) })} />
       <Changed keys={[key]} pending={pending} />
     </Row>
@@ -73,12 +74,13 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           <div className={off ? 'held' : undefined} inert={off} title={holdTitle(off) ?? undefined}>
             {sendRow(
               'gps.wheel.speed',
-              'Send the vehicle speed',
+              'Vehicle speed',
               "The car's speed ten times a second, as a car's wheel sensors give it, so the iPhone moves on smoothly between position updates",
+              'Send',
             )}
             {sendRow(
               'gps.heading.send',
-              'Send the heading',
+              'Heading',
               'The car heading as the course in the position sentences, so the iPhone can face its arrow the way the car goes',
             )}
           </div>
