@@ -45,7 +45,7 @@ A newer installer updates ChairPlay and keeps your settings, pairing and MFi fil
 
 **Portable.** `ChairPlay-…-portable.zip` runs without installing: unpack it to a folder you can write to and open `ChairPlay.exe`. Its settings, pairing and logs stay in that folder. To update, close ChairPlay, delete the `app` and `runtime` folders, and unpack the new zip over the old one. After moving the folder, Get started asks for the firewall rule again. The iPhone sees the installed copy and a portable one as two different cars and pairs with each, and only one copy runs at a time.
 
-See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 release notes](docs/RELEASE-NOTES-1.0.11.md) for this update.
+See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 release notes](docs/RELEASE-NOTES-1.0.11.md) for this update. The [roadmap](ROADMAP.md) lists what's planned next.
 
 ## Features
 
@@ -110,7 +110,7 @@ ChairPlay is a hobby project I build and test on real hardware in my spare time.
 
 Open an [issue](https://github.com/NumberOneBot/ChairPlay/issues/new): About → **Report a problem** fills in the version for you. For a connection problem, set **Log level** to **Info** on the Experiments page, try again, and attach the log: the **Logs** button on that page opens its folder. ChairPlay keeps your Wi-Fi password out of the log, but look it over before sending.
 
-Ideas and fixes are welcome too: open an issue or a pull request, or write to me at [alex.strelets@gmail.com](mailto:alex.strelets@gmail.com).
+Ideas and fixes are welcome too: see the [roadmap](ROADMAP.md), then open an issue or a pull request, or write to me at [alex.strelets@gmail.com](mailto:alex.strelets@gmail.com).
 
 ## Build it yourself
 
