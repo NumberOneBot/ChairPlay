@@ -183,7 +183,10 @@ function ReadyBody({ setup }: { setup: UsbSetupView }) {
           text="Simulation can start from the current virtual position. Automatic return to the Windows location is unavailable."
         />
       )}
-      <span>Your iPhone is prepared.</span>
+      <span>
+        Your iPhone is ready for USB GPS. ChairPlay sends the car’s position to it over the USB cable while signal
+        simulation is on.
+      </span>
       {!setup.positionValid && <span>The car needs a position before USB GPS sends. Set one on the GPS page.</span>}
     </>
   )
