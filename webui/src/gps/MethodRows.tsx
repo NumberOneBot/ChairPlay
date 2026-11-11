@@ -32,6 +32,7 @@ export function EnableRow({ output, backend, pending }: { output: GpsOutput; bac
         disabled={waiting || busy}
         onChange={(enabled) => void backend.gpsEnabled(enabled)}
       />
+      <span className="exp">Experimental</span>
       <Changed keys={['gps.enabled']} pending={pending} />
     </Row>
   )
