@@ -209,17 +209,25 @@ internal class SetupFlow(
         }
     }
 
-    /** One cheap look at the cable while the user acts on the phone: anything but the same one phone is re-checked. */
+    /**
+     * One cheap look at the cable while the user acts on the phone: anything but the same phone is re-checked, and so
+     * is usbmux gone silent (Apple Devices closed) or the drivers gone, which the USB step words.
+     */
     fun watch(s: SetupSession) {
         val udid = store.read(s) { device }?.udid
         when (val r = helper.devices()) {
-            is UsbResult.Ok -> if (r.value.size != 1 || r.value.single().udid != udid) run(s, Stage.USB)
-            is UsbResult.Failed -> if (r.code == UsbErrorCode.NO_DEVICE || r.code == UsbErrorCode.LINK_LOST) run(s, Stage.USB)
+            is UsbResult.Ok -> if (r.value.firstOrNull()?.udid != udid) run(s, Stage.USB)
+            is UsbResult.Failed -> if (r.code in RECHECK_USB) run(s, Stage.USB)
         }
     }
 
     fun refreshPosition(s: SetupSession) {
         val valid = positionValid()
         if (store.read(s) { positionValid } != valid) store.mutate(s) { positionValid = valid }
+    }
+
+    private companion object {
+        /** What [watch] sends back to the USB step: the phone gone, or the way to it (usbmux, the drivers). */
+        val RECHECK_USB = setOf(UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST, UsbErrorCode.USBMUX_UNAVAILABLE, UsbErrorCode.DRIVERS_MISSING)
     }
 }

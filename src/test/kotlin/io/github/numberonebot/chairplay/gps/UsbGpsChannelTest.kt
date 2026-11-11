@@ -53,6 +53,10 @@ class UsbGpsChannelTest {
         Thread.sleep(150)
         assertEquals(GpsReason.USB_NOT_CONNECTED, channel.state().reason)
         assertEquals(2, changes)
+        // Apple Devices closed: its usbmux is gone with the cable still in, which is no missing cable.
+        devices = UsbResult.Failed(UsbErrorCode.USBMUX_UNAVAILABLE)
+        Thread.sleep(150)
+        assertEquals(GpsReason.USB_NOT_READY, channel.state().reason)
         assertEquals(GpsReason.USB_HELPER_FAILED, UsbGpsChannel({ null }, { null }, { 10 }).state().reason)
         channel.close()
     }

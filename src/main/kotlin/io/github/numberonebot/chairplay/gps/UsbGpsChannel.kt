@@ -36,19 +36,23 @@ class UsbGpsChannel(
     }
 
     private fun look() {
-        val now = when (val found = helper()?.devices()) {
-            // Several iPhones never really happen (D11): the first one.
-            is UsbResult.Ok -> found.value.firstOrNull()
-            else -> null
-        }
-        if (now?.udid != attached?.udid) {
+        val found = helper()?.devices()
+        // Several iPhones never really happen (D11): the first one.
+        val now = (found as? UsbResult.Ok)?.value?.firstOrNull()
+        // usbmux silent (Apple Devices closed) or no drivers: the cable may well be in; the setup says what to do.
+        val silent = found is UsbResult.Failed && found.code in UNREACHABLE
+        if (now?.udid != attached?.udid || silent != usbmuxSilent) {
             attached = now
+            usbmuxSilent = silent
             onChanged()
         }
     }
 
+    @Volatile private var usbmuxSilent = false
+
     override fun state(): ChannelState {
         if (helper() == null) return ChannelState(GpsReason.USB_HELPER_FAILED)
+        if (usbmuxSilent) return ChannelState(GpsReason.USB_NOT_READY)
         val device = attached ?: return ChannelState(GpsReason.USB_NOT_CONNECTED)
         return ChannelState(null, device = device.view())
     }
@@ -120,6 +124,8 @@ class UsbGpsChannel(
     private fun outcome(result: UsbResult<Unit>) = if (result is UsbResult.Ok) StepOutcome.DONE else StepOutcome.FAILED
 
     companion object {
+        private val UNREACHABLE = setOf(UsbErrorCode.USBMUX_UNAVAILABLE, UsbErrorCode.DRIVERS_MISSING)
+
         fun reason(code: UsbErrorCode): GpsReason = when (code) {
             UsbErrorCode.NO_DEVICE, UsbErrorCode.LINK_LOST -> GpsReason.USB_NOT_CONNECTED
             UsbErrorCode.LOCKED, UsbErrorCode.NOT_TRUSTED, UsbErrorCode.DEVELOPER_MODE_OFF, UsbErrorCode.IMAGE_MISSING,
