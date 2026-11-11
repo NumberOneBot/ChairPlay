@@ -66,14 +66,33 @@
   height: 14px;
 }
 
-/* Cancel and the final action stay in reach at the foot of a long step */
+/*
+ * The setup fills the page's height, so its foot (the divider, Cancel and the final action) stands at the bottom of the
+ * page however short the steps are; steps taller than the page scroll above it, the foot staying in reach
+ */
+.shell .page-inner:has(> .usb-setup) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.shell .usb-setup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell .usb-setup > .step:last-of-type {
+  margin-bottom: 10px;
+}
+
 .shell .setup-foot {
   position: sticky;
   bottom: 0;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: auto;
   padding: 10px 0 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: var(--bg);

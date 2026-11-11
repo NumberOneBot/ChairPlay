@@ -149,6 +149,15 @@
   gap: 8px;
 }
 
+/*
+ * A step's last row, its buttons, its wait or its download, is a button tall whichever it shows, so the step keeps its
+ * height as one gives way to another
+ */
+.shell .step .acts,
+.shell .step .bd > .waiting {
+  min-height: 24px;
+}
+
 .shell .step .acts .code {
   flex: 1;
   min-width: 0;
