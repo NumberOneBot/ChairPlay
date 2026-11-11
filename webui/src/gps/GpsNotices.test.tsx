@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { outputs } from '../gpsFixtures'
+import { control } from '../testing'
 import { gpsState, openSection } from './gpsTesting'
 
 afterEach(cleanup)
@@ -51,7 +52,7 @@ describe('GPS warning (USB unavailable)', () => {
 
     fireEvent.click(tab('experiments'))
     expect(warnings()).toHaveLength(0)
-    fireEvent.click(tab('about'))
+    fireEvent.click(tab('application'))
     expect(warnings()).toHaveLength(0)
     expect(backend.gpsCommands).toEqual([])
   })
@@ -77,7 +78,7 @@ describe('the window while an operation runs', () => {
     const { update } = await openSection(gpsState(outputs.stoppingUsb))
     expect((screen.getByRole('switch', { name: 'Enable signal simulation' }) as HTMLInputElement).disabled).toBe(true)
     expect(inert(screen.getByRole('banner'))).toBe(false)
-    expect(inert(screen.getByRole('tab', { name: 'About' }))).toBe(false)
+    expect(inert(control('tab-application', 'tab'))).toBe(false)
     expect(inert(screen.getByRole('radio', { name: 'CarPlay' }))).toBe(false)
     expect(screen.getByRole('tabpanel').closest('[aria-busy]')).toBeNull()
 
