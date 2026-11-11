@@ -1,5 +1,6 @@
 // Fixtures of the GPS output and the USB setup for the tests and the preview, one per screen the mock draws
 // (desktop-docs/mockups/usb-gps), and the few the owner added. Add a state here rather than a local copy of the types.
+import type { TrackState } from './gps/trackApi'
 import type { GpsNotice, GpsOutput, SetupStep, StepState, UsbSetupView } from './gpsApi'
 
 const PHONE = { ref: 'phone-1', name: 'iPhone' }
@@ -62,6 +63,14 @@ export const outputs = {
     selected: 'usb', applied: 'usb', enabledIntent: true, availability: 'unavailable', reason: 'usb-not-connected',
     usbPrepared: true, rateHz: 10, notices: [notice('usb-unavailable', 'warn')],
   }),
+  /** USB prepared and the iPhone on the cable, signal simulation off (the mock's 17). */
+  usbOff: gpsOutput({ selected: 'usb', applied: 'usb', usbPrepared: true, device: PHONE, rateHz: 10 }),
+  /** usbOn, and the file Open… chose could not be read. */
+  usbTrackUnreadable: gpsOutput({
+    selected: 'usb', applied: 'usb', enabledIntent: true, activeMethod: 'usb', running: true, usbPrepared: true,
+    device: PHONE, successfulSends: 567, rateHz: 10,
+    notices: [notice('track-unreadable', 'bad', { args: { reason: 'It has no GPS track.' } })],
+  }),
   usbNoPosition: gpsOutput({
     selected: 'usb', applied: 'usb', enabledIntent: true, availability: 'unavailable', reason: 'no-position',
     usbPrepared: true, device: PHONE, rateHz: 10,
@@ -71,6 +80,16 @@ export const outputs = {
     operation: { id: 5, generation: 1, kind: 'disable', stage: 'close', target: null, startedAt: NOW },
   }),
 } satisfies Record<string, GpsOutput>
+
+const SPA = { name: 'spa-racebox-2024-08-10.gpx', duration: 1075, distanceKm: 34.41 }
+
+/** Track playback's recording, by the mock's states: stoppedAway is stopped at the end, as the last point leaves it. */
+export const tracks = {
+  stopped: { ...SPA, phase: 'stopped', time: 0 },
+  playing: { ...SPA, phase: 'playing', time: 134 },
+  paused: { ...SPA, phase: 'paused', time: 134 },
+  stoppedAway: { ...SPA, phase: 'stopped', time: 1075 },
+} satisfies Record<string, TrackState>
 
 /** The wizard's states, step by step (02 §3). */
 export const setups = {

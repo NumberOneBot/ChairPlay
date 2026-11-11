@@ -4,6 +4,8 @@ import { GpsNotices } from '../gps/GpsNotices'
 import { iphoneStatus } from '../gps/iphoneStatus'
 import { EnableRow, MethodRows } from '../gps/MethodRows'
 import { outputOf } from '../gps/output'
+import { TrackPlayback } from '../gps/TrackPlayback'
+import { trackOwnsCar, trackShown } from '../gps/trackRules'
 import { UsbSetupWizard } from '../gps/UsbSetupWizard'
 import { VirtualCar } from '../gps/VirtualCar'
 import { Group, Row } from '../shell/controls'
@@ -52,6 +54,11 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
         : output.reason === 'no-position'
           ? 'Set a position first'
           : 'Connect the iPhone first'
+  // A recording playing or paused drives the car: what moves it waits for Stop, Position whole and Drive mode (§8);
+  // only while the section and its Stop are on the page.
+  const trackDrives =
+    trackShown(output) && trackOwnsCar(state.gps?.track) ? 'Stop track playback to move the car yourself' : null
+  const positionHold = holdTitle(positionHeld) ?? trackDrives
   // CarPlay's GPS sends the car's speed and heading too: gps.wheel.speed and gps.heading.send, on by default and a
   // hand edit only (owner, 2026-11-11).
   return (
@@ -65,9 +72,10 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
         {/* Where the car is, apart from the car itself, whose own settings grow. */}
         <Group title="Position" />
         <div
-          className={positionHeld ? 'held' : undefined}
-          inert={positionHeld}
-          title={holdTitle(positionHeld) ?? undefined}
+          className={positionHold ? 'held' : undefined}
+          inert={positionHold !== null}
+          title={positionHold ?? undefined}
+          data-testid="gps-position-hold"
         >
           <Row>
             <WindowsLocationButton backend={backend} settings={settings} heading={heading} />
@@ -99,7 +107,14 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
             </Row>
           )}
         </div>
-        <VirtualCar state={state} backend={backend} settings={settings} held={carHeld ? holdTitle(true) : null} />
+        {trackShown(output) && <TrackPlayback output={output} track={state.gps?.track ?? null} backend={backend} />}
+        <VirtualCar
+          state={state}
+          backend={backend}
+          settings={settings}
+          held={carHeld ? holdTitle(true) : null}
+          driveHeld={carHeld ? null : trackDrives}
+        />
       </>
     </>
   )

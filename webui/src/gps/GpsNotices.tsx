@@ -29,9 +29,10 @@ export function NoticeBlock({ notice }: { notice: GpsNotice; backend?: Backend }
 /**
  * Under the GPS group's header, above the switch, as a section's own warning is (the Wi-Fi network's on Connection):
  * the USB warning there alone, never over other sections. An operation under way shows nothing: the switch waits for it.
+ * A file track playback cannot play is said in its own section (TrackPlayback), near Open…, and not here.
  */
 export function GpsNotices({ output, backend }: { output: GpsOutput; backend: Backend }) {
-  const notices = useLiveNotices(output.notices)
+  const notices = useLiveNotices(output.notices).filter(({ code }) => code !== 'track-unreadable')
   return (
     <>
       {notices.map((notice) => (

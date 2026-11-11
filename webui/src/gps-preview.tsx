@@ -2,9 +2,11 @@
 // app behind them. ?s=<scene>&section=<GPS|Experiments> picks what shows; scenes is the list of them, for the check.
 import { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import type { AppState } from './api'
 import { FakeBackend } from './fakeBackend'
+import type { TrackState } from './gps/trackApi'
 import type { GpsOutput, UsbSetupView } from './gpsApi'
-import { outputs, setups } from './gpsFixtures'
+import { outputs, setups, tracks } from './gpsFixtures'
 import { gpsState } from './gps/gpsTesting'
 import { Shell } from './shell/Shell'
 import './styles/index.css'
@@ -18,7 +20,13 @@ interface Scene {
   connected?: boolean
   /** Settings that wait for the next connection (the state's reconnectPending). */
   pending?: string[]
+  /** The recording track playback has loaded. */
+  track?: TrackState
 }
+
+/** [state] with [track] loaded in its GPS. */
+const tracked = (state: AppState, track?: TrackState): AppState =>
+  track ? { ...state, gps: { ...state.gps!, track } } : state
 
 const prepared = outputs.usbUnprepared
 const starting: GpsOutput = {
@@ -53,6 +61,11 @@ export const SCENES: Record<string, Scene> = {
   stopping: { output: outputs.stoppingUsb },
   'startup-missing': { output: outputs.usbStartupMissing, connected: false },
   'startup-missing-carplay': { output: outputs.usbStartupMissing, connected: true },
+  'track-empty': { output: outputs.usbOn },
+  'track-stopped': { output: outputs.usbOn, track: tracks.stopped },
+  'track-playing': { output: outputs.usbOn, track: tracks.playing },
+  'track-off': { output: outputs.usbOff, track: tracks.stopped },
+  'track-unreadable': { output: outputs.usbTrackUnreadable, track: tracks.stopped },
   'experiments-empty': { output: outputs.carplayOff, section: 'Experiments' },
   'experiments-cached': { output: outputs.carplayOff, section: 'Experiments', tools: 16_680_000 },
 }
@@ -63,11 +76,11 @@ function Preview() {
   const scene = SCENES[name] ?? SCENES.carplay
   const section = query.get('section') ?? scene.section ?? 'GPS'
   const real = useMemo(
-    () => gpsState(scene.output, scene.setup, { reconnectPending: scene.pending ?? [], ...(scene.connected === false ? { phase: 'idle' as const, canShowCarPlay: false } : {}) }),
+    () => tracked(gpsState(scene.output, scene.setup, { reconnectPending: scene.pending ?? [], ...(scene.connected === false ? { phase: 'idle' as const, canShowCarPlay: false } : {}) }), scene.track),
     [scene],
   )
   // The page opens its section while the window is free; the scene's own state, locked or not, comes after.
-  const free = useMemo(() => gpsState({ ...scene.output, operation: null }, scene.setup, { phase: real.phase, canShowCarPlay: real.canShowCarPlay, reconnectPending: real.reconnectPending }), [scene, real])
+  const free = useMemo(() => tracked(gpsState({ ...scene.output, operation: null }, scene.setup, { phase: real.phase, canShowCarPlay: real.canShowCarPlay, reconnectPending: real.reconnectPending }), scene.track), [scene, real])
   const [state, setState] = useState(free)
   const backend = useMemo(() => {
     const fake = new FakeBackend()

@@ -1,0 +1,109 @@
+/* The GPS page's Track playback, as the mock draws it (desktop-docs/mockups/usb-gps/track-playback.css) */
+
+/* The section makes its header :first-child; it keeps the gap above every other group's */
+.shell .track-playback > .grp:first-child {
+  padding-top: 16px;
+}
+
+.shell .track-playback .track-file {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.shell .track-playback .track-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.shell .track-playback .track-file-name {
+  overflow-wrap: anywhere;
+}
+
+.shell .track-playback .track-file-row .ctl {
+  max-width: var(--row-width);
+}
+
+.shell .track-playback .track-file-row .track-file {
+  flex: 1 1 0;
+}
+
+.shell .track-playback .track-time {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*
+ * The deck is as long as the city presets, and a key a seventh of it as in the mock, whose deck holds seven: on this
+ * step it has two, Play or Pause and Stop, each that wide.
+ */
+.shell .track-playback {
+  --track-deck: var(--row-width);
+}
+
+@container (min-width: 496px) {
+  .shell .track-playback {
+    --track-deck: calc(4 * var(--choice) + 6px);
+  }
+}
+
+.shell .track-playback .track-keys {
+  display: grid;
+  grid-template-columns: repeat(2, calc((var(--track-deck) - 6 * 4px) / 7));
+  gap: 4px;
+}
+
+.shell .row.track-keys-row {
+  padding: 5px 0;
+}
+
+/*
+ * The transport: between the settings' flat .btn and the Controls window's raised keys. The .btn's fill, edge, corner
+ * and type; from the keys, the icon over its label, a faint light along the top and a short shadow under it, and a
+ * press that sinks the key. A little taller than a row's controls.
+ */
+.shell .track-playback .key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--raised), white 2%), var(--raised));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  color: var(--text);
+  font: 10px var(--ui, inherit);
+  white-space: nowrap;
+}
+
+.shell .track-playback .key svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.shell .track-playback .key.lead svg {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+
+.shell .track-playback .key:hover:not(:disabled) {
+  border-color: #4a4a50;
+}
+
+.shell .track-playback .key:active:not(:disabled) {
+  transform: translateY(1px);
+  background: var(--raised);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.shell .track-playback .key:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
