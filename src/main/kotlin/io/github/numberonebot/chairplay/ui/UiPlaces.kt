@@ -56,6 +56,7 @@ internal class UiPlaces(
         "livi" -> "https://github.com/f-io/LIVI"
         "rgi" -> "https://github.com/luka-dev/mib2q-carplay-rgi"
         "apple-devices" -> "https://apps.microsoft.com/detail/9NP83LWLPZ9K"
+        "apple-devices-app" -> shell.systemPage(SystemPage.APPLE_DEVICES)
         "logs", "screenshots" -> Files.createDirectories(setup.settingsFile.resolveSibling(place)).toString()
         "developer-tools" -> Files.createDirectories(developerTools).toString()
         else -> Files.createDirectories(setup.mfiDirectory).toString()
@@ -101,7 +102,7 @@ internal class UiPlaces(
         val PLACES = listOf(
             "bluetooth", "wifi", "firewall", "firewall-rules", "mfi-folder", "location",
             "issues", "discussions", "pull-requests", "author", "source", "releases", "notices", "diplay", "xcertplay", "livi", "rgi",
-            "logs", "screenshots", "buy-me-a-coffee", "developer-tools", "apple-devices",
+            "logs", "screenshots", "buy-me-a-coffee", "developer-tools", "apple-devices", "apple-devices-app",
         )
 
         /** The project's home on GitHub. */

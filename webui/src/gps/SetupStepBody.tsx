@@ -3,7 +3,7 @@ import type { Backend } from '../api'
 import type { SetupAction, SetupStep, UsbSetupView } from '../gpsApi'
 import { byteSize } from '../pages/byteSize'
 import { Message } from '../shell/controls'
-import { ErrorIcon, StoreIcon } from './icons'
+import { ErrorIcon, PhoneIcon, StoreIcon } from './icons'
 import { setupError } from './setupErrors'
 
 const Ref = ({ children }: { children: ReactNode }) => <span className="ref">{children}</span>
@@ -91,6 +91,10 @@ function UsbBody({ detail, ask }: { detail: string | null; ask: Ask }) {
           <Ref>Apple Devices</Ref> is installed but not running. Open it, then check again.
         </span>
         <div className="acts">
+          <button type="button" className="btn" title="Start Apple Devices" onClick={() => void ask.open('apple-devices-app')}>
+            <PhoneIcon />
+            Open Apple Devices
+          </button>
           <Button label="Check again" title="Check for the iPhone again" ask={ask} action="retry" step="usb" />
         </div>
       </>

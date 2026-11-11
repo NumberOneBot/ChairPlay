@@ -39,6 +39,12 @@ describe('USB setup', () => {
     await waitFor(() => expect(backend.gpsCommands).toEqual(['usb-setup 7 retry usb']))
   })
 
+  it('opens the installed Apple Devices when it is not running', async () => {
+    const { backend } = await wizard(setups.appleDevicesClosed)
+    click('Open Apple Devices')
+    await waitFor(() => expect(backend.opened).toEqual(['apple-devices-app']))
+  })
+
   it('waits on the phone for the first steps, with nothing to press but Cancel', async () => {
     for (const setup of [setups.connect, setups.trust, setups.developerRevealed, setups.developerLinkLost]) {
       await wizard(setup)

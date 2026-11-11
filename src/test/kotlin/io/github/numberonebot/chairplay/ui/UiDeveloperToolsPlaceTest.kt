@@ -42,6 +42,13 @@ class UiDeveloperToolsPlaceTest : UiControllerFixture() {
     }
 
     @Test
+    fun `Open Apple Devices starts the installed app`() {
+        assertTrue(controller().open("apple-devices-app"))
+
+        assertTrue(launched.single().last().startsWith("shell:AppsFolder\\AppleInc.AppleDevices_"))
+    }
+
+    @Test
     fun `Get Apple Devices opens its Microsoft Store page`() {
         assertTrue(controller().open("apple-devices"))
 

@@ -3,7 +3,7 @@ package io.github.numberonebot.chairplay.platform
 import java.nio.file.Path
 
 /** The system pages the app links to. */
-internal enum class SystemPage { BLUETOOTH, WIFI, FIREWALL, FIREWALL_RULES, LOCATION }
+internal enum class SystemPage { BLUETOOTH, WIFI, FIREWALL, FIREWALL_RULES, LOCATION, APPLE_DEVICES }
 
 /** The desktop's own facts, as the app reads them once or on its theme watch, and what it asks the desktop to show. */
 internal interface DesktopShell {

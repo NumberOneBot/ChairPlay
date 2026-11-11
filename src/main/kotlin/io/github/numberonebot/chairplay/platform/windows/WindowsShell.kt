@@ -66,6 +66,8 @@ internal class WindowsShell : DesktopShell {
         SystemPage.FIREWALL -> "windowsdefender://network/"
         SystemPage.FIREWALL_RULES -> Path.of(System.getenv("SystemRoot") ?: "C:/Windows", "System32", "wf.msc").toString()
         SystemPage.LOCATION -> "ms-settings:privacy-location"
+        // Apple Devices from Microsoft Store, by its app ID: its usbmux runs while the app does.
+        SystemPage.APPLE_DEVICES -> "shell:AppsFolder\\AppleInc.AppleDevices_nzyj5cx40ttqa!App"
     }
 
     private interface MessageBoxes : Library {

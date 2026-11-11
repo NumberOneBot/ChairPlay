@@ -8,9 +8,9 @@ import { SetupStepBody } from './SetupStepBody'
 const STEPS: readonly (readonly [SetupStep, title: string])[] = [
   ['usb', 'Connect iPhone'],
   ['trust', 'Trust this PC'],
-  ['developer-mode', 'Developer Mode'],
-  ['tools', 'Developer tools'],
-  ['ready', 'Ready'],
+  ['developer-mode', 'Turn on Developer Mode'],
+  ['tools', 'Install developer tools'],
+  ['ready', 'Finish setup'],
 ]
 
 /**
