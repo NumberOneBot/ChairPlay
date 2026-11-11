@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { afterEach, describe, expect, it } from 'vitest'
 import type { AppState } from '../api'
 import { Shell } from '../shell/Shell'
-import { appState } from '../testing'
+import { appState, control } from '../testing'
 import { FakeBackend } from '../fakeBackend'
 
 afterEach(cleanup)
@@ -37,7 +37,7 @@ describe('Setup checks', () => {
     focusBack()
     await waitFor(() => expect(backend.setupChecks).toBe(2))
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
+    fireEvent.click(control('tab-application', 'tab'))
     focusBack()
     expect(backend.setupChecks).toBe(2)
   })

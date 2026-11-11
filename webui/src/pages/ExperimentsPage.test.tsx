@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '../api'
 import { Shell } from '../shell/Shell'
-import { appState } from '../testing'
+import { appState, control } from '../testing'
 import { FakeBackend } from '../fakeBackend'
 
 afterEach(cleanup)
@@ -12,7 +12,7 @@ const live = { phase: 'active', canShowCarPlay: true } as const
 async function experiments(state: AppState = appState(live), backend = new FakeBackend()) {
   render(<Shell state={state} backend={backend} />)
   await screen.findByRole('textbox', { name: 'Network' })
-  fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
+  fireEvent.click(control('tab-application', 'tab'))
   return backend
 }
 
@@ -125,7 +125,7 @@ describe('Experiments page', () => {
       expect(backend.folderSizeReads).toBe(1)
 
       fireEvent.click(screen.getByRole('tab', { name: 'Connection' }))
-      fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
+      fireEvent.click(control('tab-application', 'tab'))
       await waitFor(() => expect(backend.folderSizeReads).toBe(2))
     } finally {
       vi.useRealTimers()

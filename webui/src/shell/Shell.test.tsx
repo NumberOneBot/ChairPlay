@@ -120,9 +120,10 @@ describe('Shell toolbar', () => {
     expect(within(screen.getByRole('banner')).getByTestId('restart-mark')).toBeTruthy()
   })
 
-  it('puts the settings shown on Experiments on Experiments, whatever their key starts with', () => {
+  it('puts the log settings on Application, whatever their key starts with', () => {
     expect(sectionOf('altscreen.card.area')).toBe('altscreen')
-    expect(sectionOf('log.level')).toBe('experiments')
+    expect(sectionOf('log.level')).toBe('application')
+    expect(sectionOf('updates.check.on.start')).toBe('about')
   })
 
   // Typing into the iPhone is set beside the key bindings, so the bar's list of what waits names that page.
@@ -132,7 +133,7 @@ describe('Shell toolbar', () => {
 
   // The bar names Application for the settings browser's port and network, which wait for a restart.
   it("puts the app's own settings on Application", () => {
-    for (const key of ['ui.tint', 'ui.port', 'ui.network', 'updates.check.on.start', 'window.always.on.top',
+    for (const key of ['ui.tint', 'ui.port', 'ui.network', 'window.always.on.top',
       'window.front.on.call', 'altscreen.always.on.top']) {
       expect(sectionOf(key)).toBe('application')
     }

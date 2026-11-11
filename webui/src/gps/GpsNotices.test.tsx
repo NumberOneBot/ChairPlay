@@ -50,7 +50,7 @@ describe('GPS warning (USB unavailable)', () => {
     expect(warnings()[0].getAttribute('role')).toBe('alert')
     expect(page().contains(warnings()[0])).toBe(true)
 
-    fireEvent.click(tab('experiments'))
+    fireEvent.click(tab('about'))
     expect(warnings()).toHaveLength(0)
     fireEvent.click(tab('application'))
     expect(warnings()).toHaveLength(0)
@@ -82,8 +82,8 @@ describe('the window while an operation runs', () => {
     expect(inert(screen.getByRole('radio', { name: 'CarPlay' }))).toBe(false)
     expect(screen.getByRole('tabpanel').closest('[aria-busy]')).toBeNull()
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Experiments' }))
-    expect(inert(screen.getByRole('button', { name: 'Logs' }))).toBe(false)
+    fireEvent.click(control('tab-application', 'tab'))
+    expect(inert(await screen.findByTestId('app-tint-black'))).toBe(false)
     expect(within(page().parentElement!).queryAllByRole('status')).toHaveLength(0)
     update(gpsState(outputs.usbPreparedNoCable))
   })

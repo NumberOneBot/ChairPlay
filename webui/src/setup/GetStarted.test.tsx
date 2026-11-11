@@ -232,12 +232,12 @@ describe('Add the rule', () => {
 })
 
 describe('Show again', () => {
-  it('opens Get started from the Application page once the setup is done', async () => {
+  it('opens Get started from the About page once the setup is done', async () => {
     render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={new FakeBackend()} />)
     await screen.findAllByRole('switch')
     expect(absent('app-show-guide')).toBe(true)
 
-    fireEvent.click(control('tab-application', 'tab'))
+    fireEvent.click(control('tab-about', 'tab'))
     fireEvent.click(control('app-show-guide', 'button'))
 
     fireEvent.click(control('setup-skip', 'button'))
