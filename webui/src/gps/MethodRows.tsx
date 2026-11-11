@@ -67,7 +67,7 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
       )}
       {output.selected === 'usb' && (
         <>
-          <Row className="hint-row above">
+          <Row className="hint-row">
             <span className="hint">
               Requires enabling Developer Mode and downloading additional developer tools. CarPlay stays connected
               over Wi-Fi; GPS coordinates are sent over USB.
