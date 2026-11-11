@@ -79,6 +79,8 @@ class ChairPlayUi(
     bufferedAudio: () -> Map<String, Any>? = { null },
     /** The GPS output's commands, once the app made them. */
     private val gpsCommands: () -> GpsCommands? = { null },
+    /** The GPS method the coordinator has in force, read without its lock; null before it exists. */
+    gpsApplied: () -> String? = { null },
 ) : Closeable, UiSessions {
     val model = UiModel(config.wifi != null, config.autoconnect, config.autoshow, setupDone = SetupStore(dir).done())
     private val settingsFile = SettingsFile(dir.resolve(DesktopConfig.SETTINGS_FILE))
@@ -127,6 +129,7 @@ class ChairPlayUi(
         demo = demo,
         gps = gps,
         bufferedAudio = bufferedAudio,
+        gpsApplied = gpsApplied,
     )
 
     // The firewall's rules take about a second to walk: Get started shows Not checked until they are read. A read that

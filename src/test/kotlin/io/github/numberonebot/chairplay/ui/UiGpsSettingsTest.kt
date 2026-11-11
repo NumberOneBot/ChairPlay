@@ -38,7 +38,7 @@ class UiGpsSettingsTest : UiControllerFixture() {
     // D8: a method chosen waits for the next connection, marked as any reconnect setting is.
     @Test
     fun `a method chosen waits for the next connection`() {
-        val ui = controller()
+        val ui = controller(gpsApplied = { "carplay" })
         ui.saveGps(mapOf("gps.method" to "carplay", "gps.enabled" to "true"))
         ui.connected(SettingsFile(file).read())
 
@@ -46,6 +46,37 @@ class UiGpsSettingsTest : UiControllerFixture() {
 
         assertEquals(listOf("gps.method"), ui.state()["reconnectPending"])
         ui.saveGps(mapOf("gps.method" to "carplay"))
+        assertEquals(emptyList<String>(), ui.state()["reconnectPending"])
+    }
+
+    // The owner's case: connected with the simulation off, USB turned on by its switch (in force at once), then CarPlay
+    // chosen. The coordinator keeps USB in force until the next connection, so the method waits.
+    @Test
+    fun `a method chosen waits while another is in force, whatever the connection was made with`() {
+        val inForce = "usb"
+        val ui = controller(gpsApplied = { inForce })
+        ui.saveGps(mapOf("gps.method" to "usb", "gps.enabled" to "false"))
+        ui.connected(SettingsFile(file).read())
+        ui.saveGps(mapOf("gps.enabled" to "true"))
+
+        ui.saveGps(mapOf("gps.method" to "carplay"))
+
+        assertEquals(listOf("gps.method"), ui.state()["reconnectPending"])
+    }
+
+    // The coordinator puts the chosen method in force (at once with the switch off, or at a connection): its mark goes.
+    @Test
+    fun `the method's mark goes once the coordinator puts it in force`() {
+        var inForce = "carplay"
+        val ui = controller(gpsApplied = { inForce })
+        ui.saveGps(mapOf("gps.method" to "carplay", "gps.enabled" to "true"))
+        ui.connected(SettingsFile(file).read())
+        ui.saveGps(mapOf("gps.method" to "usb"))
+        assertEquals(listOf("gps.method"), ui.state()["reconnectPending"])
+
+        inForce = "usb"
+        ui.gpsChanged()
+
         assertEquals(emptyList<String>(), ui.state()["reconnectPending"])
     }
 
@@ -68,23 +99,29 @@ class UiGpsSettingsTest : UiControllerFixture() {
     // does not, as nothing sends whatever the method.
     @Test
     fun `the switch turned off waits, and a method chosen with it off does not`() {
-        val ui = controller()
+        var inForce = "carplay"
+        val ui = controller(gpsApplied = { inForce })
         ui.saveGps(mapOf("gps.method" to "carplay", "gps.enabled" to "true"))
         ui.connected(SettingsFile(file).read())
 
         ui.saveGps(mapOf("gps.method" to "usb"))
         ui.saveGps(mapOf("gps.enabled" to "false"))
+        inForce = "usb"
+        ui.gpsChanged()
 
         assertEquals(listOf("gps.enabled"), ui.state()["reconnectPending"])
     }
 
     @Test
     fun `with the simulation off a method chosen needs no reconnect`() {
-        val ui = controller()
+        var inForce = "carplay"
+        val ui = controller(gpsApplied = { inForce })
         ui.saveGps(mapOf("gps.method" to "carplay", "gps.enabled" to "false"))
         ui.connected(SettingsFile(file).read())
 
         ui.saveGps(mapOf("gps.method" to "usb"))
+        inForce = "usb"
+        ui.gpsChanged()
 
         assertEquals(emptyList<String>(), ui.state()["reconnectPending"])
     }

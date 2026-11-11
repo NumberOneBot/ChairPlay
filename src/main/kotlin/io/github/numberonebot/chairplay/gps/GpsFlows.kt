@@ -21,7 +21,9 @@ internal class GpsFlows(
     /** The method the user chose, saved as gps.method. */
     var selected: GpsMethod
 
-    /** The method in force: the one the app started with, or the last connection put in force (D8). */
+    /** The method in force: the one the app started with, or the last connection put in force (D8). Volatile: the
+     * settings' reconnect marks read it without the lock, as a save made under the lock works them out. */
+    @Volatile
     var applied: GpsMethod
 
     var enabled: Boolean

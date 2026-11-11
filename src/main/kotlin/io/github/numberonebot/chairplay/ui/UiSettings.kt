@@ -30,6 +30,8 @@ internal class UiSettings(
     private val connects: () -> Boolean,
     private val connect: () -> Unit,
     private val changed: () -> Unit,
+    /** The GPS method the coordinator has in force, read without its lock (a save runs under it); null without one. */
+    private val gpsApplied: () -> String? = { null },
 ) {
     /** The settings as the app started with them, against which a change waits for the next start. */
     private val startup: Map<String, String> = settings.read()
@@ -105,6 +107,15 @@ internal class UiSettings(
         return SaveResult(emptyMap(), applies)
     }
 
+    /** The method in force when the marks were last worked out, so a change of it alone works them out again. */
+    @Volatile
+    private var appliedSeen: String? = null
+
+    /** The GPS output changed: when the coordinator put another method in force, what waits is worked out again. */
+    fun gpsChanged() {
+        if (gpsApplied() != appliedSeen) updatePending()
+    }
+
     /** A bring-up read [values]: its connection runs with them, so a change saved since waits for the next one. */
     fun connected(values: Map<String, String>) {
         synchronized(pendingLock) {
@@ -118,6 +129,7 @@ internal class UiSettings(
      * a reconnect key unlike the value it was made with. A value set back is in force again, and waits no more.
      */
     private fun updatePending() = synchronized(pendingLock) {
+        appliedSeen = gpsApplied()
         val now = settings.read()
         fun differs(key: String, from: Map<String, String>) = normalize(key, now[key].orEmpty()) != normalize(key, from[key].orEmpty())
         val phase = model.state.phase
@@ -128,15 +140,17 @@ internal class UiSettings(
     }
 
     /**
-     * The GPS output's own keys a connection waits for, each on its own: a method chosen since it was made while the
-     * simulation was on then and is now (a sending method to swap, D8; off, nothing sends and the method is in force at
-     * once), and the switch changed since then while CarPlay's method is the one in force (D4; USB's acts at once).
+     * The GPS output's own keys a connection waits for, each on its own: a method chosen that is not the one the
+     * coordinator has in force (D8: it keeps a sending method until the next connection, and puts one chosen with the
+     * switch off in force at once; without a coordinator, the connection's), and the switch changed since the
+     * connection was made while CarPlay's method was the one it was made with (D4; USB's acts at once).
      */
     private fun gpsPending(now: Map<String, String>, made: Map<String, String>): List<String> {
         fun method(values: Map<String, String>) = values["gps.method"]?.trim()?.lowercase()?.ifEmpty { null } ?: "carplay"
         fun enabled(values: Map<String, String>) = values["gps.enabled"]?.trim() == "true"
+        val inForce = appliedSeen ?: method(made)
         return listOfNotNull(
-            "gps.method".takeIf { method(now) != method(made) && enabled(now) && enabled(made) },
+            "gps.method".takeIf { method(now) != inForce },
             "gps.enabled".takeIf { enabled(now) != enabled(made) && method(made) == "carplay" },
         )
     }

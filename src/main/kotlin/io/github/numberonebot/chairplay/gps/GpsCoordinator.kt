@@ -215,6 +215,9 @@ class GpsCoordinator(
     /** Whether an operation runs: the switch waits and the car stands (D9). */
     val holding: Boolean get() = ops.current != null
 
+    /** The method in force, without the lock: for the settings' reconnect mark, worked out inside saves made under it. */
+    val appliedMethod: GpsMethod get() = flows.applied
+
     override fun output(): GpsOutput = synchronized(flows.lock) { GpsOutputs.of(flows, ops.current, notices.current()) }
 
     /** The app closes: a USB simulation goes as an explicit stop's does, within [GpsTiming.shutdownMillis]; the switch stays saved. */

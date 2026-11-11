@@ -57,12 +57,14 @@ class UiController(
     private val gps: (() -> Map<String, Any?>)? = null,
     private val locate: () -> LocationResult = Platforms.current.location::read,
     private val bufferedAudio: () -> Map<String, Any>? = { null },
+    /** The GPS method the coordinator has in force ("carplay", "usb"), read without its lock; null without one. */
+    gpsApplied: () -> String? = { null },
 ) : UiApi {
     private val places = UiPlaces(setup, launch, log, about, systemVersion)
 
     private val settingsApi = UiSettings(
         settings, model, setup, log, audioDevices, bindings, onBindings, onSaved,
-        connects = { autoconnect && setupDone }, connect = ::connectNow, changed = ::changed,
+        connects = { autoconnect && setupDone }, connect = ::connectNow, changed = ::changed, gpsApplied = gpsApplied,
     )
 
     /** True while the page is in the main window; false when it opened in a browser instead. */
@@ -128,8 +130,11 @@ class UiController(
     /** Tells the page that the live setup checks found a change. */
     fun setupChanged() = changed()
 
-    /** Tells the GPS page that the car or the iPhone's listening changed. */
-    fun gpsChanged() = changed()
+    /** Tells the GPS page that the car, the iPhone's listening or the method in force changed. */
+    fun gpsChanged() {
+        settingsApi.gpsChanged()
+        changed()
+    }
 
     /** The insets as saved, so the frame previews them before a restart puts them in force; blank is none. */
     override fun showAltscreenFrame(view: String?): Boolean {
