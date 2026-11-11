@@ -40,9 +40,11 @@ describe('Windows', () => {
     backend.data.values['altscreen.enabled'] = 'true'
     await page(tab, backend)
 
-    for (const toggle of screen.queryAllByRole('switch')) fireEvent.click(toggle)
+    const toggles = screen.queryAllByRole('switch')
+    for (const toggle of toggles) fireEvent.click(toggle)
 
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    // Each switch saves its own key: once every click is saved, none of them is a window's.
+    await waitFor(() => expect(backend.saved).toHaveLength(toggles.length))
     expect(backend.saved.flatMap(Object.keys).filter((key) => MOVED.includes(key))).toEqual([])
   })
 })
