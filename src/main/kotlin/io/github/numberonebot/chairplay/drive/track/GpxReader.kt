@@ -13,18 +13,15 @@ import javax.xml.stream.XMLStreamReader
 object GpxReader {
     private class Raw(val epochSeconds: Double, val position: GeoPoint, val altitude: Double?)
 
-    /** The reason for a file that is not GPX at all, or that the disk cannot give. */
-    const val UNREADABLE = "It isn't a readable GPX file."
-
     fun read(name: String, input: InputStream): TrackRecording {
         val rawSegments = try {
             firstTrack(input)
         } catch (e: XMLStreamException) {
-            throw TrackFormatException(UNREADABLE)
+            throw TrackFormatException(TrackFormatReason.NOT_GPX)
         }
-        if (rawSegments == null) throw TrackFormatException("It has no GPS track.")
+        if (rawSegments == null) throw TrackFormatException(TrackFormatReason.NO_TRACK)
         val start = rawSegments.firstOrNull { it.isNotEmpty() }?.first()?.epochSeconds
-            ?: throw TrackFormatException("Its GPS points have no times.")
+            ?: throw TrackFormatException(TrackFormatReason.NO_TIMES)
         val segments = rawSegments.filter { it.isNotEmpty() }.map { segment ->
             segment.map { TrackPoint(it.epochSeconds - start, it.position, it.altitude) }
         }

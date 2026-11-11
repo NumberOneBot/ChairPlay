@@ -11,14 +11,26 @@ data class TrackPoint(
     val heading: Double? = null,
 )
 
-/** A file that cannot be played as a track; [reason] is what the owner reads after "Can't play this file". */
-class TrackFormatException(val reason: String) : Exception(reason)
+/**
+ * Why a file cannot be played, as the GPS page's notice carries it: a code ([key]), never English, which the page words
+ * after "Can't play this file" (webui/src/gps/noticeText.ts).
+ */
+enum class TrackFormatReason(val key: String) {
+    /** Not GPX at all, or a file the disk cannot give. */
+    NOT_GPX("not-gpx"),
+    NO_TRACK("no-track"),
+    NO_TIMES("no-times"),
+    TOO_SHORT("too-short"),
+}
+
+/** A file that cannot be played as a track, and why. */
+class TrackFormatException(val reason: TrackFormatReason) : Exception(reason.key)
 
 /** A recorded drive: runs of points in time order. Positions are not joined across the gap between segments. */
 class TrackRecording(val name: String, val segments: List<List<TrackPoint>>) {
     init {
         if (segments.flatten().map { it.seconds }.distinct().size < 2) {
-            throw TrackFormatException("Its GPS track is too short.")
+            throw TrackFormatException(TrackFormatReason.TOO_SHORT)
         }
     }
 
@@ -90,8 +102,9 @@ class TrackRecording(val name: String, val segments: List<List<TrackPoint>>) {
         val seg = segmentOf[i]
         fun moving(j: Int) = distanceMeters(points[j].position, points[j + 1].position) >= MOVING_METERS
         fun inSegment(j: Int) = j >= 0 && j + 1 < points.size && segmentOf[j] == seg && segmentOf[j + 1] == seg
-        val found = (i downTo 0).takeWhile { inSegment(it) }.firstOrNull { moving(it) }
-            ?: (i + 1 until points.size - 1).takeWhile { inSegment(it) }.firstOrNull { moving(it) }
+        // Sequences: the window loop asks each frame, and a list would hold every index back to the segment's start.
+        val found = (i downTo 0).asSequence().takeWhile { inSegment(it) }.firstOrNull { moving(it) }
+            ?: (i + 1 until points.size - 1).asSequence().takeWhile { inSegment(it) }.firstOrNull { moving(it) }
             ?: return 0.0
         return bearingDegrees(points[found].position, points[found + 1].position)
     }

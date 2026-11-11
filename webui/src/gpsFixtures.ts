@@ -69,7 +69,7 @@ export const outputs = {
   usbTrackUnreadable: gpsOutput({
     selected: 'usb', applied: 'usb', enabledIntent: true, activeMethod: 'usb', running: true, usbPrepared: true,
     device: PHONE, successfulSends: 567, rateHz: 10,
-    notices: [notice('track-unreadable', 'bad', { args: { reason: 'It has no GPS track.' } })],
+    notices: [notice('track-unreadable', 'bad', { args: { reason: 'no-track' } })],
   }),
   usbNoPosition: gpsOutput({
     selected: 'usb', applied: 'usb', enabledIntent: true, availability: 'unavailable', reason: 'no-position',

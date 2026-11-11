@@ -212,6 +212,11 @@ class GpsCoordinator(
         flows.enabled && (flows.applied == GpsMethod.CARPLAY || flows.usb.running)
     }
 
+    /** Whether a track may drive the car: the switch on, USB in force and sending; the page shows tracks for USB only. */
+    fun trackLive(): Boolean = synchronized(flows.lock) {
+        flows.enabled && flows.applied == GpsMethod.USB && flows.usb.running
+    }
+
     /** Shows a notice another part of the app raises, such as track playback's, and tells the page. */
     fun showNotice(code: NoticeCode, tone: NoticeTone, args: Map<String, String> = emptyMap()) {
         notices.show(code, tone, args)

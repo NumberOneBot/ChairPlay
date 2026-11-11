@@ -25,7 +25,7 @@ class TrackCommandsTest {
         locate = { LocationResult.Unknown }, lookup = { it.run() })
     private val told = mutableListOf<String>()
     private val notices = object : TrackNotices {
-        override fun unreadable(reason: String) { told += "unreadable $reason" }
+        override fun unreadable(reason: TrackFormatReason) { told += "unreadable $reason" }
         override fun clear() { told += "clear" }
     }
     private var chosen: Path? = null
@@ -68,7 +68,7 @@ class TrackCommandsTest {
         opened("empty.gpx", noTrack)
 
         assertSame(loaded, driving.track)
-        assertEquals(listOf("clear", "unreadable It has no GPS track."), told)
+        assertEquals(listOf("clear", "unreadable ${TrackFormatReason.NO_TRACK}"), told)
     }
 
     @Test
@@ -78,7 +78,7 @@ class TrackCommandsTest {
         assertTrue(commands.act("open"))
 
         assertNull(driving.track)
-        assertEquals(listOf("clear", "unreadable ${GpxReader.UNREADABLE}"), told)
+        assertEquals(listOf("clear", "unreadable ${TrackFormatReason.NOT_GPX}"), told)
     }
 
     @Test

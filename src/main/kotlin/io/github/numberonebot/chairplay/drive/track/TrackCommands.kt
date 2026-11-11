@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /** The GPS page's word that the file Open… chose cannot be played, and its end; the app shows it in Track playback. */
 interface TrackNotices {
-    fun unreadable(reason: String)
+    fun unreadable(reason: TrackFormatReason)
     fun clear()
 }
 
@@ -59,14 +59,14 @@ class TrackCommands(
             return unreadable(name, e.reason)
         } catch (e: IOException) {
             log("Track $name not read: $e")
-            return unreadable(name, GpxReader.UNREADABLE)
+            return unreadable(name, TrackFormatReason.NOT_GPX)
         }
         driving.load(recording)
         log("Track $name loaded: ${recording.duration.toInt()} s, ${recording.distanceMeters.toInt()} m")
     }
 
-    private fun unreadable(name: String, reason: String) {
-        log("Track $name not played: $reason")
+    private fun unreadable(name: String, reason: TrackFormatReason) {
+        log("Track $name not played: ${reason.key}")
         notices.unreadable(reason)
     }
 }

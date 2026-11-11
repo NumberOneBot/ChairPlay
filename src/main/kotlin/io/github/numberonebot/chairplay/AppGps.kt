@@ -5,10 +5,10 @@ import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.drive.GeoPoint
 import io.github.numberonebot.chairplay.drive.GpsSettings
 import io.github.numberonebot.chairplay.drive.track.TrackCommands
+import io.github.numberonebot.chairplay.drive.track.TrackFormatReason
 import io.github.numberonebot.chairplay.drive.track.TrackNotices
 import io.github.numberonebot.chairplay.gps.GpsCar
 import io.github.numberonebot.chairplay.gps.GpsCoordinator
-import io.github.numberonebot.chairplay.gps.GpsMethod
 import io.github.numberonebot.chairplay.gps.GpsSettingsStore
 import io.github.numberonebot.chairplay.gps.InputHold
 import io.github.numberonebot.chairplay.gps.NoticeCode
@@ -22,8 +22,8 @@ import io.github.numberonebot.chairplay.platform.Platforms
 
 /**
  * The GPS output as the app makes it: CarPlay's and USB's channels around the one [driving] car, the USB setup, the
- * coordinator that owns them (gps/GpsCoordinator.kt), and track playback's commands for the car ([track]). [saveGps] is the settings' save for the coordinator's own
- * keys; [session] says whether a CarPlay session runs.
+ * coordinator that owns them (gps/GpsCoordinator.kt), and track playback's commands for the car ([track]). [saveGps]
+ * is the settings' save for the coordinator's own keys; [session] says whether a CarPlay session runs.
  */
 internal class AppGps(
     private val driving: Driving,
@@ -70,8 +70,8 @@ internal class AppGps(
         driving,
         { Platforms.current.openFile("Open a recording", "GPX files", listOf("*.gpx")) },
         object : TrackNotices {
-            override fun unreadable(reason: String) =
-                coordinator.showNotice(NoticeCode.TRACK_UNREADABLE, NoticeTone.BAD, mapOf("reason" to reason))
+            override fun unreadable(reason: TrackFormatReason) =
+                coordinator.showNotice(NoticeCode.TRACK_UNREADABLE, NoticeTone.BAD, mapOf("reason" to reason.key))
             override fun clear() = coordinator.dropNotice(NoticeCode.TRACK_UNREADABLE)
         },
         log,
@@ -80,8 +80,7 @@ internal class AppGps(
     init {
         driving.live = coordinator::carLive
         driving.held = { coordinator.holding }
-        // A track drives only while USB is in force and sending: the GPS page shows track playback only then (spec §1).
-        driving.tracks.live = { coordinator.appliedMethod == GpsMethod.USB && coordinator.carLive() }
+        driving.tracks.live = coordinator::trackLive
     }
 
     fun start() {

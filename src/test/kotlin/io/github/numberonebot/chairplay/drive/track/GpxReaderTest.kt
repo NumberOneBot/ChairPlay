@@ -16,11 +16,11 @@ class GpxReaderTest {
 
     private fun read(text: String): TrackRecording = GpxReader.read("t", text.byteInputStream())
 
-    private fun reasonOf(text: String): String =
+    private fun reasonOf(text: String): TrackFormatReason? =
         try {
             read(text)
             fail("expected TrackFormatException")
-            ""
+            null
         } catch (e: TrackFormatException) {
             e.reason
         }
@@ -97,23 +97,29 @@ class GpxReaderTest {
 
     @Test
     fun `broken xml is not readable`() {
-        assertEquals("It isn't a readable GPX file.", reasonOf("<gpx><trk>"))
+        assertEquals(TrackFormatReason.NOT_GPX, reasonOf("<gpx><trk>"))
     }
 
     @Test
     fun `no track`() {
-        assertEquals("It has no GPS track.", reasonOf(gpx("<wpt lat=\"1\" lon=\"2\"/>")))
+        assertEquals(TrackFormatReason.NO_TRACK, reasonOf(gpx("<wpt lat=\"1\" lon=\"2\"/>")))
     }
 
     @Test
     fun `points without times`() {
         val body = "<trk><trkseg>" + pt(50.0, 6.0, null) + pt(50.0, 6.001, null) + "</trkseg></trk>"
-        assertEquals("Its GPS points have no times.", reasonOf(gpx(body)))
+        assertEquals(TrackFormatReason.NO_TIMES, reasonOf(gpx(body)))
     }
 
     @Test
     fun `a single point is too short`() {
         val body = "<trk><trkseg>" + pt(50.0, 6.0, "2024-08-10T14:00:00Z") + "</trkseg></trk>"
-        assertEquals("Its GPS track is too short.", reasonOf(gpx(body)))
+        assertEquals(TrackFormatReason.TOO_SHORT, reasonOf(gpx(body)))
+    }
+
+    // The page words each reason by its key (webui/src/gps/trackApi.ts): the keys are the protocol.
+    @Test
+    fun `each reason travels as its code`() {
+        assertEquals(listOf("not-gpx", "no-track", "no-times", "too-short"), TrackFormatReason.entries.map { it.key })
     }
 }
