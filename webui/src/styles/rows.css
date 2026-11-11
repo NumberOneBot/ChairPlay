@@ -167,13 +167,19 @@
 }
 
 /* A tag for what is still being tried: a capsule, its ends wide enough to clear the text */
+/* A tag the same size wherever it stands: beside a control or at the start of a hint's text */
 .shell .exp {
+  display: inline-block;
   padding: 0 7px;
   border: 1px solid rgba(255, 159, 10, 0.5);
   border-radius: 9px;
   color: var(--orange);
   font-size: 11px;
   line-height: 16px;
+}
+
+.shell .hint .exp {
+  margin-right: 6px;
 }
 
 /* A tag for what is there for the joy of it */
