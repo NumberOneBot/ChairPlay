@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.ui
 import io.github.numberonebot.chairplay.config.Applies
 import io.github.numberonebot.chairplay.config.EditableSettings
 import io.github.numberonebot.chairplay.config.SettingsFile
+import io.github.numberonebot.chairplay.config.tintOf
 import io.github.numberonebot.chairplay.input.ControlAction
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
@@ -37,6 +38,9 @@ internal class UiSettings(
     @Volatile
     var values: Map<String, String> = startup
         private set
+
+    /** ui.tint as [values] have it, which the pages colour themselves with at once: black for a value no palette has. */
+    val tint: String get() = tintOf(values["ui.tint"])
 
     /** The settings the connection under way, or the last one, was made with; null before a bring-up read them. */
     private var connection: Map<String, String>? = null

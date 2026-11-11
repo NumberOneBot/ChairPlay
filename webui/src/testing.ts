@@ -27,6 +27,7 @@ export function appState(overrides: Partial<AppState> = {}): AppState {
     controlsKeys: false,
     setupDone: true,
     accent: '#52c4ff',
+    tint: 'black',
     about: {
       version: null,
       app: { commit: '4e6d50df', date: '2026-10-23' },

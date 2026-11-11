@@ -9,6 +9,7 @@ afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   history.replaceState(null, '', '/')
+  document.documentElement.removeAttribute('data-tint')
 })
 
 /**
@@ -36,6 +37,15 @@ function open(address: string, state: AppState) {
   act(() => source!.onmessage!(new MessageEvent('message', { data: JSON.stringify(state) })))
   return posts
 }
+
+// ui.tint, saved on the Application page, colours the settings and the controls window as the state brings it.
+describe('the tint', () => {
+  it.each(['/', '/controls'])('colours %s with the state tint', (address) => {
+    open(address, appState({ tint: 'teal' }))
+
+    expect(document.documentElement.dataset.tint).toBe('teal')
+  })
+})
 
 // The app's state says what its window shows; ChairPlay's window opens the page at ?window, a browser tab without it.
 describe('the window and a browser tab', () => {

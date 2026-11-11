@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { applyAccent } from './accent'
+import { applyAccent, applyTint } from './accent'
 import type { AppState } from './api'
 import { Api } from './apiClient'
 import { ControlsScreen } from './ControlsScreen'
@@ -18,6 +18,7 @@ export function App() {
     [api, windowPage],
   )
   useEffect(() => applyAccent(state?.accent), [state?.accent])
+  useEffect(() => applyTint(state?.tint), [state?.tint])
 
   // The controls window opens /controls; everything else is the main window's settings.
   const controlsPage = window.location.pathname === '/controls'

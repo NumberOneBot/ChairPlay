@@ -1,5 +1,5 @@
 /*
- * The interface's tint, ui.tint, which the page sets as the root's data-tint (tint.ts): the greys of the settings and
+ * The interface's tint, ui.tint, which the page sets as the root's data-tint (accent.ts): the greys of the settings and
  * the controls window. Every other grey in the stylesheets is made from these, so it follows the tint: a fill is
  * --fill made translucent, a shade a token's channels moved by the black palette's offsets.
  */

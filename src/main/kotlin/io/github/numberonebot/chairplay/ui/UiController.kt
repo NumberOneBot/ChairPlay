@@ -240,7 +240,7 @@ class UiController(
             "controls" to controls?.state(),
             "controlsKeys" to (values["ui.controls.keys"]?.trim() == "true"),
             "setupDone" to setupDone,
-            "accent" to setup.accent,
+            "accent" to setup.accent, "tint" to settingsApi.tint,
             "about" to places.aboutPage,
             "reconnectPending" to state.reconnectPending.sorted(),
             "restartPending" to state.restartPending.sorted(),

@@ -28,6 +28,18 @@ class UiControllerStateTest : UiControllerFixture() {
         assertEquals(true, ui.state()["controlsKeys"])
     }
 
+    // ui.tint colours both pages at once: the state carries it as saved, and black for a value no palette has.
+    @Test
+    fun `the state carries the tint as last saved`() {
+        assertEquals("black", controller().state()["tint"])
+
+        val ui = controller()
+        ui.saveSettings(mapOf("ui.tint" to "slate"))
+        assertEquals("slate", ui.state()["tint"])
+
+        assertEquals("black", controller(settings = "wifi.ssid=Home\nui.tint=pink\n").state()["tint"])
+    }
+
     // The details for a report name Windows, which comes from the registry: read once, for the state and New issue alike.
     @Test
     fun `the Windows version is read once`() {
