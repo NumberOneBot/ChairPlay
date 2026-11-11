@@ -8,6 +8,7 @@ import io.github.numberonebot.chairplay.drive.track.TrackCommands
 import io.github.numberonebot.chairplay.drive.track.TrackNotices
 import io.github.numberonebot.chairplay.gps.GpsCar
 import io.github.numberonebot.chairplay.gps.GpsCoordinator
+import io.github.numberonebot.chairplay.gps.GpsMethod
 import io.github.numberonebot.chairplay.gps.GpsSettingsStore
 import io.github.numberonebot.chairplay.gps.InputHold
 import io.github.numberonebot.chairplay.gps.NoticeCode
@@ -61,7 +62,10 @@ internal class AppGps(
         log = log,
     )
 
-    /** Track playback's commands: Open… shows the platform's Open dialog, and a file it cannot play is the page's notice. */
+    /**
+     * Track playback's commands: Open… shows the platform's Open dialog, and a file it cannot play is the GPS page's
+     * notice.
+     */
     val track = TrackCommands(
         driving,
         { Platforms.current.openFile("Open a recording", "GPX files", listOf("*.gpx")) },
@@ -76,6 +80,8 @@ internal class AppGps(
     init {
         driving.live = coordinator::carLive
         driving.held = { coordinator.holding }
+        // A track drives only while USB is in force and sending: the GPS page shows track playback only then (spec §1).
+        driving.tracks.live = { coordinator.appliedMethod == GpsMethod.USB && coordinator.carLive() }
     }
 
     fun start() {

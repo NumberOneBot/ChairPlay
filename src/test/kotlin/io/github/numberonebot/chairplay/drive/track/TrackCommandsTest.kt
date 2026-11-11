@@ -14,6 +14,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Path
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /** The GPS page's track commands: Open… reads a file into the car's track, and the deck plays, pauses and stops it. */
 class TrackCommandsTest {
@@ -76,7 +78,30 @@ class TrackCommandsTest {
         assertTrue(commands.act("open"))
 
         assertNull(driving.track)
-        assertEquals(listOf("clear", "unreadable It isn't a readable GPX file."), told)
+        assertEquals(listOf("clear", "unreadable ${GpxReader.UNREADABLE}"), told)
+    }
+
+    @Test
+    fun `an Open while the dialog shows opens no second one`() {
+        val showing = CountDownLatch(1)
+        val close = CountDownLatch(1)
+        var dialogs = 0
+        val blocking = TrackCommands(driving, {
+            dialogs++
+            showing.countDown()
+            close.await(5, TimeUnit.SECONDS)
+            null
+        }, notices) {}
+        val first = Thread { blocking.act("open") }.apply { start() }
+        assertTrue(showing.await(5, TimeUnit.SECONDS))
+
+        assertTrue(blocking.act("open"))
+
+        close.countDown()
+        first.join(5_000)
+        assertEquals(1, dialogs)
+        assertTrue(blocking.act("open"))
+        assertEquals("a closed dialog opens again", 2, dialogs)
     }
 
     @Test

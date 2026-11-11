@@ -8,7 +8,8 @@ import io.github.numberonebot.chairplay.drive.track.TrackRecording
  * The recording the GPS page loaded, as the car's source: while it plays or pauses it puts [drive] where the recording
  * is ([placed] tells the car it is somewhere), and the keys and the gamepad drive nothing. Once it stops, ends or gives
  * way to another file, the car stands where it is and [remember] saves its place, as a game's car is handed back. A car
- * that cannot send pauses it; coming back does not play it.
+ * that cannot send, or USB not in force ([live]), pauses it and hands the car back, as a GPS operation's hold pauses it;
+ * coming back does not play it.
  */
 internal class DrivingTrack(
     private val drive: Drive,
@@ -23,8 +24,19 @@ internal class DrivingTrack(
     // Whether the track has the car; the window loop's thread only.
     private var tracking = false
 
+    /**
+     * Whether a track may drive the car, on top of the GPS being on: USB in force and sending, where the GPS page shows
+     * track playback. Leaving USB counts as losing it: a playing track pauses (spec §1).
+     */
+    @Volatile var live: () -> Boolean = { true }
+
     fun load(recording: TrackRecording) {
         player = TrackPlayer(recording, nanoTime)
+    }
+
+    /** A GPS operation holds the car: a playing track pauses, so its clock does not run through the hold. */
+    fun hold() {
+        player?.pause()
     }
 
     /**
@@ -33,8 +45,9 @@ internal class DrivingTrack(
      */
     fun driver(on: Boolean): TrackPlayer? {
         val player = player
-        if (player != null && player.owns && !on) player.pause()
-        if (on && player != null && player.owns) return player
+        val drives = on && live()
+        if (player != null && player.owns && !drives) player.pause()
+        if (drives && player != null && player.owns) return player
         if (tracking) release()
         return null
     }

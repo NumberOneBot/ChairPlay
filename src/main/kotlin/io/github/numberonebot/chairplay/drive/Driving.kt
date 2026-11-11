@@ -55,11 +55,10 @@ class Driving(
     }
 
     val control = DriveControl(drive, gamepad, onStopped = ::remember, nanoTime = nanoTime)
-
-    private val tracks = DrivingTrack(drive, nanoTime, { placed = true }, ::remember)
-    /** The recording loaded on the GPS page, which drives the car while it plays or pauses ([DrivingTrack]). */
+    /** The car's track playback ([DrivingTrack]); the app says through its [DrivingTrack.live] when a track may drive. */
+    internal val tracks = DrivingTrack(drive, nanoTime, { placed = true }, ::remember)
+    /** The recording loaded on the GPS page; [load] puts in another, stopped at its start, from any thread. */
     val track: TrackPlayer? get() = tracks.player
-    /** Loads [recording] stopped at its start, from any thread; a car the last one had stands on the next pass. */
     fun load(recording: TrackRecording) = tracks.load(recording).also { wake() }
 
     /** The location the last connection made from the car, which puts itself here for the GPS page. */
@@ -102,8 +101,10 @@ class Driving(
     /** Whether a GPS operation holds the app's input (S-09): the car stands, let go, drive mode kept. */
     @Volatile var held: () -> Boolean = { false }
 
-    // A pass while held: no input reaches the car, and a game's place waits too; the time held drives nothing after.
+    // A pass while held: no input reaches the car, a track pauses, and a game's place waits too; the time held drives
+    // nothing after.
     private fun hold(): Double {
+        tracks.hold()
         control.scripted = CarInput()
         if (drive.moving || drive.input != CarInput()) drive.stop()
         drive.input = CarInput()

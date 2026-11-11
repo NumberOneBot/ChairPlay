@@ -82,15 +82,55 @@ class DrivingTrackTest {
         driving.live = { live }
         playing()
         drive(1.0)
+        val there = position()
 
         live = false
         drive(1.0)
         assertEquals(TrackPhase.PAUSED, driving.track!!.phase)
+        assertAt(there, position())
+        assertEquals(place(there), saved.last()["gps.start"])
 
         live = true
         drive(1.0)
         assertEquals(TrackPhase.PAUSED, driving.track!!.phase)
         assertEquals(0.0, driving.drive.snapshot().car.speed, 0.0)
+    }
+
+    @Test
+    fun `leaving USB pauses the track and hands the car back, and USB again does not play it`() {
+        var usb = true
+        driving.tracks.live = { usb }
+        playing()
+        drive(1.0)
+        val there = position()
+
+        usb = false
+        drive(0.1)
+        assertEquals(TrackPhase.PAUSED, driving.track!!.phase)
+        assertEquals(place(there), saved.last()["gps.start"])
+        driving.control.scripted = CarInput(1.0, 0.0, 0.0)
+        drive(1.0)
+        assertTrue(driving.drive.snapshot().car.speed > 0)
+
+        driving.control.scripted = CarInput()
+        usb = true
+        drive(1.0)
+        assertEquals(TrackPhase.PAUSED, driving.track!!.phase)
+    }
+
+    @Test
+    fun `a GPS operation pauses the track, so its clock does not run through it`() {
+        var held = false
+        driving.held = { held }
+        playing()
+        drive(1.0)
+        val time = driving.track!!.time
+
+        held = true
+        drive(5.0)
+
+        assertEquals(TrackPhase.PAUSED, driving.track!!.phase)
+        assertEquals(time, driving.track!!.time, 0.02)
     }
 
     @Test

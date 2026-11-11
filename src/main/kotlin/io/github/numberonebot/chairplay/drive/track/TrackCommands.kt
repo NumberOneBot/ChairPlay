@@ -4,6 +4,7 @@ import io.github.numberonebot.chairplay.drive.Driving
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** The GPS page's word that the file Open… chose cannot be played, and its end; the app shows it in Track playback. */
 interface TrackNotices {
@@ -22,10 +23,19 @@ class TrackCommands(
     private val notices: TrackNotices,
     private val log: (String) -> Unit,
 ) {
+    // Whether an Open dialog shows: another Open… meanwhile opens no second one.
+    private val opening = AtomicBoolean()
+
     /** Does [action] ("open", "play", "pause" or "stop"); false for any other, and for the deck with nothing loaded. */
     fun act(action: String): Boolean {
         if (action == "open") {
-            openFile()?.let(::open)
+            if (!opening.compareAndSet(false, true)) return true
+            val path = try {
+                openFile()
+            } finally {
+                opening.set(false)
+            }
+            path?.let(::open)
             return true
         }
         val player = driving.track ?: return false
@@ -49,7 +59,7 @@ class TrackCommands(
             return unreadable(name, e.reason)
         } catch (e: IOException) {
             log("Track $name not read: $e")
-            return unreadable(name, UNREADABLE)
+            return unreadable(name, GpxReader.UNREADABLE)
         }
         driving.load(recording)
         log("Track $name loaded: ${recording.duration.toInt()} s, ${recording.distanceMeters.toInt()} m")
@@ -58,10 +68,5 @@ class TrackCommands(
     private fun unreadable(name: String, reason: String) {
         log("Track $name not played: $reason")
         notices.unreadable(reason)
-    }
-
-    private companion object {
-        /** GpxReader's own reason for a file it cannot parse, for one the disk cannot give. */
-        const val UNREADABLE = "It isn't a readable GPX file."
     }
 }
