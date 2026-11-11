@@ -18,10 +18,11 @@ export function App() {
     [api, windowPage],
   )
   useEffect(() => applyAccent(state?.accent), [state?.accent])
-  useEffect(() => applyTint(state?.tint), [state?.tint])
-
   // The controls window opens /controls; everything else is the main window's settings.
   const controlsPage = window.location.pathname === '/controls'
+  // The settings take ui.tint; the controls window its own, black unless ui.tint.controls lets the tint reach it.
+  const tint = controlsPage ? state?.controlsTint : state?.tint
+  useEffect(() => applyTint(tint), [tint])
   if (controlsPage) {
     return state ? <ControlsScreen state={state} backend={api} /> : <div className="controls-screen" />
   }

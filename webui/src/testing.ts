@@ -44,6 +44,7 @@ export function appState(overrides: Partial<AppState> = {}): AppState {
     setupDone: true,
     accent: '#52c4ff',
     tint: 'black',
+    controlsTint: 'black',
     about: {
       version: null,
       app: { commit: '4e6d50df', date: '2026-10-23' },

@@ -39,8 +39,12 @@ internal val SETTINGS_TEMPLATE = listOf(
         "ui.accent" to DEFAULT_ACCENT,
     ),
     SettingBlock(
-        "The greys of the screens and the controls window: 'black', 'graphite', 'slate', 'teal' or 'warm'.",
+        "The greys of the settings: 'black', 'graphite', 'slate', 'teal' or 'warm'.",
         "ui.tint" to TINTS.first(),
+    ),
+    SettingBlock(
+        "Whether the controls window takes ui.tint too; with false it keeps black.",
+        "ui.tint.controls" to "false",
     ),
     SettingBlock(
         "The port of the settings' address in a browser, http://localhost:7529 (7529 spells PLAY on a phone keypad).\n" +

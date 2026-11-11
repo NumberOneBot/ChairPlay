@@ -158,8 +158,10 @@ export interface AppState {
   setupDone: boolean
   /** ui.accent, #rrggbb: the colour every accent shade of the pages is made from. */
   accent: string
-  /** ui.tint: the palette of greys both pages take (styles/tints.css); black for any value it has none for. */
+  /** ui.tint: the palette of greys the settings take (styles/tints.css); black for any value it has none for. */
   tint: string
+  /** The controls window's palette: ui.tint when ui.tint.controls (a hand edit) is true, black otherwise. */
+  controlsTint: string
   /** Which build this is: this repository's commit and the DiPlay core's; null for one the build did not record. */
   about: {
     /** The release, X.Y.Z; null for a development build. */

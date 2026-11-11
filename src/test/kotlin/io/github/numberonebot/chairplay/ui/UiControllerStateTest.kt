@@ -40,6 +40,16 @@ class UiControllerStateTest : UiControllerFixture() {
         assertEquals("black", controller(settings = "wifi.ssid=Home\nui.tint=pink\n").state()["tint"])
     }
 
+    // The controls window keeps black unless ui.tint.controls, a hand edit only, lets the tint reach it (owner).
+    @Test
+    fun `the controls window takes the tint only when ui tint controls says so`() {
+        assertEquals("black", controller(settings = "wifi.ssid=Home\nui.tint=slate\n").state()["controlsTint"])
+        assertEquals("black",
+            controller(settings = "wifi.ssid=Home\nui.tint=slate\nui.tint.controls=false\n").state()["controlsTint"])
+        assertEquals("slate",
+            controller(settings = "wifi.ssid=Home\nui.tint=slate\nui.tint.controls=true\n").state()["controlsTint"])
+    }
+
     // The details for a report name Windows, which comes from the registry: read once, for the state and New issue alike.
     @Test
     fun `the Windows version is read once`() {

@@ -38,11 +38,20 @@ function open(address: string, state: AppState) {
   return posts
 }
 
-// ui.tint, saved on the Application page, colours the settings and the controls window as the state brings it.
+// ui.tint, saved on the Application page, colours the settings; the controls window takes the state's controlsTint,
+// black unless ui.tint.controls lets the tint reach it (owner).
 describe('the tint', () => {
-  it.each(['/', '/controls'])('colours %s with the state tint', (address) => {
-    open(address, appState({ tint: 'teal' }))
+  it('colours the settings with the state tint', () => {
+    open('/', appState({ tint: 'teal', controlsTint: 'black' }))
+    expect(document.documentElement.dataset.tint).toBe('teal')
+  })
 
+  it('colours the controls window with the state controls tint', () => {
+    open('/controls', appState({ tint: 'teal', controlsTint: 'black' }))
+    expect(document.documentElement.dataset.tint).toBe('black')
+    cleanup()
+
+    open('/controls', appState({ tint: 'teal', controlsTint: 'teal' }))
     expect(document.documentElement.dataset.tint).toBe('teal')
   })
 })

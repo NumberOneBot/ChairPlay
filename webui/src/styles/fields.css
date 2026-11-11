@@ -93,6 +93,11 @@
   max-width: 100%;
 }
 
+/* A flex item would keep its full width in a narrow row: the list still shrinks to the wrapper, as it did alone */
+.shell .caret > select {
+  min-width: 0;
+}
+
 .shell .caret::after {
   content: '';
   position: absolute;

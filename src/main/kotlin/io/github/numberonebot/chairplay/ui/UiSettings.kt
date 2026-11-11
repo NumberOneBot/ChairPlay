@@ -41,12 +41,17 @@ internal class UiSettings(
 
     /**
      * The state's colours of the pages: ui.accent as the app started with it ([accent]), and ui.tint as [values] have
-     * it, which applies at once: black for a value no palette has.
+     * it, which applies at once: black for a value no palette has. The controls window keeps black unless
+     * ui.tint.controls, a hand edit, is true (owner, 2026-11-11).
      */
-    fun appearance(accent: String): Array<Pair<String, Any?>> = arrayOf(
-        "accent" to accent,
-        "tint" to tintOf(values["ui.tint"]),
-    )
+    fun appearance(accent: String): Array<Pair<String, Any?>> {
+        val tint = tintOf(values["ui.tint"])
+        return arrayOf(
+            "accent" to accent,
+            "tint" to tint,
+            "controlsTint" to if (values["ui.tint.controls"]?.trim() == "true") tint else tintOf(null),
+        )
+    }
 
     /** The settings the connection under way, or the last one, was made with; null before a bring-up read them. */
     private var connection: Map<String, String>? = null
