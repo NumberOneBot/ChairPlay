@@ -24,7 +24,7 @@
 
 .shell .setup h2 {
   margin: 0;
-  color: #fff;
+  color: var(--strong);
   font: 700 18px/24px var(--ui);
 }
 
@@ -40,7 +40,7 @@
   align-items: center;
   column-gap: 12px;
   padding: 7px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
 }
 
 .shell .step .mark {
@@ -67,8 +67,8 @@
 }
 
 .shell .step.now .mark {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--accent-fill);
+  background: var(--accent-fill);
   color: #fff;
 }
 
@@ -136,7 +136,7 @@
 }
 
 .shell .step .st .edit.on {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .shell .step .bd {
@@ -186,7 +186,7 @@
 
 /* A button named in a step's text: only whiter than the text round it; the button itself is lit in the toolbar */
 .shell .step .ref {
-  color: #fff;
+  color: var(--strong);
 }
 
 /* Waiting for something the app checks by itself: a ring that turns */
@@ -203,7 +203,7 @@
   width: 10px;
   height: 10px;
   border: 1.5px solid var(--edge);
-  border-top-color: var(--accent);
+  border-top-color: var(--accent-fill);
   border-radius: 50%;
   animation: shell-turn 1.2s linear infinite;
 }
@@ -224,7 +224,7 @@
   color: var(--muted);
   font-size: 12px;
   text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.3);
+  text-decoration-color: color-mix(in srgb, var(--text) 30%, transparent);
   text-underline-offset: 2px;
   cursor: pointer;
 }

@@ -1,8 +1,8 @@
 /* The settings window: its body and the list of pages */
 
 /*
- * The section list and the page. The list is 123 px wide in every window from 640 px up (owner, 2026-11-12), a little
- * more than "Application", the longest name, needs.
+ * The section list and the page. The list is 116 px wide in every window from 640 px up (owner, 2026-11-12): what
+ * "Application", the longest name, needs to leave as much after it as before its icon and between.
  *
  * A row's controls are as long as Connection's first, the network's name and its security (--row-width); the longest
  * segmented groups stay within it where the page is narrow. The label column is what "Bluetooth address" needs (118 px)
@@ -11,13 +11,13 @@
  */
 .shell .body {
   /* The toolbar's height (toolbar.css), which the body runs under */
-  --bar-height: 44px;
+  --bar-height: 42px;
   /*
    * Round the floating list: its gap from the window's left edge, and the least it leaves above and below; 8 px, what
    * the centred list leaves above and below in a window 360 px tall, where it fits exactly (owner, 2026-11-12)
    */
   --nav-gap: 8px;
-  --nav-width: 123px;
+  --nav-width: 116px;
   --row-width: 326px;
   --label-width: max(118px, 118px + (100cqw - 450px) / 4);
   grid-area: 1 / 1;
@@ -40,11 +40,14 @@
   max-height: calc(100% - var(--bar-height) - 2 * var(--nav-gap));
   overflow-y: auto;
   margin: calc(var(--bar-height) + var(--nav-gap)) 0 var(--nav-gap) var(--nav-gap);
-  /* The same all round, the corners the buttons' (10 px) plus it, so the two curves run side by side */
-  padding: 5px;
-  border-radius: 15px;
+  /*
+   * The same all round and as the buttons' gaps, 4 px (owner, 2026-11-12); the corners the buttons' (10 px) plus it, so
+   * the two curves run side by side
+   */
+  padding: 4px;
+  border-radius: 14px;
   background: var(--panel);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
+  box-shadow: 0 1px 3px var(--float-shadow, rgb(0 0 0 / 22%));
   scrollbar-width: none;
 }
 
@@ -54,8 +57,9 @@
   /* As far from the icon to the name as from the edge to the icon (owner, 2026-11-12) */
   gap: 8px;
   width: 100%;
-  height: 34px;
-  margin-bottom: 2px;
+  /* 33 px tall and 4 px apart, as far as from the panel's edges (owner, 2026-11-12); the eight fit a 360 px window */
+  height: 33px;
+  margin-bottom: 4px;
   padding: 0 8px;
   border: 0;
   border-radius: 10px;
@@ -91,14 +95,15 @@
   opacity: 1;
 }
 
+/* Under the pointer a page's button greys; on white half as much (tints.css) */
 .shell .nav button:not(.sel):hover {
-  background: color-mix(in srgb, var(--fill) 16%, transparent);
+  background: var(--nav-hover, color-mix(in srgb, var(--fill) 16%, transparent));
   color: var(--text);
 }
 
 /*
  * In a window as narrow as the toolbar's icons-only form (above), the section list too shows the icons alone, each
- * named when hovered: 30 px squares 1 px apart in 2 px of padding, the panel as far from the edges as the narrow bar's
+ * named when hovered: 30 px squares 2 px apart in 2 px of padding, the panel as far from the edges as the narrow bar's
  * buttons are from its own; the icons smaller to keep clear of the squares' edges.
  */
 @container shell (max-width: 529px) {
@@ -121,7 +126,7 @@
     justify-content: center;
     width: 30px;
     height: 30px;
-    margin-bottom: 1px;
+    margin-bottom: 2px;
     padding: 0;
   }
 

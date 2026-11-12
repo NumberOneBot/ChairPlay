@@ -18,6 +18,8 @@
   --text: #fff;
   --muted: #9a9aa0;
   --dim: #5c5c63;
+  /* Headings and a chosen plate's name: white over every dark tint, black over the white one */
+  --strong: #fff;
   /* The grey the fields, switches, and segmented groups are filled with, made translucent there */
   --fill: rgb(118 118 128);
 }
@@ -83,6 +85,68 @@
   --text: #e4eded;
   --muted: #869696;
   --dim: #576869;
+}
+
+/*
+ * White, the light theme (owner, 2026-11-12): iOS's light greys, a light page under white panels and fields, dark
+ * text, lines and fills of black where the dark tints have white, and the accent, orange, green, and red deepened to
+ * read on white
+ */
+:root[data-tint='white'] {
+  color-scheme: light;
+  --bg: #f2f2f7;
+  --panel: #fff;
+  --raised: #fff;
+  --bar: #f7f7fa;
+  --field: #fff;
+  --ground: #e8e8ed;
+  --line: #d1d1d6;
+  --edge: #c4c4ca;
+  /* Darker than iOS's own greys: Reddit Sans is thinner than SF on white (owner, 2026-11-12) */
+  --text: #000;
+  --muted: #45454b;
+  --dim: #74747b;
+  --strong: #000;
+  /* The accent darkened to read on white, for any ui.accent: as text by 30 % black, as a fill by 6 % (owner, 2026-11-12) */
+  --accent-text: color-mix(in srgb, var(--accent), black 30%);
+  --accent-ink: color-mix(in srgb, var(--accent), black 30%);
+  --accent-fill: color-mix(in srgb, var(--accent), black 6%);
+  --green: #1f9d45;
+  --orange: #d97a00;
+  --red: #e5332a;
+  --bad-bg: #fde8e7;
+  --warn-bg: #fdf1dc;
+  --info-bg: #e3effc;
+  --info-head: #0b6bcb;
+  --bad-code-edge: #f2b8b5;
+  --bad-code-bg: #fff5f5;
+  --bad-code-text: #7a1f1a;
+  --warn-code-edge: #efd09a;
+  --warn-code-bg: #fffaf0;
+  --warn-code-text: #6b4a10;
+  --bad-button: #f7cfcc;
+  --warn-button: #f5dfb3;
+  --info-button: #c9def6;
+}
+
+:root[data-tint='white'] .shell {
+  --well: #fff;
+  --well-edge: rgb(0 0 0 / 14%);
+  --track: rgb(0 0 0 / 6%);
+  --chosen: #fff;
+  /* The chosen plate's shadow half the dark tints' (owner, 2026-11-12), and a switch's knob's as soft and tight, so
+     it stays within the track */
+  --chosen-shadow: rgb(0 0 0 / 14%);
+  /* The toolbar's and the section list's shadows a little lighter on white than the dark tints' 22 % */
+  --float-shadow: rgb(0 0 0 / 14%);
+  --knob-shadow: 0 1px 2px rgb(0 0 0 / 18%);
+  /* A switch under the pointer moves half as far as over the dark tints (checkbox.css) */
+  --switch-hover: color-mix(in srgb, var(--fill) 22%, transparent);
+  --switch-on-hover: color-mix(in srgb, var(--accent-fill), white 10%);
+  /* A page's button in the section list under the pointer, half the dark tints' grey (nav.css) */
+  --nav-hover: color-mix(in srgb, var(--fill) 8%, transparent);
+  --hair: rgb(0 0 0 / 10%);
+  --lighten: linear-gradient(rgb(0 0 0 / 4%), rgb(0 0 0 / 4%));
 }
 
 /* A tint's text is the same on both pages, and its fill sits between its muted and dim greys */

@@ -22,6 +22,9 @@
   --accent-dark: color-mix(in srgb, var(--accent), black 12%);
   /* Text and icons on the accent's tint, light enough to read on it */
   --accent-text: color-mix(in srgb, var(--accent), white 45%);
+  /* The accent as text, links and icons, and as a solid fill: the accent itself over the dark tints (tints.css) */
+  --accent-ink: var(--accent);
+  --accent-fill: var(--accent);
   --green: #30d158;
   --orange: #ff9f0a;
   --red: #ff453a;
@@ -123,6 +126,6 @@ code {
   bottom: 0;
   z-index: 2;
   padding: 6px 12px;
-  background: #3a2a10;
+  background: var(--warn-bg);
   color: var(--orange);
 }

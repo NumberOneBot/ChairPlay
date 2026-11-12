@@ -4,11 +4,11 @@
   z-index: 1;
   /* A light plate raised off the track as iOS's chosen segment, lit along its top, its name bold; no accent in it */
   background: var(--chosen);
-  color: #fff;
+  color: var(--strong);
   font-weight: 600;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 18%),
-    0 1px 3px rgb(0 0 0 / 28%);
+    0 1px 3px var(--chosen-shadow, rgb(0 0 0 / 28%));
 }
 
 .shell .seg button:not(.on):not(:disabled):hover {
@@ -23,13 +23,29 @@
  */
 .shell .seg:has(button:disabled),
 .shell .held .seg {
-  background: rgb(255 255 255 / 5%);
+  background: color-mix(in srgb, var(--text) 5%, transparent);
   box-shadow: none;
 }
 
 .shell .seg:has(button:disabled) > button,
 .shell .held .seg > button {
   opacity: 0.45;
+}
+
+/*
+ * A group turned off shows nothing chosen (Segmented): on a held page, where its choices stay enabled, the chosen one
+ * is drawn as the others are, no plate, and its separators back (owner, 2026-11-12)
+ */
+.shell .held .seg button.on {
+  background: transparent;
+  color: var(--muted);
+  font-weight: inherit;
+  box-shadow: none;
+}
+
+.shell .held .seg button.on::before,
+.shell .held .seg button.on + button::before {
+  display: block;
 }
 
 .shell input.t:disabled,

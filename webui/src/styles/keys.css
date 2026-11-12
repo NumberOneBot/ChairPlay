@@ -11,7 +11,7 @@
 
 .shell .keys-row:hover,
 .shell .keys-row:focus-within {
-  background: rgba(255, 255, 255, 0.035);
+  background: color-mix(in srgb, var(--text) 3.5%, transparent);
 }
 
 /* A keycap as iOS's own keyboard draws one: the fields' flat gray, no outline, and a dark line of shadow under it */

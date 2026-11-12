@@ -23,13 +23,13 @@ describe('Application page', () => {
     expect(control('tab-application', 'tab').getAttribute('aria-selected')).toBe('true')
   })
 
-  it('shows slate until a tint is chosen, and saves the one chosen', async () => {
+  it('shows black until a theme is chosen, and saves the one chosen', async () => {
     const backend = await application()
-    expect(control('app-tint-slate', 'radio').getAttribute('aria-checked')).toBe('true')
+    expect(control('app-tint-black', 'radio').getAttribute('aria-checked')).toBe('true')
 
-    fireEvent.click(control('app-tint-black', 'radio'))
+    fireEvent.click(control('app-tint-slate', 'radio'))
 
-    await waitFor(() => expect(backend.saved).toEqual([{ 'ui.tint': 'black' }]))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'ui.tint': 'slate' }]))
   })
 
   it('shows the saved tint', async () => {
@@ -44,5 +44,13 @@ describe('Application page', () => {
     await application()
 
     expect(absent('app-tint-warm')).toBe(true)
+  })
+
+  it('saves white, the light theme, when it is chosen', async () => {
+    const backend = await application()
+
+    fireEvent.click(control('app-tint-white', 'radio'))
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'ui.tint': 'white' }]))
   })
 })

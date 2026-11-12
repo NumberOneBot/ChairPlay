@@ -41,9 +41,9 @@
   --track-deck: var(--row-width);
 }
 
-@container (min-width: 496px) {
+@container (min-width: 508px) {
   .shell .track-playback {
-    --track-deck: calc(4 * var(--choice) + 6px);
+    --track-deck: calc(4 * var(--choice) + 3 * var(--seg-gap) + 6px);
   }
 }
 
@@ -90,11 +90,11 @@
 .shell .track-playback .key.lead svg {
   width: 16px;
   height: 16px;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .shell .track-playback .key:hover:not(:disabled) {
-  border-color: #4a4a50;
+  border-color: color-mix(in srgb, var(--edge), var(--text) 12%);
 }
 
 .shell .track-playback .key:active:not(:disabled) {

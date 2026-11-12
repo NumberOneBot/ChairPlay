@@ -1,5 +1,22 @@
 /* Messages in a frame, their code and buttons; and links */
 
+/* A message's colours, dark ones here; the white tint has its own (tints.css) */
+:root {
+  --bad-bg: #3a1716;
+  --warn-bg: #3a2a10;
+  --info-bg: #162435;
+  --info-head: #8bc7ff;
+  --bad-code-edge: #5a2421;
+  --bad-code-bg: #240e0d;
+  --bad-code-text: #e6c4c1;
+  --warn-code-edge: #5c4318;
+  --warn-code-bg: #241a09;
+  --warn-code-text: #e8d6b8;
+  --bad-button: #552220;
+  --warn-button: #553f17;
+  --info-button: #23476b;
+}
+
 /*
  * What is wrong, shown only while it is: the problem in the message's colour, the cause and what to do under it in
  * one light grey, then its actions; a command field and its buttons drawn in the message's own colour
@@ -15,14 +32,14 @@
 }
 
 .shell .alert.bad {
-  background: #3a1716;
+  background: var(--bad-bg);
 }
 .shell .alert.warn {
-  background: #3a2a10;
+  background: var(--warn-bg);
 }
 
 .shell .alert.info {
-  background: #162435;
+  background: var(--info-bg);
 }
 
 .shell .alert .head {
@@ -30,7 +47,7 @@
 }
 
 .shell .alert.info .head {
-  color: #8bc7ff;
+  color: var(--info-head);
 }
 
 .shell .alert.bad .head {
@@ -76,14 +93,14 @@
 }
 
 .shell .alert.bad .code {
-  border-color: #5a2421;
-  background: #240e0d;
-  color: #e6c4c1;
+  border-color: var(--bad-code-edge);
+  background: var(--bad-code-bg);
+  color: var(--bad-code-text);
 }
 .shell .alert.warn .code {
-  border-color: #5c4318;
-  background: #241a09;
-  color: #e8d6b8;
+  border-color: var(--warn-code-edge);
+  background: var(--warn-code-bg);
+  color: var(--warn-code-text);
 }
 
 /* A message's buttons one width, so the fields beside them end on one line */
@@ -93,13 +110,13 @@
 }
 
 .shell .alert.bad .btn {
-  background-color: #552220;
+  background-color: var(--bad-button);
 }
 .shell .alert.warn .btn {
-  background-color: #553f17;
+  background-color: var(--warn-button);
 }
 .shell .alert.info .btn {
-  background-color: #23476b;
+  background-color: var(--info-button);
 }
 
 /* A link: a button that reads as one */
@@ -107,7 +124,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: var(--accent-ink);
   cursor: pointer;
 }
 
@@ -116,7 +133,7 @@
 .shell .alert a {
   color: var(--text);
   text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.4);
+  text-decoration-color: color-mix(in srgb, var(--text) 40%, transparent);
   text-underline-offset: 2px;
 }
 

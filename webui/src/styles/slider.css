@@ -34,7 +34,7 @@
    */
   background: linear-gradient(
     to right in srgb,
-    var(--accent) var(--level),
+    var(--accent-fill) var(--level),
     color-mix(in srgb, var(--fill) calc(8200% / 255), transparent) var(--level)
   );
 }
@@ -71,7 +71,7 @@
 .shell .slider:focus-visible::-webkit-slider-thumb {
   box-shadow:
     0 1px 3px rgb(0 0 0 / 50%),
-    0 0 0 2px var(--accent);
+    0 0 0 2px var(--accent-fill);
 }
 
 /* The level beside it, in figures that keep their width as it moves; Muted in its place, dimmer */

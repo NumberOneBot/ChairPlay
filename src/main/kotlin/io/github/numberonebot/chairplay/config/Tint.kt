@@ -1,10 +1,10 @@
 package io.github.numberonebot.chairplay.config
 
-/** ui.tint's palettes: the greys of the settings and the controls window (tints.css). */
-val TINTS = listOf("black", "graphite", "slate", "teal")
+/** ui.tint's palettes: the greys of the settings and the controls window (tints.css); white is the light theme. */
+val TINTS = listOf("black", "graphite", "slate", "teal", "white")
 
 /** The tint a new settings file gets, and what a value no palette has falls back to (owner, 2026-11-12). */
-const val DEFAULT_TINT = "slate"
+const val DEFAULT_TINT = "black"
 
 /** The controls window's greys unless ui.tint.controls lets the tint reach it. */
 const val CONTROLS_TINT = "black"

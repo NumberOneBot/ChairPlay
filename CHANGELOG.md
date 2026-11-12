@@ -17,12 +17,12 @@ New features and fixed bugs in ChairPlay.
   ChairPlay talks to the iPhone through Apple Mobile Device Service, which Apple Devices or iTunes installs, and a helper in the app's `helper` folder. Nothing else is installed on the PC.
 - **City presets** put the USB GPS car on a busy road in one of ten cities.
 - **Track playback** (**Settings > GPS**, with USB GPS) opens a GPX recording and plays it as the GPS car: Play, Pause, Stop, and the recording's time and distance. While it plays, the arrow keys and the gamepad don't move the car, and with **Drive mode** on the gauges show the recording's speed.
-- **Settings > Application > Tint** gives the settings a shade: Slate, the new default, Black, as before, Graphite, or Teal. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
+- **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Black, as before, Graphite, Slate, or Teal. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
 - The mouse's back button goes back in the CarPlay and AltScreen windows.
 
 ### Changed
 
-- **Application** takes the place of **Experiments** and holds the app's own settings: both windows' **Always on top** and **Bring to front on a call**, **Tint**, the settings browser, logs, integrations, and the HUD demo.
+- **Application** takes the place of **Experiments** and holds the app's own settings: both windows' **Always on top** and **Bring to front on a call**, **Theme**, the settings browser, logs, integrations, and the HUD demo.
 - A new install asks the iPhone for H.264 video. **Settings > CarPlay > Video codec** can still offer H.265, and settings from an earlier version keep their codec.
 - Global shortcuts leave Enter and Escape to the app that has the focus.
 - The GPS page no longer has the **Updates** row or the speed and heading switches. CarPlay GPS sends the position 4 times a second with the speed and heading. `gps.rate` and `gps.usb.rate` take any number from 1 to 20 as a hand edit, and `gps.wheel.speed` and `gps.heading.send` stay in settings.properties.

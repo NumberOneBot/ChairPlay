@@ -28,17 +28,17 @@ class UiControllerStateTest : UiControllerFixture() {
         assertEquals(true, ui.state()["controlsKeys"])
     }
 
-    // ui.tint colours both pages at once: the state carries it as saved, and slate, the default, for a value no
+    // ui.tint colours both pages at once: the state carries it as saved, and black, the default, for a value no
     // palette has (owner, 2026-11-12).
     @Test
     fun `the state carries the tint as last saved`() {
-        assertEquals("slate", controller().state()["tint"])
+        assertEquals("black", controller().state()["tint"])
 
         val ui = controller()
         ui.saveSettings(mapOf("ui.tint" to "teal"))
         assertEquals("teal", ui.state()["tint"])
 
-        assertEquals("slate", controller(settings = "wifi.ssid=Home\nui.tint=pink\n").state()["tint"])
+        assertEquals("black", controller(settings = "wifi.ssid=Home\nui.tint=pink\n").state()["tint"])
     }
 
     // The controls window keeps black unless ui.tint.controls, a hand edit only, lets the tint reach it (owner).

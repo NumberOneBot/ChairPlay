@@ -5,21 +5,34 @@
  * inside it, the others with short separators between them that stop short of the track and drop away beside the plate
  */
 .shell {
-  /* One choice's width, which the fields as wide as one take too: 90 px on a wider page, below */
-  --choice: 80px;
+  /* Between plates, odd so a separator stands in its middle with a pixel each side of it (owner, 2026-11-12) */
+  --seg-gap: 3px;
+}
+
+/*
+ * One choice's width, which the fields as wide as one take too: on a narrow page four, their gaps and the frame are as
+ * long as a row's controls (--row-width, 77.75 px each); 90 px on a wider page, below. Set where --row-width is (nav.css)
+ */
+.shell .body {
+  --choice: calc((var(--row-width) - 6px - 3 * var(--seg-gap)) / 4);
 }
 
 .shell .seg {
   display: inline-flex;
-  padding: 2px;
-  border: 1px solid transparent;
+  gap: var(--seg-gap);
+  /*
+   * 3 px round the plates and no border: under a transparent border the track's colour ran to its edge while its inner
+   * shadow began a pixel in, which drew a light ring round it (owner, 2026-11-12)
+   */
+  padding: 3px;
+  border: 0;
   /* Capsules: the 26 px track and the 20 px plates rounded by half their height */
   border-radius: 13px;
   background: var(--track);
-  box-shadow: inset 0 1px 2px rgb(0 0 0 / 10%);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 3%);
 }
 
-/* Plates line up from row to row: 80 px on a narrow page, 90 px on a wider one (see .seg.wide below) */
+/* Plates line up from row to row: one --choice each and a gap between, 90 px on a wider page (see .seg.wide below) */
 .shell .seg button {
   position: relative;
   display: flex;
@@ -37,37 +50,37 @@
 }
 
 /*
- * Where the page is narrow, an ordinary plate is 80 px, so that four and the frame are as long as a row's controls
- * (--row-width, 326 px), and every group of four choices or more is that long, a group of five squeezed into it.
- * Where the row beside the labels holds four 90 px plates, every plate is 90 px and those groups are four plates long;
- * where it holds five or six, such a group gets them all. Beside a label column of 118 + (page - 450) / 4 the row has
- * 0.75 page - 5.5 px: four plates and the frame (366 px) need a page of 496 px, five (456 px) 616 px, six (546 px)
- * 736 px.
+ * Where the page is narrow, four plates, their gaps, and the frame are as long as a row's controls (--row-width,
+ * 326 px), and every group of four choices or more is that long, a group of five squeezed into it. Where the row beside
+ * the labels holds four 90 px plates, every plate is 90 px and those groups are four plates long; where it holds five
+ * or six, such a group gets them all. Beside a label column of 118 + (page - 450) / 4 the row has 0.75 page - 5.5 px:
+ * four plates, three 3 px gaps, and the frame (375 px) need a page of 508 px, five (468 px) 632 px, six (561 px)
+ * 756 px.
  */
 .shell .seg.wide {
   box-sizing: border-box;
   width: var(--row-width);
 }
 
-@container (min-width: 496px) {
+@container (min-width: 508px) {
   .shell .page-inner > * {
     --choice: 90px;
   }
 
   .shell .seg.wide {
-    width: calc(4 * var(--choice) + 6px);
+    width: calc(4 * var(--choice) + 3 * var(--seg-gap) + 6px);
   }
 }
 
-@container (min-width: 616px) {
+@container (min-width: 632px) {
   .shell .seg.wide[data-items='5'] {
-    width: calc(5 * var(--choice) + 6px);
+    width: calc(5 * var(--choice) + 4 * var(--seg-gap) + 6px);
   }
 }
 
-@container (min-width: 736px) {
+@container (min-width: 756px) {
   .shell .seg.wide[data-items='6'] {
-    width: calc(6 * var(--choice) + 6px);
+    width: calc(6 * var(--choice) + 5 * var(--seg-gap) + 6px);
   }
 }
 
@@ -82,9 +95,9 @@
  * gaps (.ctl), as Frame rate's are; Updates has three of them
  */
 .shell .seg.half {
-  --plate: calc((2 * 44px + 9px + 2 * 6px - 6px) / 2);
+  --plate: calc((2 * 44px + 9px + 2 * 6px - 6px - var(--seg-gap)) / 2);
   box-sizing: border-box;
-  width: calc(var(--plates, 2) * var(--plate) + 6px);
+  width: calc(var(--plates, 2) * var(--plate) + (var(--plates, 2) - 1) * var(--seg-gap) + 6px);
 }
 
 .shell .seg.half[data-items='3'] {
@@ -100,18 +113,17 @@
 .shell .seg button + button::before {
   content: '';
   position: absolute;
-  left: 0;
+  /* In the middle of the gap before the plate */
+  left: calc((var(--seg-gap) + 1px) / -2);
   top: 5px;
   bottom: 5px;
   width: 1px;
   background: var(--hair);
 }
 
-/* Beside the chosen plate, and beside a plate under the pointer (owner, 2026-11-12), the separators drop away */
+/* Beside the chosen plate the separators drop away; a plate under the pointer stays clear of them across its gap */
 .shell .seg button.on::before,
-.shell .seg button.on + button::before,
-.shell .seg button:not(.on):not(:disabled):hover::before,
-.shell .seg button:not(.on):not(:disabled):hover + button::before {
+.shell .seg button.on + button::before {
   display: none;
 }
 
@@ -123,8 +135,8 @@
   box-sizing: border-box;
   display: inline-grid;
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
-  row-gap: 2px;
-  width: calc(var(--columns) * var(--choice) + 6px);
+  gap: 2px var(--seg-gap);
+  width: calc(var(--columns) * var(--choice) + (var(--columns) - 1) * var(--seg-gap) + 6px);
 }
 
 .shell .seg.rows button {
@@ -141,10 +153,10 @@
   width: var(--row-width);
 }
 
-@container (min-width: 496px) {
+@container (min-width: 508px) {
   .shell .seg.view-areas,
   .shell .area-drawing {
-    width: calc(4 * var(--choice) + 6px);
+    width: calc(4 * var(--choice) + 3 * var(--seg-gap) + 6px);
   }
 }
 
@@ -153,9 +165,9 @@
   width: var(--row-width);
 }
 
-@container (min-width: 496px) {
+@container (min-width: 508px) {
   .shell .seg.cities {
-    width: calc(4 * var(--choice) + 6px);
+    width: calc(4 * var(--choice) + 3 * var(--seg-gap) + 6px);
   }
 }
 

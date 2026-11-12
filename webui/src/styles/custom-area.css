@@ -36,14 +36,14 @@
 
 .shell .area-drawing .area {
   fill: color-mix(in srgb, var(--accent) 35%, transparent);
-  stroke: var(--accent);
+  stroke: var(--accent-fill);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
   cursor: move;
 }
 
 .shell .area-drawing .handle {
-  fill: var(--accent);
+  fill: var(--accent-fill);
 }
 
 .shell .area-drawing .handle.nw,

@@ -48,7 +48,7 @@
   flex: none;
   width: 160px;
   height: 6px;
-  accent-color: var(--accent);
+  accent-color: var(--accent-fill);
 }
 
 /* A step's error: the triangle and its reason in red, as large as the information sign */
@@ -94,6 +94,6 @@
   gap: 8px;
   margin-top: auto;
   padding: 10px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   background: var(--bg);
 }

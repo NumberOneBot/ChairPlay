@@ -23,7 +23,7 @@
 }
 
 .shell .about-name {
-  color: #fff;
+  color: var(--strong);
   font: 700 20px/26px var(--ui);
 }
 
@@ -67,6 +67,18 @@
 
 .shell .coffee-button:hover {
   background-image: var(--lighten);
+}
+
+/*
+ * The artwork is drawn for a dark ground (its black made clear by the filter): over the white tint the button keeps a
+ * dark plate, a dark tint's button, lightened when hovered (owner, 2026-11-12)
+ */
+:root[data-tint='white'] .shell .coffee-button {
+  background-color: #2a2a2e;
+}
+
+:root[data-tint='white'] .shell .coffee-button:hover {
+  background-image: linear-gradient(rgb(255 255 255 / 9%), rgb(255 255 255 / 9%));
 }
 
 .shell .coffee-button:focus-visible {

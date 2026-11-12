@@ -9,17 +9,19 @@ afterEach(() => {
 describe('applyTint', () => {
   // ui.tint picks the palette of greys the stylesheet keeps for each data-tint (tints.css).
   it('names the tint where the stylesheet reads it', () => {
-    applyTint('slate')
+    for (const tint of ['black', 'teal', 'white']) {
+      applyTint(tint)
 
-    expect(document.documentElement.dataset.tint).toBe('slate')
+      expect(document.documentElement.dataset.tint).toBe(tint)
+    }
   })
 
-  it('takes slate, the default, for a tint no palette has', () => {
+  it('takes black, the default, for a tint no palette has', () => {
     for (const tint of ['pink', 'warm']) {
       applyTint('teal')
       applyTint(tint)
 
-      expect(document.documentElement.dataset.tint).toBe('slate')
+      expect(document.documentElement.dataset.tint).toBe('black')
     }
   })
 })

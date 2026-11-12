@@ -32,7 +32,7 @@
   }
 
   .shell .seg.rows {
-    width: min(calc(var(--columns) * var(--choice) + 6px), 100%);
+    width: min(calc(var(--columns) * var(--choice) + (var(--columns) - 1) * var(--seg-gap) + 6px), 100%);
   }
 
   .shell .seg.view-areas,

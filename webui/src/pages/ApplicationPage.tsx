@@ -6,8 +6,9 @@ import { BrowserAccess } from './BrowserAccess'
 import { ExperimentsPage } from './ExperimentsPage'
 import { WindowSettings } from './WindowSettings'
 
-/** ui.tint's palettes (styles/tints.css), slate the default (DEFAULT_TINT). */
+/** ui.tint's palettes (styles/tints.css), shown as the Theme: the light one first, black the default (DEFAULT_TINT). */
 const TINTS: readonly Choice[] = [
+  ['white', 'White'],
   ['black', 'Black'],
   ['graphite', 'Graphite'],
   ['slate', 'Slate'],
@@ -23,9 +24,9 @@ export function ApplicationPage({ state, backend, settings }: { state: AppState;
     <>
       <WindowSettings settings={settings} />
       <Group title="Appearance" />
-      <Row label="Tint">
+      <Row label="Theme">
         <Segmented
-          label="Tint"
+          label="Theme"
           value={settings.value('ui.tint') || DEFAULT_TINT}
           options={TINTS}
           onChange={(tint) => settings.save({ 'ui.tint': tint })}

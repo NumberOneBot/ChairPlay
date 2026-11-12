@@ -52,7 +52,7 @@
   gap: 8px;
   margin: 0 0 4px;
   padding: 16px 0 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
   /* Whiter than a label, short of the values' white (owner, 2026-11-12) */
   color: color-mix(in srgb, var(--text) 60%, var(--muted));
   font: 700 11px/15px var(--ui);
@@ -148,7 +148,7 @@
   width: 14px;
   height: 14px;
   margin-top: calc((1lh - 14px) / 2);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .shell .errtext {
@@ -164,7 +164,7 @@
 }
 
 .shell a {
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: none;
   cursor: pointer;
 }
