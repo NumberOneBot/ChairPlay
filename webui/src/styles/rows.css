@@ -7,6 +7,9 @@
  */
 .shell .page {
   position: relative;
+  /* A column, so a page shorter than the window sits in its middle (.page-inner) */
+  display: flex;
+  flex-direction: column;
   padding: calc(var(--bar-height) + 16px) 18px 10px;
   overflow-y: scroll;
   scroll-padding-top: var(--bar-height);
@@ -18,12 +21,15 @@
 
 /*
  * In a larger window the page keeps to the middle, 760 px at most (owner, 2026-11-12), from a window of 928 px; the
- * label column (100cqw) grows with it
+ * label column (100cqw) grows with it. In a taller one it keeps to the middle of the height under the bar too: auto
+ * margins, which fall to nothing once the page is taller than the window, so it scrolls from its top as before
  */
 .shell .page-inner {
   container-type: inline-size;
+  flex: none;
+  width: 100%;
   max-width: 760px;
-  margin: 0 auto;
+  margin: auto;
 }
 
 /*
