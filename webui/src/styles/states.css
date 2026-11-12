@@ -17,15 +17,18 @@
 }
 
 /*
- * A control that does nothing now: its choices fade to 0.45, and its track stays, barely there (owner, 2026-11-12);
- * faded with the rest, it was gone on a group's card
+ * A control that does nothing now, turned off itself or on a held page (rows.css), one look for both (owner,
+ * 2026-11-12): its choices and the chosen plate fade to 0.45, once however many reasons hold it, and its track stays,
+ * barely there; faded with the rest, it was gone on a group's card
  */
-.shell .seg:has(button:disabled) {
+.shell .seg:has(button:disabled),
+.shell .held .seg {
   background: rgb(255 255 255 / 5%);
   box-shadow: none;
 }
 
-.shell .seg:has(button:disabled) > button {
+.shell .seg:has(button:disabled) > button,
+.shell .held .seg > button {
   opacity: 0.45;
 }
 
