@@ -13,8 +13,9 @@ const DOT = { ok: 'ok', busy: 'busy', warn: 'warn', idle: '' } as const
 /**
  * The bar over every page: CarPlay and the app's other windows at the left, which act on the app's own windows only
  * (a tab never shows CarPlay itself); at the right what waits for a restart, where the connection stands, and Connect,
- * or Reconnect and Disconnect once connecting has begun. In a narrow window the window buttons show their icons alone,
- * and the status gives way before the buttons do.
+ * or Reconnect and Disconnect once connecting has begun, Reconnect ringed in orange while changes wait for it (owner,
+ * 2026-11-12). In a narrow window the window buttons show their icons alone, and the status gives way before the
+ * buttons do.
  */
 export function Toolbar({ state, backend, guide }: { state: AppState; backend: Backend; guide?: Steps | null }) {
   const session = state.canShowCarPlay
@@ -47,15 +48,7 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
       <WindowButton state={state} backend={backend} name="altscreen" label="AltScreen" icon={<AltScreenIcon />} />
       <WindowButton state={state} backend={backend} name="controls" label="Controls" icon={<ControlsIcon />} />
       <span className="grow" />
-      {/* The signs alone: at 640 px "Restart needed" and the connection's status never shared the bar whole */}
-      {reconnect.length > 0 && (
-        <PendingMark
-          what="reconnect"
-          className="pending"
-          label="Reconnect needed"
-          title={`Reconnect to apply: ${reconnect.join(', ')}`}
-        />
-      )}
+      {/* The sign alone: at 640 px "Restart needed" and the connection's status never shared the bar whole */}
       {restart.length > 0 && (
         <PendingMark
           what="restart"
@@ -64,7 +57,7 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
           title={`Restart ChairPlay to apply: ${restart.join(', ')}`}
         />
       )}
-      {(reconnect.length > 0 || restart.length > 0) && <span className="sep" />}
+      {restart.length > 0 && <span className="sep" />}
       <span className="chip" title={status.detail}>
         <span className={`dot ${DOT[status.tone]}`} />
         <b>{status.title}</b>
@@ -84,9 +77,15 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
         <>
           <button
             type="button"
-            className="btn icon"
+            className="btn icon reconnect"
             aria-label="Reconnect"
-            title={`Reconnect: end the session and connect again${reconnectKey ? ` (${keyLabel(reconnectKey)})` : ''}`}
+            data-testid="tb-reconnect"
+            data-pending={reconnect.length > 0 || undefined}
+            title={
+              reconnect.length > 0
+                ? `Reconnect to apply: ${reconnect.join(', ')}${reconnectKey ? ` (${keyLabel(reconnectKey)})` : ''}`
+                : `Reconnect: end the session and connect again${reconnectKey ? ` (${keyLabel(reconnectKey)})` : ''}`
+            }
             onClick={() => backend.reconnect()}
           >
             <ReconnectIcon />

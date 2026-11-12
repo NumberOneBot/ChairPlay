@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { appState } from '../testing'
+import { appState, control } from '../testing'
 import { FakeBackend } from '../fakeBackend'
 import { sectionOf } from './sections'
 import { Shell } from './Shell'
@@ -148,14 +148,20 @@ describe('Shell toolbar', () => {
     expect(screen.queryByRole('img', { name: 'Reconnect needed' })).toBeNull()
   })
 
-  // A change for the next connection is marked in the bar too, as at its field: ⟳, not the restart's sign.
-  it('says in the toolbar when changes wait for the next connection', () => {
+  // A change for the next connection lights the bar's Reconnect button, with no mark of its own (owner, 2026-11-12).
+  it('lights Reconnect in the toolbar when changes wait for the next connection', () => {
     render(<Shell state={appState({ ...live, reconnectPending: ['display.physical.width.mm'] })} backend={new FakeBackend()} />)
 
     const bar = within(screen.getByRole('banner'))
-    expect(bar.getByRole('img', { name: 'Reconnect needed' })).toBeTruthy()
-    expect(bar.getByTestId('reconnect-mark')).toBeTruthy()
+    expect(control('tb-reconnect', 'button').dataset.pending).toBe('true')
+    expect(bar.queryByTestId('reconnect-mark')).toBeNull()
     expect(bar.queryByTestId('restart-mark')).toBeNull()
+  })
+
+  it('leaves Reconnect unlit while nothing waits for the next connection', () => {
+    render(<Shell state={appState(live)} backend={new FakeBackend()} />)
+
+    expect(control('tb-reconnect', 'button').dataset.pending).toBeUndefined()
   })
 })
 

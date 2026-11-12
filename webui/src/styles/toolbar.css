@@ -211,6 +211,16 @@
   padding: 0;
 }
 
+/*
+ * Reconnect while changes wait for the next connection: a 1.5 px ring 1.5 px off it in the orange dimmed as the thin ⟳
+ * it replaces looked, in place of that mark in the bar (owner, 2026-11-12); 3 px out in all, the narrow bar's 3 px
+ * above and below
+ */
+.shell .tb .btn.reconnect[data-pending] {
+  outline: 1.5px solid color-mix(in srgb, var(--orange) 86%, black);
+  outline-offset: 1.5px;
+}
+
 /* Connect when Get started's last step points to it: a ring and a glow in the accent colour */
 .shell .tb .btn.primary.lit {
   box-shadow:
