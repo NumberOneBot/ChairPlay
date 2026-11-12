@@ -16,10 +16,13 @@
   margin-top: var(--bar-height);
 }
 
-/* In a larger window the page keeps to the middle; the label column (100cqw) grows with it */
+/*
+ * In a larger window the page keeps to the middle, 760 px at most (owner, 2026-11-12), from a window of 928 px; the
+ * label column (100cqw) grows with it
+ */
 .shell .page-inner {
   container-type: inline-size;
-  max-width: 824px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
