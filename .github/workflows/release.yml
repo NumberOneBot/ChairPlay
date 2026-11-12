@@ -115,13 +115,27 @@ jobs:
           }
           if (Test-Path -LiteralPath $staging) { Remove-Item -LiteralPath $staging -Force }
 
+      # Beside each download its SHA-256 as sha256sum writes it ("<hash>  <name>", LF): `sha256sum -c` checks it, and
+      # Windows' Get-FileHash shows the same hash.
+      - name: Write the SHA-256 files
+        shell: pwsh
+        run: |
+          foreach ($file in @("build/installer/ChairPlay-$env:VERSION-setup.exe", "build/portable/ChairPlay-$env:VERSION-portable.zip")) {
+            # A full path: .NET resolves a relative one against its own directory, not PowerShell's
+            $path = (Resolve-Path -LiteralPath $file).Path
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $path).Hash.ToLowerInvariant()
+            $name = Split-Path -Leaf $path
+            [System.IO.File]::WriteAllText("$path.sha256", "$hash  $name`n", [System.Text.Encoding]::ASCII)
+            "$hash  $name"
+          }
+
       - name: Draft the release
         if: github.event_name == 'push'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $ghArgs = @('release', 'create', $env:GITHUB_REF_NAME, "build/installer/ChairPlay-$env:VERSION-setup.exe", "build/portable/ChairPlay-$env:VERSION-portable.zip", '--draft', '--title', $env:GITHUB_REF_NAME, '--notes=')
+          $ghArgs = @('release', 'create', $env:GITHUB_REF_NAME, "build/installer/ChairPlay-$env:VERSION-setup.exe", "build/installer/ChairPlay-$env:VERSION-setup.exe.sha256", "build/portable/ChairPlay-$env:VERSION-portable.zip", "build/portable/ChairPlay-$env:VERSION-portable.zip.sha256", '--draft', '--title', $env:GITHUB_REF_NAME, '--notes=')
           # 0.x and a pre-release such as 1.1.0-rc1 are marked so: the update check offers stable releases only.
           if ($env:VERSION.StartsWith('0.') -or $env:VERSION.Contains('-')) { $ghArgs += '--prerelease' }
           gh @ghArgs
@@ -132,7 +146,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ChairPlay-0.0.0-setup
-          path: build/installer/ChairPlay-0.0.0-setup.exe
+          path: |
+            build/installer/ChairPlay-0.0.0-setup.exe
+            build/installer/ChairPlay-0.0.0-setup.exe.sha256
           if-no-files-found: error
 
       - name: Keep the dry run's portable zip
@@ -140,5 +156,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ChairPlay-0.0.0-portable
-          path: build/portable/ChairPlay-0.0.0-portable.zip
+          path: |
+            build/portable/ChairPlay-0.0.0-portable.zip
+            build/portable/ChairPlay-0.0.0-portable.zip.sha256
           if-no-files-found: error
