@@ -23,11 +23,13 @@ A website for ChairPlay with step-by-step guides to connecting the iPhone, troub
 ## 1.2 to 1.4: early versions for new platforms
 
 - **ChairPlay for macOS:** a first working version for Macs with Apple silicon.
+- **ChairPlay for Linux:** a first working version for Ubuntu 22.04+, Debian 12+, Linux Mint, and other systems built on them.
 - **CouchPlay:** a separate app for Android TV and Google TV. One CarPlay screen with music, navigation, and Siri, controlled with the TV remote, and calls when the TV has a microphone. No AltScreen, HUD, or GPS simulation.
+- **Package managers:** install and update ChairPlay with winget, Chocolatey, and Scoop.
 
 ## Later: 1.5+
 
-- **Android Auto:** Android phones in the same ChairPlay app.
 - **USB CarPlay:** CarPlay over a USB cable, besides wireless.
+- **Android Auto:** Android phones in the same ChairPlay app.
 
 Ideas and requests are welcome: open an [issue](https://github.com/NumberOneBot/ChairPlay/issues/new).
