@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { appState, control } from '../testing'
 import { FakeBackend } from '../fakeBackend'
 import { sectionOf } from './sections'
@@ -162,6 +162,35 @@ describe('Shell toolbar', () => {
     render(<Shell state={appState(live)} backend={new FakeBackend()} />)
 
     expect(control('tb-reconnect', 'button').dataset.pending).toBeUndefined()
+  })
+})
+
+describe('Section list', () => {
+  // The tab already chosen takes its page back to the top; another tab only opens its page (owner, 2026-11-12).
+  it('scrolls the page to the top when its own tab is clicked again', () => {
+    render(<Shell state={appState(live)} backend={new FakeBackend()} />)
+    fireEvent.click(control('tab-keyboard', 'tab'))
+    const page = screen.getByRole('tabpanel')
+    const scrollTo = vi.fn()
+    page.scrollTo = scrollTo as typeof page.scrollTo
+
+    fireEvent.click(control('tab-audio', 'tab'))
+    expect(scrollTo).not.toHaveBeenCalled()
+
+    fireEvent.click(control('tab-audio', 'tab'))
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+  })
+
+  // Every page opens at its top, not where the page before it was scrolled to (owner, 2026-11-12).
+  it('opens each page at its top', () => {
+    render(<Shell state={appState(live)} backend={new FakeBackend()} />)
+    const page = screen.getByRole('tabpanel')
+    let top = 300
+    Object.defineProperty(page, 'scrollTop', { configurable: true, get: () => top, set: (value: number) => { top = value } })
+
+    fireEvent.click(control('tab-keyboard', 'tab'))
+
+    expect(top).toBe(0)
   })
 })
 
