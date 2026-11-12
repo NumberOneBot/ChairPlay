@@ -5,19 +5,25 @@ import io.github.numberonebot.chairplay.config.isVisibleOn
 import org.lwjgl.glfw.GLFW.*
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Requests may come from WebView; all native changes stay on the window's event thread. */
+/**
+ * Requests may come from WebView; all native changes stay on the window's event thread. The settings page cannot show
+ * over full screen (its web view is a child window the full-screen picture leaves out): while it is to show
+ * ([uiShown]) the window leaves full screen for its own size, and F does nothing until CarPlay shows again; back on
+ * CarPlay the window stays as it is until F (owner, 2026-11-12).
+ */
 internal class WindowFullscreen {
     private val requests = AtomicInteger()
     fun toggle() { requests.incrementAndGet() }
 
-    fun apply(window: Long, tracker: PlacementTracker) {
+    fun apply(window: Long, tracker: PlacementTracker, uiShown: Boolean = false) {
         // GLFW leaves full screen itself when its monitor is unplugged.
         if (tracker.suspended && glfwGetWindowMonitor(window) == 0L) restore(window, tracker)
-        if (requests.getAndSet(0) % 2 == 0) return
+        val toggled = requests.getAndSet(0) % 2 != 0
         if (glfwGetWindowMonitor(window) != 0L) {
-            restore(window, tracker)
+            if (toggled || uiShown) restore(window, tracker)
             return
         }
+        if (!toggled || uiShown) return
         val monitors = glfwGetMonitors() ?: return
         val handles = (0 until monitors.limit()).map { monitors[it] }
         val areas = handles.map { monitor ->

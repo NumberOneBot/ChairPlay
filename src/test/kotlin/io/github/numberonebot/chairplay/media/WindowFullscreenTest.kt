@@ -14,6 +14,53 @@ class WindowFullscreenTest {
         assertNull(fullscreenMonitor(ScreenArea(0, 0, 800, 480), emptyList()))
     }
 
+    // The settings cannot show over full screen: CarPlay asking for them, or the start screen, takes the window back to
+    // its own size, and F waits while they show (owner, 2026-11-12).
+    @Test fun `the settings take the window out of full screen and keep it out`() = withWindow { window, tracker ->
+        glfwPollEvents()
+        val saved = tracker.placement()
+        val fullscreen = WindowFullscreen()
+        fullscreen.toggle()
+        fullscreen.apply(window, tracker, uiShown = false)
+        glfwPollEvents()
+        assertNotEquals(0L, glfwGetWindowMonitor(window))
+
+        fullscreen.apply(window, tracker, uiShown = true)
+        glfwPollEvents()
+        assertEquals(0L, glfwGetWindowMonitor(window))
+        assertEquals(saved, tracker.placement())
+
+        fullscreen.toggle()
+        fullscreen.apply(window, tracker, uiShown = true)
+        glfwPollEvents()
+        assertEquals(0L, glfwGetWindowMonitor(window))
+
+        // Back on CarPlay the window stays as it is until F
+        fullscreen.apply(window, tracker, uiShown = false)
+        glfwPollEvents()
+        assertEquals(0L, glfwGetWindowMonitor(window))
+    }
+
+    private fun withWindow(test: (Long, PlacementTracker) -> Unit) {
+        assertTrue(glfwInit())
+        try {
+            glfwDefaultWindowHints()
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
+            glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
+            val window = glfwCreateWindow(800, 480, "Fullscreen test", 0, 0)
+            assertNotEquals(0L, window)
+            try {
+                glfwSetWindowPos(window, 100, 100)
+                test(window, PlacementTracker(window, false))
+            } finally {
+                glfwFreeCallbacks(window)
+                glfwDestroyWindow(window)
+            }
+        } finally {
+            glfwTerminate()
+        }
+    }
+
     @Test fun `native fullscreen preserves normal and maximized placement`() {
         assertTrue(glfwInit())
         try {

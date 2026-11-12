@@ -22,8 +22,9 @@ class WindowCommands internal constructor(private val wake: () -> Unit, private 
     /** Apply a saved preference before the newly created window is shown. */
     internal fun open(window: Long) = applyTopmost(window)
 
-    internal fun apply(window: Long, tracker: PlacementTracker) {
-        fullscreen.apply(window, tracker)
+    /** [uiShown]: the settings page is to cover the window, which then leaves full screen (WindowFullscreen). */
+    internal fun apply(window: Long, tracker: PlacementTracker, uiShown: Boolean = false) {
+        fullscreen.apply(window, tracker, uiShown)
         applyTopmost(window)
         flashing.getAndSet(null)?.let { on -> runCatching { hooks.flash(window, on) } }
     }

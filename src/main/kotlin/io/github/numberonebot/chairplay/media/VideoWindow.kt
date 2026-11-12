@@ -408,7 +408,7 @@ class VideoWindow(
         glfwMakeContextCurrent(window)
         GL.setCapabilities(capabilities)
         val gl = checkNotNull(gl)
-        tracker?.let { commands.apply(window, it) }
+        tracker?.let { commands.apply(window, it, uiShown = child?.covers == true) }
         if (minimizing.getAndSet(false)) glfwIconifyWindow(window)
         shownRequest.getAndSet(null)?.let { applyShown(window, it) }
         streamRequest.getAndSet(null)?.let { size ->
