@@ -14,6 +14,27 @@ async function about(backend = new FakeBackend()) {
   return backend
 }
 
+describe('About page, a newer release', () => {
+  // The release the last check found stays offered on About after its dialog is gone, while it is newer than this
+  // build; Download opens the latest release's page (owner, 2026-11-12).
+  it('offers the release the last check found, and opens the latest release', async () => {
+    const backend = new FakeBackend()
+    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true, updateAvailable: '1.1.1' })} backend={backend} />)
+    fireEvent.click(control('tab-about', 'tab'))
+
+    fireEvent.click(control('app-update-download', 'button'))
+
+    expect(backend.opened).toEqual(['latest-release'])
+  })
+
+  it('offers nothing while no newer release was found', () => {
+    render(<Shell state={appState({ phase: 'active', canShowCarPlay: true })} backend={new FakeBackend()} />)
+    fireEvent.click(control('tab-about', 'tab'))
+
+    expect(absent('app-update-download')).toBe(true)
+  })
+})
+
 describe('About page', () => {
   // Which build this is, the update checks, and help never wait for the settings; the update switch does.
   it('shows the build, the update checks, and help before the settings are in', () => {

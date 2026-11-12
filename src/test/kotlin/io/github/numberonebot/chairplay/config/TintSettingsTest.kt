@@ -5,19 +5,19 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files
 
-/** ui.tint: the greys of the settings and the controls window, black unless chosen (owner, 2026-11-12). */
+/** ui.tint: the greys of the settings and the controls window, slate unless chosen (owner, 2026-11-12). */
 class TintSettingsTest {
     @Test
-    fun `a new settings file and an older one both get black`() {
+    fun `a new settings file and an older one both get slate`() {
         val fresh = Files.createTempDirectory("tint-fresh")
         DesktopConfig(fresh)
-        assertEquals("black", SettingsFile(fresh.resolve("settings.properties")).read()["ui.tint"])
+        assertEquals("slate", SettingsFile(fresh.resolve("settings.properties")).read()["ui.tint"])
 
         val older = Files.createTempDirectory("tint-older")
         val file = SettingsFile(older.resolve("settings.properties"))
         file.write(mapOf("ui.autoconnect" to "false"))
         DesktopConfig(older)
-        assertEquals("black", file.read()["ui.tint"])
+        assertEquals("slate", file.read()["ui.tint"])
     }
 
     @Test

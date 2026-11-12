@@ -17,7 +17,7 @@ This is a release candidate: it is meant for testing before 1.1.0. Report what d
   ChairPlay talks to the iPhone through Apple Mobile Device Service, which Apple Devices or iTunes installs. Nothing else is installed on the PC.
 - **City presets** put the USB GPS car on a busy road in one of ten cities.
 - **Track playback.** With USB GPS, **Settings > GPS** opens a GPX recording and plays it as the GPS car, with Play, Pause, Stop, and the recording's time and distance.
-- **Theme.** **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Black, as before, Graphite, Slate, or Teal.
+- **Theme.** **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Slate, the new default, Black, as before, Graphite, or Teal.
 - **New look.** The toolbar is translucent and the page scrolls under it, the list of pages floats beside the page, and a page shorter than the window sits in its middle.
 - **Application** takes the place of **Experiments** and holds the app's own settings: the windows, **Theme**, the settings browser, logs, integrations, and the HUD demo.
 - **Mouse.** The mouse's back button goes back in the CarPlay and AltScreen windows.

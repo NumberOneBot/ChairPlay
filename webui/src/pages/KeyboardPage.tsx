@@ -189,7 +189,8 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
 
   return (
     <div className="keyboard">
-      <Group title="General" />
+      {/* As Audio's Music group: the one setting here that waits (keyboard.text.input), named */}
+      <Group title="General" note="Type in CarPlay applies at the next connection" />
       <GlobalShortcuts data={data} state={state} save={save} error={errors['global.enabled']} />
       <TextInputSettings state={state} settings={settings} />
       <Row title="Hold Alt to see them for a moment">

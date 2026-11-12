@@ -4,6 +4,7 @@ import io.github.numberonebot.chairplay.gps.DeveloperToolsStore
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.platform.SystemPage
+import io.github.numberonebot.chairplay.update.LATEST_RELEASE_PAGE
 import java.net.URLEncoder
 import java.nio.file.Files
 
@@ -51,6 +52,7 @@ internal class UiPlaces(
         "buy-me-a-coffee" -> "https://www.buymeacoffee.com/alexstrelets"
         "source" -> PROJECT
         "releases" -> "$PROJECT/releases"
+        "latest-release" -> LATEST_RELEASE_PAGE
         "diplay" -> "https://github.com/shihabal3amri/DiPlay"
         "xcertplay" -> "https://github.com/shilapi/xcertplay"
         "livi" -> "https://github.com/f-io/LIVI"
@@ -101,7 +103,7 @@ internal class UiPlaces(
         /** The names the page may give ([open]). */
         val PLACES = listOf(
             "bluetooth", "wifi", "firewall", "firewall-rules", "mfi-folder", "location",
-            "issues", "discussions", "pull-requests", "author", "source", "releases", "notices", "diplay", "xcertplay", "livi", "rgi",
+            "issues", "discussions", "pull-requests", "author", "source", "releases", "latest-release", "notices", "diplay", "xcertplay", "livi", "rgi",
             "logs", "screenshots", "buy-me-a-coffee", "developer-tools", "apple-devices", "apple-devices-app",
         )
 

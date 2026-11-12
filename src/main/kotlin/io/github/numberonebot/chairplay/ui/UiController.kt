@@ -7,6 +7,7 @@ import io.github.numberonebot.chairplay.config.WindowSize
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
 import io.github.numberonebot.chairplay.platform.Platforms
+import io.github.numberonebot.chairplay.update.newerRelease
 import java.time.format.DateTimeFormatter
 
 /**
@@ -130,6 +131,9 @@ class UiController(
     /** Tells the page that the live setup checks found a change. */
     fun setupChanged() = changed()
 
+    /** An update check found [version], [published] that day, as the latest release: kept, and offered on About. */
+    fun updateFound(version: String, published: java.time.LocalDate?) = settingsApi.rememberLatest(version, published)
+
     /** Tells the GPS page that the car, the iPhone's listening or the method in force changed. */
     fun gpsChanged() {
         settingsApi.gpsChanged()
@@ -243,6 +247,7 @@ class UiController(
             "setupDone" to setupDone,
             *settingsApi.appearance(setup.accent),
             "about" to places.aboutPage,
+            "updateAvailable" to newerRelease(values[LATEST_RELEASE], about.version, values[LATEST_RELEASE_DATE], about.app?.date),
             "reconnectPending" to state.reconnectPending.sorted(),
             "restartPending" to state.restartPending.sorted(),
             "setup" to setupState(setup, checks, values),

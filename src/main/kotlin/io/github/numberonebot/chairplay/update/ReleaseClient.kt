@@ -7,6 +7,9 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 /**
  * ChairPlay versions: X.Y.Z, or a pre-release of it, X.Y.Z-<label><n> such as 1.1.0-rc1, optionally prefixed by v in
@@ -44,6 +47,9 @@ internal data class ReleaseVersion(
     }
 }
 
+/** A stable release: its version and the day GitHub published it (UTC), null when the response gives none. */
+internal data class Release(val version: ReleaseVersion, val published: LocalDate?)
+
 /** GitHub's latest published, stable release; no account or token is needed for this public repository. */
 internal class ReleaseClient(
     private val endpoint: URI = URI("https://api.github.com/repos/NumberOneBot/ChairPlay/releases/latest"),
@@ -51,7 +57,7 @@ internal class ReleaseClient(
 ) {
     private val http by lazy { HttpClient.newBuilder().connectTimeout(timeout).build() }
 
-    fun latest(): ReleaseVersion? {
+    fun latest(): Release? {
         val request = HttpRequest.newBuilder(endpoint).timeout(timeout)
             .header("Accept", "application/vnd.github+json")
             .header("User-Agent", "ChairPlay-update-check")
@@ -61,6 +67,9 @@ internal class ReleaseClient(
         check(response.statusCode() == 200) { "GitHub returned HTTP ${response.statusCode()}" }
         val release = Json.parse(response.body()) as? Map<*, *> ?: error("Invalid release response")
         check(release["draft"] == false && release["prerelease"] == false) { "Not a stable published release" }
-        return ReleaseVersion.parse(release["tag_name"] as? String ?: error("Missing release version"))
+        val version = ReleaseVersion.parse(release["tag_name"] as? String ?: error("Missing release version"))
+        val published = (release["published_at"] as? String)
+            ?.let { runCatching { Instant.parse(it).atZone(ZoneOffset.UTC).toLocalDate() }.getOrNull() }
+        return Release(version, published)
     }
 }

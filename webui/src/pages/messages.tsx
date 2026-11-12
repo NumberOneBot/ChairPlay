@@ -59,6 +59,18 @@ function GuideLink({ onShowGuide }: { onShowGuide?: () => void }) {
   )
 }
 
+/**
+ * The iPhone answered over Bluetooth and is joining the Wi-Fi, while no attempt has failed yet: said at once rather
+ * than only after the attempt times out; after a failure the error stays in its place (owner, 2026-11-12).
+ */
+export function JoiningMessage({ state }: { state: AppState }) {
+  if (state.phase !== 'joining' || state.error) return null
+  const text = state.knownIphone
+    ? 'Waiting for it to join the Wi-Fi.'
+    : 'Waiting for it to join the Wi-Fi. Accept CarPlay on the iPhone if it asks.'
+  return <Message tone="info" head="The iPhone answered over Bluetooth." text={text} testId="joining-message" />
+}
+
 /** The bring-up's last error, until a session is active; the raw message is its tooltip. */
 export function ErrorMessage({
   state,
@@ -76,9 +88,11 @@ export function ErrorMessage({
   if (kind === 'mfi' && !setup.mfiPresent) return null
   if (kind === 'bluetooth' && !setup.pairedIphone) return null
   const messages: Record<ErrorKind, [head: string, text: string, actions: ReactNode]> = {
+    // Most often the network's settings; the iPhone also stays off it when CarPlay with this PC is turned off on it
+    // (owner, 2026-11-12).
     join: [
-      "The iPhone didn't join the Wi-Fi.",
-      'It answered over Bluetooth but did not come onto the network. Check the network and the password below, and that this PC is on that network.',
+      "The iPhone answered over Bluetooth but didn't join the Wi-Fi.",
+      'Check the network and the password below, and that this PC is on that network. Or turn on CarPlay with this PC on the iPhone, in Settings > General > CarPlay.',
       null,
     ],
     bluetooth: [

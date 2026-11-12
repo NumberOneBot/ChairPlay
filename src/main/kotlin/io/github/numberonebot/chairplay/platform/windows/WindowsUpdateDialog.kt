@@ -19,7 +19,8 @@ internal object WindowsUpdateDialog {
     fun show(result: UpdateResult): Boolean {
         val (heading, text) = when (result) {
             is UpdateResult.Available -> "ChairPlay ${result.latest} is available" to
-                "You have version ${result.current}. Open the releases page on GitHub to download the update."
+                (result.current?.let { "You have version $it." } ?: "You have a development build from ${result.built}.") +
+                " Open the releases page on GitHub to download the update."
             UpdateResult.Current -> "ChairPlay is up to date" to "No newer release is available"
             UpdateResult.Failed -> "Couldn't check for updates" to "Check your internet connection and try again"
             UpdateResult.Development -> "This is a development build" to

@@ -35,10 +35,17 @@
   margin-left: 10px;
 }
 
+/* The coffee button under the author's name, not beside it (owner, 2026-11-12) */
 .shell .about .author-credit .ctl {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* Its label beside the name, the button's line below them */
+.shell .about .author-credit > label {
+  align-self: start;
 }
 
 .shell .coffee-button {

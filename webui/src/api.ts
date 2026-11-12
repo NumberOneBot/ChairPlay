@@ -38,6 +38,7 @@ export type WindowsPlace =
   | 'buy-me-a-coffee'
   | 'source'
   | 'releases'
+  | 'latest-release'
   | 'notices'
   | 'location'
   | 'diplay'
@@ -172,6 +173,8 @@ export interface AppState {
   tint: string
   /** The controls window's palette: ui.tint when ui.tint.controls (a hand edit) is true, black otherwise. */
   controlsTint: string
+  /** The release the last update check found (updates.latest), while it is newer than this build; null otherwise. */
+  updateAvailable: string | null
   /** Which build this is: this repository's commit and the DiPlay core's; null for one the build did not record. */
   about: {
     /** The release, X.Y.Z; null for a development build. */

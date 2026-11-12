@@ -86,7 +86,12 @@ class ChairPlayUi(
 ) : Closeable, UiSessions {
     val model = UiModel(config.wifi != null, config.autoconnect, config.autoshow, setupDone = SetupStore(dir).done())
     private val settingsFile = SettingsFile(dir.resolve(DesktopConfig.SETTINGS_FILE))
-    private val updates = UpdateChecks(BuildInfo.load().version, log = log)
+    // A release found stays for the About page (updates.latest), called on the check's worker once the UI is up. A build
+    // without a version compares by its commit's day (owner, 2026-11-12).
+    private val updates = BuildInfo.load().let { build ->
+        UpdateChecks(build.version, built = build.app?.date?.let { runCatching { java.time.LocalDate.parse(it) }.getOrNull() },
+            remember = { controller.updateFound(it.version.toString(), it.published) }, log = log)
+    }
 
     /** Called once the app's windows are open; the network request runs on its own daemon thread. */
     fun checkUpdatesAtStart() = updates.start(!settingsFile.read()["updates.check.on.start"].orEmpty().trim().equals("false", true))

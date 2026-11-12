@@ -3,8 +3,8 @@ import { Group, Row, Switch, type Choice } from '../shell/controls'
 import { Field, PasswordField, Select } from '../shell/fields'
 import { InfoIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
-import { ErrorMessage, SetupMessages } from './messages'
-import { Changed, pendingOf } from './parts'
+import { ErrorMessage, JoiningMessage, SetupMessages } from './messages'
+import { Changed, parts, pendingOf } from './parts'
 import { NetworkConnection, showNetworkConnection, WifiHidden } from './NetworkConnection'
 import { useSetupChecks } from '../setup/useSetupChecks'
 
@@ -61,6 +61,7 @@ export function ConnectionPage(props: {
   )
   return (
     <>
+      <JoiningMessage state={state} />
       <ErrorMessage state={state} backend={backend} onShowGuide={props.onShowGuide} />
       <SetupMessages state={state} backend={backend} onShowGuide={props.onShowGuide} />
       {showNetworkConnection(state) && <>
@@ -93,7 +94,11 @@ export function ConnectionPage(props: {
         />
         {later('wifi.passphrase')}
       </Row>
-      <Group title="iPhone" />
+      {/* Show CarPlay on connect applies at once; the rest of the group after a restart */}
+      <Group
+        title="iPhone"
+        note={parts(settings).note(['device.name', 'iphone.address', 'iphone.join.seconds', 'ui.autoconnect'])}
+      />
       {state.setup.pairedIphone ? (
         <Row label="Paired iPhone">
           <span>{state.setup.pairedIphone}</span>

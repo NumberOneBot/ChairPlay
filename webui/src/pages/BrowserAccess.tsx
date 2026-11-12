@@ -7,13 +7,13 @@ import { Group, Message, Row, Switch } from '../shell/controls'
 import { BrowserIcon } from '../shell/icons'
 import { PrefixField } from '../shell/PrefixField'
 import type { Settings } from '../shell/useSettings'
-import { Changed, pendingOf } from './parts'
+import { Changed, parts, pendingOf } from './parts'
 
 export function BrowserAccess({ state, backend, settings }: { state: AppState; backend: Backend; settings: Settings }) {
   const { port, configuredPort, network, urls } = state.uiServer
   return (
     <>
-      <Group title="Settings browser" />
+      <Group title="Settings browser" note={parts(settings).note(['ui.port', 'ui.network'])} />
       {/* configuredPort 0 (CHAIRPLAY_UI_PORT=0) asks for any free port, so none was taken from it. */}
       {configuredPort > 0 && port !== configuredPort && (
         <Message

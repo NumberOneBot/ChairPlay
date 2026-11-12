@@ -3,10 +3,22 @@ import icon from '@icons/chairplay-256.png'
 import coffeeButton from '../assets/buy-me-a-coffee-dark.png'
 import type { ReactNode } from 'react'
 import type { AppState, Backend, BuildCommit, WindowsPlace } from '../api'
-import { Group, Row } from '../shell/controls'
+import { Group, Message, Row } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
 import { CopyButton } from './messages'
 import { UpdateSettings } from './UpdateSettings'
+
+/** An arrow down into a tray, for Download: in the shell's icons' line (icons.tsx), used here alone. */
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 2.2v8M4.6 7 8 10.4 11.4 7" />
+        <path d="M2.5 10.8v1.7a1.3 1.3 0 0 0 1.3 1.3h8.4a1.3 1.3 0 0 0 1.3-1.3v-1.7" />
+      </g>
+    </svg>
+  )
+}
 
 function Commit({ commit }: { commit: BuildCommit | null }) {
   if (!commit) return <span className="hint">Not recorded</span>
@@ -38,7 +50,22 @@ export function Version({ state, backend, settings }: { state: AppState; backend
   return (
     <>
       <Group title="Version" />
+      {/* The release the last check found, kept after its dialog is gone, while it is newer (owner, 2026-11-12) */}
+      {state.updateAvailable && (
+        <Message tone="info" head={`ChairPlay ${state.updateAvailable} is available.`}
+          text="Download it from its release page on GitHub.">
+          <div className="acts">
+            <button type="button" className="btn small" title="Open the latest release on GitHub"
+              data-testid="app-update-download" onClick={() => backend.open('latest-release')}>
+              <DownloadIcon />
+              Download
+            </button>
+          </div>
+        </Message>
+      )}
       <div className="about">
+        {/* The update switch and Check now first, the build's own figures under them (owner, 2026-11-12) */}
+        <UpdateSettings backend={backend} settings={settings} />
         <Row label="Build">
           {state.about.version && `${state.about.version} · `}
           <Commit commit={state.about.app} />
@@ -46,7 +73,6 @@ export function Version({ state, backend, settings }: { state: AppState; backend
         <Row label="DiPlay core">
           <Commit commit={state.about.core} />
         </Row>
-        <UpdateSettings backend={backend} settings={settings} />
       </div>
     </>
   )

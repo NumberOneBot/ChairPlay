@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '../api'
 import { Shell } from '../shell/Shell'
-import { appState } from '../testing'
+import { absent, appState, control } from '../testing'
 import { FakeBackend } from '../fakeBackend'
 
 afterEach(() => {
@@ -267,5 +267,24 @@ describe('Connection page, messages', () => {
     await connection(appState({ ...live, error: { message: 'RFCOMM connect failed', at: '14:02:11' } }))
 
     expect(screen.queryAllByRole('alert')).toEqual([])
+  })
+
+  // The iPhone answered over Bluetooth and is joining the Wi-Fi: said at once, not only once the attempt has failed;
+  // after a failure its error stays instead (owner, 2026-11-12).
+  it('says the iPhone answered while it joins the Wi-Fi, before any attempt failed', async () => {
+    await connection(appState({ phase: 'joining', knownIphone: true }))
+    expect(control('joining-message', 'status')).toBeTruthy()
+    cleanup()
+
+    const error = { message: 'Bluetooth control ended TIMEOUT before the iPhone joined over Wi-Fi', at: '14:02:11' }
+    await connection(appState({ phase: 'joining', knownIphone: true, error }))
+    expect(absent('joining-message')).toBe(true)
+    cleanup()
+
+    for (const phase of ['starting', 'calling', 'active'] as const) {
+      await connection(appState({ phase, knownIphone: true }))
+      expect(absent('joining-message'), phase).toBe(true)
+      cleanup()
+    }
   })
 })

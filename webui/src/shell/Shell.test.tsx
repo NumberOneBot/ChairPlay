@@ -195,25 +195,18 @@ describe('Section list', () => {
 })
 
 describe('Shell', () => {
-  // The connection reads the CarPlay and AltScreen pages as it is made: changed meanwhile, who knows which value it
-  // took. While it connects they wait, off, with no message; the pages that apply at once, and Connection, stay live.
-  it('holds the pages the connection reads while it connects', async () => {
+  // Every page stays open while the iPhone connects: the attempt tells the app which values it read, so a change it has
+  // already read is marked to wait for the next connection, as on Connection, Audio, and Keyboard (owner, 2026-11-12).
+  it('keeps the CarPlay and AltScreen pages open while the iPhone connects', async () => {
+    const inert = (element: HTMLElement) => element.closest('[inert]') !== null
     for (const phase of ['starting', 'calling', 'joining', 'retrying'] as const) {
       render(<Shell state={appState({ phase, canShowCarPlay: true })} backend={new FakeBackend()} />)
       await screen.findByRole('textbox', { name: 'Network' })
-      expect(document.querySelector('[inert]')).toBeNull()
 
-      for (const name of ['CarPlay', 'AltScreen']) {
-        fireEvent.click(screen.getByRole('tab', { name }))
-        const held = screen.getByRole('tabpanel').querySelector('[inert]')
-        expect(held, `${phase} ${name}`).not.toBeNull()
-        expect(
-          held!.contains(screen.getByRole('radiogroup', { name: name === 'CarPlay' ? 'Frame rate' : 'Area' })),
-        ).toBe(true)
-        expect(screen.queryByRole('alert')).toBeNull()
-      }
-      fireEvent.click(screen.getByRole('tab', { name: 'Audio' }))
-      expect(document.querySelector('[inert]')).toBeNull()
+      fireEvent.click(control('tab-carplay', 'tab'))
+      expect(inert(screen.getByRole('radiogroup', { name: 'Frame rate' })), `${phase} CarPlay`).toBe(false)
+      fireEvent.click(control('tab-altscreen', 'tab'))
+      expect(inert(screen.getByRole('switch', { name: 'Enabled' })), `${phase} AltScreen`).toBe(false)
       cleanup()
     }
   })

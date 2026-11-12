@@ -6,7 +6,7 @@ import { BrowserAccess } from './BrowserAccess'
 import { ExperimentsPage } from './ExperimentsPage'
 import { WindowSettings } from './WindowSettings'
 
-/** ui.tint's palettes (styles/tints.css), shown as the Theme: the light one first, black the default (DEFAULT_TINT). */
+/** ui.tint's palettes (styles/tints.css), shown as the Theme: the light one first, slate the default (DEFAULT_TINT). */
 const TINTS: readonly Choice[] = [
   ['white', 'White'],
   ['black', 'Black'],

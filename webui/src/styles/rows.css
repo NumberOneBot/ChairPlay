@@ -33,7 +33,7 @@
 }
 
 /*
- * A held page (the connection reads it while it is made, or the AltScreen is off): inert keeps the pointer and the keys
+ * A held part of a page (the AltScreen's while it is off, the GPS car's while it waits): inert keeps the pointer and the keys
  * out, and each control on it looks as one turned off on its own does, no dimmer, its label as it was.
  */
 /* A held segmented group is drawn by the turned-off group's rule (states.css) */

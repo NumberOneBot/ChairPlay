@@ -10,7 +10,7 @@ export function applyAccent(accent: string | undefined) {
 const TINTS = ['black', 'graphite', 'slate', 'teal', 'white']
 
 /** The default tint, and what a tint no palette has falls back to (owner, 2026-11-12). */
-export const DEFAULT_TINT = 'black'
+export const DEFAULT_TINT = 'slate'
 
 /** Greys both pages with ui.tint: the stylesheet keeps a palette for each data-tint on the root. */
 export function applyTint(tint: string | undefined) {

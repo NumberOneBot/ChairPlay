@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.ui
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.nio.file.Files
+import java.time.LocalDate
 
 /**
  * UiController: the state is built on every change for every open page, so it reads nothing from the disk or the
@@ -28,17 +29,37 @@ class UiControllerStateTest : UiControllerFixture() {
         assertEquals(true, ui.state()["controlsKeys"])
     }
 
-    // ui.tint colours both pages at once: the state carries it as saved, and black, the default, for a value no
+    // The release the last check found (updates.latest) shows on About while it is newer than this build, and a check
+    // that finds one updates the page at once (owner, 2026-11-12).
+    @Test
+    fun `the state offers the remembered release while it is newer`() {
+        val build = BuildInfo(null, null, version = "1.0.5")
+        assertEquals("1.0.6", controller(settings = "wifi.ssid=Home\nupdates.latest=1.0.6\n", about = build).state()["updateAvailable"])
+        assertEquals(null, controller(settings = "wifi.ssid=Home\nupdates.latest=1.0.5\n", about = build).state()["updateAvailable"])
+
+        val ui = controller(settings = "wifi.ssid=Home\n", about = build)
+        assertEquals(null, ui.state()["updateAvailable"])
+        ui.updateFound("1.0.7", LocalDate.of(2026, 11, 10))
+        assertEquals("1.0.7", ui.state()["updateAvailable"])
+
+        // A build without a version goes by its commit's day against the release's publication
+        val dev = BuildInfo(Commit("4e6d50df", "2026-11-01"), null)
+        val found = "wifi.ssid=Home\nupdates.latest=1.1.1\nupdates.latest.date="
+        assertEquals("1.1.1", controller(settings = "${found}2026-11-10\n", about = dev).state()["updateAvailable"])
+        assertEquals(null, controller(settings = "${found}2026-11-01\n", about = dev).state()["updateAvailable"])
+    }
+
+    // ui.tint colours both pages at once: the state carries it as saved, and slate, the default, for a value no
     // palette has (owner, 2026-11-12).
     @Test
     fun `the state carries the tint as last saved`() {
-        assertEquals("black", controller().state()["tint"])
+        assertEquals("slate", controller().state()["tint"])
 
         val ui = controller()
         ui.saveSettings(mapOf("ui.tint" to "teal"))
         assertEquals("teal", ui.state()["tint"])
 
-        assertEquals("black", controller(settings = "wifi.ssid=Home\nui.tint=pink\n").state()["tint"])
+        assertEquals("slate", controller(settings = "wifi.ssid=Home\nui.tint=pink\n").state()["tint"])
     }
 
     // The controls window keeps black unless ui.tint.controls, a hand edit only, lets the tint reach it (owner).

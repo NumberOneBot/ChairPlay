@@ -17,7 +17,7 @@ New features and fixed bugs in ChairPlay.
   ChairPlay talks to the iPhone through Apple Mobile Device Service, which Apple Devices or iTunes installs, and a helper in the app's `helper` folder. Nothing else is installed on the PC.
 - **City presets** put the USB GPS car on a busy road in one of ten cities.
 - **Track playback** (**Settings > GPS**, with USB GPS) opens a GPX recording and plays it as the GPS car: Play, Pause, Stop, and the recording's time and distance. While it plays, the arrow keys and the gamepad don't move the car, and with **Drive mode** on the gauges show the recording's speed.
-- **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Black, as before, Graphite, Slate, or Teal. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
+- **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Slate, the new default, Black, as before, Graphite, or Teal. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
 - The mouse's back button goes back in the CarPlay and AltScreen windows.
 
 ### Changed

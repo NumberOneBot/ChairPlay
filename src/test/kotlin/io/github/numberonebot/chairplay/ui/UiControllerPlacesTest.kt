@@ -56,6 +56,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
             "author" to "https://github.com/NumberOneBot",
             "source" to "https://github.com/NumberOneBot/ChairPlay",
             "releases" to "https://github.com/NumberOneBot/ChairPlay/releases",
+            "latest-release" to "https://github.com/NumberOneBot/ChairPlay/releases/latest",
             "discussions" to "https://github.com/NumberOneBot/ChairPlay/discussions",
             "pull-requests" to "https://github.com/NumberOneBot/ChairPlay/pulls",
             "diplay" to "https://github.com/shihabal3amri/DiPlay",

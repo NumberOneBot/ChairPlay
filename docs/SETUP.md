@@ -73,7 +73,7 @@ The files below live in the app folder, next to `ChairPlay.exe`.
    - `ui.autoshow` (default `true`): show CarPlay over the settings as soon as the iPhone connects; `false` stays on the settings, whose CarPlay button then shows it;
    - `ui.controls.keys` (default `false`): `true` shows each controls window button's key on it, not only while Alt is held (Show keys on the buttons, on the Keyboard page);
    - `ui.accent` (default `#0a84ff`, iOS's blue): the accent colour of the settings, the controls window, and the HUD, written `#rrggbb`; every lighter, darker, or fainter shade of it is made from it;
-   - `ui.tint` (default `black`): the settings' theme, `white`, a light one, or the dark `black`, `graphite`, `slate`, or `teal` (Theme, on the Application page); it applies at once;
+   - `ui.tint` (default `slate`): the settings' theme, `white`, a light one, or the dark `black`, `graphite`, `slate`, or `teal` (Theme, on the Application page); it applies at once;
    - `ui.tint.controls` (default `false`): `true` gives the controls window the same tint; with `false` it stays black;
    - `ui.port` (default `7529`, PLAY on a phone keypad): the port of the settings' address in a browser, `http://localhost:7529`. When another program has it at start, the app takes a free port for that run, as the log and the Application page say;
    - `ui.network` (default `false`): `true` lets phones and other PCs on the local network open the settings at this PC's address, `http://<address>:7529`, which the Application page lists as links (Allow access from the local network; in ChairPlay's window a link opens the default browser); the app then listens on every address and serves any device that reaches the port. Applies at the next start;

@@ -55,6 +55,20 @@ html:has(.shell) {
 }
 
 /* Waiting for the connection the app makes on its own: black, as CarPlay's picture will be, the icon over the status */
+/*
+ * Black whatever the theme, so its text is the dark themes' whatever the theme too: under White its button and its
+ * detail were dark on the black (owner, 2026-11-12). Above the themes' own .shell rules (tints.css) in weight.
+ */
+.shell.waiting,
+:root[data-tint] .shell.waiting {
+  --text: #f2f2f4;
+  --muted: #a3a3ab;
+  --dim: #76767e;
+  --fill: rgb(118 118 128);
+  --lighten: linear-gradient(rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.09));
+  color-scheme: dark;
+}
+
 .shell.waiting {
   display: flex;
   flex-direction: column;

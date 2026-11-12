@@ -6,6 +6,7 @@ import org.junit.Test
 import java.net.InetSocketAddress
 import java.net.URI
 import java.time.Duration
+import java.time.LocalDate
 
 class ReleaseClientTest {
     @Test fun `release versions compare numeric components including multi digit versions`() {
@@ -33,7 +34,7 @@ class ReleaseClientTest {
     @Test fun `GitHub response is validated and HTTP failures are not up to date`() {
         val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
         var status = 200
-        var body = """{"tag_name":"v1.0.6","draft":false,"prerelease":false}"""
+        var body = """{"tag_name":"v1.0.6","draft":false,"prerelease":false,"published_at":"2026-11-10T21:30:00Z"}"""
         server.createContext("/latest") { exchange ->
             val bytes = body.toByteArray()
             exchange.sendResponseHeaders(status, bytes.size.toLong())
@@ -42,7 +43,10 @@ class ReleaseClientTest {
         server.start()
         try {
             val client = ReleaseClient(URI("http://127.0.0.1:${server.address.port}/latest"))
-            assertEquals(ReleaseVersion.parse("1.0.6"), client.latest())
+            // The release and the day it was published, which a build without a version compares with its own
+            assertEquals(Release(ReleaseVersion.parse("1.0.6"), LocalDate.of(2026, 11, 10)), client.latest())
+            body = """{"tag_name":"v1.0.6","draft":false,"prerelease":false}"""
+            assertEquals(Release(ReleaseVersion.parse("1.0.6"), null), client.latest())
             for (code in listOf(403, 429, 500)) {
                 status = code
                 assertThrows(Exception::class.java) { client.latest() }

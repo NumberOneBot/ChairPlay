@@ -89,7 +89,8 @@ export function AltScreenPage({ state, backend, settings }: { state: AppState; b
             Most instrument clusters have an 8:3 aspect ratio, so the area presets below split the width into eighths
           </span>
         </Row>
-        <Group title="Appearance" />
+        {/* As Audio's Music group: the one setting here that waits (altscreen.hud.stream), named */}
+        <Group title="Appearance" note="Map stream applies at the next connection" />
         <Row
           label="Content"
           title="What the AltScreen shows now, as the controls window switches it too; it opens on it again"

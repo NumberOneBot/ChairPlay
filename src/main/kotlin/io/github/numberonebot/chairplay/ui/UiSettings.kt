@@ -11,6 +11,11 @@ import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
 import io.github.numberonebot.chairplay.input.ControlsSave
 import io.github.numberonebot.chairplay.input.WheelAction
+import java.time.LocalDate
+
+/** The release the last update check found, and the day it was published, kept in settings.properties by the app. */
+internal const val LATEST_RELEASE = "updates.latest"
+internal const val LATEST_RELEASE_DATE = "updates.latest.date"
 
 /**
  * The settings as the pages read and save them: settings.properties ([settings]) with when each change applies, the
@@ -121,6 +126,20 @@ internal class UiSettings(
         version++
         changed()
         return SaveResult(emptyMap(), applies)
+    }
+
+    /**
+     * updates.latest: the release the last update check found, which the app writes and the page never edits; the
+     * About page offers it while it is newer than this build (owner, 2026-11-12).
+     */
+    fun rememberLatest(version: String, published: LocalDate?) {
+        val found = mapOf(LATEST_RELEASE to version, LATEST_RELEASE_DATE to published?.toString().orEmpty())
+        synchronized(this) {
+            if (found.all { (key, value) -> values[key].orEmpty() == value }) return
+            settings.write(found)
+            values = settings.read()
+        }
+        changed()
     }
 
     /** The method in force when the marks were last worked out, so a change of it alone works them out again. */

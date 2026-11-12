@@ -25,9 +25,6 @@ export type { Section } from './sections'
  * section's settings, or Get started in their place until an iPhone has connected, and again from Show again. Escape
  * shows CarPlay when it can, unless a page used the key itself.
  */
-/** The phases in which a connection is being made, from the start to CarPlay's picture, a retry among them. */
-const CONNECTING_PHASES = ['starting', 'calling', 'joining', 'retrying'] as const
-
 export function Shell({ state, backend }: { state: AppState; backend: Backend }) {
   const [section, setSection] = useState<Section>('connection')
   const page = useRef<HTMLDivElement>(null)
@@ -49,10 +46,8 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
   const guiding = guide === 'shown' || (guide === 'auto' && !state.setupDone)
   const steps = guiding ? setupSteps(state, joinFailureSeen) : null
   const showGuide = () => setGuide('shown')
-  // The connection reads the CarPlay and AltScreen pages as it is made: changed meanwhile, which value it took is
-  // anyone's guess. While it connects they wait, off; the pages that apply at once, and Connection, stay live.
-  const connecting = (CONNECTING_PHASES as readonly string[]).includes(state.phase)
-  const held = connecting && (section === 'carplay' || section === 'altscreen')
+  // Every page stays open while the iPhone connects: each attempt tells the app which values it read (UiSettings
+  // .connected), so a change it has already read is marked to wait for the next connection (owner, 2026-11-12).
 
   // Forget this iPhone undoes the setup: Get started comes back, though it was skipped before.
   useEffect(() => {
@@ -124,12 +119,9 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
               {settings.data && section === 'connection' && (
                 <ConnectionPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />
               )}
-              {/* Only around the pages it may hold: before any other, it would take its first group's place. */}
-              {settings.data && (section === 'carplay' || section === 'altscreen') && (
-                <div className={held ? 'held' : undefined} inert={held}>
-                  {section === 'carplay' && <CarPlayPage state={state} backend={backend} settings={settings} />}
-                  {section === 'altscreen' && <AltScreenPage state={state} backend={backend} settings={settings} />}
-                </div>
+              {settings.data && section === 'carplay' && <CarPlayPage state={state} backend={backend} settings={settings} />}
+              {settings.data && section === 'altscreen' && (
+                <AltScreenPage state={state} backend={backend} settings={settings} />
               )}
               {settings.data && section === 'keyboard' && <KeyboardPage state={state} backend={backend} settings={settings} />}
               {settings.data && section === 'audio' && (

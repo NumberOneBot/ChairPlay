@@ -22,20 +22,16 @@ export function CarPlayIcon() {
   )
 }
 
-/** An instrument cluster: a long filled panel with the speedometer and the rev counter cut out at its ends. */
+/**
+ * An instrument cluster: a long panel in outline, as the section list drew it before, with the speedometer and the rev
+ * counter filled and a pixel in from its ends (owner, 2026-11-12)
+ */
 export function AltScreenIcon() {
-  const mask = useMaskId('alt')
   return (
     <svg className="wide" viewBox="0 0 26 16" aria-hidden="true">
-      <defs>
-        <mask id={mask}>
-          <rect width="26" height="16" fill="#fff" />
-          {/* In the middle of the panel's height */}
-          <circle cx="5.9" cy="8" r="4.3" fill="#000" />
-          <circle cx="20.1" cy="8" r="4.3" fill="#000" />
-        </mask>
-      </defs>
-      <rect x="0.2" y="1.6" width="25.6" height="12.8" rx="4" fill="currentColor" mask={`url(#${mask})`} />
+      <rect x="0.8" y="2.2" width="24.4" height="11.6" rx="3.6" fill="none" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="6.7" cy="8" r="3.9" fill="currentColor" />
+      <circle cx="19.3" cy="8" r="3.9" fill="currentColor" />
     </svg>
   )
 }

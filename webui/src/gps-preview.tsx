@@ -75,9 +75,11 @@ function Preview() {
   const name = query.get('s') ?? 'carplay'
   const scene = SCENES[name] ?? SCENES.carplay
   const section = query.get('section') ?? scene.section ?? 'GPS'
+  // ?update=1.1.1: the release the last update check found, offered on About
+  const update = query.get('update')
   const real = useMemo(
-    () => tracked(gpsState(scene.output, scene.setup, { reconnectPending: scene.pending ?? [], ...(scene.connected === false ? { phase: 'idle' as const, canShowCarPlay: false } : {}) }), scene.track),
-    [scene],
+    () => tracked(gpsState(scene.output, scene.setup, { reconnectPending: scene.pending ?? [], updateAvailable: update, ...(scene.connected === false ? { phase: 'idle' as const, canShowCarPlay: false } : {}) }), scene.track),
+    [scene, update],
   )
   // The page opens its section while the window is free; the scene's own state, locked or not, comes after.
   const free = useMemo(() => tracked(gpsState({ ...scene.output, operation: null }, scene.setup, { phase: real.phase, canShowCarPlay: real.canShowCarPlay, reconnectPending: real.reconnectPending }), scene.track), [scene, real])

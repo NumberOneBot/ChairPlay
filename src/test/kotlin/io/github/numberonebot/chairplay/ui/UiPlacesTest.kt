@@ -34,6 +34,7 @@ class UiPlacesTest {
             "author" to listOf("explorer.exe", "https://github.com/NumberOneBot"),
             "source" to listOf("explorer.exe", project),
             "releases" to listOf("explorer.exe", "$project/releases"),
+            "latest-release" to listOf("explorer.exe", "$project/releases/latest"),
             "notices" to listOf("notepad.exe", dir.resolve("THIRD_PARTY_NOTICES").toString()),
             "diplay" to listOf("explorer.exe", "https://github.com/shihabal3amri/DiPlay"),
             "xcertplay" to listOf("explorer.exe", "https://github.com/shilapi/xcertplay"),
