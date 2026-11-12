@@ -21,6 +21,8 @@ This is a release candidate: it is meant for testing before 1.1.0. Report what d
 - **New look.** The toolbar is translucent and the page scrolls under it, the list of pages floats beside the page, and a page shorter than the window sits in its middle.
 - **Application** takes the place of **Experiments** and holds the app's own settings: the windows, **Theme**, the settings browser, logs, integrations, and the HUD demo.
 - **Mouse.** The mouse's back button goes back in the CarPlay and AltScreen windows.
+- **Updates.** **About > Version** offers a newer release that the update check found, with **Download**, until that version is installed. The update dialog's **Open** goes to the latest release's page.
+- **Connecting.** **Settings > CarPlay** and **AltScreen** stay open while the iPhone connects; a change the connection has already read is marked to apply at the next one.
 - **Video.** A new install asks the iPhone for H.264 video. **Settings > CarPlay > Video codec** can still offer H.265, and settings from an earlier version keep their codec.
 - **Global shortcuts** leave Enter and Escape to the app that has the focus.
 - **GPS page.** The **Updates** row and the speed and heading switches are gone: CarPlay GPS sends the position 4 times a second with the speed and heading. Every gauge style shows the heading arrow.

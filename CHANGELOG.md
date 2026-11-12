@@ -19,6 +19,7 @@ New features and fixed bugs in ChairPlay.
 - **Track playback** (**Settings > GPS**, with USB GPS) opens a GPX recording and plays it as the GPS car: Play, Pause, Stop, and the recording's time and distance. While it plays, the arrow keys and the gamepad don't move the car, and with **Drive mode** on the gauges show the recording's speed.
 - **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Slate, the new default, Black, as before, Graphite, or Teal. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
 - The mouse's back button goes back in the CarPlay and AltScreen windows.
+- **About > Version** offers a newer release that the update check found, with **Download**, until that version is installed. The update dialog's **Open** goes to the latest release's page.
 
 ### Changed
 
@@ -27,6 +28,8 @@ New features and fixed bugs in ChairPlay.
 - Global shortcuts leave Enter and Escape to the app that has the focus.
 - The GPS page no longer has the **Updates** row or the speed and heading switches. CarPlay GPS sends the position 4 times a second with the speed and heading. `gps.rate` and `gps.usb.rate` take any number from 1 to 20 as a hand edit, and `gps.wheel.speed` and `gps.heading.send` stay in settings.properties.
 - Every gauge style shows the heading arrow, whatever the wheel shows.
+- **Settings > CarPlay** and **AltScreen** stay open while the iPhone connects. A change the connection has already read is marked to apply at the next one.
+- **Settings > Connection** says at once when the iPhone has answered over Bluetooth and is joining the Wi-Fi, not only after the attempt fails. The error that follows also names CarPlay turned off for this PC on the iPhone.
 - The settings window has a new look. The toolbar is translucent and the page scrolls under it, the list of pages floats beside the page, and a page shorter than the window sits in its middle. In a wide window the page keeps to 760 px.
 
 ### Fixed
