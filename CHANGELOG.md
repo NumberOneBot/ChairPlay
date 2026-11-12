@@ -27,6 +27,11 @@ New features and fixed bugs in ChairPlay.
 - Global shortcuts leave Enter and Escape to the app that has the focus.
 - The GPS page no longer has the **Updates** row or the speed and heading switches. CarPlay GPS sends the position 4 times a second with the speed and heading. `gps.rate` and `gps.usb.rate` take any number from 1 to 20 as a hand edit, and `gps.wheel.speed` and `gps.heading.send` stay in settings.properties.
 - Every gauge style shows the heading arrow, whatever the wheel shows.
+- The settings window has a new look. The toolbar is translucent and the page scrolls under it, the list of pages floats beside the page, and a page shorter than the window sits in its middle. In a wide window the page keeps to 760 px.
+
+### Fixed
+
+- In full screen, choosing ChairPlay on CarPlay's home screen made the screen blink and left CarPlay showing. The window now leaves full screen and shows the settings; **F** takes it back to full screen.
 
 [Release notes](docs/RELEASE-NOTES-1.1.0.md) · [Changes since v1.0.11](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.11...v1.1.0-rc1)
 
