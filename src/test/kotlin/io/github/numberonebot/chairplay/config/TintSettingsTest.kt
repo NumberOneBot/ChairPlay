@@ -21,9 +21,10 @@ class TintSettingsTest {
     }
 
     @Test
-    fun `the tint is one of the five palettes and applies at once`() {
+    fun `the tint is one of the six palettes and applies at once`() {
         // white, the light theme (owner, 2026-11-12)
-        for (tint in listOf("black", "graphite", "slate", "teal", "white")) {
+        // dracula, a purple dark theme (owner, 2026-11-12)
+        for (tint in listOf("black", "graphite", "slate", "teal", "white", "dracula")) {
             assertTrue(tint, EditableSettings.validate(mapOf("ui.tint" to tint), emptyMap()).isEmpty())
         }
         // warm was dropped (owner, 2026-11-12)

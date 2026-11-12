@@ -53,4 +53,12 @@ describe('Application page', () => {
 
     await waitFor(() => expect(backend.saved).toEqual([{ 'ui.tint': 'white' }]))
   })
+
+  it('saves dracula, the purple dark theme, when it is chosen', async () => {
+    const backend = await application()
+
+    fireEvent.click(control('app-tint-dracula', 'radio'))
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'ui.tint': 'dracula' }]))
+  })
 })

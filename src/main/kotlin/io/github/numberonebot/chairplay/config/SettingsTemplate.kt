@@ -39,7 +39,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "ui.accent" to DEFAULT_ACCENT,
     ),
     SettingBlock(
-        "The settings' theme (Theme): 'white', the light one, or 'black', 'graphite', 'slate' or 'teal'.",
+        "The settings' theme (Theme): 'white', the light one, or 'black', 'graphite', 'slate', 'teal' or 'dracula'.",
         "ui.tint" to DEFAULT_TINT,
     ),
     SettingBlock(

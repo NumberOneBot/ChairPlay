@@ -9,7 +9,7 @@ afterEach(() => {
 describe('applyTint', () => {
   // ui.tint picks the palette of greys the stylesheet keeps for each data-tint (tints.css).
   it('names the tint where the stylesheet reads it', () => {
-    for (const tint of ['black', 'teal', 'white']) {
+    for (const tint of ['black', 'teal', 'white', 'dracula']) {
       applyTint(tint)
 
       expect(document.documentElement.dataset.tint).toBe(tint)

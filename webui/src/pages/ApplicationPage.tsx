@@ -13,6 +13,7 @@ const TINTS: readonly Choice[] = [
   ['graphite', 'Graphite'],
   ['slate', 'Slate'],
   ['teal', 'Teal'],
+  ['dracula', 'Dracula'],
 ]
 
 /**

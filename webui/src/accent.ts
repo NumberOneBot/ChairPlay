@@ -7,7 +7,7 @@ export function applyAccent(accent: string | undefined) {
 }
 
 /** ui.tint's palettes (styles/tints.css); white is the light theme. */
-const TINTS = ['black', 'graphite', 'slate', 'teal', 'white']
+const TINTS = ['black', 'graphite', 'slate', 'teal', 'white', 'dracula']
 
 /** The default tint, and what a tint no palette has falls back to (owner, 2026-11-12). */
 export const DEFAULT_TINT = 'slate'

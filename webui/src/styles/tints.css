@@ -45,18 +45,19 @@
   --hair: rgb(255 255 255 / 9%);
 }
 
+/* Cool grey, twice as tinted as it was and still well short of slate's blue (owner, 2026-11-12) */
 :root[data-tint='graphite'] {
-  --bg: #0f0f11;
-  --panel: #161619;
-  --raised: #212125;
-  --bar: #26262b;
-  --field: #0b0b0d;
-  --ground: #17171a;
-  --line: #2e2e33;
-  --edge: #3e3e44;
-  --text: #e9e9eb;
-  --muted: #8d8d94;
-  --dim: #5e5e66;
+  --bg: #0d0f13;
+  --panel: #14161b;
+  --raised: #1e2128;
+  --bar: #23262e;
+  --field: #090b0f;
+  --ground: #15171c;
+  --line: #2b2e37;
+  --edge: #3a3e48;
+  --text: #e7e9ed;
+  --muted: #898d98;
+  --dim: #5a5f6b;
 }
 
 :root[data-tint='slate'] {
@@ -85,6 +86,21 @@
   --text: #e4eded;
   --muted: #869696;
   --dim: #576869;
+}
+
+/* Dracula: dark greys with a purple cast, of the dark themes' depth (owner, 2026-11-12) */
+:root[data-tint='dracula'] {
+  --bg: #110e17;
+  --panel: #18141f;
+  --raised: #231e2c;
+  --bar: #292233;
+  --field: #0c0a11;
+  --ground: #19151f;
+  --line: #312a3c;
+  --edge: #42394f;
+  --text: #ece8f3;
+  --muted: #968ca7;
+  --dim: #645a75;
 }
 
 /*

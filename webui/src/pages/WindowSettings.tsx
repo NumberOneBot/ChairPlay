@@ -20,11 +20,12 @@ export function WindowSettings({ settings }: { settings: Settings }) {
   return (
     <>
       <Group title="Windows" />
+      {/* The AltScreen's switch first (owner, 2026-11-12) */}
+      <Row label="AltScreen">{toggle('altscreen.always.on.top', 'Always on top', 'app-altscreen-on-top')}</Row>
       <Row label="CarPlay">{toggle('window.always.on.top', 'Always on top', 'app-carplay-on-top')}</Row>
       <Row title="Show the CarPlay window and bring it to the front when a call comes in. Its taskbar button flashes on a call either way.">
         {toggle('window.front.on.call', 'Bring to front on a call', 'app-carplay-front-on-call')}
       </Row>
-      <Row label="AltScreen">{toggle('altscreen.always.on.top', 'Always on top', 'app-altscreen-on-top')}</Row>
     </>
   )
 }
