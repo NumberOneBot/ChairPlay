@@ -39,8 +39,8 @@ internal val SETTINGS_TEMPLATE = listOf(
         "ui.accent" to DEFAULT_ACCENT,
     ),
     SettingBlock(
-        "The greys of the settings: 'black', 'graphite', 'slate', 'teal' or 'warm'.",
-        "ui.tint" to TINTS.first(),
+        "The greys of the settings: 'black', 'graphite', 'slate' or 'teal'.",
+        "ui.tint" to DEFAULT_TINT,
     ),
     SettingBlock(
         "Whether the controls window takes ui.tint too; with false it keeps black.",

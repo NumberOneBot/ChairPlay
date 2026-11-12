@@ -1,7 +1,7 @@
 /* Groups of choices: their widths, rows, the view areas and the city presets */
 
 /*
- * Segmented groups as iOS draws them: a translucent gray track with no outline, the chosen item a lighter raised plate
+ * Segmented groups as iOS draws them: a faint sunken track with no outline, the chosen item a lighter raised plate
  * inside it, the others with short separators between them that stop short of the track and drop away beside the plate
  */
 .shell {
@@ -15,7 +15,8 @@
   border: 1px solid transparent;
   /* Capsules: the 26 px track and the 20 px plates rounded by half their height */
   border-radius: 13px;
-  background: color-mix(in srgb, var(--fill) 24%, transparent);
+  background: var(--track);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 10%);
 }
 
 /* Plates line up from row to row: 80 px on a narrow page, 90 px on a wider one (see .seg.wide below) */
@@ -103,11 +104,14 @@
   top: 5px;
   bottom: 5px;
   width: 1px;
-  background: rgb(255 255 255 / 12%);
+  background: var(--hair);
 }
 
+/* Beside the chosen plate, and beside a plate under the pointer (owner, 2026-11-12), the separators drop away */
 .shell .seg button.on::before,
-.shell .seg button.on + button::before {
+.shell .seg button.on + button::before,
+.shell .seg button:not(.on):not(:disabled):hover::before,
+.shell .seg button:not(.on):not(:disabled):hover + button::before {
   display: none;
 }
 

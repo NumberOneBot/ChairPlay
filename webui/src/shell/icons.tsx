@@ -115,13 +115,16 @@ export function CarPlayLineIcon() {
   )
 }
 
-/** The cluster in lines for the section list; the toolbar's has filled gauges. */
+/**
+ * The AltScreen in the section list: a gauge, the speed glyph of the track playback mock
+ * (desktop-docs/mockups/usb-gps/track-playback.js) as it is; the toolbar's is the cluster with filled gauges.
+ */
 export function AltScreenLineIcon() {
   return (
-    <svg className="wide" viewBox="0 0 26 16" aria-hidden="true">
-      <rect x="0.8" y="2.2" width="24.4" height="11.6" rx="3.6" fill="none" stroke="currentColor" strokeWidth="1.2" />
-      <circle cx="5.7" cy="8" r="3.3" fill="none" stroke="currentColor" strokeWidth="1.2" />
-      <circle cx="20.3" cy="8" r="3.3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M2.6 12A6 6 0 1 1 13.4 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M8 10.2l3-3.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="10.2" r="1.3" fill="currentColor" />
     </svg>
   )
 }

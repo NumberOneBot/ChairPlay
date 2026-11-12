@@ -23,20 +23,26 @@ describe('Application page', () => {
     expect(control('tab-application', 'tab').getAttribute('aria-selected')).toBe('true')
   })
 
-  it('shows black until a tint is chosen, and saves the one chosen', async () => {
+  it('shows slate until a tint is chosen, and saves the one chosen', async () => {
     const backend = await application()
-    expect(control('app-tint-black', 'radio').getAttribute('aria-checked')).toBe('true')
+    expect(control('app-tint-slate', 'radio').getAttribute('aria-checked')).toBe('true')
 
-    fireEvent.click(control('app-tint-slate', 'radio'))
+    fireEvent.click(control('app-tint-black', 'radio'))
 
-    await waitFor(() => expect(backend.saved).toEqual([{ 'ui.tint': 'slate' }]))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'ui.tint': 'black' }]))
   })
 
   it('shows the saved tint', async () => {
     const backend = new FakeBackend()
-    backend.data.values['ui.tint'] = 'warm'
+    backend.data.values['ui.tint'] = 'teal'
     await application(backend)
 
-    expect(control('app-tint-warm', 'radio').getAttribute('aria-checked')).toBe('true')
+    expect(control('app-tint-teal', 'radio').getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('offers no warm tint', async () => {
+    await application()
+
+    expect(absent('app-tint-warm')).toBe(true)
   })
 })

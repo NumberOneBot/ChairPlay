@@ -5,27 +5,30 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files
 
-/** ui.tint: the greys of the settings and the controls window, black unless chosen. */
+/** ui.tint: the greys of the settings and the controls window, slate unless chosen (owner, 2026-11-12). */
 class TintSettingsTest {
     @Test
-    fun `a new settings file and an older one both get black`() {
+    fun `a new settings file and an older one both get slate`() {
         val fresh = Files.createTempDirectory("tint-fresh")
         DesktopConfig(fresh)
-        assertEquals("black", SettingsFile(fresh.resolve("settings.properties")).read()["ui.tint"])
+        assertEquals("slate", SettingsFile(fresh.resolve("settings.properties")).read()["ui.tint"])
 
         val older = Files.createTempDirectory("tint-older")
         val file = SettingsFile(older.resolve("settings.properties"))
         file.write(mapOf("ui.autoconnect" to "false"))
         DesktopConfig(older)
-        assertEquals("black", file.read()["ui.tint"])
+        assertEquals("slate", file.read()["ui.tint"])
     }
 
     @Test
-    fun `the tint is one of the five palettes and applies at once`() {
-        for (tint in listOf("black", "graphite", "slate", "teal", "warm")) {
+    fun `the tint is one of the four palettes and applies at once`() {
+        for (tint in listOf("black", "graphite", "slate", "teal")) {
             assertTrue(tint, EditableSettings.validate(mapOf("ui.tint" to tint), emptyMap()).isEmpty())
         }
-        assertTrue("ui.tint" in EditableSettings.validate(mapOf("ui.tint" to "pink"), emptyMap()))
+        // warm was dropped (owner, 2026-11-12)
+        for (tint in listOf("pink", "warm")) {
+            assertTrue(tint, "ui.tint" in EditableSettings.validate(mapOf("ui.tint" to tint), emptyMap()))
+        }
         assertEquals(Applies.NOW, EditableSettings.applies("ui.tint"))
     }
 }

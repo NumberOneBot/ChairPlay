@@ -1,14 +1,30 @@
 /* The settings window's toolbar: its buttons, connection chip and status dot */
 
-/* Toolbar: 38 px buttons in a 58 px bar, 10 px round them as between them; what never fits is cut off, never scrolled */
+/*
+ * Toolbar: 34 px buttons in a 44 px bar, 10 px from its ends and between them, half that above and below (owner,
+ * 2026-11-12); what never fits is cut off, never scrolled.
+ * Frosted glass over the body's top (shell.css): the bar's grey let through and the page blurred under it, with the
+ * faintest shadow on what scrolls by
+ */
 .shell .tb {
+  z-index: 2;
+  grid-area: 1 / 1;
+  align-self: start;
+  /* The gap between the bar's parts, and what a button adds beside another or a separator beside each (below) */
+  --tb-gap: 7px;
+  --tb-nudge: 3px;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--tb-gap);
   min-width: 0;
   overflow: hidden;
-  padding: 10px;
-  background: var(--bar);
+  padding: 5px 10px;
+  /* A white veil over the bar's grey: over the bare background the glass is as light as the bar was, black tint too */
+  background:
+    linear-gradient(rgb(255 255 255 / 8%), rgb(255 255 255 / 8%)),
+    color-mix(in srgb, var(--bar) 35%, transparent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
+  backdrop-filter: blur(12px) saturate(180%);
 }
 
 .shell .tb .grow {
@@ -19,7 +35,7 @@
   flex: none;
   width: 1px;
   height: 18px;
-  margin: 0 3px;
+  margin: 0 var(--tb-nudge);
   background: rgb(from var(--edge) r g calc(b + 1));
 }
 
@@ -117,12 +133,21 @@
   background-image: var(--lighten);
 }
 
-/* The bar's buttons are capsules; an open window's button is on, and Connect is filled with the accent */
+/*
+ * The bar's buttons are flat capsules, with no shadow (owner, 2026-11-12); an open window's button is on, and Connect
+ * is filled with the accent. 34 px tall (--tb-button) in every window (owner, 2026-11-12). The icon sits close
+ * to the capsule's round end, about 8.5 px on the drawn pixels, and the label's end 2 px further from the other
+ * (owner, 2026-11-12)
+ */
+.shell .tb {
+  --tb-button: 34px;
+}
+
 .shell .tb .btn {
   gap: 8px;
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 19px;
+  height: var(--tb-button);
+  padding: 0 10px 0 7px;
+  border-radius: calc(var(--tb-button) / 2);
   font: 600 14px var(--ui);
 }
 
@@ -138,22 +163,21 @@
 /* A button with its icon alone: square, as tall as the others */
 .shell .tb .btn.icon {
   justify-content: center;
-  width: 38px;
+  width: var(--tb-button);
   padding: 0;
 }
 
 /*
  * A window narrower than the bar with every label (525 px): the window buttons are squares with their icons alone,
- * the AltScreen's wide one smaller to keep clear of the square's edges, and the bar's padding and gaps are halved.
+ * the AltScreen's wide one smaller to keep clear of the square's edges, and the bar's padding and gaps are smaller:
+ * 6 px from its ends and between buttons, 3 above and below. Whole pixels: a button 2.5 px down is drawn at 3, which
+ * left it 3 px under the bar's top and 2 over its bottom
  */
 @container shell (max-width: 529px) {
   .shell .tb {
-    gap: 3.5px;
-    padding: 5px;
-  }
-
-  .shell .tb .sep {
-    margin: 0 1.5px;
+    --tb-gap: 4px;
+    --tb-nudge: 2px;
+    padding: 3px 6px;
   }
 
   .shell .tb .btn .label {
@@ -162,7 +186,7 @@
 
   .shell .tb .btn:has(.label) {
     justify-content: center;
-    width: 38px;
+    width: var(--tb-button);
     padding: 0;
   }
 
@@ -174,15 +198,16 @@
 
 /*
  * Buttons side by side 10 px apart, as far as a button is from a separator (the bar's 7 px gap and the separator's
- * 3 px margin). Connect takes the place of Reconnect and Disconnect, two squares and that gap, so nothing shifts.
+ * 3 px nudge; 4 and 2 in a narrow window). Connect takes the place of Reconnect and Disconnect, two squares and that
+ * gap, so nothing shifts.
  */
 .shell .tb > .btn + .btn {
-  margin-left: 3px;
+  margin-left: var(--tb-nudge);
 }
 
 .shell .tb .btn.primary {
   justify-content: center;
-  width: 86px;
+  width: calc(2 * var(--tb-button) + var(--tb-gap) + var(--tb-nudge));
   padding: 0;
 }
 

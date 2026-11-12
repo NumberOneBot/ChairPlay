@@ -1,3 +1,4 @@
+import { DEFAULT_TINT } from '../accent'
 import type { AppState, Backend } from '../api'
 import { Group, Row, Segmented, type Choice } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
@@ -5,13 +6,12 @@ import { BrowserAccess } from './BrowserAccess'
 import { ExperimentsPage } from './ExperimentsPage'
 import { WindowSettings } from './WindowSettings'
 
-/** ui.tint's palettes (styles/tints.css), black the default. */
+/** ui.tint's palettes (styles/tints.css), slate the default (DEFAULT_TINT). */
 const TINTS: readonly Choice[] = [
   ['black', 'Black'],
   ['graphite', 'Graphite'],
   ['slate', 'Slate'],
   ['teal', 'Teal'],
-  ['warm', 'Warm'],
 ]
 
 /**
@@ -26,7 +26,7 @@ export function ApplicationPage({ state, backend, settings }: { state: AppState;
       <Row label="Tint">
         <Segmented
           label="Tint"
-          value={settings.value('ui.tint') || 'black'}
+          value={settings.value('ui.tint') || DEFAULT_TINT}
           options={TINTS}
           onChange={(tint) => settings.save({ 'ui.tint': tint })}
           testId="app-tint"

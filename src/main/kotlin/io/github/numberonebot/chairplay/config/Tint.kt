@@ -1,7 +1,13 @@
 package io.github.numberonebot.chairplay.config
 
-/** ui.tint's palettes, black first and the default: the greys of the settings and the controls window (tints.css). */
-val TINTS = listOf("black", "graphite", "slate", "teal", "warm")
+/** ui.tint's palettes: the greys of the settings and the controls window (tints.css). */
+val TINTS = listOf("black", "graphite", "slate", "teal")
 
-/** [value] as one of [TINTS]; black for anything else, so a value typed by hand never leaves the pages uncoloured. */
-fun tintOf(value: String?): String = value?.trim()?.lowercase()?.takeIf { it in TINTS } ?: TINTS.first()
+/** The tint a new settings file gets, and what a value no palette has falls back to (owner, 2026-11-12). */
+const val DEFAULT_TINT = "slate"
+
+/** The controls window's greys unless ui.tint.controls lets the tint reach it. */
+const val CONTROLS_TINT = "black"
+
+/** [value] as one of [TINTS]; [DEFAULT_TINT] for anything else, so a value typed by hand never leaves the pages uncoloured. */
+fun tintOf(value: String?): String = value?.trim()?.lowercase()?.takeIf { it in TINTS } ?: DEFAULT_TINT

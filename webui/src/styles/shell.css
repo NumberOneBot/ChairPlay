@@ -21,8 +21,11 @@ html:has(.shell) {
   container: shell / inline-size;
   /* As wide as the window whatever the page needs: only the page scrolls, in either direction */
   grid-template-columns: minmax(0, 1fr);
-  /* The toolbar as tall as its buttons and padding: 58 px, 48 px in a narrow window */
-  grid-template-rows: auto minmax(0, 1fr);
+  /*
+   * One cell for the toolbar and the body: the bar floats over the body's top, frosted, and the page scrolls under it
+   * (toolbar.css). The bar is as tall as its buttons and padding, --bar-height (nav.css)
+   */
+  grid-template-rows: minmax(0, 1fr);
   height: 100vh;
   background: var(--bg);
   color: var(--text);

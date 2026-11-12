@@ -1,8 +1,8 @@
 /* Switches */
 
 /*
- * A switch as iOS draws one, sized for a mouse: a 30 × 18 track in the fields' gray, the accent when on, and a white
- * knob with the slider's shadow that slides across
+ * A switch as iOS draws one, sized for a mouse: a 30 × 18 track as faint as a segmented group's, the accent when on,
+ * and a round white knob that slides across (owner, 2026-11-12)
  */
 .shell .chk {
   display: inline-flex;
@@ -20,7 +20,8 @@
   margin: 0;
   border: 0;
   border-radius: 9px;
-  background: color-mix(in srgb, var(--fill) 32%, transparent);
+  background: var(--track);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 14%);
   transition: background-color 0.15s;
   cursor: default;
 }
@@ -34,7 +35,7 @@
   height: 14px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 50%);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
   transition: transform 0.15s;
 }
 

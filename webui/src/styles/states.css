@@ -2,27 +2,39 @@
 
 .shell .seg button.on {
   z-index: 1;
-  /* A plate raised off the track as iOS's chosen segment, its gray tinted with the accent */
-  background: color-mix(in srgb, var(--accent) 45%, rgb(from var(--edge) r g calc(b - 3)));
+  /* A light plate raised off the track as iOS's chosen segment, lit along its top, its name bold; no accent in it */
+  background: var(--chosen);
   color: #fff;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    0 1px 3px rgb(0 0 0 / 28%);
 }
 
 .shell .seg button:not(.on):not(:disabled):hover {
-  background: rgb(255 255 255 / 6%);
+  background: var(--hair);
   color: var(--text);
 }
 
-/* A control that does nothing now fades to 0.45, its gray track still there */
+/*
+ * A control that does nothing now: its choices fade to 0.45, and its track stays, barely there (owner, 2026-11-12);
+ * faded with the rest, it was gone on a group's card
+ */
 .shell .seg:has(button:disabled) {
+  background: rgb(255 255 255 / 5%);
+  box-shadow: none;
+}
+
+.shell .seg:has(button:disabled) > button {
   opacity: 0.45;
 }
 
 .shell input.t:disabled,
 .shell select:disabled {
-  /* A segmented group's track and text at its 0.45 opacity above */
-  border-color: transparent;
-  background-color: color-mix(in srgb, var(--fill) 11%, transparent);
+  /* No well, its edge alone; the text a segmented group's at its 0.45 opacity above */
+  border-color: var(--hair);
+  background-color: transparent;
+  box-shadow: none;
   color: color-mix(in srgb, var(--muted) 45%, transparent);
   cursor: default;
 }

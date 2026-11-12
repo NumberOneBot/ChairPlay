@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.ui
 
 import io.github.numberonebot.chairplay.config.Applies
+import io.github.numberonebot.chairplay.config.CONTROLS_TINT
 import io.github.numberonebot.chairplay.config.EditableSettings
 import io.github.numberonebot.chairplay.config.GpsOwnedSettings
 import io.github.numberonebot.chairplay.config.SettingsFile
@@ -52,7 +53,7 @@ internal class UiSettings(
         return arrayOf(
             "accent" to accent,
             "tint" to tint,
-            "controlsTint" to if (values["ui.tint.controls"]?.trim() == "true") tint else tintOf(null),
+            "controlsTint" to if (values["ui.tint.controls"]?.trim() == "true") tint else CONTROLS_TINT,
         )
     }
 

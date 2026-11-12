@@ -1,10 +1,19 @@
 /* A settings page: its groups and rows, labels, units, hints, and the page's buttons */
 
-/* The scrollbar always there, its track empty while nothing scrolls, so the page keeps its width as it grows */
+/*
+ * The scrollbar always there, its track empty while nothing scrolls, so the page keeps its width as it grows. The page
+ * runs under the frosted bar (toolbar.css): its first group starts as far under the bar as a group is from the one
+ * before it (.grp's 16 px), and its scrollbar and what scrolls into view stop at the bar's edge
+ */
 .shell .page {
   position: relative;
-  padding: 12px 18px 10px;
+  padding: calc(var(--bar-height) + 16px) 18px 10px;
   overflow-y: scroll;
+  scroll-padding-top: var(--bar-height);
+}
+
+.shell .page::-webkit-scrollbar-track {
+  margin-top: var(--bar-height);
 }
 
 /* In a larger window the page keeps to the middle; the label column (100cqw) grows with it */
@@ -40,9 +49,10 @@
 
 .shell .held input.t,
 .shell .held select {
-  /* A held segmented group's track and text, at its 0.45 opacity */
-  border-color: transparent;
-  background-color: color-mix(in srgb, var(--fill) 11%, transparent);
+  /* A field turned off (states.css): its edge alone, the text a held segmented group's at its 0.45 opacity */
+  border-color: var(--hair);
+  background-color: transparent;
+  box-shadow: none;
   color: color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
@@ -57,7 +67,8 @@
   margin: 0 0 4px;
   padding: 16px 0 6px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--muted);
+  /* Whiter than a label, short of the values' white (owner, 2026-11-12) */
+  color: color-mix(in srgb, var(--text) 60%, var(--muted));
   font: 700 11px/15px var(--ui);
   letter-spacing: 0.06em;
   text-transform: uppercase;

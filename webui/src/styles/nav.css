@@ -1,8 +1,8 @@
 /* The settings window: its body and the list of pages */
 
 /*
- * The section list and the page. The list narrows evenly with the window, from its full width at 800 px down to what
- * "Connection" needs at 640 px, leaving as much after it as before its icon, with no step between.
+ * The section list and the page. The list is 123 px wide in every window from 640 px up (owner, 2026-11-12), a little
+ * more than "Application", the longest name, needs.
  *
  * A row's controls are as long as Connection's first, the network's name and its security (--row-width); the longest
  * segmented groups stay within it where the page is narrow. The label column is what "Bluetooth address" needs (118 px)
@@ -10,33 +10,53 @@
  * left half empty.
  */
 .shell .body {
-  --nav-width: clamp(146px, 13.75vw + 58px, 168px);
+  /* The toolbar's height (toolbar.css), which the body runs under */
+  --bar-height: 44px;
+  /*
+   * Round the floating list: its gap from the window's left edge, and the least it leaves above and below; 8 px, what
+   * the centred list leaves above and below in a window 360 px tall, where it fits exactly (owner, 2026-11-12)
+   */
+  --nav-gap: 8px;
+  --nav-width: 123px;
   --row-width: 326px;
   --label-width: max(118px, 118px + (100cqw - 450px) / 4);
+  grid-area: 1 / 1;
   display: grid;
-  grid-template-columns: var(--nav-width) minmax(0, 1fr);
-  /* As tall as the window leaves, whatever the list needs: a taller list would push the page past the window's edge */
+  grid-template-columns: calc(var(--nav-gap) + var(--nav-width)) minmax(0, 1fr);
+  /* The window's height whatever the list needs: a taller list would push the page past the window's edge */
   grid-template-rows: minmax(0, 1fr);
   min-height: 0;
 }
 
-/* Taller than a low window, the list scrolls with the wheel, without a bar to narrow it */
+/*
+ * A floating panel, rounded round its buttons, as tall as its list and no taller, in the middle of the height under the
+ * bar (owner, 2026-11-12): its top margin holds the bar, so the grid centres it between the bar and the window's
+ * bottom. In a window too low for the list it fills that height and scrolls with the wheel, without a bar to narrow
+ * it. The eight pages fit a window 360 px tall (a 720 px one at 200 %)
+ */
 .shell .nav {
+  align-self: center;
   min-height: 0;
+  max-height: calc(100% - var(--bar-height) - 2 * var(--nav-gap));
   overflow-y: auto;
-  padding: 8px;
+  margin: calc(var(--bar-height) + var(--nav-gap)) 0 var(--nav-gap) var(--nav-gap);
+  /* The same all round, the corners the buttons' (10 px) plus it, so the two curves run side by side */
+  padding: 5px;
+  border-radius: 15px;
   background: var(--panel);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 22%);
   scrollbar-width: none;
 }
 
 .shell .nav button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  /* As far from the icon to the name as from the edge to the icon (owner, 2026-11-12) */
+  gap: 8px;
   width: 100%;
   height: 34px;
   margin-bottom: 2px;
-  padding: 0 10px;
+  padding: 0 8px;
   border: 0;
   border-radius: 10px;
   background: none;
@@ -45,15 +65,18 @@
   cursor: default;
 }
 
-/* Nothing under the last: the eight pages fit a window 360 px tall (a 720 px one at 200 %) exactly */
+/* Nothing under the last */
 .shell .nav button:last-child {
   margin-bottom: 0;
 }
 
-/* Every icon in a slot as wide as the widest (the AltScreen's), so the names line up */
+/*
+ * Every icon in a 17 px square, as wide as the icons drawn in it, so the names line up and the space round each icon
+ * is the same; the AltScreen's wide one is drawn smaller to fit (owner, 2026-11-12)
+ */
 .shell .nav svg {
   flex: none;
-  width: 27px;
+  width: 17px;
   height: 17px;
   opacity: 0.8;
 }
@@ -75,16 +98,19 @@
 
 /*
  * In a window as narrow as the toolbar's icons-only form (above), the section list too shows the icons alone, each
- * named when hovered: 30 px squares 1 px apart in 2 px of padding, so that all six fit the 192 px a window of 240 px
- * leaves under the bar (190 px); the icons smaller to keep clear of the squares' edges.
+ * named when hovered: 30 px squares 1 px apart in 2 px of padding, the panel as far from the edges as the narrow bar's
+ * buttons are from its own; the icons smaller to keep clear of the squares' edges.
  */
 @container shell (max-width: 529px) {
   .shell .body {
+    --bar-height: 40px;
+    --nav-gap: 3px;
     --nav-width: 34px;
   }
 
   .shell .nav {
     padding: 2px;
+    border-radius: 12px;
   }
 
   .shell .nav .label {

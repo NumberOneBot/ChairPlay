@@ -22,10 +22,25 @@
   --fill: rgb(118 118 128);
 }
 
-/* Black's settings text a shade softer than the controls window's white */
+/* Black's settings text a shade softer than the controls window's white, its labels and hints lighter than there */
 .shell {
-  --text: #e9e9eb;
-  --muted: #8b8b92;
+  --text: #f2f2f4;
+  --muted: #a3a3ab;
+  --dim: #76767e;
+}
+
+/*
+ * What the settings' fields, switches, and groups of choices are drawn with, the same over every tint: a field is a
+ * well (darker than the page, a thin light edge), and a group of choices or a switch is a faint track with a light
+ * plate on it
+ */
+.shell {
+  --well: rgb(0 0 0 / 30%);
+  --well-edge: rgb(255 255 255 / 9%);
+  --track: rgb(255 255 255 / 8%);
+  /* Not --plate: that is a short group's plate width (segmented.css) */
+  --chosen: rgb(255 255 255 / 20%);
+  --hair: rgb(255 255 255 / 9%);
 }
 
 :root[data-tint='graphite'] {
@@ -70,20 +85,6 @@
   --dim: #576869;
 }
 
-:root[data-tint='warm'] {
-  --bg: #12100e;
-  --panel: #191714;
-  --raised: #24211d;
-  --bar: #2a2621;
-  --field: #0e0c0a;
-  --ground: #1a1714;
-  --line: #312c27;
-  --edge: #413b34;
-  --text: #ece8e3;
-  --muted: #9a938a;
-  --dim: #6a635a;
-}
-
 /* A tint's text is the same on both pages, and its fill sits between its muted and dim greys */
 :root[data-tint]:not([data-tint='black']) {
   --fill: color-mix(in srgb, var(--muted) 55%, var(--dim));
@@ -92,4 +93,5 @@
 :root[data-tint]:not([data-tint='black']) .shell {
   --text: inherit;
   --muted: inherit;
+  --dim: inherit;
 }

@@ -14,11 +14,13 @@ describe('applyTint', () => {
     expect(document.documentElement.dataset.tint).toBe('slate')
   })
 
-  it('takes black for a tint no palette has', () => {
-    applyTint('slate')
-    applyTint('pink')
+  it('takes slate, the default, for a tint no palette has', () => {
+    for (const tint of ['pink', 'warm']) {
+      applyTint('teal')
+      applyTint(tint)
 
-    expect(document.documentElement.dataset.tint).toBe('black')
+      expect(document.documentElement.dataset.tint).toBe('slate')
+    }
   })
 })
 

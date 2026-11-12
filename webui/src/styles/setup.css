@@ -11,10 +11,15 @@
   overflow-y: auto;
 }
 
+/* Under the frosted bar as a settings page is (rows.css) */
+.shell .body.setup-body::-webkit-scrollbar-track {
+  margin-top: var(--bar-height);
+}
+
 .shell .setup {
   position: relative;
   min-height: 100%;
-  padding: 14px 24px 34px;
+  padding: calc(var(--bar-height) + 14px) 24px 34px;
 }
 
 .shell .setup h2 {
