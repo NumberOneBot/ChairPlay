@@ -88,6 +88,14 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           >
             <PositionFields settings={settings} car={state.gps} heading={heading} />
           </Row>
+          {/* USB GPS sets the position alone: the iPhone works out the car's heading itself (owner, 2026-11-13) */}
+          {usb && (
+            <Row className="hint-row">
+              <span className="hint">
+                USB GPS sends no heading, which can affect how the car turns on the map
+              </span>
+            </Row>
+          )}
           {usbReady && <CityPresets settings={settings} place={placeOf(state.gps, value('gps.start'))} />}
           {!usb && value('gps.heading.send') !== 'false' && (
             <Row
