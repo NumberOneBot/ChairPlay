@@ -40,8 +40,9 @@
     },
     {
       "label": "Deploy and run",
-      "dependsOrder": "sequence",
-      "dependsOn": ["Deploy", "Run ChairPlay"],
+      "detail": "Builds the app into dist\\ChairPlay, or the chairplay.home path, and starts it there (gradlew deployAndLaunch). Close the app first.",
+      "type": "shell",
+      "command": ".\\gradlew.bat deployAndLaunch",
       "problemMatcher": []
     },
     {

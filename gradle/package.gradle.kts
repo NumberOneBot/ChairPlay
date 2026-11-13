@@ -194,6 +194,15 @@ tasks.register<Exec>("launchApp") {
     val folder = home.get().path.replace("'", "''")
     commandLine("powershell", "-NoProfile", "-Command",
         "Start-Process -FilePath '$folder\\ChairPlay.exe' -WorkingDirectory '$folder'")
+    // Asked for together, the app starts only once it is installed
+    mustRunAfter("deploy")
+}
+
+// Installs the app into the app folder and starts it there, in one task (owner, 2026-11-13).
+tasks.register("deployAndLaunch") {
+    group = "application"
+    description = "Installs the app into the app folder (deploy) and starts it there (launchApp)."
+    dependsOn("deploy", "launchApp")
 }
 
 tasks.register<Exec>("listDevices") {
