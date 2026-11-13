@@ -79,12 +79,16 @@ class ControlsConfigTest {
         assertEquals(ControlAction.MEDIA_NEXT, loaded.bindings[KeyBinding(MediaKeys.NEXT, 0)])
         assertEquals(ControlAction.MEDIA_PREVIOUS, loaded.bindings[KeyBinding(MediaKeys.PREVIOUS, 0)])
         assertEquals(ControlAction.MEDIA_PLAY_PAUSE, loaded.bindings[KeyBinding(MediaKeys.PLAY_PAUSE, 0)])
-        assertEquals(listOf("F5", "MediaNext"), loaded.keys(ControlAction.MEDIA_NEXT))
+        // First in the list, as Escape and Enter; the buttons' labels keep the key the user presses.
+        assertEquals(listOf("MediaNext", "F5"), loaded.keys(ControlAction.MEDIA_NEXT))
+        assertEquals("F5", loaded.firstKey(ControlAction.MEDIA_NEXT))
         assertEquals(listOf("MediaPrevious"), loaded.keys(ControlAction.MEDIA_PREVIOUS))
+        assertNull(loaded.firstKey(ControlAction.MEDIA_PREVIOUS))
         assertEquals(listOf("MediaPlayPause", "F2"), loaded.keys(ControlAction.MEDIA_PLAY_PAUSE))
         assertEquals(listOf("MediaNext"), loaded.fixedKeys(ControlAction.MEDIA_NEXT))
         assertEquals("F9", ControlsConfig.DEFAULT.firstKey(ControlAction.MEDIA_NEXT))
-        assertEquals(ControlsConfig.DEFAULT.keys(ControlAction.MEDIA_NEXT), listOf("F9", "MediaNext"))
+        assertEquals(listOf("MediaNext", "F9"), ControlsConfig.DEFAULT.keys(ControlAction.MEDIA_NEXT))
+        assertEquals(listOf("MediaNext", "F9"), ControlsConfig.load(dirWith("key.media.next = F9")).keys(ControlAction.MEDIA_NEXT))
         assertEquals(Control.Media(MediaKey.NEXT), KeyControls(loaded).key(MediaKeys.NEXT, GLFW_PRESS, 0))
     }
 

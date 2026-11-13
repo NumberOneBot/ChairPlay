@@ -34,9 +34,9 @@ const KEY_LABELS: Record<string, string> = {
   slash: '/',
   graveaccent: '`',
   kp_equal: 'Num =',
-  mediaprevious: 'Previous track',
-  mediaplaypause: 'Play/Pause',
-  medianext: 'Next track',
+  mediaprevious: 'Media: Previous',
+  mediaplaypause: 'Media: Play/Pause',
+  medianext: 'Media: Next',
 }
 
 export function keyLabel(name: string): string {

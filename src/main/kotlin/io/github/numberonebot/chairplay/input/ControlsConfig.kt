@@ -23,9 +23,9 @@ enum class ControlAction(val key: String, val defaults: String, val description:
     SELECT("key.select", "Enter, KP_Enter, Space", "knob select"),
     BACK("key.back", "Escape, Backspace", "back"),
     HOME("key.home", "Home", "CarPlay home screen"),
-    MEDIA_PREVIOUS("key.media.previous", "F7, MediaPrevious", "previous track"),
-    MEDIA_PLAY_PAUSE("key.media.playpause", "F8, MediaPlayPause", "play or pause"),
-    MEDIA_NEXT("key.media.next", "F9, MediaNext", "next track"),
+    MEDIA_PREVIOUS("key.media.previous", "MediaPrevious, F7", "previous track"),
+    MEDIA_PLAY_PAUSE("key.media.playpause", "MediaPlayPause, F8", "play or pause"),
+    MEDIA_NEXT("key.media.next", "MediaNext, F9", "next track"),
     CALL_ANSWER("key.call.answer", "F3", "answer a call"),
     CALL_END("key.call.end", "F4", "end a call"),
     SIRI("key.siri", "S", "Siri"),
@@ -68,8 +68,11 @@ class ControlsConfig(
     private val keyNames: Map<ControlAction, List<String>> = emptyMap(),
     val globalEnabled: Boolean = false,
 ) {
-    /** The first key bound to [action], as the file names it ("Escape", "Ctrl+Up"), for a button's label; null for none. */
-    fun firstKey(action: ControlAction): String? = keyNames[action]?.firstOrNull()
+    /**
+     * The first key bound to [action], as the file names it ("Escape", "Ctrl+Up"), for a button's label; null for none.
+     * The keyboard's track keys name no button: F9 does, after Next track.
+     */
+    fun firstKey(action: ControlAction): String? = keyNames[action]?.firstOrNull { it.lowercase() !in UNLABELLED }
 
     /** Every key bound to [action], as the file names them, in its order; the fixed one first when the file lacks it. */
     fun keys(action: ControlAction): List<String> = keyNames[action].orEmpty()
@@ -94,19 +97,23 @@ class ControlsConfig(
 
         /**
          * A key an action always has, so the app never loses its way back or its select, and the keyboard's track keys
-         * always do what they say. One the file leaves out comes [first] or after the file's own keys.
+         * always do what they say. One the file leaves out comes first. A [label] one names its button in the controls
+         * window; a track key does not, as its button says what it does already: the next key does (owner, 2026-11-13).
          */
         private class Fixed(
-            val binding: KeyBinding, val action: ControlAction, val name: String, val reason: String, val first: Boolean = true,
+            val binding: KeyBinding, val action: ControlAction, val name: String, val reason: String, val label: Boolean = true,
         )
 
         private val FIXED = listOf(
             Fixed(KeyBinding(GLFW_KEY_ESCAPE, 0), ControlAction.BACK, "Escape", "Escape always goes back"),
             Fixed(KeyBinding(GLFW_KEY_ENTER, 0), ControlAction.SELECT, "Enter", "Enter always selects"),
-            Fixed(KeyBinding(MediaKeys.PREVIOUS, 0), ControlAction.MEDIA_PREVIOUS, "MediaPrevious", "the Previous track key always goes back a track", first = false),
-            Fixed(KeyBinding(MediaKeys.PLAY_PAUSE, 0), ControlAction.MEDIA_PLAY_PAUSE, "MediaPlayPause", "the Play/Pause key always plays or pauses", first = false),
-            Fixed(KeyBinding(MediaKeys.NEXT, 0), ControlAction.MEDIA_NEXT, "MediaNext", "the Next track key always skips a track", first = false),
+            Fixed(KeyBinding(MediaKeys.PREVIOUS, 0), ControlAction.MEDIA_PREVIOUS, "MediaPrevious", "the Previous track key always goes back a track", label = false),
+            Fixed(KeyBinding(MediaKeys.PLAY_PAUSE, 0), ControlAction.MEDIA_PLAY_PAUSE, "MediaPlayPause", "the Play/Pause key always plays or pauses", label = false),
+            Fixed(KeyBinding(MediaKeys.NEXT, 0), ControlAction.MEDIA_NEXT, "MediaNext", "the Next track key always skips a track", label = false),
         )
+
+        /** The fixed keys that name no button. */
+        private val UNLABELLED = FIXED.filterNot { it.label }.map { it.name.lowercase() }.toSet()
 
         /** The pinned keys, with any modifiers: they act only in ChairPlay's windows, never as global shortcuts. */
         val PINNED_KEYS: Set<Int> = FIXED.map { it.binding.key }.toSet()
@@ -159,12 +166,10 @@ class ControlsConfig(
             }
             val keyNames = LinkedHashMap<ControlAction, List<String>>()
             for (action in ControlAction.entries) keyNames[action] = boundNames[action].orEmpty()
-            // A fixed key the file leaves out: Escape and Enter come first, as the ones the controls window's legends
-            // show; the track keys last, so F7 to F9 stay on the buttons.
+            // A fixed key the file leaves out comes first.
             for (fixed in FIXED) {
                 if (bindings.putIfAbsent(fixed.binding, fixed.action) == null) {
-                    val others = keyNames[fixed.action].orEmpty()
-                    keyNames[fixed.action] = if (fixed.first) listOf(fixed.name) + others else others + fixed.name
+                    keyNames[fixed.action] = listOf(fixed.name) + keyNames[fixed.action].orEmpty()
                 }
             }
             return ControlsConfig(

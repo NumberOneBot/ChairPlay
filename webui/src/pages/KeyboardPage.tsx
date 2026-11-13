@@ -248,8 +248,9 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
           {actions.map(actionRow)}
         </div>
       ))}
-      {/* Every action's keys back to the defaults in one save, as each row's Reset does for its own (owner). */}
-      <Row>
+      {/* Every action's keys back to the defaults in one save, as each row's Reset does for its own (owner); set apart
+          from the last group as groups are from each other (owner, 2026-11-13). */}
+      <Row className="keys-all">
         <button
           type="button"
           className="btn small"
