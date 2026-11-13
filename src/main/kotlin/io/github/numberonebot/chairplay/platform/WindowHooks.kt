@@ -23,6 +23,13 @@ interface WindowHooks {
     /** Moves the window by a press anywhere on its picture, as by its title bar; its edges keep sizing it. */
     fun dragByPicture(window: Long)
 
+    /**
+     * Hands the keyboard's track keys to [key] while the window has the focus, as GLFW hands it keys (action GLFW_PRESS,
+     * GLFW_REPEAT or GLFW_RELEASE, no modifiers) under MediaKeys' codes, and keeps them from the system, so no other
+     * player acts on them too.
+     */
+    fun mediaKeys(window: Long, key: (key: Int, action: Int, mods: Int) -> Unit)
+
     /** Flashes the window's taskbar button until the window comes to the front ([on]), or stops it. */
     fun flash(window: Long, on: Boolean)
 }

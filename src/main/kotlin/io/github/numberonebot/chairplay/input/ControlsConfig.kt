@@ -23,9 +23,9 @@ enum class ControlAction(val key: String, val defaults: String, val description:
     SELECT("key.select", "Enter, KP_Enter, Space", "knob select"),
     BACK("key.back", "Escape, Backspace", "back"),
     HOME("key.home", "Home", "CarPlay home screen"),
-    MEDIA_PREVIOUS("key.media.previous", "F7", "previous track"),
-    MEDIA_PLAY_PAUSE("key.media.playpause", "F8", "play or pause"),
-    MEDIA_NEXT("key.media.next", "F9", "next track"),
+    MEDIA_PREVIOUS("key.media.previous", "F7, MediaPrevious", "previous track"),
+    MEDIA_PLAY_PAUSE("key.media.playpause", "F8, MediaPlayPause", "play or pause"),
+    MEDIA_NEXT("key.media.next", "F9, MediaNext", "next track"),
     CALL_ANSWER("key.call.answer", "F3", "answer a call"),
     CALL_END("key.call.end", "F4", "end a call"),
     SIRI("key.siri", "S", "Siri"),
@@ -92,12 +92,20 @@ class ControlsConfig(
         private val MODIFIERS = mapOf("shift" to GLFW_MOD_SHIFT, "ctrl" to GLFW_MOD_CONTROL, "alt" to GLFW_MOD_ALT)
         internal const val MOD_MASK = GLFW_MOD_SHIFT or GLFW_MOD_CONTROL or GLFW_MOD_ALT
 
-        /** A key an action always has, so the app never loses its way back or its select. */
-        private class Fixed(val binding: KeyBinding, val action: ControlAction, val name: String, val reason: String)
+        /**
+         * A key an action always has, so the app never loses its way back or its select, and the keyboard's track keys
+         * always do what they say. One the file leaves out comes [first] or after the file's own keys.
+         */
+        private class Fixed(
+            val binding: KeyBinding, val action: ControlAction, val name: String, val reason: String, val first: Boolean = true,
+        )
 
         private val FIXED = listOf(
             Fixed(KeyBinding(GLFW_KEY_ESCAPE, 0), ControlAction.BACK, "Escape", "Escape always goes back"),
             Fixed(KeyBinding(GLFW_KEY_ENTER, 0), ControlAction.SELECT, "Enter", "Enter always selects"),
+            Fixed(KeyBinding(MediaKeys.PREVIOUS, 0), ControlAction.MEDIA_PREVIOUS, "MediaPrevious", "the Previous track key always goes back a track", first = false),
+            Fixed(KeyBinding(MediaKeys.PLAY_PAUSE, 0), ControlAction.MEDIA_PLAY_PAUSE, "MediaPlayPause", "the Play/Pause key always plays or pauses", first = false),
+            Fixed(KeyBinding(MediaKeys.NEXT, 0), ControlAction.MEDIA_NEXT, "MediaNext", "the Next track key always skips a track", first = false),
         )
 
         /** The pinned keys, with any modifiers: they act only in ChairPlay's windows, never as global shortcuts. */
@@ -151,10 +159,12 @@ class ControlsConfig(
             }
             val keyNames = LinkedHashMap<ControlAction, List<String>>()
             for (action in ControlAction.entries) keyNames[action] = boundNames[action].orEmpty()
-            // A fixed key the file leaves out comes first, as the one the controls window's legends show.
+            // A fixed key the file leaves out: Escape and Enter come first, as the ones the controls window's legends
+            // show; the track keys last, so F7 to F9 stay on the buttons.
             for (fixed in FIXED) {
                 if (bindings.putIfAbsent(fixed.binding, fixed.action) == null) {
-                    keyNames[fixed.action] = listOf(fixed.name) + keyNames[fixed.action].orEmpty()
+                    val others = keyNames[fixed.action].orEmpty()
+                    keyNames[fixed.action] = if (fixed.first) listOf(fixed.name) + others else others + fixed.name
                 }
             }
             return ControlsConfig(
@@ -228,6 +238,7 @@ class ControlsConfig(
                 "kp_decimal" to GLFW_KEY_KP_DECIMAL, "kp_divide" to GLFW_KEY_KP_DIVIDE, "kp_multiply" to GLFW_KEY_KP_MULTIPLY,
                 "kp_subtract" to GLFW_KEY_KP_SUBTRACT, "kp_add" to GLFW_KEY_KP_ADD, "kp_enter" to GLFW_KEY_KP_ENTER,
                 "kp_equal" to GLFW_KEY_KP_EQUAL,
+                "mediaprevious" to MediaKeys.PREVIOUS, "mediaplaypause" to MediaKeys.PLAY_PAUSE, "medianext" to MediaKeys.NEXT,
             ))
         }
 
@@ -239,6 +250,7 @@ class ControlsConfig(
             append("# 'Backspace', 'Insert', 'Delete', 'Home', 'End', 'PageUp', 'PageDown', 'KP_0'-'KP_9', 'KP_Enter',\n")
             append("# 'KP_Add', 'KP_Subtract', 'Minus', 'Equal', 'Comma', 'Period', 'Slash', ... named after their place on\n")
             append("# a US keyboard, so letters work in any layout. A raw GLFW key code is written '#290'.\n")
+            append("# The keyboard's track keys, 'MediaPrevious', 'MediaPlayPause' and 'MediaNext', always do what they say.\n")
             append("# Modifiers: 'Shift+', 'Ctrl+', 'Alt+' (for example 'Ctrl+Shift+S').\n")
             append("\n")
             for (action in ControlAction.entries) {

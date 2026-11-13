@@ -11,7 +11,13 @@ import { GlobalShortcuts } from './GlobalShortcuts'
 import { KEY_GROUPS } from './keyGroups'
 
 /** Why a fixed key stays where it is. */
-const FIXED_REASON: Record<string, string> = { escape: 'Esc always goes back', enter: 'Enter always selects' }
+const FIXED_REASON: Record<string, string> = {
+  escape: 'Esc always goes back',
+  enter: 'Enter always selects',
+  mediaprevious: "The keyboard's Previous track key always goes back a track",
+  mediaplaypause: "The keyboard's Play/Pause key always plays or pauses",
+  medianext: "The keyboard's Next track key always skips a track",
+}
 
 /** Up to three keys an action: the + goes at three. */
 const MOST_KEYS = 3

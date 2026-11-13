@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.input
 
 import io.github.numberonebot.chairplay.phone.KnobInput
+import io.github.numberonebot.chairplay.phone.MediaKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -70,9 +71,26 @@ class ControlsConfigTest {
         assertEquals(emptyList<String>(), loaded.fixedKeys(ControlAction.HOME))
     }
 
+    // The keyboard's own media keys work whatever the file says, after the keys it names (owner, 2026-11-13).
+    @Test
+    fun `the media keys always play their actions`() {
+        val loaded = ControlsConfig.load(dirWith("key.media.next = F5", "key.media.previous =", "key.media.playpause = MediaPlayPause, F2"))
+
+        assertEquals(ControlAction.MEDIA_NEXT, loaded.bindings[KeyBinding(MediaKeys.NEXT, 0)])
+        assertEquals(ControlAction.MEDIA_PREVIOUS, loaded.bindings[KeyBinding(MediaKeys.PREVIOUS, 0)])
+        assertEquals(ControlAction.MEDIA_PLAY_PAUSE, loaded.bindings[KeyBinding(MediaKeys.PLAY_PAUSE, 0)])
+        assertEquals(listOf("F5", "MediaNext"), loaded.keys(ControlAction.MEDIA_NEXT))
+        assertEquals(listOf("MediaPrevious"), loaded.keys(ControlAction.MEDIA_PREVIOUS))
+        assertEquals(listOf("MediaPlayPause", "F2"), loaded.keys(ControlAction.MEDIA_PLAY_PAUSE))
+        assertEquals(listOf("MediaNext"), loaded.fixedKeys(ControlAction.MEDIA_NEXT))
+        assertEquals("F9", ControlsConfig.DEFAULT.firstKey(ControlAction.MEDIA_NEXT))
+        assertEquals(ControlsConfig.DEFAULT.keys(ControlAction.MEDIA_NEXT), listOf("F9", "MediaNext"))
+        assertEquals(Control.Media(MediaKey.NEXT), KeyControls(loaded).key(MediaKeys.NEXT, GLFW_PRESS, 0))
+    }
+
     @Test
     fun `a file that binds Escape or Enter to another action is refused, naming the setting`() {
-        for (line in listOf("key.home = Escape", "key.siri = F2, enter")) {
+        for (line in listOf("key.home = Escape", "key.siri = F2, enter", "key.siri = MediaNext")) {
             val message = runCatching { ControlsConfig.load(dirWith(line)) }.exceptionOrNull()?.message.orEmpty()
             assertTrue(message, line.substringBefore(" =") in message)
         }

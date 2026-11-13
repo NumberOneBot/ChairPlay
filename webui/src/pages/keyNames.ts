@@ -41,6 +41,9 @@ const NAMED: Record<string, string> = {
   NumpadDivide: 'KP_Divide',
   NumpadDecimal: 'KP_Decimal',
   NumpadEqual: 'KP_Equal',
+  MediaTrackPrevious: 'MediaPrevious',
+  MediaPlayPause: 'MediaPlayPause',
+  MediaTrackNext: 'MediaNext',
 }
 
 /** Pressed alone, these are no key: the wait for one goes on. */

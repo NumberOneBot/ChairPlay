@@ -94,6 +94,10 @@ internal class FakeWindowHooks(var closedByUser: Boolean = false) : WindowHooks 
         calls += "dragByPicture($window)"
     }
 
+    override fun mediaKeys(window: Long, key: (key: Int, action: Int, mods: Int) -> Unit) {
+        calls += "mediaKeys($window)"
+    }
+
     override fun flash(window: Long, on: Boolean) {
         flashes += window to on
     }

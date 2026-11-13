@@ -3,11 +3,16 @@ package io.github.numberonebot.chairplay.media
 import io.github.numberonebot.chairplay.input.PointerEvent
 import io.github.numberonebot.chairplay.input.Size
 import io.github.numberonebot.chairplay.input.toFramebuffer
+import io.github.numberonebot.chairplay.platform.WindowHooks
 import org.lwjgl.glfw.GLFW.*
 
-/** GLFW input callbacks, with pointer coordinates converted to framebuffer pixels. */
+/**
+ * GLFW input callbacks, with pointer coordinates converted to framebuffer pixels, and the keyboard's track keys, which
+ * GLFW does not report, from [hooks] to [key] as well.
+ */
 internal fun installWindowInput(
     window: Long,
+    hooks: WindowHooks,
     pointer: (PointerEvent, Size) -> Unit,
     key: (Int, Int, Int) -> Unit,
     scroll: (Double) -> Unit,
@@ -37,6 +42,7 @@ internal fun installWindowInput(
         emit(x[0], y[0])
     }
     glfwSetKeyCallback(window) { _, code, _, action, mods -> key(code, action, mods) }
+    hooks.mediaKeys(window, key)
     glfwSetCharCallback(window) { _, codePoint -> character(codePoint) }
     glfwSetWindowFocusCallback(window) { _, focused -> if (!focused) focusLost() }
     glfwSetScrollCallback(window) { _, _, dy -> scroll(dy) }

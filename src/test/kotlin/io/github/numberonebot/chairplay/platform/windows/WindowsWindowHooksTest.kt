@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.platform.windows
 
+import io.github.numberonebot.chairplay.input.MediaKeys
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -57,6 +58,34 @@ class WindowsWindowHooksTest {
         assertEquals(ClientDrag.HTCAPTION, send(window, WM_NCHITTEST, 0, point))
     }
 
+    // The keyboard's track keys are the app's while its window has the focus: Windows gets none of them, so another
+    // player does not skip too; the volume keys stay Windows' (owner, 2026-11-13).
+    @Test
+    fun `the track keys go to the app and not on to Windows, the volume keys do`() = withWindow { window ->
+        val glfw = mutableListOf<Int>()
+        glfwSetKeyCallback(window) { _, _, scancode, _, _ -> glfw += scancode }
+        val got = mutableListOf<Triple<Int, Int, Int>>()
+        hooks.mediaKeys(window) { key, action, mods -> got += Triple(key, action, mods) }
+
+        assertEquals(0L, send(window, WM_KEYDOWN, VK_MEDIA_NEXT_TRACK, NEXT_SCAN))
+        send(window, WM_KEYDOWN, VK_MEDIA_NEXT_TRACK, NEXT_SCAN or WAS_DOWN)
+        send(window, WM_KEYUP, VK_MEDIA_NEXT_TRACK, NEXT_SCAN or WAS_DOWN or RELEASED)
+        send(window, WM_KEYDOWN, VK_MEDIA_PREV_TRACK, 1)
+        send(window, WM_KEYDOWN, VK_MEDIA_PLAY_PAUSE, 1)
+        send(window, WM_KEYDOWN, VK_VOLUME_UP, 1)
+
+        assertEquals(
+            listOf(
+                Triple(MediaKeys.NEXT, GLFW_PRESS, 0), Triple(MediaKeys.NEXT, GLFW_REPEAT, 0),
+                Triple(MediaKeys.NEXT, GLFW_RELEASE, 0), Triple(MediaKeys.PREVIOUS, GLFW_PRESS, 0),
+                Triple(MediaKeys.PLAY_PAUSE, GLFW_PRESS, 0),
+            ),
+            got,
+        )
+        // GLFW's procedure, which hands keys on to Windows, saw the volume key alone.
+        assertEquals(1, glfw.size)
+    }
+
     // Windows draws a dark title bar for a window in dark mode; a dialog's keeps only its close button.
     @Test
     fun `a painted title bar is dark and a dialog's has no size buttons`() = withWindow { window ->
@@ -100,6 +129,16 @@ class WindowsWindowHooksTest {
     }
 
     private companion object {
+        const val WM_KEYDOWN = 0x0100
+        const val WM_KEYUP = 0x0101
+        const val VK_VOLUME_UP = 0xAFL
+        const val VK_MEDIA_NEXT_TRACK = 0xB0L
+        const val VK_MEDIA_PREV_TRACK = 0xB1L
+        const val VK_MEDIA_PLAY_PAUSE = 0xB3L
+        // A key message's lParam: one press, the extended scan code E0 19, and the bits of a repeat and a release.
+        const val NEXT_SCAN = 1L or (0x19L shl 16) or (1L shl 24)
+        const val WAS_DOWN = 1L shl 30
+        const val RELEASED = 1L shl 31
         const val WM_CLOSE = 0x0010
         const val WM_NCHITTEST = 0x0084
         const val WM_SYSCOMMAND = 0x0112

@@ -77,7 +77,7 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 | Ctrl+R                                    | reconnect                                                      |
 | S                                         | Siri                                                           |
 | F3 / F4                                   | answer / end a call                                            |
-| F7 / F8 / F9                              | previous track / play or pause / next track                    |
+| F7 / F8 / F9, or the keyboard's media keys | previous track / play or pause / next track                  |
 | F10                                       | drive the GPS car with the arrows (GPS simulation on)          |
 | Shift+F10                                 | large or small gauges for the GPS car                          |
 | F11                                       | AltScreen: switch between the HUD and the map                  |

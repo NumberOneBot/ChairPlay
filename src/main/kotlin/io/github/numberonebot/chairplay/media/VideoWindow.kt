@@ -322,7 +322,7 @@ class VideoWindow(
         // Draw as soon as a frame is ready instead of waiting for vertical blank, which would add up to a frame.
         glfwSwapInterval(0)
         capabilities = GL.createCapabilities()
-        installWindowInput(window, { event, size -> framebufferSize = size; inputHandler(event) },
+        installWindowInput(window, hooks, { event, size -> framebufferSize = size; inputHandler(event) },
             { key, action, mods -> keyHandler(key, action, mods) }, { scrollHandler(it) }, { characterHandler(it) }, { inputFocusLost() })
         val gl = PictureGl().also { gl = it }
         // Black from the start, like the title bar, instead of the system's white until the first frame.

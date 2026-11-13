@@ -19,6 +19,7 @@ New features and fixed bugs in ChairPlay.
 - **Track playback** (**Settings > GPS**, with USB GPS) opens a GPX recording and plays it as the GPS car: Play, Pause, Stop, and the recording's time and distance. While it plays, the arrow keys and the gamepad don't move the car, and with **Drive mode** on the gauges show the recording's speed.
 - **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Slate, the new default, Black, as before, Graphite, Teal, or Dracula. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
 - The mouse's back button goes back in the CarPlay and AltScreen windows.
+- The keyboard's media keys, Previous track, Play/Pause, and Next track, control the iPhone's music while a ChairPlay window has the focus, whatever the key bindings say. Other players don't get them meanwhile; the volume keys stay with Windows.
 - **About > Version** offers a newer release that the update check found, with **Download**, until that version is installed. The update dialog's **Open** goes to the latest release's page.
 
 ### Changed

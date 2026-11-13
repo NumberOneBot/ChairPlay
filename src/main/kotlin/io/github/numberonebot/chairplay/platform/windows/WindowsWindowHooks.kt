@@ -21,6 +21,9 @@ internal class WindowsWindowHooks : WindowHooks {
 
     override fun dragByPicture(window: Long) = ClientDrag.install(nativeHandle(window))
 
+    override fun mediaKeys(window: Long, key: (key: Int, action: Int, mods: Int) -> Unit) =
+        MediaKeyHook.install(nativeHandle(window), key)
+
     override fun flash(window: Long, on: Boolean) {
         val info = WinUser.FLASHWINFO().apply {
             hWnd = HWND(Pointer(nativeHandle(window)))

@@ -37,11 +37,11 @@ class ControlsFileTest {
     fun `a key taken from another action leaves it`() {
         val controls = file()
 
-        val result = saved(controls.save(mapOf("key.home" to "F7")))
+        val result = saved(controls.save(mapOf("key.home" to "F3")))
 
-        assertEquals(mapOf("key.home" to "F7", "key.media.previous" to ""), result.changes)
-        assertEquals(ControlAction.HOME, result.config.bindings[KeyBinding(GLFW_KEY_F7, 0)])
-        assertTrue("\nkey.media.previous=\n" in Files.readString(path))
+        assertEquals(mapOf("key.home" to "F3", "key.call.answer" to ""), result.changes)
+        assertEquals(ControlAction.HOME, result.config.bindings[KeyBinding(GLFW_KEY_F3, 0)])
+        assertTrue("\nkey.call.answer=\n" in Files.readString(path))
     }
 
     @Test

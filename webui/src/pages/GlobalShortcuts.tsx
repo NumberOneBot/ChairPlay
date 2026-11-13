@@ -15,7 +15,7 @@ export function GlobalShortcuts({ data, state, save, error }: {
           onChange={(enabled) => void save({ 'global.enabled': String(enabled) })} />
       </Row>
       <Row className="hint-row">
-        <span className="hint">Use these shortcuts while another app has focus, except Enter and Esc; that app also receives the keys</span>
+        <span className="hint">Use these shortcuts while another app has focus, except Enter, Esc, and the media keys; that app also receives the keys</span>
       </Row>
       {problem && <Row><span className="errtext" role="alert">{problem}</span></Row>}
     </>

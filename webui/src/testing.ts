@@ -115,9 +115,9 @@ const DEFAULT_KEYS: [string, string[]][] = [
   ['key.select', ['Enter', 'KP_Enter', 'Space']],
   ['key.back', ['Escape', 'Backspace']],
   ['key.home', ['Home']],
-  ['key.media.previous', ['F7']],
-  ['key.media.playpause', ['F8']],
-  ['key.media.next', ['F9']],
+  ['key.media.previous', ['F7', 'MediaPrevious']],
+  ['key.media.playpause', ['F8', 'MediaPlayPause']],
+  ['key.media.next', ['F9', 'MediaNext']],
   ['key.call.answer', ['F3']],
   ['key.call.end', ['F4']],
   ['key.siri', ['S']],
@@ -136,6 +136,15 @@ const DEFAULT_KEYS: [string, string[]][] = [
 ]
 
 /** The bindings as a fresh controls.properties has them. */
+/** The keys each action has whatever the file says, as the app reports them. */
+const FIXED_KEYS: Record<string, string[]> = {
+  'key.back': ['Escape'],
+  'key.select': ['Enter'],
+  'key.media.previous': ['MediaPrevious'],
+  'key.media.playpause': ['MediaPlayPause'],
+  'key.media.next': ['MediaNext'],
+}
+
 export function controlsData(): ControlsData {
   return {
     actions: Object.fromEntries(
@@ -144,7 +153,7 @@ export function controlsData(): ControlsData {
         {
           keys: [...keys],
           defaults: [...keys],
-          fixed: key === 'key.back' ? ['Escape'] : key === 'key.select' ? ['Enter'] : [],
+          fixed: FIXED_KEYS[key] ?? [],
         },
       ]),
     ),

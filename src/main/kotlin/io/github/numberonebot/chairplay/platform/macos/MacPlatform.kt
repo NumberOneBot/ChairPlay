@@ -71,6 +71,8 @@ private object MacWindows : WindowHooks {
 
     override fun dragByPicture(window: Long) = notReady()
 
+    override fun mediaKeys(window: Long, key: (key: Int, action: Int, mods: Int) -> Unit) = notReady()
+
     override fun flash(window: Long, on: Boolean) = notReady()
 }
 
