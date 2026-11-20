@@ -22,11 +22,12 @@
                 (void)note;
                 CpWindowCloseObserver *strongSelf = weakSelf;
                 if (strongSelf) {
-                    // Check if current event is a click or close command
+                    // Check if current event targets this window: click on
+                    // the close button, or Cmd+W.
                     NSEvent *event = [NSApp currentEvent];
-                    if (event && (event.type == NSEventTypeLeftMouseUp ||
-                                  event.type == NSEventTypeLeftMouseDown ||
-                                  event.type == NSEventTypeKeyDown)) {
+                    if (event && event.window == win &&
+                        (event.type == NSEventTypeLeftMouseUp ||
+                         event.type == NSEventTypeLeftMouseDown)) {
                         strongSelf.userClosed = YES;
                     }
                 }
@@ -74,12 +75,17 @@ int cp_win_user_closed(int64_t watch) {
     }
     @autoreleasepool {
         NSEvent *event = [NSApp currentEvent];
-        if (event) {
+        if (event && event.window == obs.window) {
             NSEventType type = event.type;
-            if (type == NSEventTypeLeftMouseUp ||
-                type == NSEventTypeLeftMouseDown ||
-                type == NSEventTypeKeyDown) {
+            if (type == NSEventTypeLeftMouseUp || type == NSEventTypeLeftMouseDown) {
                 return 1;
+            }
+            if (type == NSEventTypeKeyDown) {
+                NSString *chars = [event charactersIgnoringModifiers];
+                if ((event.modifierFlags & NSEventModifierFlagCommand) &&
+                    [chars isEqualToString:@"w"]) {
+                    return 1;
+                }
             }
         }
     }
