@@ -46,7 +46,7 @@ internal class MacNetwork(
     }
 
     override fun ethernetAdapters(): List<EthernetAdapter> {
-        val activeWifiInf = wifiProvider()?.takeIf { !it.wifiHidden }?.interfaceName
+        val activeWifiInf = wifiProvider()?.interfaceName
         val physicalNics = filterPhysicalInterfaces(nicProvider())
         return physicalNics.filter { it.name != activeWifiInf }.mapNotNull { nic ->
             val ipv4s = nic.addresses.filterIsInstance<Inet4Address>()

@@ -18,11 +18,8 @@ internal class MacWindows : WindowHooks {
         val nsWindow = nativeHandle(window)
         val watchHandle = MacNative.INSTANCE.cp_win_watch_close(nsWindow)
         return object : CloseWatch {
-            override fun userClosed(): Boolean {
-                val res = MacNative.INSTANCE.cp_win_user_closed(watchHandle)
-                MacNative.INSTANCE.cp_win_unwatch_close(watchHandle)
-                return res != 0
-            }
+            override fun userClosed(): Boolean =
+                MacNative.INSTANCE.cp_win_user_closed(watchHandle) != 0
         }
     }
 

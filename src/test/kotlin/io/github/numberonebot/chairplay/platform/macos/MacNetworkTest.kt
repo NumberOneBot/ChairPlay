@@ -131,4 +131,46 @@ class MacNetworkTest {
         assertEquals("en3", adapter.interfaceName)
         assertEquals(listOf("10.0.0.5"), adapter.addresses)
     }
+
+    @Test
+    fun `ethernetAdapters excludes wifi interface even when wifiHidden is true`() {
+        val addrEn0 = InetAddress.getByName("192.168.1.100")
+        val addrEn3 = InetAddress.getByName("10.0.0.5")
+
+        val nics = listOf(
+            MacNetwork.NetworkNic(
+                name = "en0",
+                isUp = true,
+                isLoopback = false,
+                isVirtual = false,
+                addresses = listOf(addrEn0),
+            ),
+            MacNetwork.NetworkNic(
+                name = "en3",
+                isUp = true,
+                isLoopback = false,
+                isVirtual = false,
+                addresses = listOf(addrEn3),
+            ),
+        )
+
+        val network = MacNetwork(
+            wifiProvider = {
+                MacNetwork.WifiDetails(
+                    interfaceName = "en0",
+                    ssid = null,
+                    bssid = null,
+                    channel = 36,
+                    powerOn = true,
+                    serviceActive = true,
+                    wifiHidden = true,
+                )
+            },
+            nicProvider = { nics },
+        )
+
+        val ethernet = network.ethernetAdapters()
+        assertEquals(1, ethernet.size)
+        assertEquals("en3", ethernet.first().id)
+    }
 }

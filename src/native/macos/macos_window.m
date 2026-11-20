@@ -25,6 +25,7 @@
                     // Check if current event is a click or close command
                     NSEvent *event = [NSApp currentEvent];
                     if (event && (event.type == NSEventTypeLeftMouseUp ||
+                                  event.type == NSEventTypeLeftMouseDown ||
                                   event.type == NSEventTypeKeyDown)) {
                         strongSelf.userClosed = YES;
                     }
@@ -67,7 +68,22 @@ int64_t cp_win_watch_close(int64_t ns_window) {
 int cp_win_user_closed(int64_t watch) {
     if (watch == 0) return 0;
     CpWindowCloseObserver *obs = (__bridge CpWindowCloseObserver *)(void *)(intptr_t)watch;
-    return obs.userClosed ? 1 : 0;
+    if (obs.userClosed) {
+        obs.userClosed = NO;
+        return 1;
+    }
+    @autoreleasepool {
+        NSEvent *event = [NSApp currentEvent];
+        if (event) {
+            NSEventType type = event.type;
+            if (type == NSEventTypeLeftMouseUp ||
+                type == NSEventTypeLeftMouseDown ||
+                type == NSEventTypeKeyDown) {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 void cp_win_unwatch_close(int64_t watch) {
