@@ -31,12 +31,12 @@ class VideoDecoderHardwareTest {
 
     @Test
     fun `the decoder's hardware log lines are today's`() {
-        assumeTrue("Windows only: D3D11 hardware decoding log lines", System.getProperty("os.name").startsWith("Windows"))
         val unavailable = mutableListOf<String>()
         VideoDecoder(onFrame = { it.release() }, log = { unavailable += it },
             hardwareFactory = { _, _ -> null }).use { play(it) }
         assertEquals(listOf("H264 decoder: software"), unavailable)
 
+        assumeTrue("Windows only: D3D11 hardware decoding log lines", System.getProperty("os.name").startsWith("Windows"))
         val thrown = mutableListOf<String>()
         VideoDecoder(onFrame = { it.release() }, log = { thrown += it },
             hardwareFactory = { _, _ -> error("no device") }).use { play(it) }

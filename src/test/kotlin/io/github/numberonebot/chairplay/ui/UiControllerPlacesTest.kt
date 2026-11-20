@@ -5,6 +5,7 @@ import io.github.numberonebot.chairplay.platform.LocationResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.nio.file.Files
 
@@ -39,6 +40,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
 
     @Test
     fun `New issue opens GitHub with the details filled in`() {
+        assumeTrue("Windows only: Explorer launch for issue URL", System.getProperty("os.name").startsWith("Windows"))
         val ui = controller()
         assertTrue(ui.open("issues"))
 
@@ -51,6 +53,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
 
     @Test
     fun `the About page's links open the project's pages, and the notices in Notepad`() {
+        assumeTrue("Windows only: Explorer and Notepad launches", System.getProperty("os.name").startsWith("Windows"))
         val ui = controller()
         val pages = mapOf(
             "author" to "https://github.com/NumberOneBot",
@@ -101,6 +104,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
     // The screens' links open Windows' own pages; the page names a place the app knows, never a command of its own.
     @Test
     fun `a link opens the Windows page it names, and nothing else`() {
+        assumeTrue("Windows only: ms-settings and Windows Defender URLs", System.getProperty("os.name").startsWith("Windows"))
         val ui = controller()
 
         assertTrue(ui.open("bluetooth"))
@@ -124,6 +128,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
     // Its rules are in the firewall's own console; the shell asks for the administrator's consent it needs.
     @Test
     fun `the firewall's rules open in its console through the shell`() {
+        assumeTrue("Windows only: wf.msc launch", System.getProperty("os.name").startsWith("Windows"))
         val ui = controller()
 
         assertTrue(ui.open("firewall-rules"))
@@ -134,6 +139,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
 
     @Test
     fun `the MFi folder opens in File Explorer, made first if it is missing`() {
+        assumeTrue("Windows only: File Explorer launch", System.getProperty("os.name").startsWith("Windows"))
         val ui = controller()
 
         assertTrue(ui.open("mfi-folder"))
@@ -156,6 +162,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
     // The Experiments page's Logs: the CarPlay data log's folder and F12's screenshots, in the app folder.
     @Test
     fun `the logs and screenshots folders open in File Explorer, made first if they are missing`() {
+        assumeTrue("Windows only: File Explorer launch", System.getProperty("os.name").startsWith("Windows"))
         val ui = controller()
 
         assertTrue(ui.open("logs"))

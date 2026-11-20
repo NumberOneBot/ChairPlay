@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.platform.windows
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class EthernetAdaptersTest {
@@ -37,6 +38,7 @@ class EthernetAdaptersTest {
     /** Asks this PC's adapters (never changes them): the call must at least answer. */
     @Test
     fun `the lookup runs against this PC`() {
+        assumeTrue("Windows only: iphlpapi adapter lookup", System.getProperty("os.name").startsWith("Windows"))
         EthernetAdapters.current()
     }
 }

@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 import org.lwjgl.glfw.GLFW.*
@@ -110,6 +111,7 @@ class WindowsWindowHooksTest {
         User32.INSTANCE.SendMessage(HWND(Pointer(hooks.nativeHandle(window))), message, WPARAM(wParam), LPARAM(lParam)).toLong()
 
     private fun withWindow(test: (Long) -> Unit) {
+        assumeTrue("Windows only: Windows window hooks and win32 messages", System.getProperty("os.name").startsWith("Windows"))
         assertTrue(glfwInit())
         glfwDefaultWindowHints()
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)

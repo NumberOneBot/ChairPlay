@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.platform.windows
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.util.UUID
 
@@ -11,6 +12,7 @@ class NamedMutexTest {
     // The installed copy and a portable one lock their own folders: the system-wide name keeps the second from
     // running while the first does, and lets it once the first is gone.
     @Test fun `a second copy cannot claim the name while the first holds it`() {
+        assumeTrue("Windows only: named mutex uses Win32 kernel objects", System.getProperty("os.name").startsWith("Windows"))
         val first = NamedMutex.claim(name, timeoutMillis = 0)
         assertTrue(first != null)
         assertTrue(NamedMutex.claim(name, timeoutMillis = 300) == null)
@@ -22,6 +24,7 @@ class NamedMutexTest {
 
     // A copy of the same folder that is still closing lets go of the name within the wait: the new one runs.
     @Test fun `the claim waits for a copy that is going`() {
+        assumeTrue("Windows only: named mutex uses Win32 kernel objects", System.getProperty("os.name").startsWith("Windows"))
         val going = NamedMutex.claim(name, timeoutMillis = 0)!!
         Thread { Thread.sleep(200); going.close() }.start()
         val next = NamedMutex.claim(name, timeoutMillis = 3000)

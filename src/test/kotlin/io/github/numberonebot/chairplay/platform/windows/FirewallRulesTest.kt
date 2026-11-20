@@ -5,6 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class FirewallTest {
@@ -180,6 +181,7 @@ class FirewallTest {
     /** Reads this machine's rules (never changes them): the API must at least answer. */
     @Test
     fun `the query runs against the real firewall`() {
+        assumeTrue("Windows only: real firewall query uses Windows COM/netsh", System.getProperty("os.name").startsWith("Windows"))
         val state = readFirewall("C:\\no such folder\\DiPlay test.exe")
 
         assertNotNull(state)

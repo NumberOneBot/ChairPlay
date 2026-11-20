@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.platform.windows
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.io.FileOutputStream
 import java.io.IOException
@@ -14,6 +15,7 @@ class LockedFileTest {
     // An elevated netsh reads the script: nothing else of the user's may change, replace, or rename it meanwhile.
     @Test
     fun `the file cannot be changed, replaced, or moved while it is held`() {
+        assumeTrue("Windows only: Win32 CreateFileW file locking", System.getProperty("os.name").startsWith("Windows"))
         val held = withLockedFile("advfirewall firewall show rule name=none\r\n") { path ->
             assertThrows(IOException::class.java) { FileOutputStream(path.toFile()).close() }
             assertThrows(IOException::class.java) { Files.delete(path) }
@@ -27,6 +29,7 @@ class LockedFileTest {
     /** Runs this PC's netsh on a held script (reading only, never changing a rule): it must still read it. */
     @Test
     fun `netsh reads the file while it is held`() {
+        assumeTrue("Windows only: Windows netsh and file locking", System.getProperty("os.name").startsWith("Windows"))
         val netsh = System.getenv("SystemRoot").orEmpty().ifEmpty { "C:\\Windows" } + "\\System32\\netsh.exe"
         val exit = withLockedFile("interface show interface\r\n") { path ->
             val process = ProcessBuilder(netsh, "-f", path.toString()).redirectErrorStream(true)

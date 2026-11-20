@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.nio.file.Files
 
@@ -34,6 +35,7 @@ class UiDeveloperToolsPlaceTest : UiControllerFixture() {
 
     @Test
     fun `the Developer tools folder opens in File Explorer`() {
+        assumeTrue("Windows only: File Explorer launch", System.getProperty("os.name").startsWith("Windows"))
         val ui = controller()
 
         assertTrue(ui.open("developer-tools"))
@@ -43,6 +45,7 @@ class UiDeveloperToolsPlaceTest : UiControllerFixture() {
 
     @Test
     fun `Open Apple Devices starts the installed app`() {
+        assumeTrue("Windows only: Apple Devices Store app launch", System.getProperty("os.name").startsWith("Windows"))
         assertTrue(controller().open("apple-devices-app"))
 
         assertTrue(launched.single().last().startsWith("shell:AppsFolder\\AppleInc.AppleDevices_"))

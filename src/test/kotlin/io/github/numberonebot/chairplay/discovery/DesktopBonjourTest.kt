@@ -9,8 +9,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.net.DatagramSocket
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -107,6 +109,7 @@ class DesktopBonjourTest {
     // The iPhone publishes _carplay-ctrl._tcp after it joins Wi-Fi; the receiver must ask it to connect.
     @Test
     fun `asks a discovered CarPlay control service to connect`() {
+        assumeTrue("Port 5353 collision: mDNS port already bound by host daemon (e.g. BrowserOS)", isMdnsPortAvailable())
         val loopback = InetAddress.getLoopbackAddress()
         val logged = CopyOnWriteArrayList<String>()
         MulticastSocket(null).use { holder ->
@@ -141,6 +144,7 @@ class DesktopBonjourTest {
     // JmDNS answers a PTR listing on loopback; getServiceInfo alone does not, as it only queries SRV/TXT.
     @Test
     fun `publishes on loopback while port 5353 is shared`() {
+        assumeTrue("Port 5353 collision: mDNS port already bound by host daemon (e.g. BrowserOS)", isMdnsPortAvailable())
         val publishConfig = config.copy(port = 47123)
         val loopback = InetAddress.getLoopbackAddress()
         MulticastSocket(null).use { holder ->
@@ -157,5 +161,11 @@ class DesktopBonjourTest {
                 assertEquals("0x4", found.getPropertyString("flags"))
             }
         }
+    }
+
+    private fun isMdnsPortAvailable(): Boolean = try {
+        DatagramSocket(5353).use { true }
+    } catch (_: Exception) {
+        false
     }
 }
