@@ -40,9 +40,10 @@ internal class MacFirewall(
         return parseFirewallState(globalOut, appOut)
     }
 
+    // macOS Application Firewall (ALF) controls incoming connections per-application binary, not per-port;
+    // unblocking the program binary permits inbound traffic on CarPlay control port (7000) and settings uiPort.
     override fun hint(port: Int, uiPort: Int?): String =
         "sudo $SOCKETFILTERFW --add $program && sudo $SOCKETFILTERFW --unblockapp $program"
-
     override fun addRules(commands: String): Boolean {
         val escaped = commands.replace("\\", "\\\\").replace("\"", "\\\"")
         val osaScript = "do shell script \"$escaped\" with administrator privileges"

@@ -87,5 +87,5 @@ private fun defaultReadDark(): Boolean? = runCatching {
     val p = ProcessBuilder("/usr/bin/defaults", "read", "-g", "AppleInterfaceStyle").start()
     val out = p.inputStream.bufferedReader().readText().trim()
     val exit = p.waitFor()
-    if (exit == 0 && out.equals("Dark", ignoreCase = true)) true else if (exit != 0) false else false
+    exit == 0 && out.equals("Dark", ignoreCase = true)
 }.getOrNull()
