@@ -35,14 +35,16 @@ abstract class InstallArchive : DefaultTask() {
         val dir = target.get()
         if (dir.resolve(marker.get()).isFile) return
         val root = dir.parentFile.apply { mkdirs() }
+        val downloadUrl = url.get()
+        val isTarGz = downloadUrl.endsWith(".tar.gz")
         // Unique names, so builds in two checkouts at once do not share half-written files.
         val part = "${dir.name}.${UUID.randomUUID()}.part"
-        val archive = root.resolve("$part.zip")
+        val archive = if (isTarGz) root.resolve("$part.tar.gz") else root.resolve("$part.zip")
         val staging = root.resolve(part)
         try {
-            logger.lifecycle("Downloading ${url.get()}")
+            logger.lifecycle("Downloading $downloadUrl")
             val digest = MessageDigest.getInstance("SHA-256")
-            val connection = URI(url.get()).toURL().openConnection().apply {
+            val connection = URI(downloadUrl).toURL().openConnection().apply {
                 connectTimeout = 30_000
                 readTimeout = 60_000
             }
@@ -50,14 +52,15 @@ abstract class InstallArchive : DefaultTask() {
                 DigestOutputStream(archive.outputStream(), digest).use { input.copyTo(it) }
             }
             val actual = digest.digest().joinToString("") { "%02x".format(it) }
-            check(actual == sha256.get()) { "${url.get()} has SHA-256 $actual, expected ${sha256.get()}" }
+            check(actual == sha256.get()) { "$downloadUrl has SHA-256 $actual, expected ${sha256.get()}" }
             val patterns = only.get()
+            val tree = if (isTarGz) archives.tarTree(archives.gzip(archive)) else archives.zipTree(archive)
             fs.copy {
-                from(archives.zipTree(archive)) { if (patterns.isNotEmpty()) include(patterns) }
+                from(tree) { if (patterns.isNotEmpty()) include(patterns) }
                 into(staging)
             }
             val unpacked = topFolder.orNull?.let { staging.resolve(it) } ?: staging
-            check(unpacked.resolve(marker.get()).isFile) { "${url.get()} has no ${marker.get()}" }
+            check(unpacked.resolve(marker.get()).isFile) { "$downloadUrl has no ${marker.get()}" }
             // An empty folder left by an interrupted run would block the move.
             dir.delete()
             try {
@@ -75,17 +78,33 @@ abstract class InstallArchive : DefaultTask() {
 // Node runs the UI's build and tests only; nothing of it ships. The release is pinned like zig, with the SHA-256
 // from https://nodejs.org/dist/v<version>/SHASUMS256.txt. npm checks every package against the integrity hashes
 // in webui/package-lock.json, and installs them without running their install scripts.
+val isMac = (project.extra["isMac"] as? Boolean) ?: System.getProperty("os.name").startsWith("Mac")
+val isWindows = (project.extra["isWindows"] as? Boolean) ?: System.getProperty("os.name").startsWith("Windows")
+val isArm64 = (project.extra["isArm64"] as? Boolean) ?: (System.getProperty("os.arch") == "aarch64")
+
 val nodeVersion = "24.22.1"
-val nodeDir: File = gradle.gradleUserHomeDir.resolve("caches/chairplay/node/node-v$nodeVersion-win-x64")
+val nodeArchiveName = when {
+    isMac && isArm64 -> "node-v$nodeVersion-darwin-arm64"
+    isMac -> "node-v$nodeVersion-darwin-x64"
+    else -> "node-v$nodeVersion-win-x64"
+}
+val nodeDir: File = gradle.gradleUserHomeDir.resolve("caches/chairplay/node/$nodeArchiveName")
 val webui = layout.projectDirectory.dir("webui")
 val webuiResources = layout.buildDirectory.dir("webui/resources")
 
 val installNode by tasks.registering(InstallArchive::class) {
     description = "Downloads Node.js $nodeVersion into the Gradle user home, unless it is there already."
-    url = "https://nodejs.org/dist/v$nodeVersion/node-v$nodeVersion-win-x64.zip"
-    sha256 = "d2046d28c2c3dcd211ac5145c0bf30e2047ef9dfb306693c8c6e2eccd8b95fa5"
-    topFolder = "node-v$nodeVersion-win-x64"
-    marker = "node.exe"
+    if (isMac) {
+        url = "https://nodejs.org/dist/v$nodeVersion/$nodeArchiveName.tar.gz"
+        sha256 = if (isArm64) "89c682593d76cd44233fa53b1563264e7de9cbb189cad169135c5b4fadfbc0a7" else "f3964f4340d8aa2b95fa7aa8705bc762efea5fc7a627cbcaea9e5a1b32d1844b"
+        topFolder = nodeArchiveName
+        marker = "bin/node"
+    } else {
+        url = "https://nodejs.org/dist/v$nodeVersion/$nodeArchiveName.zip"
+        sha256 = "d2046d28c2c3dcd211ac5145c0bf30e2047ef9dfb306693c8c6e2eccd8b95fa5"
+        topFolder = nodeArchiveName
+        marker = "node.exe"
+    }
     target = nodeDir
 }
 
@@ -93,17 +112,20 @@ val installNode by tasks.registering(InstallArchive::class) {
 fun Exec.node(vararg args: String) {
     dependsOn(installNode)
     workingDir(webui)
-    environment("PATH", nodeDir.path + File.pathSeparator + System.getenv("PATH"))
+    val binDir = if (isMac) nodeDir.resolve("bin") else nodeDir
+    val nodeBin = if (isMac) nodeDir.resolve("bin/node") else nodeDir.resolve("node.exe")
+    environment("PATH", binDir.path + File.pathSeparator + System.getenv("PATH"))
     // npm's cache stays beside node instead of in %LOCALAPPDATA%.
     environment("npm_config_cache", nodeDir.resolveSibling("npm-cache").path)
     environment("npm_config_update_notifier", "false")
-    commandLine(listOf(nodeDir.resolve("node.exe").path) + args)
+    commandLine(listOf(nodeBin.path) + args)
 }
 
 val npmCi by tasks.registering(Exec::class) {
     group = "build"
     description = "Installs the UI's packages from webui/package-lock.json into webui/node_modules."
-    node(nodeDir.resolve("node_modules/npm/bin/npm-cli.js").path, "ci", "--ignore-scripts", "--no-audit", "--no-fund")
+    val npmCli = if (isMac) nodeDir.resolve("lib/node_modules/npm/bin/npm-cli.js") else nodeDir.resolve("node_modules/npm/bin/npm-cli.js")
+    node(npmCli.path, "ci", "--ignore-scripts", "--no-audit", "--no-fund")
     inputs.files(webui.file("package.json"), webui.file("package-lock.json")).withPathSensitivity(PathSensitivity.RELATIVE)
     // npm's own record of the install, rather than the many thousand files beside it.
     outputs.file(webui.file("node_modules/.package-lock.json"))
@@ -184,49 +206,51 @@ val installWebView2Sdk by tasks.registering(InstallArchive::class) {
     target = webview2Sdk
 }
 
-val zigExe = project.extra["zigExe"] as File
-val zigRoot = project.extra["zigRoot"] as File
-val zigVersion = project.extra["zigVersion"] as String
+if (isWindows) {
+    val zigExe = project.extra["zigExe"] as File
+    val zigRoot = project.extra["zigRoot"] as File
+    val zigVersion = project.extra["zigVersion"] as String
 
-val webviewDll by tasks.registering(Exec::class) {
-    group = "build"
-    description = "Compiles the UI's web view host into build/native/chairplay_webview.dll, with WebView2Loader.dll beside it."
-    dependsOn("installZig", installWebviewSources, installWebView2Sdk)
-    val source = layout.projectDirectory.dir("src/native/webview")
-    val nativeDir = layout.buildDirectory.dir("native")
-    val dll = nativeDir.map { it.file("chairplay_webview.dll") }
-    val loader = nativeDir.map { it.file("WebView2Loader.dll") }
-    val work = temporaryDir
-    val ops = objects.newInstance<FileOps>()
-    val sources = webviewSources
-    val sdk = webview2Sdk
-    inputs.dir(source).withPathSensitivity(PathSensitivity.RELATIVE)
-    inputs.property("zig", zigVersion)
-    inputs.property("webview", webviewVersion)
-    inputs.property("webview2", webview2SdkVersion)
-    outputs.files(dll, loader)
-    workingDir(source)
-    environment("ZIG_GLOBAL_CACHE_DIR", zigRoot.resolve("cache").path)
-    environment("ZIG_LOCAL_CACHE_DIR", work.resolve("zig-cache").path)
-    // libc++ is linked in statically, and Windows' own C runtime (UCRT) is used, as for speex_echo.dll.
-    commandLine(
-        zigExe.path, "c++", "-target", "x86_64-windows-gnu", "-shared", "-O2", "-std=c++17",
-        "-I${sources.resolve("core/include").path}", "-I${sdk.resolve("build/native/include").path}", "-Icompat",
-        "chairplay_webview.cc", "update_dialog.cc", "open_file.cc", "update_dialog.rc", "-ladvapi32", "-lole32", "-lshell32", "-lshlwapi", "-luser32", "-lversion",
-        "-o", work.resolve("chairplay_webview.dll").path,
-    )
-    doLast {
-        ops.fs.copy {
-            from(work.resolve("chairplay_webview.dll"))
-            from(sdk.resolve("build/native/x64/WebView2Loader.dll"))
-            into(dll.get().asFile.parentFile)
+    val webviewDll by tasks.registering(Exec::class) {
+        group = "build"
+        description = "Compiles the UI's web view host into build/native/chairplay_webview.dll, with WebView2Loader.dll beside it."
+        dependsOn("installZig", installWebviewSources, installWebView2Sdk)
+        val source = layout.projectDirectory.dir("src/native/webview")
+        val nativeDir = layout.buildDirectory.dir("native")
+        val dll = nativeDir.map { it.file("chairplay_webview.dll") }
+        val loader = nativeDir.map { it.file("WebView2Loader.dll") }
+        val work = temporaryDir
+        val ops = objects.newInstance<FileOps>()
+        val sources = webviewSources
+        val sdk = webview2Sdk
+        inputs.dir(source).withPathSensitivity(PathSensitivity.RELATIVE)
+        inputs.property("zig", zigVersion)
+        inputs.property("webview", webviewVersion)
+        inputs.property("webview2", webview2SdkVersion)
+        outputs.files(dll, loader)
+        workingDir(source)
+        environment("ZIG_GLOBAL_CACHE_DIR", zigRoot.resolve("cache").path)
+        environment("ZIG_LOCAL_CACHE_DIR", work.resolve("zig-cache").path)
+        // libc++ is linked in statically, and Windows' own C runtime (UCRT) is used, as for speex_echo.dll.
+        commandLine(
+            zigExe.path, "c++", "-target", "x86_64-windows-gnu", "-shared", "-O2", "-std=c++17",
+            "-I${sources.resolve("core/include").path}", "-I${sdk.resolve("build/native/include").path}", "-Icompat",
+            "chairplay_webview.cc", "update_dialog.cc", "open_file.cc", "update_dialog.rc", "-ladvapi32", "-lole32", "-lshell32", "-lshlwapi", "-luser32", "-lversion",
+            "-o", work.resolve("chairplay_webview.dll").path,
+        )
+        doLast {
+            ops.fs.copy {
+                from(work.resolve("chairplay_webview.dll"))
+                from(sdk.resolve("build/native/x64/WebView2Loader.dll"))
+                into(dll.get().asFile.parentFile)
+            }
         }
     }
-}
 
-// The DLLs go where speex_echo.dll goes: build/native for the tests and run, bin/ in the distribution, and the app
-// image's root, next to the exe, where Windows looks for a DLL's own dependencies (WebView2Loader.dll) too. Their
-// licences are in notices/.
-tasks.named("test") { dependsOn(webviewDll) }
-tasks.named("run") { dependsOn(webviewDll) }
-the<DistributionContainer>()["main"].contents { from(webviewDll) { into("bin") } }
+    // The DLLs go where speex_echo.dll goes: build/native for the tests and run, bin/ in the distribution, and the app
+    // image's root, next to the exe, where Windows looks for a DLL's own dependencies (WebView2Loader.dll) too. Their
+    // licences are in notices/.
+    tasks.named("test") { dependsOn(webviewDll) }
+    tasks.named("run") { dependsOn(webviewDll) }
+    the<DistributionContainer>()["main"].contents { from(webviewDll) { into("bin") } }
+}

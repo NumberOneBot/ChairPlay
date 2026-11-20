@@ -15,27 +15,44 @@ repositories {
 kotlin {
     jvmToolchain(17)
 }
+val osName = System.getProperty("os.name")
+val osArch = System.getProperty("os.arch")
+val isMac = osName.startsWith("Mac")
+val isWindows = osName.startsWith("Windows")
+val isArm64 = osArch == "aarch64"
+
+val javacppClassifier = when {
+    isMac && isArm64 -> "macosx-arm64"
+    isMac -> "macosx-x86_64"
+    else -> "windows-x86_64"
+}
+
+val lwjglNatives = when {
+    isMac && isArm64 -> "natives-macos-arm64"
+    isMac -> "natives-macos"
+    else -> "natives-windows"
+}
 
 dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.79")
     implementation("org.jmdns:jmdns:3.6.3")
     implementation("org.slf4j:slf4j-jdk14:2.0.7")
     implementation("net.java.dev.jna:jna-platform:5.15.0")
-    // Native classifiers are pinned to windows-x86_64: the *-platform artifacts of javacpp presets pull
-    // every OS, hundreds of megabytes this Windows-only app never loads.
+    // Native classifiers are pinned to host OS/arch: the *-platform artifacts of javacpp presets pull
+    // every OS, hundreds of megabytes this app never loads.
     implementation("org.bytedeco:javacpp:1.5.12")
-    implementation("org.bytedeco:javacpp:1.5.12:windows-x86_64")
+    implementation("org.bytedeco:javacpp:1.5.12:$javacppClassifier")
     // 7.1.1 fixes the HEVC WPP slice-thread deadlock in software decoding (FFmpeg 79c47dfd).
     implementation("org.bytedeco:ffmpeg:7.1.1-1.5.12")
-    implementation("org.bytedeco:ffmpeg:7.1.1-1.5.12:windows-x86_64")
+    implementation("org.bytedeco:ffmpeg:7.1.1-1.5.12:$javacppClassifier")
     implementation("org.lwjgl:lwjgl:3.3.4")
     implementation("org.lwjgl:lwjgl-glfw:3.3.4")
     implementation("org.lwjgl:lwjgl-opengl:3.3.4")
     implementation("org.lwjgl:lwjgl-nanovg:3.3.4")
-    runtimeOnly("org.lwjgl:lwjgl:3.3.4:natives-windows")
-    runtimeOnly("org.lwjgl:lwjgl-glfw:3.3.4:natives-windows")
-    runtimeOnly("org.lwjgl:lwjgl-opengl:3.3.4:natives-windows")
-    runtimeOnly("org.lwjgl:lwjgl-nanovg:3.3.4:natives-windows")
+    runtimeOnly("org.lwjgl:lwjgl:3.3.4:$lwjglNatives")
+    runtimeOnly("org.lwjgl:lwjgl-glfw:3.3.4:$lwjglNatives")
+    runtimeOnly("org.lwjgl:lwjgl-opengl:3.3.4:$lwjglNatives")
+    runtimeOnly("org.lwjgl:lwjgl-nanovg:3.3.4:$lwjglNatives")
     testImplementation("junit:junit:4.13.2")
 }
 
@@ -45,19 +62,26 @@ dependencies {
 val socketHandleOpens = listOf("java.base/java.net", "java.base/java.io").map { "--add-opens=$it=ALL-UNNAMED" }
 extra["socketHandleOpens"] = socketHandleOpens
 
+val macAppJvmArgs = if (isMac) listOf("-XstartOnFirstThread", "-Djava.awt.headless=true") else emptyList()
+val macTestJvmArgs = if (isMac) listOf("-Djava.awt.headless=true") else emptyList()
+
 application {
     mainClass.set("io.github.numberonebot.chairplay.MainKt")
-    applicationDefaultJvmArgs = socketHandleOpens
+    applicationDefaultJvmArgs = socketHandleOpens + macAppJvmArgs
 }
 
 tasks.test {
-    jvmArgs(socketHandleOpens)
+    jvmArgs(socketHandleOpens + macTestJvmArgs)
     // Four test JVMs take the Kotlin tests from 88 s to 46 s on 12 cores; more add little, as DesktopBonjourTest's
     // mDNS waits hold one of them for 21 s. A class runs whole in one JVM, so a class's tests that share a fixed name
     // (the bridge's status file, port 5353) never run beside each other.
     maxParallelForks = minOf(4, Runtime.getRuntime().availableProcessors())
 }
-
+extra["isMac"] = isMac
+extra["isWindows"] = isWindows
+extra["isArm64"] = isArm64
+extra["javacppClassifier"] = javacppClassifier
+extra["lwjglNatives"] = lwjglNatives
 apply(from = "gradle/upstream.gradle.kts")
 apply(from = "gradle/apap-upstream.gradle.kts")
 apply(from = "gradle/spatial-session.gradle.kts")
@@ -135,10 +159,14 @@ tasks.processResources {
 }
 
 apply(from = "gradle/native.gradle.kts")
-apply(from = "gradle/spatial.gradle.kts")
-apply(from = "gradle/bridge.gradle.kts")
-apply(from = "gradle/apac.gradle.kts")
+if (isWindows) {
+    apply(from = "gradle/spatial.gradle.kts")
+    apply(from = "gradle/bridge.gradle.kts")
+    apply(from = "gradle/apac.gradle.kts")
+}
 apply(from = "gradle/web.gradle.kts")
 apply(from = "gradle/package.gradle.kts")
-apply(from = "gradle/usb-gps.gradle.kts")
-apply(from = "gradle/installer.gradle.kts")
+if (isWindows) {
+    apply(from = "gradle/usb-gps.gradle.kts")
+    apply(from = "gradle/installer.gradle.kts")
+}
