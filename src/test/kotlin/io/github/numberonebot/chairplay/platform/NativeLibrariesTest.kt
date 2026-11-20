@@ -9,7 +9,7 @@ import org.junit.Test
 class NativeLibrariesTest {
     @Test
     fun `searchDirs lists the library path, then the exe's folder`() {
-        val exe = File("C:\\X\\ChairPlay.exe")
+        val exe = File("X", "ChairPlay.exe")
         val dirs = NativeLibraries.searchDirs("a${File.pathSeparator}${File.pathSeparator}b", exe.path)
 
         assertEquals(listOf(File("a"), File("b"), exe.parentFile), dirs)
@@ -19,6 +19,13 @@ class NativeLibrariesTest {
     fun `searchDirs copes with no library path and no exe`() {
         assertEquals(emptyList<File>(), NativeLibraries.searchDirs(null, null))
     }
+    @Test
+    fun `searchDirs includes Contents app for a macOS app bundle launcher`() {
+        val exe = File("/Applications/ChairPlay.app/Contents/MacOS/ChairPlay")
+        val dirs = NativeLibraries.searchDirs(null, exe.path)
+        assertEquals(listOf(exe.parentFile, File("/Applications/ChairPlay.app/Contents/app")), dirs)
+    }
+
 
     @Test
     fun `find takes the first folder holding the file`() {

@@ -11,10 +11,19 @@ object NativeLibraries {
     fun searchDirs(
         libraryPath: String? = System.getProperty("java.library.path"),
         appPath: String? = System.getProperty("jpackage.app-path"),
-    ): List<File> =
-        libraryPath.orEmpty().split(File.pathSeparator).filter { it.isNotEmpty() }.map(::File) +
-            listOfNotNull(appPath?.let { File(it).parentFile })
-
+    ): List<File> {
+        val appDirs = appPath?.let { path ->
+            val exe = File(path)
+            val parent = exe.parentFile
+            val contents = parent?.parentFile
+            if (parent != null && parent.name == "MacOS" && contents?.name == "Contents" && contents.parentFile?.name?.endsWith(".app") == true) {
+                listOf(parent, File(contents, "app"))
+            } else {
+                listOfNotNull(parent)
+            }
+        }.orEmpty()
+        return libraryPath.orEmpty().split(File.pathSeparator).filter { it.isNotEmpty() }.map(::File) + appDirs
+    }
     /** The library [base] in the first of [dirs] that holds it, or null. */
     fun find(base: String, dirs: List<File> = searchDirs()): File? =
         dirs.map { File(it, fileName(base)) }.firstOrNull { it.isFile }

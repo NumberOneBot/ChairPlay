@@ -277,11 +277,12 @@ class VideoWindow(
 
     /** Creates the window, hidden until it is in place, with its own GL context. GLFW is initialised. */
     internal fun open() {
+        val isMac = System.getProperty("os.name").orEmpty().startsWith("Mac")
         glfwDefaultWindowHints()
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3)
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
-        // Hidden until it is in place, so it does not flash at the default position first.
+        if (isMac) glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE)
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
         glfwWindowHint(GLFW_RESIZABLE, if (resizable) GLFW_TRUE else GLFW_FALSE)
         // GLFW scales a page's size by the monitor's scale as it creates the window, and again on WM_DPICHANGED.
@@ -313,7 +314,7 @@ class VideoWindow(
             }
         }
         if (dragAnywhere) hooks.dragByPicture(window)
-        WindowIcon.apply(window)
+        if (!isMac) WindowIcon.apply(window)
         tracker = PlacementTracker(window, restore?.maximized ?: false)
         if (visible) {
             if (restore?.maximized == true) glfwMaximizeWindow(window) else glfwShowWindow(window)

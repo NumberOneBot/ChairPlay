@@ -30,4 +30,4 @@ internal object Platforms {
 
 /** The app was started on a system it has no platform for, named [osName]. */
 internal class UnsupportedPlatform(osName: String) :
-    IllegalStateException("ChairPlay does not run on $osName. Run it on Windows 10 or 11.")
+    IllegalStateException("ChairPlay does not run on $osName. Run it on Windows 10/11 or macOS.")
