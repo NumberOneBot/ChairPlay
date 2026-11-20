@@ -77,15 +77,32 @@ internal fun parseSystemName(swVersOutput: String, arch: String): String {
 }
 
 private fun defaultShowAlert(text: String) {
-    runCatching {
-        val escaped = text.replace("\\", "\\\\").replace("\"", "\\\"")
-        ProcessBuilder("/usr/bin/osascript", "-e", "display alert \"ChairPlay\" message \"$escaped\" as critical").start().waitFor()
+    val nativeSuccess = runCatching {
+        MacNative.INSTANCE.cp_shell_show_error("ChairPlay", text)
+        true
+    }.getOrDefault(false)
+    if (!nativeSuccess) {
+        runCatching {
+            val escaped = text.replace("\\", "\\\\").replace("\"", "\\\"")
+            ProcessBuilder("/usr/bin/osascript", "-e", "display alert \"ChairPlay\" message \"$escaped\" as critical").start().waitFor()
+        }
     }
 }
 
-private fun defaultReadDark(): Boolean? = runCatching {
-    val p = ProcessBuilder("/usr/bin/defaults", "read", "-g", "AppleInterfaceStyle").start()
-    val out = p.inputStream.bufferedReader().readText().trim()
-    val exit = p.waitFor()
-    exit == 0 && out.equals("Dark", ignoreCase = true)
-}.getOrNull()
+private fun defaultReadDark(): Boolean? {
+    val nativeResult = runCatching {
+        when (MacNative.INSTANCE.cp_shell_apps_dark()) {
+            1 -> true
+            0 -> false
+            else -> null
+        }
+    }.getOrNull()
+    if (nativeResult != null) return nativeResult
+
+    return runCatching {
+        val p = ProcessBuilder("/usr/bin/defaults", "read", "-g", "AppleInterfaceStyle").start()
+        val out = p.inputStream.bufferedReader().readText().trim()
+        val exit = p.waitFor()
+        exit == 0 && out.equals("Dark", ignoreCase = true)
+    }.getOrNull()
+}

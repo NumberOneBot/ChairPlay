@@ -48,9 +48,9 @@ internal class MacPlatform : Platform {
     override val firewall: Firewall = MacFirewallStub
     override val network: PcNetwork = MacNetwork
     override val bluetooth: Bluetooth = MacBluetooth
-    override val audio: SystemAudio = MacAudio
+    override val audio: SystemAudio = MacAudio()
     override val video: HardwareVideo? get() = notReady()
-    override val windowHooks: WindowHooks = MacWindows
+    override val windowHooks: WindowHooks = MacWindows()
     override val bridge: GameBridge = MacBridge
 
     override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource = notReady()
@@ -62,19 +62,6 @@ internal class MacPlatform : Platform {
     override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = notReady()
 }
 
-private object MacWindows : WindowHooks {
-    override fun nativeHandle(window: Long): Long = notReady()
-
-    override fun paintTitleBar(window: Long, dialog: Boolean) = notReady()
-
-    override fun watchClose(window: Long): CloseWatch = notReady()
-
-    override fun dragByPicture(window: Long) = notReady()
-
-    override fun mediaKeys(window: Long, key: (key: Int, action: Int, mods: Int) -> Unit) = notReady()
-
-    override fun flash(window: Long, on: Boolean) = notReady()
-}
 
 private object MacBridge : GameBridge {
     override val frames: FrameSink = MacFrames
@@ -99,27 +86,6 @@ private object MacTelemetry : TelemetrySource {
     override fun close() = notReady()
 }
 
-private object MacSpatial : SpatialOutputs {
-    override fun devices(): List<OutputDevice> = notReady()
-
-    override fun defaultDevice(): OutputDevice = notReady()
-
-    override fun open(deviceId: String?, channels: Int): SpatialDevice = notReady()
-}
-
-private object MacAudio : SystemAudio {
-    override fun defaultDevices(): DefaultAudioDevices = notReady()
-
-    override val spatial: SpatialOutputs = MacSpatial
-}
-
-private object MacBluetooth : Bluetooth {
-    override fun radioAddress(): String = notReady()
-
-    override fun pairedDevices(): List<PairedDevice> = notReady()
-
-    override fun connectRfcomm(address: String, service: UUID): RfcommLink = notReady()
-}
 
 private object MacFirewallStub : Firewall {
     override fun check(port: Int, uiPort: Int?, log: AppLog): FirewallStatus = notReady()

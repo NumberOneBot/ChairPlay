@@ -156,6 +156,45 @@ if (isWindows) {
             }
         }
     }
+if (isMac) {
+    tasks.register<Exec>("macosBridgeDylib") {
+        group = "build"
+        description = "Compiles macOS Objective-C bridge into build/native/libchairplay_macos.dylib."
+        val src = layout.projectDirectory.dir("src/native/macos")
+        val dylib = nativeDir.map { it.file("libchairplay_macos.dylib") }
+        val work = temporaryDir
+        val ops = objects.newInstance<FileOps>()
+        val arch = if (isArm64) "arm64" else "x86_64"
+        val frameworks = listOf(
+            "-framework", "Foundation",
+            "-framework", "AppKit",
+            "-framework", "IOBluetooth",
+            "-framework", "CoreWLAN",
+            "-framework", "CoreLocation",
+            "-framework", "CoreAudio",
+            "-framework", "AudioToolbox",
+            "-framework", "Cocoa",
+        )
+        inputs.files(fileTree(src) { include("*.h", "*.m") }).withPathSensitivity(PathSensitivity.RELATIVE)
+        inputs.property("arch", arch)
+        outputs.file(dylib)
+        workingDir(src)
+        doFirst {
+            val mFiles = src.asFile.listFiles { _, name -> name.endsWith(".m") }?.map { it.absolutePath } ?: emptyList()
+            commandLine(
+                listOf("clang", "-shared", "-fobjc-arc", "-O2", "-Wall", "-Wextra", "-Werror", "-arch", arch) +
+                    frameworks + mFiles + listOf("-o", work.resolve("libchairplay_macos.dylib").path)
+            )
+        }
+        doLast {
+            ops.fs.copy {
+                from(work.resolve("libchairplay_macos.dylib"))
+                into(dylib.get().asFile.parentFile)
+            }
+        }
+    }
+}
+
 }
 
 // The HUD's maneuver renderer: the MHI2Q project's maneuver_render (native/maneuver, see its README) with
@@ -214,7 +253,12 @@ if (isWindows) {
 // the image's app/ folder, which is not on the launcher's library path.
 tasks.named<Test>("test") {
     dependsOn("speexEchoDll")
-    systemProperty("java.library.path", nativeDir.get().asFile.path)
+    if (isMac) {
+        dependsOn("macosBridgeDylib")
+    }
+    val natDir = nativeDir.get().asFile.path
+    systemProperty("java.library.path", natDir)
+    systemProperty("jna.library.path", natDir)
     if (isWindows) {
         inputs.files(tasks.named("maneuverDll")).withPropertyName("maneuverDll")
     }
@@ -223,15 +267,21 @@ tasks.named<Test>("test") {
 tasks.named<JavaExec>("run") {
     if (isWindows) {
         dependsOn("speexEchoDll", "maneuverDll")
+    } else if (isMac) {
+        dependsOn("speexEchoDll", "macosBridgeDylib")
     } else {
         dependsOn("speexEchoDll")
     }
-    systemProperty("java.library.path", nativeDir.get().asFile.path)
+    val natDir = nativeDir.get().asFile.path
+    systemProperty("java.library.path", natDir)
+    systemProperty("jna.library.path", natDir)
 }
 
 the<DistributionContainer>()["main"].contents {
     from(tasks.named("speexEchoDll")) { into("bin") }
     if (isWindows) {
         from(tasks.named("maneuverDll")) { into("bin") }
+    } else if (isMac) {
+        from(tasks.named("macosBridgeDylib")) { into("bin") }
     }
 }
