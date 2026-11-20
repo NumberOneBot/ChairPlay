@@ -41,11 +41,11 @@ import java.util.UUID
 
 /** macOS, chosen for a Mac but not ready: every use of it throws [notReady]'s exception. */
 internal class MacPlatform : Platform {
-    override val shell: DesktopShell = MacShell
-    override val oneCopy: OneCopyClaim = MacOneCopy
-    override val keepAlive: KeepAliveTuning = MacKeepAlive
+    override val shell: DesktopShell = MacShellStub
+    override val oneCopy: OneCopyClaim = MacOneCopyStub
+    override val keepAlive: KeepAliveTuning = MacKeepAliveStub
     override val location: LocationSource = MacLocation
-    override val firewall: Firewall = MacFirewall
+    override val firewall: Firewall = MacFirewallStub
     override val network: PcNetwork = MacNetwork
     override val bluetooth: Bluetooth = MacBluetooth
     override val audio: SystemAudio = MacAudio
@@ -121,7 +121,7 @@ private object MacBluetooth : Bluetooth {
     override fun connectRfcomm(address: String, service: UUID): RfcommLink = notReady()
 }
 
-private object MacFirewall : Firewall {
+private object MacFirewallStub : Firewall {
     override fun check(port: Int, uiPort: Int?, log: AppLog): FirewallStatus = notReady()
 
     override fun status(uiPort: Int?): FirewallStatus = notReady()
@@ -139,7 +139,7 @@ private object MacNetwork : PcNetwork {
     override fun physicalAddresses(): List<InetAddress> = notReady()
 }
 
-private object MacShell : DesktopShell {
+private object MacShellStub : DesktopShell {
     override fun systemName(): String = notReady()
 
     override fun appsDark(): Boolean? = notReady()
@@ -157,11 +157,11 @@ private object MacShell : DesktopShell {
     override fun systemPage(page: SystemPage): String = notReady()
 }
 
-private object MacOneCopy : OneCopyClaim {
+private object MacOneCopyStub : OneCopyClaim {
     override fun claim(name: String, timeoutMillis: Long): Closeable? = notReady()
 }
 
-private object MacKeepAlive : KeepAliveTuning {
+private object MacKeepAliveStub : KeepAliveTuning {
     override fun tune(socket: Socket, idleSeconds: Int, intervalSeconds: Int, count: Int, deadlineSeconds: Int) = notReady()
 }
 
