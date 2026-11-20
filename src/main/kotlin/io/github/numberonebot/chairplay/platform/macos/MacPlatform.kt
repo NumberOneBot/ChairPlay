@@ -5,13 +5,7 @@ import io.github.numberonebot.chairplay.bridge.TelemetrySource
 import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
 import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
-import io.github.numberonebot.chairplay.log.AppLog
-import io.github.numberonebot.chairplay.media.DefaultAudioDevices
-import io.github.numberonebot.chairplay.media.apac.SpatialDevice
-import io.github.numberonebot.chairplay.network.EthernetAdapter
-import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.platform.Bluetooth
-import io.github.numberonebot.chairplay.platform.CloseWatch
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.GameBridge
@@ -20,48 +14,53 @@ import io.github.numberonebot.chairplay.platform.KeepAliveTuning
 import io.github.numberonebot.chairplay.platform.LocationResult
 import io.github.numberonebot.chairplay.platform.LocationSource
 import io.github.numberonebot.chairplay.platform.OneCopyClaim
-import io.github.numberonebot.chairplay.platform.OutputDevice
-import io.github.numberonebot.chairplay.platform.PairedDevice
 import io.github.numberonebot.chairplay.platform.PcNetwork
 import io.github.numberonebot.chairplay.platform.Platform
-import io.github.numberonebot.chairplay.platform.RfcommLink
-import io.github.numberonebot.chairplay.platform.SpatialOutputs
 import io.github.numberonebot.chairplay.platform.SystemAudio
-import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.platform.WindowHooks
-import io.github.numberonebot.chairplay.ui.FirewallStatus
 import io.github.numberonebot.chairplay.ui.WebViewBackend
+import io.github.numberonebot.chairplay.ui.WebViewUnavailable
 import io.github.numberonebot.chairplay.update.UpdateResult
-import java.io.Closeable
-import java.net.InetAddress
-import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.file.Path
-import java.util.UUID
 
-/** macOS, chosen for a Mac but not ready: every use of it throws [notReady]'s exception. */
+/** macOS platform adapters; each is created lazily when first accessed. */
 internal class MacPlatform : Platform {
-    override val shell: DesktopShell = MacShellStub
-    override val oneCopy: OneCopyClaim = MacOneCopyStub
-    override val keepAlive: KeepAliveTuning = MacKeepAliveStub
-    override val location: LocationSource = MacLocation
-    override val firewall: Firewall = MacFirewallStub
-    override val network: PcNetwork = MacNetwork
-    override val bluetooth: Bluetooth = MacBluetooth
-    override val audio: SystemAudio = MacAudio()
-    override val video: HardwareVideo? get() = notReady()
-    override val windowHooks: WindowHooks = MacWindows()
-    override val bridge: GameBridge = MacBridge
+    override val shell: DesktopShell by lazy { MacShell() }
+    override val oneCopy: OneCopyClaim by lazy { MacOneCopy() }
+    override val keepAlive: KeepAliveTuning by lazy { MacKeepAlive() }
+    override val location: LocationSource by lazy { MacLocation }
+    override val firewall: Firewall by lazy { MacFirewall() }
+    override val network: PcNetwork by lazy { MacNetwork() }
+    override val bluetooth: Bluetooth by lazy { MacBluetooth }
+    override val audio: SystemAudio by lazy { MacAudio() }
+    override val video: HardwareVideo? by lazy { null }
+    override val windowHooks: WindowHooks by lazy { MacWindows() }
+    override val bridge: GameBridge by lazy { MacBridge }
 
-    override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource = notReady()
+    override fun globalKeyboard(callbacks: GlobalKeyboardCallbacks): GlobalKeyboardSource =
+        throw UnsupportedOperationException("Global shortcuts are not supported on macOS yet")
 
-    override fun webView(userData: Path, debug: Boolean): WebViewBackend = notReady()
+    override fun webView(userData: Path, debug: Boolean): WebViewBackend =
+        throw WebViewUnavailable("Embedded web view is not available on macOS; opening in browser")
 
-    override fun updateDialog(result: UpdateResult): Boolean = notReady()
+    override fun updateDialog(result: UpdateResult): Boolean {
+        val (heading, text) = when (result) {
+            is UpdateResult.Available -> "ChairPlay ${result.latest} is available" to
+                (result.current?.let { "You have version $it." } ?: "You have a development build from ${result.built}.") +
+                " Open the releases page on GitHub to download the update."
+            UpdateResult.Current -> "ChairPlay is up to date" to "No newer release is available"
+            UpdateResult.Failed -> "Couldn't check for updates" to "Check your internet connection and try again"
+            UpdateResult.Development -> "This is a development build" to
+                "This build has no release version to compare. Open the releases page on GitHub to see the latest version."
+        }
+        val offerOpen = result is UpdateResult.Available || result == UpdateResult.Development
+        shell.showError("$heading\n\n$text")
+        return offerOpen
+    }
 
-    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = notReady()
+    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = null
 }
-
 
 private object MacBridge : GameBridge {
     override val frames: FrameSink = MacFrames
@@ -69,71 +68,18 @@ private object MacBridge : GameBridge {
 }
 
 private object MacFrames : FrameSink {
-    override fun open(): String? = notReady()
-
-    override fun publish(bgra: ByteBuffer, width: Int, height: Int, safe: AreaRect): String? = notReady()
-
-    override fun state(state: Int) = notReady()
-
-    override fun close() = notReady()
+    override fun open(): String? = null
+    override fun publish(bgra: ByteBuffer, width: Int, height: Int, safe: AreaRect): String? = null
+    override fun state(state: Int) {}
+    override fun close() {}
 }
 
 private object MacTelemetry : TelemetrySource {
-    override fun open(): String? = notReady()
-
-    override fun read(into: ByteBuffer): Boolean = notReady()
-
-    override fun close() = notReady()
-}
-
-
-private object MacFirewallStub : Firewall {
-    override fun check(port: Int, uiPort: Int?, log: AppLog): FirewallStatus = notReady()
-
-    override fun status(uiPort: Int?): FirewallStatus = notReady()
-
-    override fun hint(port: Int, uiPort: Int?): String = notReady()
-
-    override fun addRules(commands: String): Boolean = notReady()
-}
-
-private object MacNetwork : PcNetwork {
-    override fun wifiConnections(): List<WlanConnection> = notReady()
-
-    override fun ethernetAdapters(): List<EthernetAdapter> = notReady()
-
-    override fun physicalAddresses(): List<InetAddress> = notReady()
-}
-
-private object MacShellStub : DesktopShell {
-    override fun systemName(): String = notReady()
-
-    override fun appsDark(): Boolean? = notReady()
-
-    override fun dataDirectory(): Path = notReady()
-
-    override fun showError(text: String) = notReady()
-
-    override fun openInBrowser(url: String) = notReady()
-
-    override fun openCommand(target: String): List<String> = notReady()
-
-    override fun textFileCommand(file: Path): List<String> = notReady()
-
-    override fun systemPage(page: SystemPage): String = notReady()
-}
-
-private object MacOneCopyStub : OneCopyClaim {
-    override fun claim(name: String, timeoutMillis: Long): Closeable? = notReady()
-}
-
-private object MacKeepAliveStub : KeepAliveTuning {
-    override fun tune(socket: Socket, idleSeconds: Int, intervalSeconds: Int, count: Int, deadlineSeconds: Int) = notReady()
+    override fun open(): String? = null
+    override fun read(into: ByteBuffer): Boolean = false
+    override fun close() {}
 }
 
 private object MacLocation : LocationSource {
-    override fun read(): LocationResult = notReady()
+    override fun read(): LocationResult = LocationResult.Unknown
 }
-
-/** Thrown by every member of [MacPlatform] until the Mac adapters exist. */
-private fun notReady(): Nothing = throw UnsupportedOperationException("macOS support is not ready")

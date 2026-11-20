@@ -20,11 +20,29 @@ class PlatformBoundaryTest {
     }
 
     @Test
+    fun `only listed files use macOS outside platform macos`() {
+        val users = kotlinFiles().map { relative(it) }.filter { !it.startsWith(MACOS_DIR) }
+            .filter { usesMac(sourceRoot.resolve(it)) }.toSortedSet()
+        val unlisted = users - ALLOWED
+        val stale = ALLOWED - users
+        assertTrue("Files call macOS but are not in ALLOWED (move the call to platform/macos/): $unlisted", unlisted.isEmpty())
+        assertTrue("Entries in ALLOWED no longer call macOS; remove them: $stale", stale.isEmpty())
+    }
+
+    @Test
     fun `only the selection reaches the Windows adapters`() {
         val users = kotlinFiles().map { relative(it) }
             .filter { !it.startsWith(WINDOWS_DIR) && it != SELECTION }
             .filter { path -> Files.readAllLines(sourceRoot.resolve(path)).any { reachesAdapters(it) } }.toSortedSet()
         assertTrue("Files reach the Windows adapters; only $SELECTION may: $users", users.isEmpty())
+    }
+
+    @Test
+    fun `only the selection reaches the macOS adapters`() {
+        val users = kotlinFiles().map { relative(it) }
+            .filter { !it.startsWith(MACOS_DIR) && it != SELECTION }
+            .filter { path -> Files.readAllLines(sourceRoot.resolve(path)).any { reachesMacAdapters(it) } }.toSortedSet()
+        assertTrue("Files reach the macOS adapters; only $SELECTION may: $users", users.isEmpty())
     }
 
     @Test
@@ -49,17 +67,37 @@ class PlatformBoundaryTest {
         assertTrue("A fully qualified use of an adapter is caught", reachesAdapters("val s = $ADAPTERS.WindowsShell()"))
         assertTrue("A comment line is skipped", !reachesAdapters(" * see $ADAPTERS.WindowsShell"))
         assertTrue("A comment line is skipped", !matches(" * see user32.dll") && !matches("// \"x.exe\""))
+        val macSamples = listOf(
+            "import org.lwjgl.glfw.GLFWNativeCocoa",
+            "val lib = \"chairplay_macos\"",
+            "val cmd = \"/usr/libexec/ApplicationFirewall/socketfilterfw\"",
+            "open(\"x-apple.systempreferences:com.apple.BluetoothSettings\")",
+        )
+        macSamples.forEach { assertTrue("No macOS pattern matches: $it", matchesMac(it)) }
+        assertTrue("An import of a Mac adapter is caught", reachesMacAdapters("import $MACOS_ADAPTERS.MacPlatform"))
+        assertTrue("A fully qualified use of a Mac adapter is caught", reachesMacAdapters("val s = $MACOS_ADAPTERS.MacShell()"))
+        assertTrue("A comment line is skipped for Mac", !reachesMacAdapters(" * see $MACOS_ADAPTERS.MacPlatform"))
+        assertTrue("A comment line is skipped for Mac", !matchesMac(" * see chairplay_macos") && !matchesMac("// \"socketfilterfw\""))
     }
 
     private fun usesWindows(file: Path): Boolean = Files.readAllLines(file).any { matches(it) }
 
+    private fun usesMac(file: Path): Boolean = Files.readAllLines(file).any { matchesMac(it) }
+
     private fun reachesAdapters(line: String): Boolean = !isComment(line) && line.contains(ADAPTERS)
+
+    private fun reachesMacAdapters(line: String): Boolean = !isComment(line) && line.contains(MACOS_ADAPTERS)
 
     private fun isComment(line: String): Boolean = line.trim().let { it.startsWith("*") || it.startsWith("/*") || it.startsWith("//") }
 
     private fun matches(line: String): Boolean {
         if (isComment(line)) return false
         return WINDOWS_PATTERNS.any { it.containsMatchIn(line) }
+    }
+
+    private fun matchesMac(line: String): Boolean {
+        if (isComment(line)) return false
+        return MACOS_PATTERNS.any { it.containsMatchIn(line) }
     }
 
     private fun kotlinFiles(): List<Path> = Files.walk(sourceRoot).use { stream ->
@@ -82,8 +120,10 @@ class PlatformBoundaryTest {
         private const val SOURCE_PATH = "src/main/kotlin"
         private const val APP_DIR = "io/github/numberonebot/chairplay/"
         private const val WINDOWS_DIR = APP_DIR + "platform/windows/"
+        private const val MACOS_DIR = APP_DIR + "platform/macos/"
         private const val SELECTION = APP_DIR + "platform/Platforms.kt"
         private const val ADAPTERS = "chairplay.platform.windows."
+        private const val MACOS_ADAPTERS = "chairplay.platform.macos."
 
         private val WINDOWS_PATTERNS: List<Regex> = listOf(
             Regex("""^import com\.sun\.jna\.platform\.win32\."""),
@@ -96,6 +136,13 @@ class PlatformBoundaryTest {
             Regex("\"(chairplay_webview|chairplay_audio|chairplay_bridge|WebView2Loader)\""),
             Regex("""ms-settings:|windowsdefender:|"netsh """),
             Regex("""Advapi32Util|WinReg\.|HKEY_"""),
+        )
+
+        private val MACOS_PATTERNS: List<Regex> = listOf(
+            Regex("""GLFWNativeCocoa"""),
+            Regex("""chairplay_macos"""),
+            Regex("""socketfilterfw"""),
+            Regex("""x-apple\.systempreferences:"""),
         )
 
         /** Paths relative to `src/main/kotlin/`. */

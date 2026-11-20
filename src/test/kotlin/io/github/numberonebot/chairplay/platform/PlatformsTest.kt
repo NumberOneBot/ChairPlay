@@ -21,22 +21,9 @@ class PlatformsTest {
         assertTrue(Platforms.select("Mac OS X") is MacPlatform)
     }
 
-    // The Mac platform compiles and is chosen, but nothing on it works yet: each use says so.
     @Test
-    fun `the Mac platform refuses every use`() {
-        val shell = MacPlatform().shell
-        val uses = listOf<() -> Any?>(shell::systemName, shell::appsDark, shell::dataDirectory)
-        for (use in uses) {
-            val refused = assertThrows(UnsupportedOperationException::class.java) { use() }
-            assertEquals("macOS support is not ready", refused.message)
-        }
-    }
-
-    // main prints this and stops before any window or native load; a platform that works gives no refusal.
-    @Test
-    fun `an unknown system and a Mac are refused at start`() {
-        assertTrue(Platforms.refusal { Platforms.select("Linux") }.orEmpty().contains("Linux"))
-        assertEquals("macOS support is not ready", Platforms.refusal { Platforms.select("Mac OS X") })
+    fun `Platforms refusal returns null for Mac`() {
+        assertEquals(null, Platforms.refusal { Platforms.select("Mac OS X") })
         assertEquals(null, Platforms.refusal { FakePlatform() })
     }
 
@@ -52,6 +39,19 @@ class PlatformsTest {
         val platform = WindowsPlatform()
         val fields = WindowsPlatform::class.java.declaredFields.filter { !Modifier.isStatic(it.modifiers) }
         assertTrue("WindowsPlatform has no members", fields.isNotEmpty())
+        for (field in fields) {
+            field.isAccessible = true
+            val value = field.get(platform)
+            assertTrue("${field.name} is not lazy", value is Lazy<*>)
+            assertFalse("${field.name} is made before it is asked for", (value as Lazy<*>).isInitialized())
+        }
+    }
+
+    @Test
+    fun `the Mac platform loads nothing until asked`() {
+        val platform = MacPlatform()
+        val fields = MacPlatform::class.java.declaredFields.filter { !Modifier.isStatic(it.modifiers) }
+        assertTrue("MacPlatform has no members", fields.isNotEmpty())
         for (field in fields) {
             field.isAccessible = true
             val value = field.get(platform)
