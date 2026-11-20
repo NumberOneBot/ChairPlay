@@ -7,7 +7,7 @@ import com.sun.jna.Structure
 internal interface MacNative : Library {
 
     @Structure.FieldOrder("name", "address", "classOfDevice")
-    class CpBtDevice : Structure(), Structure.ByReference {
+    class CpBtDevice : Structure() {
         @JvmField var name: ByteArray = ByteArray(256)
         @JvmField var address: ByteArray = ByteArray(32)
         @JvmField var classOfDevice: Int = 0
@@ -25,7 +25,7 @@ internal interface MacNative : Library {
     }
 
     fun cp_bt_radio_address(outBuf: ByteArray, bufLen: Int, errBuf: ByteArray, errLen: Int): Int
-    fun cp_bt_paired_devices(outDevices: Array<CpBtDevice>, maxDevices: Int, errBuf: ByteArray, errLen: Int): Int
+    fun cp_bt_paired_devices(outDevices: CpBtDevice, maxDevices: Int, errBuf: ByteArray, errLen: Int): Int
     fun cp_bt_connect_rfcomm(address: String, uuid16: ByteArray?, errBuf: ByteArray, errLen: Int): Long
     fun cp_bt_read(handle: Long, buf: ByteArray, len: Int, errBuf: ByteArray, errLen: Int): Int
     fun cp_bt_write(handle: Long, buf: ByteArray, len: Int, errBuf: ByteArray, errLen: Int): Int

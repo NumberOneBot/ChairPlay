@@ -7,9 +7,12 @@ interface FileOps {
 }
 
 @Suppress("UNCHECKED_CAST")
+val isMac = (project.extra["isMac"] as? Boolean) ?: System.getProperty("os.name").startsWith("Mac")
+val isWindows = (project.extra["isWindows"] as? Boolean) ?: System.getProperty("os.name").startsWith("Windows")
 val socketHandleOpens = project.extra["socketHandleOpens"] as List<String>
 // The release version (chairplay.version, X.Y.Z), set in build.gradle.kts; null in a development build.
 val appVersion = project.extra["appVersion"] as String?
+val appNumericVersion = project.extra["appNumericVersion"] as String?
 val javaToolchains = extensions.getByType<JavaToolchainService>()
 val mainSourceSet = the<SourceSetContainer>()["main"]
 
@@ -35,7 +38,8 @@ the<DistributionContainer>()["main"].contents {
 // The start scripts load speex_echo.dll from bin/. The placeholder becomes the scripts' own APP_HOME variable,
 // which both scripts set before DEFAULT_JVM_OPTS.
 tasks.named<CreateStartScripts>("startScripts") {
-    defaultJvmOpts = socketHandleOpens + "-Djava.library.path=__APP_HOME__/bin"
+    val macOpts = if (isMac) listOf("-XstartOnFirstThread", "-Djava.awt.headless=true") else emptyList()
+    defaultJvmOpts = socketHandleOpens + macOpts + "-Djava.library.path=__APP_HOME__/bin"
     doLast {
         unixScript.writeText(unixScript.readText().replace("__APP_HOME__", "'\"\$APP_HOME\"'"))
         windowsScript.writeText(windowsScript.readText().replace("__APP_HOME__/bin", "%APP_HOME%\\bin"))
@@ -47,9 +51,10 @@ tasks.named<CreateStartScripts>("startScripts") {
 // java.desktop, java.management, java.naming, java.sql, jdk.unsupported) plus modules reached only
 // reflectively: java.logging (JmDNS, SLF4J), java.xml, and the security providers, which are looked up by
 // name. A missing provider would break MFi signing at runtime only.
-val appImageModules = listOf(
+val appImageModules = listOfNotNull(
     "java.base", "java.desktop", "java.logging", "java.management", "java.naming", "java.sql", "java.xml",
-    "jdk.unsupported", "jdk.crypto.ec", "jdk.crypto.cryptoki", "jdk.crypto.mscapi",
+    "jdk.unsupported", "jdk.crypto.ec", "jdk.crypto.cryptoki",
+    if (isWindows) "jdk.crypto.mscapi" else null,
     // The UI's local HTTP server (com.sun.net.httpserver).
     "jdk.httpserver",
     // The release checker uses java.net.http.HttpClient; the bundled runtime must include it too.
@@ -58,7 +63,7 @@ val appImageModules = listOf(
 
 val jpackageImage by tasks.registering(Exec::class) {
     group = "distribution"
-    description = "Builds build/jpackage/ChairPlay with the launcher ChairPlay.exe."
+    description = if (isMac) "Builds build/jpackage/ChairPlay.app." else "Builds build/jpackage/ChairPlay with the launcher ChairPlay.exe."
     dependsOn("installDist")
     val launcher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(17) }
     val installDir = layout.buildDirectory.dir("install/chairplay")
@@ -66,64 +71,102 @@ val jpackageImage by tasks.registering(Exec::class) {
     val upstream = layout.projectDirectory.dir("upstream")
     val notices = layout.projectDirectory.dir("notices")
     val thirdParty = layout.projectDirectory.file("THIRD_PARTY_NOTICES")
-    // Written by packaging/icon/make_icon.py, as are the window icon PNGs in the resources.
-    val icon = layout.projectDirectory.file("packaging/chairplay.ico")
+    val icon = if (isMac) layout.projectDirectory.file("packaging/macos/chairplay.icns")
+        else layout.projectDirectory.file("packaging/chairplay.ico")
+    val macResDir = temporaryDir.resolve("mac-resources")
     val ops = objects.newInstance<FileOps>()
-    // Command-line arguments given to ChairPlay.exe replace the default `run`, so `devices` and
-    // `probe-bt` work by passing them explicitly.
     doFirst {
         ops.fs.delete { delete(outDir) }
+        val jpackageBin = if (isWindows) "bin/jpackage.exe" else "bin/jpackage"
+        val jpackagePath = launcher.get().metadata.installationPath.file(jpackageBin).asFile.path
+        val numericVersion = appNumericVersion ?: (if (isMac) "1.0.0" else "0.0.0")
+        val extraJavaOptions = if (isMac) {
+            listOf(
+                "--java-options", "-XstartOnFirstThread",
+                "--java-options", "-Djava.awt.headless=true",
+                "--java-options", "-Djava.library.path=\$APPDIR",
+            )
+        } else emptyList()
+        val macArgs = if (isMac) {
+            macResDir.mkdirs()
+            val plistTemplate = layout.projectDirectory.file("packaging/macos/Info.plist").asFile.readText()
+            val displayVersion = appVersion ?: numericVersion
+            val substituted = plistTemplate.replace("<string>1.0.0</string>", "<string>$displayVersion</string>")
+            macResDir.resolve("Info.plist").writeText(substituted)
+            listOf(
+                "--mac-package-identifier", "io.github.numberonebot.chairplay",
+                "--resource-dir", macResDir.path,
+            )
+        } else emptyList()
+
         commandLine(
-            launcher.get().metadata.installationPath.file("bin/jpackage.exe").asFile.path,
-            "--type", "app-image",
-            "--name", "ChairPlay",
-            // The exe's file version takes numbers only: a pre-release (1.1.0-rc1) goes in as 1.1.0.
-            "--app-version", project.extra["appNumericVersion"] as String? ?: "0.0.0",
-            "--vendor", "Oleksiy Strelets",
-            "--input", installDir.get().dir("lib").asFile.path,
-            "--main-jar", "chairplay.jar",
-            "--main-class", "io.github.numberonebot.chairplay.MainKt",
-            "--arguments", "run",
-            "--icon", icon.asFile.path,
-            "--add-modules", appImageModules.joinToString(","),
-            "--dest", outDir.get().asFile.path,
-            *socketHandleOpens.flatMap { listOf("--java-options", it) }.toTypedArray(),
+            listOf(
+                jpackagePath,
+                "--type", "app-image",
+                "--name", "ChairPlay",
+                "--app-version", numericVersion,
+                "--vendor", "Oleksiy Strelets",
+                "--input", installDir.get().dir("lib").asFile.path,
+                "--main-jar", "chairplay.jar",
+                "--main-class", "io.github.numberonebot.chairplay.MainKt",
+                "--arguments", "run",
+                "--icon", icon.asFile.path,
+                "--add-modules", appImageModules.joinToString(","),
+                "--dest", outDir.get().asFile.path,
+            ) + macArgs +
+                socketHandleOpens.flatMap { listOf("--java-options", it) } +
+                extraJavaOptions,
         )
     }
-    // jpackage on JDK 17 has no --app-content, so notices are copied into the image afterwards, and so are the
-    // DLLs: into the image's root next to ChairPlay.exe, because the launcher sets no java.library.path and the
-    // JVM's default one on Windows starts with the folder of the running exe.
     doLast {
-        ops.fs.copy {
-            from(installDir.get().file("bin/speex_echo.dll"))
-            from(installDir.get().file("LICENSE-concentus"))
-            from(installDir.get().file("LICENSE-speexdsp"))
-            from(layout.projectDirectory.file("LICENSE"))
-            from(thirdParty)
-            from(upstream.dir("docs/licenses/dependencies")) { into("licenses") }
-            from(notices) { into("licenses") }
-            into(outDir.get().dir("ChairPlay"))
-        }
-        ops.fs.copy {
-            from(installDir.get().file("bin/chairplay_webview.dll"), installDir.get().file("bin/WebView2Loader.dll"))
-            from(installDir.get().file("bin/chairplay_maneuver.dll"))
-            from(installDir.get().file("bin/chairplay_audio.dll"))
-            from(installDir.get().file("bin/chairplay_bridge.dll"))
-            into(outDir.get().dir("ChairPlay"))
-        }
-        ops.fs.copy {
-            from(installDir.get().dir("apac"))
-            into(outDir.get().dir("ChairPlay/apac"))
+        if (isMac) {
+            val appDir = outDir.get().dir("ChairPlay.app")
+            ops.fs.copy {
+                from(installDir.get().file("bin/libspeex_echo.dylib"))
+                from(installDir.get().file("bin/libchairplay_macos.dylib"))
+                into(appDir.dir("Contents/app"))
+            }
+            ops.fs.copy {
+                from(installDir.get().file("LICENSE-concentus"))
+                from(installDir.get().file("LICENSE-speexdsp"))
+                from(layout.projectDirectory.file("LICENSE"))
+                from(thirdParty)
+                from(upstream.dir("docs/licenses/dependencies")) { into("licenses") }
+                from(notices) { into("licenses") }
+                into(appDir.dir("Contents/Resources"))
+            }
+        } else {
+            ops.fs.copy {
+                from(installDir.get().file("bin/speex_echo.dll"))
+                from(installDir.get().file("LICENSE-concentus"))
+                from(installDir.get().file("LICENSE-speexdsp"))
+                from(layout.projectDirectory.file("LICENSE"))
+                from(thirdParty)
+                from(upstream.dir("docs/licenses/dependencies")) { into("licenses") }
+                from(notices) { into("licenses") }
+                into(outDir.get().dir("ChairPlay"))
+            }
+            ops.fs.copy {
+                from(installDir.get().file("bin/chairplay_webview.dll"), installDir.get().file("bin/WebView2Loader.dll"))
+                from(installDir.get().file("bin/chairplay_maneuver.dll"))
+                from(installDir.get().file("bin/chairplay_audio.dll"))
+                from(installDir.get().file("bin/chairplay_bridge.dll"))
+                into(outDir.get().dir("ChairPlay"))
+            }
+            ops.fs.copy {
+                from(installDir.get().dir("apac"))
+                into(outDir.get().dir("ChairPlay/apac"))
+            }
         }
     }
 }
-
 // The app folder holds the program next to its data (settings, keys, pairings), which the app reads from
 // its exe's folder. deploy refreshes the program there and never touches the data. It is dist/ChairPlay
 // in the project (outside build/, which clean wipes), or the path in the chairplay.home property: on the
 // command line (-Pchairplay.home=<path>) or, to keep one for good, in %USERPROFILE%\.gradle\gradle.properties.
 val appHome: Provider<String> = providers.gradleProperty("chairplay.home")
-    .orElse(layout.projectDirectory.dir("dist/ChairPlay").asFile.path)
+    .orElse(if (isMac) layout.projectDirectory.dir("dist/ChairPlay.app").asFile.path
+            else layout.projectDirectory.dir("dist/ChairPlay").asFile.path)
 
 // The app data, which the app writes next to its exe: settings, controls, window places and car icon, the AirPlay
 // identity, pairings, the MFi files, the data logs, screenshots, the instance lock, and cache\ (the USB GPS developer
@@ -138,83 +181,122 @@ project.extra["appDataFiles"] = appDataFiles
 val syncApp by tasks.registering(Sync::class) {
     description = "Copies the app image into the app folder (chairplay.home), keeping its settings, keys and pairings."
     dependsOn(jpackageImage)
-    from(layout.buildDirectory.dir("jpackage/ChairPlay"))
+    from(if (isMac) layout.buildDirectory.dir("jpackage/ChairPlay.app") else layout.buildDirectory.dir("jpackage/ChairPlay"))
     into(appHome)
-    // helper\ is the USB GPS helper's, which deployHelper keeps: the image the app runs from here has none.
-    preserve { include(appDataFiles + "helper/**") }
-    // jpackage leaves ChairPlay.exe read-only, and Windows refuses to replace a read-only file: the copies stay
-    // writable, so the next deploy can replace them.
-    filePermissions { user { write = true } }
-    // Sync deletes whatever else is there, so a mistyped folder must not be one with other files in it.
+    if (!isMac) {
+        preserve { include(appDataFiles + "helper/**") }
+    }
+    filePermissions {
+        user {
+            write = true
+            read = true
+            if (isMac) execute = true
+        }
+    }
     val home = appHome.map { file(it) }
     doFirst {
         val target = home.get()
-        val entries = target.list().orEmpty()
-        val known = setOf("ChairPlay.exe", "settings.properties", "controls.properties", "carplay-icon.png", "identity.properties", "pairings", "offline-mfi")
-        check(entries.isEmpty() || entries.any { it in known }) {
-            "$target has files but no ChairPlay.exe or app data; refusing to replace its contents"
+        if (isMac) {
+            target.parentFile?.mkdirs()
+        } else {
+            val entries = target.list().orEmpty()
+            val known = setOf("ChairPlay.exe", "settings.properties", "controls.properties", "carplay-icon.png", "identity.properties", "pairings", "offline-mfi")
+            check(entries.isEmpty() || entries.any { it in known }) {
+                "$target has files but no ChairPlay.exe or app data; refusing to replace its contents"
+            }
+            target.resolve("ChairPlay.exe").takeIf { it.isFile && !it.canWrite() }?.setWritable(true)
         }
-        // A read-only exe left by an earlier deploy.
-        target.resolve("ChairPlay.exe").takeIf { it.isFile && !it.canWrite() }?.setWritable(true)
+    }
+    doLast {
+        if (isMac) {
+            home.get().resolve("Contents/MacOS/ChairPlay").setExecutable(true)
+        }
     }
 }
 
-// The USB GPS helper (gradle/usb-gps.gradle.kts), some 6,400 files, goes into the app folder's helper\ on its own:
-// copied only when it was built anew, never with every deploy.
 val deployHelper by tasks.registering(Sync::class) {
     description = "Copies the frozen USB GPS helper into the app folder's helper\\ when it changed."
-    dependsOn("usbGpsHelper")
-    from(layout.buildDirectory.dir("usb-gps/dist/helper"))
-    into(appHome.map { "$it/helper" })
-    filePermissions { user { write = true } }
+    if (isWindows) {
+        dependsOn("usbGpsHelper")
+        from(layout.buildDirectory.dir("usb-gps/dist/helper"))
+        into(appHome.map { "$it/helper" })
+        filePermissions { user { write = true } }
+    }
 }
 
-// Then writes the default settings, controls and car icon the folder lacks, so the Wi-Fi can be filled in
-// before the first start; the templates live in the app's code (AppDefaults.kt).
 tasks.register<JavaExec>("deploy") {
     group = "distribution"
     description = "Installs the app into the app folder (chairplay.home) with default settings where it has none."
-    dependsOn(syncApp, deployHelper)
+    dependsOn(syncApp)
+    if (isWindows) dependsOn(deployHelper)
     mainClass = "io.github.numberonebot.chairplay.config.AppDefaultsKt"
     classpath = mainSourceSet.runtimeClasspath
     jvmArgs("-Djava.awt.headless=true")
-    args(appHome.get())
+    val defaultTarget = if (isMac) {
+        providers.provider {
+            System.getProperty("chairplay.home") ?: System.getenv("CHAIRPLAY_HOME")
+                ?: "${System.getProperty("user.home")}/Library/Application Support/ChairPlay"
+        }
+    } else {
+        appHome
+    }
+    args(defaultTarget.get())
 }
 
-// Starts the deployed app detached, so it is stopped by closing its window: a task runner's stop button
-// would kill it hard, and the iPhone then ignores new sessions until it restarts.
 tasks.register<Exec>("launchApp") {
     group = "application"
-    description = "Starts ChairPlay.exe from the app folder (chairplay.home), detached from Gradle."
+    description = "Starts the app from the deployed location, detached from Gradle."
     val home = appHome.map { file(it) }
     doFirst {
-        check(home.get().resolve("ChairPlay.exe").isFile) { "no ChairPlay.exe in ${home.get()}; run deploy first" }
+        if (isMac) {
+            check(home.get().exists()) { "no app bundle at ${home.get()}; run deploy first" }
+            commandLine("/usr/bin/open", "-n", home.get().path)
+        } else {
+            check(home.get().resolve("ChairPlay.exe").isFile) { "no ChairPlay.exe in ${home.get()}; run deploy first" }
+            val folder = home.get().path.replace("'", "''")
+            commandLine("powershell", "-NoProfile", "-Command",
+                "Start-Process -FilePath '$folder\\ChairPlay.exe' -WorkingDirectory '$folder'")
+        }
     }
-    // The app has no console: it logs into its logs folder and closes with its windows.
-    val folder = home.get().path.replace("'", "''")
-    commandLine("powershell", "-NoProfile", "-Command",
-        "Start-Process -FilePath '$folder\\ChairPlay.exe' -WorkingDirectory '$folder'")
-    // Asked for together, the app starts only once it is installed
     mustRunAfter("deploy")
 }
 
-// Installs the app into the app folder and starts it there, in one task (owner, 2026-11-13).
 tasks.register("deployAndLaunch") {
     group = "application"
     description = "Installs the app into the app folder (deploy) and starts it there (launchApp)."
     dependsOn("deploy", "launchApp")
 }
 
+fun latestLog(logDir: File, prefix: String): File? =
+    logDir.listFiles { f -> f.name.startsWith(prefix) && f.name.endsWith(".log") }
+        ?.maxByOrNull { it.name }
+
 tasks.register<Exec>("listDevices") {
     group = "application"
     description = "Lists the Bluetooth radio, paired devices and sound devices with the deployed app."
     val home = appHome.map { file(it) }
-    commandLine(home.get().resolve("ChairPlay.exe").path, "devices")
-    // The app has no console: it wrote the list to logs/devices-<time>.log, which is shown here.
+    val executable = if (isMac) home.map { it.resolve("Contents/MacOS/ChairPlay") } else home.map { it.resolve("ChairPlay.exe") }
+    commandLine(executable.get().path, "devices")
     doLast {
-        val newest = home.get().resolve("logs").listFiles { f -> f.name.startsWith("devices-") && f.name.endsWith(".log") }
-            ?.maxByOrNull { it.name }
-        check(newest != null) { "no devices-*.log in ${home.get().resolve("logs")}" }
+        val logDir = if (isMac) File(System.getProperty("user.home"), "Library/Application Support/ChairPlay/logs")
+            else home.get().resolve("logs")
+        val newest = latestLog(logDir, "devices-")
+        check(newest != null) { "no devices-*.log in $logDir" }
+        println(newest.readText())
+    }
+}
+
+tasks.register<Exec>("probeBt") {
+    group = "application"
+    description = "Probes Bluetooth radio and iAP2 link with paired iPhone."
+    val home = appHome.map { file(it) }
+    val executable = if (isMac) home.map { it.resolve("Contents/MacOS/ChairPlay") } else home.map { it.resolve("ChairPlay.exe") }
+    commandLine(executable.get().path, "probe-bt")
+    doLast {
+        val logDir = if (isMac) File(System.getProperty("user.home"), "Library/Application Support/ChairPlay/logs")
+            else home.get().resolve("logs")
+        val newest = latestLog(logDir, "probe-bt-")
+        check(newest != null) { "no probe-bt-*.log in $logDir" }
         println(newest.readText())
     }
 }

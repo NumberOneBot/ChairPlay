@@ -55,9 +55,10 @@ internal object MacBluetooth : Bluetooth {
 
     override fun pairedDevices(): List<PairedDevice> {
         val maxDevices = 64
-        val devs = Array(maxDevices) { MacNative.CpBtDevice() }
+        val dev = MacNative.CpBtDevice()
+        val devs = dev.toArray(maxDevices) as Array<MacNative.CpBtDevice>
         val errBuf = ByteArray(256)
-        val count = MacNative.INSTANCE.cp_bt_paired_devices(devs, maxDevices, errBuf, errBuf.size)
+        val count = MacNative.INSTANCE.cp_bt_paired_devices(devs[0], maxDevices, errBuf, errBuf.size)
         if (count < 0) return emptyList()
         val list = mutableListOf<PairedDevice>()
         for (i in 0 until count) {
