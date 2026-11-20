@@ -268,35 +268,20 @@ tasks.register("deployAndLaunch") {
 }
 
 fun latestLog(logDir: File, prefix: String): File? =
-    logDir.listFiles { f -> f.name.startsWith(prefix) && f.name.endsWith(".log") }
-        ?.maxByOrNull { it.name }
+    logDir.listFiles { f -> f.name.startsWith(prefix) && f.name.endsWith(".log") }?.maxByOrNull { it.name }
 
-tasks.register<Exec>("listDevices") {
-    group = "application"
-    description = "Lists the Bluetooth radio, paired devices and sound devices with the deployed app."
+fun registerCliTask(name: String, desc: String, arg: String, logPrefix: String) = tasks.register<Exec>(name) {
+    group = "application"; description = desc
     val home = appHome.map { file(it) }
-    val executable = if (isMac) home.map { it.resolve("Contents/MacOS/ChairPlay") } else home.map { it.resolve("ChairPlay.exe") }
-    commandLine(executable.get().path, "devices")
+    val exe = if (isMac) home.map { it.resolve("Contents/MacOS/ChairPlay") } else home.map { it.resolve("ChairPlay.exe") }
+    commandLine(exe.get().path, arg)
     doLast {
-        val logDir = if (isMac) File(System.getProperty("user.home"), "Library/Application Support/ChairPlay/logs")
-            else home.get().resolve("logs")
-        val newest = latestLog(logDir, "devices-")
-        check(newest != null) { "no devices-*.log in $logDir" }
+        val logDir = if (isMac) File(System.getProperty("user.home"), "Library/Application Support/ChairPlay/logs") else home.get().resolve("logs")
+        val newest = latestLog(logDir, logPrefix)
+        check(newest != null) { "no $logPrefix*.log in $logDir" }
         println(newest.readText())
     }
 }
 
-tasks.register<Exec>("probeBt") {
-    group = "application"
-    description = "Probes Bluetooth radio and iAP2 link with paired iPhone."
-    val home = appHome.map { file(it) }
-    val executable = if (isMac) home.map { it.resolve("Contents/MacOS/ChairPlay") } else home.map { it.resolve("ChairPlay.exe") }
-    commandLine(executable.get().path, "probe-bt")
-    doLast {
-        val logDir = if (isMac) File(System.getProperty("user.home"), "Library/Application Support/ChairPlay/logs")
-            else home.get().resolve("logs")
-        val newest = latestLog(logDir, "probe-bt-")
-        check(newest != null) { "no probe-bt-*.log in $logDir" }
-        println(newest.readText())
-    }
-}
+registerCliTask("listDevices", "Lists the Bluetooth radio, paired devices and sound devices with the deployed app.", "devices", "devices-")
+registerCliTask("probeBt", "Probes Bluetooth radio and iAP2 link with paired iPhone.", "probe-bt", "probe-bt-")

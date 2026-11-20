@@ -7,6 +7,7 @@ import io.github.numberonebot.chairplay.phone.AltscreenContent
 import io.github.numberonebot.chairplay.ui.BuildInfo
 import io.github.numberonebot.chairplay.media.decibelGain
 import org.junit.Assert.assertEquals
+import org.junit.Assume.assumeTrue
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
@@ -238,6 +239,7 @@ class DesktopConfigTest {
     // The packaged exe keeps its settings, keys and pairings in its own folder.
     @Test
     fun `the app folder is the packaged exe's folder`() {
+        assumeTrue("Windows path test", System.getProperty("os.name").startsWith("Windows"))
         val exe = Path.of("C:", "Users", "dark", "Documents", "ChairPlayApp", "ChairPlay.exe")
 
         assertEquals(exe.parent, DesktopConfig.appDirectory(exe.toString()))

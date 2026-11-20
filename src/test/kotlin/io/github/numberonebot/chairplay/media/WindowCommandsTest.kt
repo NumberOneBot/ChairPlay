@@ -6,6 +6,7 @@ import com.sun.jna.platform.win32.WinDef.HWND
 import com.sun.jna.platform.win32.WinUser
 import io.github.numberonebot.chairplay.platform.FakeWindowHooks
 import org.junit.Assert.*
+import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWNativeWin32.glfwGetWin32Window
@@ -13,6 +14,7 @@ import org.lwjgl.glfw.Callbacks.glfwFreeCallbacks
 
 class WindowCommandsTest {
     @Test fun `saved and live topmost requests affect only their window without changing its placement`() {
+        assumeTrue("Windows only: topmost assertion uses User32/GetWindowLong", System.getProperty("os.name").startsWith("Windows"))
         assertTrue(glfwInit())
         val windows = mutableListOf<Long>()
         try {

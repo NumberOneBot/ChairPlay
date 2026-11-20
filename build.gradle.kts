@@ -63,7 +63,7 @@ val socketHandleOpens = listOf("java.base/java.net", "java.base/java.io").map { 
 extra["socketHandleOpens"] = socketHandleOpens
 
 val macAppJvmArgs = if (isMac) listOf("-XstartOnFirstThread", "-Djava.awt.headless=true") else emptyList()
-val macTestJvmArgs = if (isMac) listOf("-Djava.awt.headless=true") else emptyList()
+val macTestJvmArgs = if (isMac) listOf("-XstartOnFirstThread", "-Djava.awt.headless=true") else emptyList()
 
 application {
     mainClass.set("io.github.numberonebot.chairplay.MainKt")

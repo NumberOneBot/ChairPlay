@@ -2,6 +2,7 @@ package com.shilapi.xcertplay.network
 
 import io.github.numberonebot.chairplay.platform.windows.WinsockKeepAlive
 import org.junit.Assert.assertEquals
+import org.junit.Assume.assumeTrue
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.net.InetAddress
@@ -11,6 +12,7 @@ import java.net.Socket
 class TcpLivenessTest {
     @Test
     fun acceptedSocketGetsUpstreamKeepAliveTiming() {
+        assumeTrue("Windows only: WinsockKeepAlive is Windows-specific", System.getProperty("os.name").startsWith("Windows"))
         val loopback = InetAddress.getLoopbackAddress()
         ServerSocket(0, 1, loopback).use { server ->
             Socket(loopback, server.localPort).use {
