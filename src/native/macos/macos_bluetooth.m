@@ -88,41 +88,45 @@ void cp_bt_set_err(char *err_buf, int err_len, const char *msg) {
 @end
 
 int cp_bt_radio_address(char *out_buf, int buf_len, char *err_buf, int err_len) {
-    @autoreleasepool {
-        ensure_run_loop();
-        IOBluetoothHostController *hc = [IOBluetoothHostController defaultController];
-        if (!hc) {
-            cp_bt_set_err(err_buf, err_len, "No default Bluetooth host controller");
-            return -1;
+    __block int result = -1;
+    cp_bt_run_on_loop(^{
+        @autoreleasepool {
+            IOBluetoothHostController *hc = [IOBluetoothHostController defaultController];
+            if (!hc) {
+                cp_bt_set_err(err_buf, err_len, "No default Bluetooth host controller");
+                return;
+            }
+            NSString *addr = [hc addressAsString];
+            if (!addr || [addr length] == 0) {
+                cp_bt_set_err(err_buf, err_len, "Host controller address unavailable");
+                return;
+            }
+            snprintf(out_buf, (size_t)buf_len, "%s", [addr UTF8String]);
+            result = 0;
         }
-        NSString *addr = [hc addressAsString];
-        if (!addr || [addr length] == 0) {
-            cp_bt_set_err(err_buf, err_len, "Host controller address unavailable");
-            return -1;
-        }
-        snprintf(out_buf, (size_t)buf_len, "%s", [addr UTF8String]);
-        return 0;
-    }
+    });
+    return result;
 }
 
 int cp_bt_paired_devices(CpBtDevice *out_devices, int max_devices, char *err_buf, int err_len) {
-    @autoreleasepool {
-        ensure_run_loop();
-        NSArray *devices = [IOBluetoothDevice pairedDevices];
-        if (!devices) return 0;
-        int count = 0;
-        for (IOBluetoothDevice *dev in devices) {
-            if (count >= max_devices) break;
-            NSString *name = [dev nameOrAddress];
-            NSString *addr = [dev addressString];
-            snprintf(out_devices[count].name, sizeof(out_devices[count].name), "%s", name ? [name UTF8String] : "");
-            snprintf(out_devices[count].address, sizeof(out_devices[count].address), "%s", addr ? [addr UTF8String] : "");
-            out_devices[count].class_of_device = (uint32_t)[dev classOfDevice];
-            count++;
+    __block int count = 0;
+    cp_bt_run_on_loop(^{
+        @autoreleasepool {
+            NSArray *devices = [IOBluetoothDevice pairedDevices];
+            if (!devices) return;
+            for (IOBluetoothDevice *dev in devices) {
+                if (count >= max_devices) break;
+                NSString *name = [dev nameOrAddress];
+                NSString *addr = [dev addressString];
+                snprintf(out_devices[count].name, sizeof(out_devices[count].name), "%s", name ? [name UTF8String] : "");
+                snprintf(out_devices[count].address, sizeof(out_devices[count].address), "%s", addr ? [addr UTF8String] : "");
+                out_devices[count].class_of_device = (uint32_t)[dev classOfDevice];
+                count++;
+            }
         }
-        (void)err_buf; (void)err_len;
-        return count;
-    }
+    });
+    (void)err_buf; (void)err_len;
+    return count;
 }
 
 int64_t cp_bt_connect_rfcomm(const char *address, const uint8_t *uuid16, char *err_buf, int err_len) {
