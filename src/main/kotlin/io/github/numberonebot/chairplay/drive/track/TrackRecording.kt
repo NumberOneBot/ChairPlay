@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.drive.track
 
+import io.github.numberonebot.chairplay.drive.GaugeLimits
 import io.github.numberonebot.chairplay.drive.GeoPoint
 
 /** One recorded fix. [seconds] count from the recording's first point; [speed] is in m/s, [heading] in degrees. */
@@ -27,7 +28,11 @@ enum class TrackFormatReason(val key: String) {
 class TrackFormatException(val reason: TrackFormatReason) : Exception(reason.key)
 
 /** A recorded drive: runs of points in time order. Positions are not joined across the gap between segments. */
-class TrackRecording(val name: String, val segments: List<List<TrackPoint>>) {
+class TrackRecording @JvmOverloads constructor(
+    val name: String,
+    val segments: List<List<TrackPoint>>,
+    val gaugeLimits: GaugeLimits = GaugeLimits.DEFAULT,
+) {
     init {
         if (segments.flatten().map { it.seconds }.distinct().size < 2) {
             throw TrackFormatException(TrackFormatReason.TOO_SHORT)

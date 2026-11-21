@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.drive.track
 
+import io.github.numberonebot.chairplay.drive.GaugeLimits
 import io.github.numberonebot.chairplay.drive.GeoPoint
 import java.io.InputStream
 import java.time.OffsetDateTime
@@ -9,67 +10,98 @@ import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLStreamReader
 
-/** Reads the first `trk` of a GPX 1.0 or 1.1 file; elements are matched by local name, whatever the namespace. */
+/** Reads the first `trk` of a GPX 1.0 or 1.1 file, with optional ChairPlay gauge limits. */
 object GpxReader {
-    private class Raw(val epochSeconds: Double, val position: GeoPoint, val altitude: Double?)
+    private const val GPX_NAMESPACE = "http://www.topografix.com/GPX/1/1"
+    private const val TELEMETRY_NAMESPACE = "urn:chairplay:gpx:telemetry:1"
+    private const val MAX_GAUGE_SPEED = 1000.0 // m/s; bound the number of gauge marks from file input.
+    private const val MAX_GAUGE_RPM = 100_000
+
+    private class RawPoint(
+        val epochSeconds: Double, val position: GeoPoint, val altitude: Double?,
+        val observedSpeed: Double?, val observedRpm: Double?,
+    )
+
+    private class RawTrack(val segments: List<List<RawPoint>>, val gaugeLimits: GaugeLimits)
 
     fun read(name: String, input: InputStream): TrackRecording {
-        val rawSegments = try {
+        val track = try {
             firstTrack(input)
         } catch (e: XMLStreamException) {
             throw TrackFormatException(TrackFormatReason.NOT_GPX)
-        }
-        if (rawSegments == null) throw TrackFormatException(TrackFormatReason.NO_TRACK)
-        val start = rawSegments.firstOrNull { it.isNotEmpty() }?.first()?.epochSeconds
+        } ?: throw TrackFormatException(TrackFormatReason.NO_TRACK)
+        val start = track.segments.firstOrNull { it.isNotEmpty() }?.first()?.epochSeconds
             ?: throw TrackFormatException(TrackFormatReason.NO_TIMES)
-        val segments = rawSegments.filter { it.isNotEmpty() }.map { segment ->
+        val segments = track.segments.filter { it.isNotEmpty() }.map { segment ->
             segment.map { TrackPoint(it.epochSeconds - start, it.position, it.altitude) }
         }
-        return TrackRecording(name, segments)
+        val points = track.segments.asSequence().flatten()
+        val limits = track.gaugeLimits.copy(
+            peakSpeed = points.mapNotNull { it.observedSpeed }.maxOrNull(),
+            peakRpm = points.mapNotNull { it.observedRpm }.maxOrNull(),
+        )
+        return TrackRecording(name, segments, limits)
     }
 
     /** The first track's segments with their timed points, or null when the file has no track point at all. */
-    private fun firstTrack(input: InputStream): List<List<Raw>>? {
+    private fun firstTrack(input: InputStream): RawTrack? {
         val factory = XMLInputFactory.newFactory()
         factory.setProperty(XMLInputFactory.SUPPORT_DTD, false)
         factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false)
         val reader = factory.createXMLStreamReader(input)
         try {
-            val segments = mutableListOf<MutableList<Raw>>()
-            var inTrack = false
+            val segments = mutableListOf<MutableList<RawPoint>>()
+            var limits = GaugeLimits.DEFAULT
+            var trackDepth = 0
+            var depth = 0
             var sawPoint = false
             while (reader.hasNext()) {
                 when (reader.next()) {
-                    XMLStreamConstants.START_ELEMENT -> when (reader.localName) {
-                        "trk" -> inTrack = true
-                        "trkseg" -> if (inTrack) segments.add(mutableListOf())
-                        "trkpt" -> if (inTrack) {
-                            if (segments.isEmpty()) segments.add(mutableListOf())
-                            sawPoint = true
-                            readPoint(reader)?.let { point ->
-                                val segment = segments.last()
-                                // A point not later than the one before it is a repeat or a clock step back: skipped.
-                                if (segment.isEmpty() || point.epochSeconds > segment.last().epochSeconds) segment.add(point)
+                    XMLStreamConstants.START_ELEMENT -> {
+                        depth++
+                        when (reader.localName) {
+                            "trk" -> if (trackDepth == 0) trackDepth = depth
+                            "trkseg" -> if (trackDepth != 0) segments.add(mutableListOf())
+                            "trkpt" -> if (trackDepth != 0) {
+                                if (segments.isEmpty()) segments.add(mutableListOf())
+                                sawPoint = true
+                                readPoint(reader)?.let { point ->
+                                    val segment = segments.last()
+                                    // Ignore repeats and clock steps back inside the segment.
+                                    if (segment.isEmpty() || point.epochSeconds > segment.last().epochSeconds) segment.add(point)
+                                }
+                                depth--
+                            }
+                            "extensions" -> if (trackDepth != 0 && depth == trackDepth + 1 && reader.namespaceURI == GPX_NAMESPACE) {
+                                val fields = readExtension(reader, "gauges", "redline", "top_speed")
+                                limits = GaugeLimits(
+                                    redlineRpm = fields["redline"]?.toDoubleOrNull()?.takeIf { it > 1000 && it <= 20000 },
+                                    topSpeed = readGaugeSpeed(fields["top_speed"])?.takeIf { it > 0 },
+                                )
+                                depth--
                             }
                         }
                     }
-                    XMLStreamConstants.END_ELEMENT -> if (reader.localName == "trk" && inTrack) {
-                        return if (sawPoint) segments else null
+                    XMLStreamConstants.END_ELEMENT -> {
+                        if (reader.localName == "trk" && depth == trackDepth) return if (sawPoint) RawTrack(segments, limits) else null
+                        depth--
                     }
                 }
             }
-            return if (sawPoint) segments else null
+            return if (sawPoint) RawTrack(segments, limits) else null
         } finally {
             reader.close()
         }
     }
 
     /** Reads a `trkpt` (the reader stands on its start) through its end; null when it has no time or no place. */
-    private fun readPoint(reader: XMLStreamReader): Raw? {
+    private fun readPoint(reader: XMLStreamReader): RawPoint? {
         val latitude = reader.getAttributeValue(null, "lat")?.toDoubleOrNull()
         val longitude = reader.getAttributeValue(null, "lon")?.toDoubleOrNull()
         var altitude: Double? = null
         var time: Double? = null
+        var observedSpeed: Double? = null
+        var observedRpm: Double? = null
         var depth = 1
         while (depth > 0 && reader.hasNext()) {
             when (reader.next()) {
@@ -79,14 +111,49 @@ object GpxReader {
                     if (depth == 2) when (reader.localName) {
                         "ele" -> altitude = reader.elementText.trim().toDoubleOrNull().also { depth-- }
                         "time" -> time = parseTime(reader.elementText).also { depth-- }
+                        "extensions" -> if (reader.namespaceURI == GPX_NAMESPACE) {
+                            val fields = readExtension(reader, "telemetry", "speed", "rpm")
+                            observedSpeed = readGaugeSpeed(fields["speed"])
+                            observedRpm = fields["rpm"]?.toIntOrNull()?.takeIf { it in 0..MAX_GAUGE_RPM }?.toDouble()
+                            depth--
+                        }
                     }
                 }
                 XMLStreamConstants.END_ELEMENT -> depth--
             }
         }
         if (latitude == null || longitude == null || time == null) return null
-        return Raw(time, GeoPoint(latitude, longitude), altitude)
+        return RawPoint(time, GeoPoint(latitude, longitude), altitude, observedSpeed, observedRpm)
     }
+
+    /** Consumes an extensions element, taking only text fields directly inside the named ChairPlay block. */
+    private fun readExtension(reader: XMLStreamReader, block: String, vararg names: String): Map<String, String> {
+        val fields = mutableMapOf<String, String>()
+        val text = StringBuilder()
+        var depth = 1
+        var inBlock = false
+        var field: String? = null
+        while (depth > 0 && reader.hasNext()) {
+            when (reader.next()) {
+                XMLStreamConstants.START_ELEMENT -> when (++depth) {
+                    2 -> inBlock = reader.namespaceURI == TELEMETRY_NAMESPACE && reader.localName == block
+                    3 -> if (inBlock && reader.namespaceURI == TELEMETRY_NAMESPACE && reader.localName in names) {
+                        field = reader.localName
+                    }
+                    4 -> field = null // Nested markup is not a numeric value.
+                }
+                XMLStreamConstants.CHARACTERS, XMLStreamConstants.CDATA -> if (field != null) text.append(reader.text)
+                XMLStreamConstants.END_ELEMENT -> if (depth-- == 3) {
+                    field?.let { fields.putIfAbsent(it, text.toString().trim()) }
+                    field = null
+                    text.setLength(0)
+                }
+            }
+        }
+        return fields
+    }
+
+    private fun readGaugeSpeed(text: String?): Double? = text?.toDoubleOrNull()?.takeIf { it in 0.0..MAX_GAUGE_SPEED }
 
     private fun parseTime(text: String): Double? =
         try {

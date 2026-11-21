@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.drive
 import io.github.numberonebot.chairplay.drive.track.TrackPhase
 import io.github.numberonebot.chairplay.drive.track.TrackPlayer
 import io.github.numberonebot.chairplay.drive.track.TrackRecording
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The recording the GPS page loaded, as the car's source: while it plays or pauses it puts [drive] where the recording
@@ -17,9 +18,11 @@ internal class DrivingTrack(
     private val placed: () -> Unit,
     private val remember: (DriveSnapshot) -> Unit,
 ) {
-    /** The recording loaded last, stopped at its start until played; set from any thread, read on the window loop. */
-    @Volatile var player: TrackPlayer? = null
-        private set
+    private data class Loaded(val player: TrackPlayer, val showGauges: Boolean = true)
+    private val loaded = AtomicReference<Loaded?>()
+
+    val player: TrackPlayer? get() = loaded.get()?.player
+    val gaugeLimits: GaugeLimits? get() = loaded.get()?.takeIf { it.showGauges }?.player?.recording?.gaugeLimits
 
     // Whether the track has the car; the window loop's thread only.
     private var tracking = false
@@ -31,7 +34,13 @@ internal class DrivingTrack(
     @Volatile var live: () -> Boolean = { true }
 
     fun load(recording: TrackRecording) {
-        player = TrackPlayer(recording, nanoTime)
+        loaded.set(Loaded(TrackPlayer(recording, nanoTime)))
+    }
+
+    /** The next source actually drove the car. A simultaneous Open can still select its new track. */
+    fun releaseGauges() {
+        val current = loaded.get() ?: return
+        if (current.showGauges) loaded.compareAndSet(current, current.copy(showGauges = false))
     }
 
     /** A GPS operation holds the car: a playing track pauses, so its clock does not run through the hold. */
@@ -54,6 +63,12 @@ internal class DrivingTrack(
 
     /** One pass of [player]: the car where its recording is now, at frame pace while it plays and waiting while paused. */
     fun pass(player: TrackPlayer): Double? {
+        if (player.phase == TrackPhase.PLAYING) {
+            val current = loaded.get()
+            if (current?.player === player && !current.showGauges) {
+                loaded.compareAndSet(current, current.copy(showGauges = true))
+            }
+        }
         player.advance()
         val (phase, time) = player.state()
         // Stopped at its start, the page stopped it since the last look: the car stands where it is. Stopped further on,

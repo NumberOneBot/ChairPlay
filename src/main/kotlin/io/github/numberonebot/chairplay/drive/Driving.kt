@@ -71,10 +71,8 @@ class Driving(
     @Volatile private var gameThere = false
     // Whether the last poll had a game there, driving or halted; the window loop's thread only.
     private var following = false
-    // The red line and top speed (m/s) the game last gave while driving, for the gauges until the gamepad or keys first
-    // drive the car again ([ownControls]); null for the GPS car's own.
-    @Volatile private var gameRedline: Double? = null
-    @Volatile private var gameTopSpeed: Double? = null
+    // The game's last limits, kept until the gamepad or keys drive again ([ownControls]).
+    @Volatile private var gameGauges = GaugeLimits.DEFAULT
 
     /**
      * [DriveControl.pass] while the GPS is on, after a track playing or paused ([tracks], drive mode's switch still taking
@@ -127,8 +125,8 @@ class Driving(
                     // The game's wheel angle as a share of the gauges' lock, which turns their wheel as far.
                     CarInput(record.throttle ?: 0.0, record.brake ?: 0.0, (record.steerDegrees ?: 0.0) / STEER_LOCK_DEGREES),
                 )
-                gameRedline = record.redline
-                gameTopSpeed = record.topSpeed
+                gameGauges = GaugeLimits(redlineRpm = record.redline, topSpeed = record.topSpeed)
+                tracks.releaseGauges()
                 placed = true
                 following = true
                 return DriveControl.FRAME_SECONDS
@@ -182,8 +180,8 @@ class Driving(
     // car's. A game sending again brings its own back.
     private fun ownControls() {
         if (drive.snapshot().input == CarInput()) return
-        gameRedline = null
-        gameTopSpeed = null
+        gameGauges = GaugeLimits.DEFAULT
+        tracks.releaseGauges()
     }
 
     /** Turns drive mode on or off and says which; it stays off while the GPS is off. */
@@ -270,9 +268,7 @@ class Driving(
     fun gauges(): GaugeView? {
         if (!settings.enabled || !control.keyboard) return null
         val snapshot = drive.snapshot()
-        return gaugeView(
-            settings, snapshot, snapshot, gameRedline ?: drive.spec.redlineRpm, settings.gauges, gameTopSpeed?.times(3.6),
-        )
+        return gaugeView(settings, snapshot, snapshot, drive.spec.redlineRpm, settings.gauges, tracks.gaugeLimits ?: gameGauges)
     }
 
     /** Saves where the car is for the next start; the app calls it as it closes. */

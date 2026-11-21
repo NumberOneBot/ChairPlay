@@ -74,6 +74,31 @@ data class GaugeScale(
     }
 }
 
+/** Declared instrument limits and, for a recording, the peaks measured across the whole track. Speeds are in m/s. */
+data class GaugeLimits(
+    val redlineRpm: Double? = null,
+    val topSpeed: Double? = null,
+    val peakRpm: Double? = null,
+    val peakSpeed: Double? = null,
+) {
+    internal fun speedometer(units: SpeedUnits, sweep: Sweep): GaugeScale {
+        val scale = GaugeScale.speedometer(units, sweep, topSpeed?.let { units.fromKmh(it * 3.6) })
+        val peak = peakSpeed?.let { units.fromKmh(it * 3.6) }
+        return if (topSpeed == null && peak != null && peak > scale.max) GaugeScale.speedometer(units, sweep, peak) else scale
+    }
+
+    internal fun tachometer(ownRedline: Double, sweep: Sweep): GaugeScale {
+        val scale = GaugeScale.tachometer(redlineRpm ?: ownRedline, sweep)
+        val peak = peakRpm?.div(1000)
+        if (redlineRpm != null || peak == null || peak <= scale.max) return scale
+        return GaugeScale((0..ceil(peak).toInt()).map { it.toDouble() }, sweep = sweep)
+    }
+
+    companion object {
+        internal val DEFAULT = GaugeLimits()
+    }
+}
+
 /** What the gauges show at a moment: the speed, the engine, the gear, the pedals, the heading, the place, and the scales. */
 data class GaugeView(
     val speedKmh: Double,

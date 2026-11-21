@@ -1,11 +1,11 @@
 package io.github.numberonebot.chairplay.drive
 
 /**
- * What the gauges show in [settings]' scales and style, at [size]: [engine]'s speed, revs, gear and pedals, an engine red
- * from [redlineRpm], a speedometer up to [topKmh] when a game gives one, and the place, heading and steering of [car].
+ * The [engine]'s readings and the [car]'s place, heading and steering, with the source's [limits] or the GPS car's scales.
  */
 internal fun gaugeView(
-    settings: GpsSettings, engine: DriveSnapshot, car: DriveSnapshot, redlineRpm: Double, size: GaugeSize, topKmh: Double? = null,
+    settings: GpsSettings, engine: DriveSnapshot, car: DriveSnapshot, redlineRpm: Double, size: GaugeSize,
+    limits: GaugeLimits,
 ) = GaugeView(
     speedKmh = engine.car.speedKmh,
     rpm = engine.car.rpm,
@@ -13,8 +13,8 @@ internal fun gaugeView(
     throttle = engine.input.throttle,
     brake = engine.input.brake,
     headingDegrees = car.car.headingDegrees,
-    speedometer = GaugeScale.speedometer(settings.units, settings.design.speedometer, topKmh?.let(settings.units::fromKmh)),
-    tachometer = GaugeScale.tachometer(redlineRpm, settings.design.tachometer),
+    speedometer = limits.speedometer(settings.units, settings.design.speedometer),
+    tachometer = limits.tachometer(redlineRpm, settings.design.tachometer),
     position = car.position,
     size = size,
     steer = car.input.steer,
@@ -41,7 +41,9 @@ class GaugeDemo(private val driving: Driving, private val nanoTime: () -> Long =
     /** What the gauges show while it plays; null while it does not. */
     fun view(): GaugeView? {
         val engine = engine ?: return null
-        return gaugeView(driving.settings, engine.snapshot(), driving.drive.snapshot(), engine.spec.redlineRpm, GaugeSize.LARGE)
+        return gaugeView(
+            driving.settings, engine.snapshot(), driving.drive.snapshot(), engine.spec.redlineRpm, GaugeSize.LARGE, GaugeLimits.DEFAULT,
+        )
     }
 
     /** Plays it, [repaint] after each frame, until [stop]. */
