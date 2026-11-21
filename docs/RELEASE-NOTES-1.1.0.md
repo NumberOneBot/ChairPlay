@@ -1,8 +1,7 @@
-# ChairPlay 1.1.0 RC1
+<!-- highlight: USB GPS: drive anywhere, no 80 km limit -->
+# ChairPlay 1.1.0
 
-This update sets the iPhone's location over a USB cable while CarPlay stays on Wi-Fi, with a step-by-step setup, city presets, and GPX track playback. The settings window gets a new look and a light theme.
-
-This is a release candidate: it is meant for testing before 1.1.0. Report what does not work with **About > Report a problem**.
+This update sets the iPhone's location over a USB cable while CarPlay stays on Wi-Fi, with a step-by-step setup, city presets, and GPX and VBO track playback. The settings window gets a new look and a light theme.
 
 ## What's changed
 
@@ -16,13 +15,15 @@ This is a release candidate: it is meant for testing before 1.1.0. Report what d
 
   ChairPlay talks to the iPhone through Apple Mobile Device Service, which Apple Devices or iTunes installs. Nothing else is installed on the PC.
 - **City presets** put the USB GPS car on a busy road in one of ten cities.
-- **Track playback.** With USB GPS, **Settings > GPS** opens a GPX recording and plays it as the GPS car, with Play, Pause, Stop, and the recording's time and distance.
+- **Track playback.** With USB GPS, **Settings > GPS** opens a GPX or VBO recording and plays it as the GPS car, with Play, Pause, Stop, and the recording's time and distance. With **Drive mode** on, the gauges show the recording's speed, and its revs and gear when it has them.
+- **Sample tracks.** The `tracks` folder next to ChairPlay.exe holds George Russell's pole lap of the 2024 Las Vegas GP and a lap of the Nordschleife, and **Open…** starts there.
 - **Theme.** **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Slate, the new default, Black, as before, Graphite, Teal, or Dracula.
 - **New look.** The toolbar is translucent and the page scrolls under it, the list of pages floats beside the page, and a page shorter than the window sits in its middle.
 - **Application** takes the place of **Experiments** and holds the app's own settings: the windows, **Theme**, the settings browser, logs, integrations, and the HUD demo.
 - **Mouse.** The mouse's back button goes back in the CarPlay and AltScreen windows.
 - **Media keys.** The keyboard's Previous track, Play/Pause, and Next track keys control the iPhone's music while a ChairPlay window has the focus, and other players don't get them meanwhile. The volume keys stay with Windows.
-- **Updates.** **About > Version** offers a newer release that the update check found, with **Download**, until that version is installed. The update dialog's **Open** goes to the latest release's page.
+- **Updates.** **About > Version** offers a newer release that the update check found, with **Download**, until that version is installed. The update dialog's **Open** goes to the latest release's page. From the next minor version on, the first start after an update shows a Windows notification with the release's main change and **What's new**.
+- **Support.** After two hours of CarPlay, a card on top of the settings asks for a coffee. **Buy me a coffee** or **I already did** ends it; **Later** asks again in three days.
 - **Connecting.** **Settings > CarPlay** and **AltScreen** stay open while the iPhone connects; a change the connection has already read is marked to apply at the next one.
 - **Video.** A new install asks the iPhone for H.264 video. **Settings > CarPlay > Video codec** can still offer H.265, and settings from an earlier version keep their codec.
 - **Global shortcuts** leave Enter and Escape to the app that has the focus.
@@ -31,8 +32,8 @@ This is a release candidate: it is meant for testing before 1.1.0. Report what d
 
 ## Install or update
 
-Download **ChairPlay-1.1.0-rc1-setup.exe** from the [Releases page](https://github.com/NumberOneBot/ChairPlay/releases) and run it. Installation does not require administrator rights. Updates preserve settings, iPhone pairing, and MFi files. For the portable build, download **ChairPlay-1.1.0-rc1-portable.zip**: close ChairPlay, delete the **app**, **runtime**, and **helper** folders, and unpack the new zip over the old one.
+Download **ChairPlay-1.1.0-setup.exe** from the [Releases page](https://github.com/NumberOneBot/ChairPlay/releases) and run it. Installation does not require administrator rights. Updates preserve settings, iPhone pairing, and MFi files. For the portable build, download **ChairPlay-1.1.0-portable.zip**: close ChairPlay, delete the **app**, **runtime**, and **helper** folders, and unpack the new zip over the old one.
 
 For problems, use **About > Report a problem** to include the app version in a new issue.
 
-[Full changelog](https://github.com/NumberOneBot/ChairPlay/blob/v1.1.0-rc1/CHANGELOG.md) · [Changes since v1.0.11](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.11...v1.1.0-rc1)
+[Full changelog](https://github.com/NumberOneBot/ChairPlay/blob/v1.1.0/CHANGELOG.md) · [Changes since v1.0.11](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.11...v1.1.0)

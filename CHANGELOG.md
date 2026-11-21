@@ -2,7 +2,7 @@
 
 New features and fixed bugs in ChairPlay.
 
-## 1.1.0 RC1 - 2026-11-11
+## 1.1.0 - 2026-11-22
 
 ### Added
 
@@ -16,7 +16,8 @@ New features and fixed bugs in ChairPlay.
 
   ChairPlay talks to the iPhone through Apple Mobile Device Service, which Apple Devices or iTunes installs, and a helper in the app's `helper` folder. Nothing else is installed on the PC.
 - **City presets** put the USB GPS car on a busy road in one of ten cities.
-- **Track playback** (**Settings > GPS**, with USB GPS) opens a GPX recording and plays it as the GPS car: Play, Pause, Stop, and the recording's time and distance. While it plays, the arrow keys and the gamepad don't move the car, and with **Drive mode** on the gauges show the recording's speed.
+- **Track playback** (**Settings > GPS**, with USB GPS) opens a GPX or VBO recording and plays it as the GPS car: Play, Pause, Stop, and the recording's time and distance. While it plays, the arrow keys and the gamepad don't move the car, and with **Drive mode** on the gauges show the recording's speed, and its revs and gear when it has them. At the end the car stays at the recording's last point.
+- The `tracks` folder next to ChairPlay.exe holds two sample recordings, George Russell's pole lap of the 2024 Las Vegas GP (VBO) and a lap of the Nordschleife (GPX), and **Open…** starts there until a file is opened from another folder.
 - A GPX recording with ChairPlay's telemetry extension sets the gauges' scales: its red line and top speed, or a scale wide enough for its highest speed and revs. They stay after the recording ends, until the keys, the gamepad, or a game drive the car.
 - **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Slate, the new default, Black, as before, Graphite, Teal, or Dracula. `ui.tint.controls=true` in settings.properties gives it to the controls window too.
 - The mouse's back button goes back in the CarPlay and AltScreen windows.
@@ -40,7 +41,7 @@ New features and fixed bugs in ChairPlay.
 
 - In full screen, choosing ChairPlay on CarPlay's home screen made the screen blink and left CarPlay showing. The window now leaves full screen and shows the settings; **F** takes it back to full screen.
 
-[Release notes](docs/RELEASE-NOTES-1.1.0.md) · [Changes since v1.0.11](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.11...v1.1.0-rc1)
+[Release notes](docs/RELEASE-NOTES-1.1.0.md) · [Changes since v1.0.11](https://github.com/NumberOneBot/ChairPlay/compare/v1.0.11...v1.1.0)
 
 ## 1.0.11 - 2026-11-10
 

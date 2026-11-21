@@ -92,7 +92,6 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 
 ## What's next
 
-- **1.1:** USB GPS. Navigation apps on the iPhone follow the GPS car, including recorded trips from GPX files.
 - **Game bridge:** CarPlay on a screen in the game's car, with the iPhone navigating your drive in Assetto Corsa, Assetto Corsa EVO, Euro Truck Simulator 2, and American Truck Simulator.
 - **1.2 to 1.4:** first versions for macOS and Linux, and **CouchPlay** for Android TV.
 - **1.5+:** USB CarPlay and Android Auto.
