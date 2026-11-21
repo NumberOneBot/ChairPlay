@@ -32,6 +32,12 @@ internal data class ReleaseVersion(
 
     override fun toString() = parts.joinToString(".") + (label?.let { "-$it$number" } ?: "")
 
+    /** A release candidate or another pre-release, such as 1.2.0-rc1. */
+    val prerelease: Boolean get() = label != null
+
+    /** Both have the same major and minor version: 1.2.0 and 1.2.3. */
+    fun sameMinor(other: ReleaseVersion): Boolean = parts.take(2) == other.parts.take(2)
+
     companion object {
         private val FORMAT = Regex("v?(\\d+)\\.(\\d+)\\.(\\d+)(?:-([a-z]+)(\\d+))?")
 

@@ -16,6 +16,7 @@ import io.github.numberonebot.chairplay.phone.LinkStatus
 import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.appLog
 import io.github.numberonebot.chairplay.log.LogLevel
+import io.github.numberonebot.chairplay.update.UpdateAnnouncement
 import io.github.numberonebot.chairplay.update.UpdateChecks
 import java.io.Closeable
 import java.nio.file.Path
@@ -97,8 +98,16 @@ class ChairPlayUi(
             remember = { controller.updateFound(it.version.toString(), it.published) }, log = log)
     }
 
-    /** Called once the app's windows are open; the network request runs on its own daemon thread. */
-    fun checkUpdatesAtStart() = updates.start(!settingsFile.read()["updates.check.on.start"].orEmpty().trim().equals("false", true))
+    // The toast of an update just installed, from this build's version and its release's highlight.
+    private val announcement = BuildInfo.load().let { build ->
+        UpdateAnnouncement(dir, build.version, build.highlight, Platforms.current::updateToast, log)
+    }
+
+    /** Called once the app's windows are open: the update check and the update's toast, each on its own daemon thread. */
+    fun checkUpdatesAtStart() {
+        updates.start(!settingsFile.read()["updates.check.on.start"].orEmpty().trim().equals("false", true))
+        announcement.start()
+    }
 
     private val checks = SetupChecks(
         pairedIphone = { pairedIphoneName(Platforms.current.bluetooth.pairedDevices(), config.iphoneAddress) },

@@ -12,10 +12,19 @@ class SupportStore(private val dir: Path, private val now: () -> Long = { System
 
     fun done(): Boolean = text(DONE)?.toBooleanStrictOrNull() ?: false
 
-    /** The card asks: two hours of CarPlay, not supported, and Later not pressed in the last three days (owner, 2026-11-21). */
+    /**
+     * The coffee ask's rule, for the card and the update toast alike: not supported, and two hours of CarPlay; an install
+     * from before the count ([unknownTime], the toast's first) asks while it has counted nothing (owner, 2026-11-21).
+     */
+    fun asks(unknownTime: Boolean = false): Boolean {
+        val seconds = carPlaySeconds()
+        return !done() && ((seconds ?: 0) >= ASK_AFTER_SECONDS || (unknownTime && seconds == null))
+    }
+
+    /** The card asks: [asks], and Later not pressed in the last three days; the toast does not wait for Later. */
     fun due(): Boolean {
         val later = text(LATER)?.toLongOrNull()
-        return !done() && (carPlaySeconds() ?: 0) >= ASK_AFTER_SECONDS && (later == null || now() - later >= LATER_SECONDS)
+        return asks() && (later == null || now() - later >= LATER_SECONDS)
     }
 
     fun addCarPlay(seconds: Long) {

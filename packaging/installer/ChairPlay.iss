@@ -75,6 +75,10 @@ Source: "{#MfiSourceDir}\certificate.p7b"; DestDir: "{app}\offline-mfi"; Flags: 
 Name: "{autoprograms}\ChairPlay"; Filename: "{app}\ChairPlay.exe"
 Name: "{autodesktop}\ChairPlay"; Filename: "{app}\ChairPlay.exe"; Tasks: desktopicon
 
+[Registry]
+; The app registers its ID for the update toast itself (WindowsToast.kt); uninstalling removes it.
+Root: HKCU; Subkey: "Software\Classes\AppUserModelId\NumberOneBot.ChairPlay"; Flags: uninsdeletekey dontcreatekey
+
 [Run]
 Filename: "{app}\ChairPlay.exe"; Description: "{cm:LaunchProgram,ChairPlay}"; Flags: postinstall nowait skipifsilent
 

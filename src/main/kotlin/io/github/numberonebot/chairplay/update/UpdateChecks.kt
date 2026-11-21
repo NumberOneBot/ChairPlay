@@ -32,6 +32,11 @@ internal fun newerRelease(stored: String?, installed: String?, published: String
 /** The latest stable release's page: GitHub sends it on to the release itself (owner, 2026-11-12). */
 internal const val LATEST_RELEASE_PAGE = "https://github.com/NumberOneBot/ChairPlay/releases/latest"
 
+/** One release's page, by its tag. */
+internal fun releasePage(version: String) = "https://github.com/NumberOneBot/ChairPlay/releases/tag/v$version"
+
+internal const val BUY_ME_A_COFFEE_PAGE = "https://www.buymeacoffee.com/alexstrelets"
+
 /**
  * One of the project's own pages, [url], tagged with where in the app it was opened ([campaign]) and the build
  * ([version], "dev" without one): GitHub ignores the tags, a page of our own later counts them (owner, 2026-11-21).

@@ -32,6 +32,7 @@ import io.github.numberonebot.chairplay.platform.WindowHooks
 import io.github.numberonebot.chairplay.ui.FirewallStatus
 import io.github.numberonebot.chairplay.ui.WebViewBackend
 import io.github.numberonebot.chairplay.update.UpdateResult
+import io.github.numberonebot.chairplay.update.UpdateToast
 import java.io.Closeable
 import java.net.InetAddress
 import java.net.Socket
@@ -58,6 +59,8 @@ internal class MacPlatform : Platform {
     override fun webView(userData: Path, debug: Boolean): WebViewBackend = notReady()
 
     override fun updateDialog(result: UpdateResult): Boolean = notReady()
+
+    override fun updateToast(toast: UpdateToast): Unit = notReady()
 
     override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = notReady()
 }

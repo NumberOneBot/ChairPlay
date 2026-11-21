@@ -4,6 +4,7 @@ import io.github.numberonebot.chairplay.gps.DeveloperToolsStore
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.platform.SystemPage
+import io.github.numberonebot.chairplay.update.BUY_ME_A_COFFEE_PAGE
 import io.github.numberonebot.chairplay.update.LATEST_RELEASE_PAGE
 import io.github.numberonebot.chairplay.update.tagged
 import java.net.URLEncoder
@@ -52,7 +53,7 @@ internal class UiPlaces(
         "discussions" -> "$PROJECT/discussions"
         "pull-requests" -> "$PROJECT/pulls"
         "author" -> "https://github.com/NumberOneBot"
-        "buy-me-a-coffee" -> "https://www.buymeacoffee.com/alexstrelets"
+        "buy-me-a-coffee" -> BUY_ME_A_COFFEE_PAGE
         "source" -> PROJECT
         "releases" -> "$PROJECT/releases"
         "latest-release" -> LATEST_RELEASE_PAGE

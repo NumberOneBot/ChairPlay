@@ -109,7 +109,11 @@ val buildInfo by tasks.registering {
             val text = process.inputStream.bufferedReader().readText().trim()
             if (process.waitFor() == 0) text.split(' ') else emptyList()
         }.getOrDefault(emptyList())
-        val lines = listOfNotNull(version?.let { "app.version=$it" }) + listOf("app" to commit(root), "core" to commit(root.resolve("upstream")))
+        // The update toast's line: <!-- highlight: ... --> in the X.Y.0 notes, for every X.Y.Z (1.2.1 reads 1.2.0's).
+        val notes = version?.let { root.resolve("docs/RELEASE-NOTES-${it.substringBefore('-').substringBeforeLast('.')}.0.md") }
+        val highlight = notes?.takeIf { it.isFile }?.readLines()
+            ?.firstNotNullOfOrNull { Regex("""<!--\s*highlight:\s*(.+?)\s*-->""").find(it)?.groupValues?.get(1) }
+        val lines = listOfNotNull(version?.let { "app.version=$it" }, highlight?.let { "app.highlight=" + it.replace("\\", "\\\\") }) + listOf("app" to commit(root), "core" to commit(root.resolve("upstream")))
             .filter { (_, commit) -> commit.size == 2 }
             .flatMap { (name, commit) -> listOf("$name.commit=${commit[0]}", "$name.date=${commit[1]}") }
         val text = lines.joinToString("") { "$it\n" }

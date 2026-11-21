@@ -11,7 +11,13 @@ data class Commit(val id: String, val date: String)
  * as the build's buildInfo task wrote them into build-info.properties, and the release [version] (X.Y.Z) when the build was
  * given one. Each is null when the build did not record it.
  */
-data class BuildInfo(val app: Commit?, val core: Commit?, val version: String? = null) {
+data class BuildInfo(
+    val app: Commit?,
+    val core: Commit?,
+    val version: String? = null,
+    /** The release's main change for the update toast, from its X.Y.0 notes' highlight comment; null without one. */
+    val highlight: String? = null,
+) {
     companion object {
         fun load(): BuildInfo {
             val text = BuildInfo::class.java.getResourceAsStream("/build-info.properties")?.use { String(it.readBytes(), Charsets.UTF_8) }
@@ -24,7 +30,8 @@ data class BuildInfo(val app: Commit?, val core: Commit?, val version: String? =
                 val id = values.getProperty("$name.commit")?.trim()?.ifEmpty { null } ?: return null
                 return Commit(id, values.getProperty("$name.date")?.trim().orEmpty())
             }
-            return BuildInfo(commit("app"), commit("core"), values.getProperty("app.version")?.trim()?.ifEmpty { null })
+            fun text(name: String) = values.getProperty(name)?.trim()?.ifEmpty { null }
+            return BuildInfo(commit("app"), commit("core"), text("app.version"), text("app.highlight"))
         }
     }
 }

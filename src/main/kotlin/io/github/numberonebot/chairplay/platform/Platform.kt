@@ -4,6 +4,7 @@ import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
 import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.ui.WebViewBackend
 import io.github.numberonebot.chairplay.update.UpdateResult
+import io.github.numberonebot.chairplay.update.UpdateToast
 import java.nio.file.Path
 
 /**
@@ -52,6 +53,9 @@ internal interface Platform {
 
     /** Shows the update dialog for [result]; true when the user chose to open the releases page. */
     fun updateDialog(result: UpdateResult): Boolean
+
+    /** Shows [toast] as the system's notification, which takes no focus. */
+    fun updateToast(toast: UpdateToast)
 
     /** Shows the system's Open dialog for one file kind ([patterns] like `*.gpx`); null when the user cancelled. */
     fun openFile(title: String, filterName: String, patterns: List<String>): Path?

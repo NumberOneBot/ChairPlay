@@ -16,6 +16,7 @@ import io.github.numberonebot.chairplay.platform.SystemAudio
 import io.github.numberonebot.chairplay.platform.WindowHooks
 import io.github.numberonebot.chairplay.ui.WebViewBackend
 import io.github.numberonebot.chairplay.update.UpdateResult
+import io.github.numberonebot.chairplay.update.UpdateToast
 import java.nio.file.Path
 import org.bytedeco.ffmpeg.global.avutil.AV_HWDEVICE_TYPE_D3D11VA
 import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_D3D11
@@ -41,6 +42,8 @@ internal class WindowsPlatform : Platform {
     override fun webView(userData: Path, debug: Boolean): WebViewBackend = WindowsWebView(userData, debug)
 
     override fun updateDialog(result: UpdateResult): Boolean = WindowsUpdateDialog.show(result)
+
+    override fun updateToast(toast: UpdateToast) = WindowsToast.show(toast)
 
     override fun openFile(title: String, filterName: String, patterns: List<String>): Path? =
         WindowsOpenFile.show(title, filterName, patterns)

@@ -15,6 +15,7 @@ import io.github.numberonebot.chairplay.ui.FirewallStatus
 import io.github.numberonebot.chairplay.ui.WebViewBackend
 import io.github.numberonebot.chairplay.ui.WebViewUnavailable
 import io.github.numberonebot.chairplay.update.UpdateResult
+import io.github.numberonebot.chairplay.update.UpdateToast
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.InputStream
@@ -55,6 +56,8 @@ internal class FakePlatform(
         shownUpdates += result
         return updateAnswer
     }
+
+    override fun updateToast(toast: UpdateToast) = Unit
 
     override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = null
 }
