@@ -21,6 +21,8 @@ New features and fixed bugs in ChairPlay.
 - The mouse's back button goes back in the CarPlay and AltScreen windows.
 - The keyboard's media keys, Previous track, Play/Pause, and Next track, control the iPhone's music while a ChairPlay window has the focus, whatever the key bindings say. Other players don't get them meanwhile; the volume keys stay with Windows.
 - **About > Version** offers a newer release that the update check found, with **Download**, until that version is installed. The update dialog's **Open** goes to the latest release's page.
+- A card on top of the settings asks for a coffee once CarPlay has run for two hours. **Buy me a coffee** or **I already did** ends it; **Later** asks again in three days.
+- The first start after an update to a new minor or major version shows a Windows notification with the release's main change, or the coffee ask, and **What's new**.
 
 ### Changed
 
