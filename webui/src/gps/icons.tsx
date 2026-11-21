@@ -16,6 +16,42 @@ export function TrackIcon() {
 }
 
 /** A square, the track's Stop key (the mock's stop glyph). */
+/** The seek keys' double triangles, as the mock draws them. */
+export function RewindIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 3L1 8l7 5V3zm7 0L8 8l7 5V3z" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function ForwardIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M1 3l7 5-7 5V3zm7 0l7 5-7 5V3z" fill="currentColor" />
+    </svg>
+  )
+}
+
+/** The speed key's dial and the small chevron that says it opens a list, as the mock draws them. */
+export function SpeedIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M2.6 12A6 6 0 1 1 13.4 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M8 10.2l3-3.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="10.2" r="1.3" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function ChevronIcon() {
+  return (
+    <svg className="chevron" viewBox="0 0 8 8" aria-hidden="true">
+      <path d="M1.5 3l2.5 2.5L6.5 3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  )
+}
+
 export function StopIcon() {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true">

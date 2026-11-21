@@ -2,10 +2,69 @@ import type { Backend } from '../api'
 import { icons } from '../controlsIcons'
 import type { GpsOutput } from '../gpsApi'
 import { Group, Row } from '../shell/controls'
+import { Select } from '../shell/fields'
 import { NoticeBlock, useLiveNotices } from './GpsNotices'
-import { StopIcon, TrackIcon } from './icons'
-import type { TrackAction, TrackState } from './trackApi'
-import { stopOff, trackHeld } from './trackRules'
+import { ChevronIcon, ForwardIcon, RewindIcon, SpeedIcon, StopIcon, TrackIcon } from './icons'
+import { TRACK_SPEEDS, type TrackAction, type TrackSeek, type TrackState } from './trackApi'
+import { seekOff, stopOff, trackHeld } from './trackRules'
+
+/** A seek key's tooltip and label under its icon. */
+const SEEKS: Record<TrackSeek, [string, string]> = {
+  'back-60': ['Seek backward 1 minute', '1 min'],
+  'back-10': ['Seek backward 10 seconds', '10 s'],
+  'forward-10': ['Seek forward 10 seconds', '10 s'],
+  'forward-60': ['Seek forward 1 minute', '1 min'],
+}
+
+function SeekKey({ seek, track, held, send }: {
+  seek: TrackSeek
+  track: TrackState
+  held: string | null
+  send: (action: TrackAction) => void
+}) {
+  const [title, label] = SEEKS[seek]
+  return (
+    <button
+      type="button"
+      className="key"
+      title={held ?? title}
+      aria-label={title}
+      data-testid={`track-${seek}`}
+      disabled={held !== null || seekOff(track, seek)}
+      onClick={() => send(seek)}
+    >
+      {seek.startsWith('back') ? <RewindIcon /> : <ForwardIcon />}
+      {label}
+    </button>
+  )
+}
+
+const SPEED_CHOICES = TRACK_SPEEDS.map((pace) => [String(pace), `×${pace}`] as const)
+
+/** The speed key: the dial over the pace, and the settings' drop-down list, unseen, over it to open on a press. */
+function SpeedKey({ track, held, send }: {
+  track: TrackState
+  held: string | null
+  send: (action: TrackAction) => void
+}) {
+  return (
+    <label className="key speed" title={held ?? 'Change the playback speed'}>
+      <span className="glyphs">
+        <SpeedIcon />
+        <ChevronIcon />
+      </span>
+      <span className="pace">×{track.speed}</span>
+      <Select
+        label="Playback speed"
+        testId="track-speed"
+        disabled={held !== null}
+        value={String(track.speed)}
+        options={SPEED_CHOICES}
+        onChange={(pace) => send(`speed-${pace}` as TrackAction)}
+      />
+    </label>
+  )
+}
 
 const two = (value: number) => String(Math.floor(value)).padStart(2, '0')
 
@@ -79,6 +138,8 @@ export function TrackPlayback({
       {track && (
         <Row label="Playback" className="track-keys-row">
           <span className="track-keys" role="group" aria-label="Playback controls">
+            <SeekKey seek="back-60" track={track} held={held} send={send} />
+            <SeekKey seek="back-10" track={track} held={held} send={send} />
             <button
               type="button"
               className="key lead"
@@ -101,6 +162,9 @@ export function TrackPlayback({
             >
               <StopIcon />
             </button>
+            <SeekKey seek="forward-10" track={track} held={held} send={send} />
+            <SeekKey seek="forward-60" track={track} held={held} send={send} />
+            <SpeedKey track={track} held={held} send={send} />
           </span>
         </Row>
       )}

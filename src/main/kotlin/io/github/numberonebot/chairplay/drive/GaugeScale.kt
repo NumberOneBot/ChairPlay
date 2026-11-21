@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.drive
 
 import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /**
@@ -73,11 +74,8 @@ data class GaugeScale(
             return tachometerScale(redline, ceil(redline + 0.5), sweep)
         }
 
-        internal fun tachometerScale(redline: Double, top: Double, sweep: Sweep): GaugeScale {
-            val wholeNumbers = (0..top.toInt()).map { it.toDouble() }
-            val numbers = if (wholeNumbers.last() < top) wholeNumbers + top else wholeNumbers
-            return GaugeScale(numbers, redFrom = redline, warnFrom = redline - 0.5, sweep = sweep)
-        }
+        internal fun tachometerScale(redline: Double, top: Double, sweep: Sweep): GaugeScale =
+            GaugeScale((0..top.toInt()).map { it.toDouble() }, redFrom = redline, warnFrom = redline - 0.5, sweep = sweep)
     }
 }
 
@@ -98,8 +96,9 @@ data class GaugeLimits(
         val scale = GaugeScale.tachometer(redlineRpm ?: ownRedline, sweep)
         val peak = peakRpm?.div(1000)
         if (redlineRpm != null || peak == null || peak <= scale.max) return scale
+        // The red line to the nearest 500 rpm, the scale to the next whole thousand: no fractional end mark.
         val redline = (peak * 2).roundToInt() / 2.0
-        return GaugeScale.tachometerScale(redline, redline + 1.0, sweep)
+        return GaugeScale.tachometerScale(redline, floor(redline) + 1.0, sweep)
     }
 
     companion object {

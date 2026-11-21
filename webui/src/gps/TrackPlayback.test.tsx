@@ -73,6 +73,39 @@ describe('Track playback, the keys', () => {
     fireEvent.click(button('track-stop'))
     expect(backend.trackActions).toEqual(['stop'])
   })
+
+  it('sends each seek key as its own action', async () => {
+    const { backend } = await openSection(withTrack(outputs.usbOn, tracks.paused))
+    for (const action of ['back-60', 'back-10', 'forward-10', 'forward-60']) fireEvent.click(button(`track-${action}`))
+    expect(backend.trackActions).toEqual(['back-60', 'back-10', 'forward-10', 'forward-60'])
+  })
+
+  it('shows the speed and sends the one chosen', async () => {
+    const { backend } = await openSection(withTrack(outputs.usbOn, { ...tracks.playing, speed: 2 }))
+    const speed = control('track-speed', 'combobox') as HTMLSelectElement
+    expect(speed.value).toBe('2')
+    fireEvent.change(speed, { target: { value: '0.25' } })
+    expect(backend.trackActions).toEqual(['speed-0.25'])
+  })
+
+  it('holds the speed while the section waits for signal simulation', async () => {
+    await openSection(withTrack(outputs.usbOff, tracks.stopped))
+    expect((control('track-speed', 'combobox') as HTMLSelectElement).disabled).toBe(true)
+  })
+
+  it('holds the back keys at the start and the forward keys at the end', async () => {
+    const back = ['track-back-60', 'track-back-10']
+    const forward = ['track-forward-10', 'track-forward-60']
+    const disabled = (ids: string[]) => ids.map((id) => button(id).disabled)
+    const { update } = await openSection(withTrack(outputs.usbOn, tracks.stopped))
+    expect([disabled(back), disabled(forward)]).toEqual([[true, true], [false, false]])
+
+    update(withTrack(outputs.usbOn, tracks.paused))
+    expect([disabled(back), disabled(forward)]).toEqual([[false, false], [false, false]])
+
+    update(withTrack(outputs.usbOn, tracks.stoppedAway))
+    expect([disabled(back), disabled(forward)]).toEqual([[false, false], [true, true]])
+  })
 })
 
 describe('Track playback, the car', () => {

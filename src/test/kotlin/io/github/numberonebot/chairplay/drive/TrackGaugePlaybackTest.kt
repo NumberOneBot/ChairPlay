@@ -123,11 +123,11 @@ class TrackGaugePlaybackTest {
         val fast = "<cp:speed>96</cp:speed><cp:rpm>11585</cp:rpm>"
         val slow = "<cp:speed>50</cp:speed><cp:rpm>7800</cp:rpm>"
         load(first = slow, second = fast)
-        assertScales(380.0, 12.5)
+        assertScales(380.0, 12.0)
         assertEquals(11.5, driving.gauges()!!.tachometer.redFrom!!, 0.0)
 
         load(gauges = "<cp:top_speed>50</cp:top_speed>", first = fast, second = slow)
-        assertScales(180.0, 12.5)
+        assertScales(180.0, 12.0)
 
         load(gauges = "<cp:redline>9500</cp:redline>", first = fast, second = slow)
         assertScales(380.0, 10.0)

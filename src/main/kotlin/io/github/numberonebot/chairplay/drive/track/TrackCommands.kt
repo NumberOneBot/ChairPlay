@@ -26,7 +26,10 @@ class TrackCommands(
     // Whether an Open dialog shows: another Open… meanwhile opens no second one.
     private val opening = AtomicBoolean()
 
-    /** Does [action] ("open", "play", "pause" or "stop"); false for any other, and for the deck with nothing loaded. */
+    /**
+     * Does [action] ("open", "play", "pause", "stop", a seek of [SEEKS], or a speed of [SPEEDS]); false for any other,
+     * and for the deck with nothing loaded.
+     */
     fun act(action: String): Boolean {
         if (action == "open") {
             if (!opening.compareAndSet(false, true)) return true
@@ -43,6 +46,8 @@ class TrackCommands(
             "play" -> player.play()
             "pause" -> player.pause()
             "stop" -> player.stop()
+            in SEEKS -> player.seek(SEEKS.getValue(action))
+            in SPEEDS -> player.speed = SPEEDS.getValue(action)
             else -> return false
         }
         // A paused or stopped car's window loop may be waiting for an event.
@@ -71,5 +76,13 @@ class TrackCommands(
     private fun unreadable(name: String, reason: TrackFormatReason) {
         log("Track $name not played: ${reason.key}")
         notices.unreadable(reason)
+    }
+
+    private companion object {
+        /** The deck's seek keys and the seconds each moves the recording (webui/src/gps/trackApi.ts). */
+        val SEEKS = mapOf("back-60" to -60.0, "back-10" to -10.0, "forward-10" to 10.0, "forward-60" to 60.0)
+
+        /** The speed key's choices, as "speed-<pace>" (webui/src/gps/trackApi.ts). */
+        val SPEEDS = listOf(0.25, 0.5, 1.0, 2.0, 5.0, 10.0).associateBy { "speed-" + it.toString().removeSuffix(".0") }
     }
 }

@@ -81,7 +81,7 @@ export const outputs = {
   }),
 } satisfies Record<string, GpsOutput>
 
-const SPA = { name: 'spa-racebox-2024-08-10.gpx', duration: 1075, distanceKm: 34.41 }
+const SPA = { name: 'spa-racebox-2024-08-10.gpx', duration: 1075, speed: 1, distanceKm: 34.41 }
 
 /** Track playback's recording, by the mock's states: stoppedAway is stopped at the end, as the last point leaves it. */
 export const tracks = {

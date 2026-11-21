@@ -152,12 +152,16 @@ export function Select(props: {
   options: readonly Choice[]
   onChange: (value: string) => void
   className?: string
+  testId?: string
+  disabled?: boolean
 }) {
   return (
     <span className="caret">
       <select
         className={`t ${props.className ?? ''}`}
         aria-label={props.label}
+        data-testid={props.testId}
+        disabled={props.disabled}
         value={props.value}
         onChange={(event) => props.onChange(event.target.value)}
       >

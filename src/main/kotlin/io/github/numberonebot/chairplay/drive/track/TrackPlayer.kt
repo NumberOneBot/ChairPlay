@@ -15,6 +15,14 @@ class TrackPlayer(val recording: TrackRecording, private val nanoTime: () -> Lon
 
     val time: Double @Synchronized get() = currentTime
 
+    /** The pace of the recording's time, ×1 as recorded; the time run so far keeps the pace it ran at. */
+    var speed: Double = 1.0
+        @Synchronized get
+        @Synchronized set(value) {
+            advance()
+            field = value
+        }
+
     /** The phase and the time read together, so a stop on another thread never splits them. */
     @Synchronized
     fun state(): Pair<TrackPhase, Double> = currentPhase to currentTime
@@ -43,11 +51,18 @@ class TrackPlayer(val recording: TrackRecording, private val nanoTime: () -> Lon
         currentTime = 0.0
     }
 
+    /** Moves the time [by] seconds, back when negative, within the recording; the phase stays as it is. */
+    @Synchronized
+    fun seek(by: Double) {
+        advance()
+        currentTime = (currentTime + by).coerceIn(0.0, recording.duration)
+    }
+
     @Synchronized
     fun advance() {
         if (currentPhase != TrackPhase.PLAYING) return
         val now = nanoTime()
-        currentTime += (now - lastNanos) / 1e9
+        currentTime += (now - lastNanos) / 1e9 * speed
         lastNanos = now
         if (currentTime >= recording.duration) {
             currentTime = recording.duration

@@ -213,13 +213,13 @@ class DrivingTrackTest {
     }
 
     @Test
-    fun `the GPS page sees the recording loaded, its phase, time, length and distance`() {
+    fun `the GPS page sees the recording loaded, its phase, time, length, speed and distance`() {
         assertNull(driving.state()["track"])
         playing()
         drive(1.0)
 
         assertEquals(
-            mapOf("name" to "spa.gpx", "phase" to "playing", "time" to 1.0, "duration" to 10.0, "distanceKm" to 0.11),
+            mapOf("name" to "spa.gpx", "phase" to "playing", "time" to 1.0, "duration" to 10.0, "speed" to 1.0, "distanceKm" to 0.11),
             driving.state()["track"],
         )
     }

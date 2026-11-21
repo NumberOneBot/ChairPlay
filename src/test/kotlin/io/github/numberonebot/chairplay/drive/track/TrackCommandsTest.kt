@@ -46,6 +46,29 @@ class TrackCommandsTest {
     }
 
     @Test
+    fun `the seek keys move the loaded recording by their seconds`() {
+        assertFalse(commands.act("forward-10"))
+        opened()
+        assertTrue(commands.act("forward-10"))
+        assertEquals(10.0, driving.track!!.time, 0.0)
+        assertTrue(commands.act("back-10"))
+        assertEquals(0.0, driving.track!!.time, 0.0)
+        assertFalse(commands.act("forward-5"))
+    }
+
+    @Test
+    fun `the speed keys set the loaded recording's pace`() {
+        assertFalse(commands.act("speed-2"))
+        opened()
+        assertTrue(commands.act("speed-0.25"))
+        assertEquals(0.25, driving.track!!.speed, 0.0)
+        assertTrue(commands.act("speed-10"))
+        assertEquals(10.0, driving.track!!.speed, 0.0)
+        assertFalse(commands.act("speed-3"))
+        assertEquals(10.0, driving.track!!.speed, 0.0)
+    }
+
+    @Test
     fun `a cancelled Open changes neither the recording nor the notices`() {
         assertTrue(commands.act("open"))
         assertNull(driving.track)
@@ -178,7 +201,7 @@ class TrackCommandsTest {
         assertEquals(11_585.0, gauges.rpm, 0.0)
         assertEquals("D8", gauges.gear)
         assertEquals(11.5, gauges.tachometer.redFrom!!, 0.0)
-        assertEquals(12.5, gauges.tachometer.max, 0.0)
+        assertEquals(12.0, gauges.tachometer.max, 0.0)
     }
 
     @Test

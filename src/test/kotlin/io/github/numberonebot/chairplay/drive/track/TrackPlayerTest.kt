@@ -109,4 +109,51 @@ class TrackPlayerTest {
         player.stop()
         assertEquals(TrackPhase.STOPPED to 0.0, player.state())
     }
+
+    @Test
+    fun `seeking moves the time within the recording and keeps the phase`() {
+        player.seek(4.0)
+        assertEquals(TrackPhase.STOPPED to 4.0, player.state())
+        player.seek(60.0)
+        assertEquals(TrackPhase.STOPPED to 10.0, player.state())
+        player.seek(-60.0)
+        assertEquals(TrackPhase.STOPPED to 0.0, player.state())
+
+        player.seek(3.0)
+        player.play()
+        player.pause()
+        player.seek(-1.0)
+        assertEquals(TrackPhase.PAUSED to 2.0, player.state())
+    }
+
+    @Test
+    fun `the speed sets the pace of the recording's time from the moment it changes`() {
+        assertEquals(1.0, player.speed, 0.0)
+        player.play()
+        seconds(1)
+        player.speed = 2.0
+        seconds(2)
+        player.advance()
+        assertEquals(TrackPhase.PLAYING to 5.0, player.state())
+
+        player.pause()
+        player.speed = 0.25
+        player.seek(1.0)
+        assertEquals(TrackPhase.PAUSED to 6.0, player.state())
+        player.play()
+        seconds(4)
+        player.advance()
+        assertEquals(7.0, player.time, 1e-9)
+    }
+
+    @Test
+    fun `seeking while playing counts from the moment of the seek`() {
+        player.play()
+        seconds(2)
+        player.seek(5.0)
+        assertEquals(TrackPhase.PLAYING to 7.0, player.state())
+        seconds(1)
+        player.advance()
+        assertEquals(TrackPhase.PLAYING to 8.0, player.state())
+    }
 }

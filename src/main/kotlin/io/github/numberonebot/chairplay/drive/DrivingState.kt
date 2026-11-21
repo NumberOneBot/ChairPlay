@@ -31,6 +31,7 @@ internal fun drivingState(driving: Driving): Map<String, Any?> {
                 "phase" to phase.key,
                 "time" to (time * 10).roundToInt() / 10.0,
                 "duration" to player.recording.duration,
+                "speed" to player.speed,
                 "distanceKm" to (player.recording.distanceMeters / 10).roundToInt() / 100.0,
             )
         },

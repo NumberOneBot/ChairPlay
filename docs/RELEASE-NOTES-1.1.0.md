@@ -15,7 +15,7 @@ This update sets the iPhone's location over a USB cable while CarPlay stays on W
 
   ChairPlay talks to the iPhone through Apple Mobile Device Service, which Apple Devices or iTunes installs. Nothing else is installed on the PC.
 - **City presets** put the USB GPS car on a busy road in one of ten cities.
-- **Track playback.** With USB GPS, **Settings > GPS** opens a GPX or VBO recording and plays it as the GPS car, with Play, Pause, Stop, and the recording's time and distance. With **Drive mode** on, the gauges show the recording's speed, and its revs and gear when it has them.
+- **Track playback.** With USB GPS, **Settings > GPS** opens a GPX or VBO recording and plays it as the GPS car, with Play, Pause, Stop, seeking by 10 s and 1 min, a speed from ×0.25 to ×10, and the recording's time and distance. With **Drive mode** on, the gauges show the recording's speed, and its revs and gear when it has them.
 - **Sample tracks.** The `tracks` folder next to ChairPlay.exe holds George Russell's pole lap of the 2024 Las Vegas GP and a lap of the Nordschleife, and **Open…** starts there.
 - **Theme.** **Settings > Application > Theme** gives the settings a light theme, White, or a dark one: Slate, the new default, Black, as before, Graphite, Teal, or Dracula.
 - **New look.** The toolbar is translucent and the page scrolls under it, the list of pages floats beside the page, and a page shorter than the window sits in its middle.
