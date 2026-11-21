@@ -29,20 +29,20 @@ class UiPlacesTest {
             "firewall-rules" to listOf("explorer.exe", wf),
             "mfi-folder" to listOf("explorer.exe", dir.resolve("offline-mfi").toString()),
             "location" to listOf("explorer.exe", "ms-settings:privacy-location"),
-            "discussions" to listOf("explorer.exe", "$project/discussions"),
-            "pull-requests" to listOf("explorer.exe", "$project/pulls"),
-            "author" to listOf("explorer.exe", "https://github.com/NumberOneBot"),
-            "source" to listOf("explorer.exe", project),
-            "releases" to listOf("explorer.exe", "$project/releases"),
-            "latest-release" to listOf("explorer.exe", "$project/releases/latest"),
+            "discussions" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "$project/discussions"),
+            "pull-requests" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "$project/pulls"),
+            "author" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "https://github.com/NumberOneBot"),
+            "source" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", project),
+            "releases" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "$project/releases"),
+            "latest-release" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "$project/releases/latest"),
             "notices" to listOf("notepad.exe", dir.resolve("THIRD_PARTY_NOTICES").toString()),
-            "diplay" to listOf("explorer.exe", "https://github.com/shihabal3amri/DiPlay"),
-            "xcertplay" to listOf("explorer.exe", "https://github.com/shilapi/xcertplay"),
-            "livi" to listOf("explorer.exe", "https://github.com/f-io/LIVI"),
-            "rgi" to listOf("explorer.exe", "https://github.com/luka-dev/mib2q-carplay-rgi"),
+            "diplay" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "https://github.com/shihabal3amri/DiPlay"),
+            "xcertplay" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "https://github.com/shilapi/xcertplay"),
+            "livi" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "https://github.com/f-io/LIVI"),
+            "rgi" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "https://github.com/luka-dev/mib2q-carplay-rgi"),
             "logs" to listOf("explorer.exe", dir.resolve("logs").toString()),
             "screenshots" to listOf("explorer.exe", dir.resolve("screenshots").toString()),
-            "buy-me-a-coffee" to listOf("explorer.exe", "https://www.buymeacoffee.com/alexstrelets"),
+            "buy-me-a-coffee" to listOf("rundll32.exe", "url.dll,FileProtocolHandler", "https://www.buymeacoffee.com/alexstrelets"),
         )
         val ui = places()
         for ((place, command) in expected) {
@@ -53,8 +53,9 @@ class UiPlacesTest {
 
         launched.clear()
         assertTrue(ui.open("issues"))
-        val (program, url) = launched.single()
-        assertEquals("explorer.exe", program)
+        val command = launched.single()
+        val url = command.last()
+        assertEquals("rundll32.exe", command.first())
         assertTrue(url.startsWith("$project/issues/new?body="))
         assertEquals(
             "What happened, and what you expected:\n\n\n---\n${ui.details}",

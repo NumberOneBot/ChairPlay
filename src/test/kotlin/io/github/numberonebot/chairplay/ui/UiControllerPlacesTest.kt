@@ -42,8 +42,9 @@ class UiControllerPlacesTest : UiControllerFixture() {
         val ui = controller()
         assertTrue(ui.open("issues"))
 
-        val (program, url) = launched.single()
-        assertEquals("explorer.exe", program)
+        val command = launched.single()
+        val url = command.last()
+        assertEquals("rundll32.exe", command.first())
         assertTrue(url, url.startsWith("https://github.com/NumberOneBot/ChairPlay/issues/new?body="))
         val body = java.net.URLDecoder.decode(url.substringAfter("body=").substringBefore("&utm_"), Charsets.UTF_8)
         assertTrue(body, body.endsWith((ui.state()["about"] as Map<*, *>)["details"] as String))
@@ -67,7 +68,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
         for ((place, url) in pages) {
             launched.clear()
             assertTrue(place, ui.open(place))
-            assertEquals(listOf("explorer.exe", url), launched.single().map { it.substringBefore("?utm_") })
+            assertEquals(listOf("rundll32.exe", "url.dll,FileProtocolHandler", url), launched.single().map { it.substringBefore("?utm_") })
         }
 
         launched.clear()
@@ -81,19 +82,19 @@ class UiControllerPlacesTest : UiControllerFixture() {
         val ui = controller(about = BuildInfo(null, null, "1.2.0"))
         val tags = "utm_source=chairplay&utm_medium=app&utm_campaign=support-card&utm_content=1.2.0"
         assertTrue(ui.open("buy-me-a-coffee", "support-card"))
-        assertEquals("https://www.buymeacoffee.com/alexstrelets?$tags", launched.single()[1])
+        assertEquals("https://www.buymeacoffee.com/alexstrelets?$tags", launched.single().last())
 
         launched.clear()
         assertTrue(ui.open("issues", "about"))
-        assertTrue(launched.single()[1], launched.single()[1].endsWith("&${tags.replace("support-card", "about")}"))
+        assertTrue(launched.single().last(), launched.single().last().endsWith("&${tags.replace("support-card", "about")}"))
 
         launched.clear()
         assertTrue(ui.open("releases", "<script>"))
-        assertTrue("an odd place is not passed on", launched.single()[1].endsWith("utm_campaign=app&utm_content=1.2.0"))
+        assertTrue("an odd place is not passed on", launched.single().last().endsWith("utm_campaign=app&utm_content=1.2.0"))
 
         launched.clear()
         assertTrue(controller().open("diplay", "about"))
-        assertEquals("https://github.com/shihabal3amri/DiPlay", launched.single()[1])
+        assertEquals("https://github.com/shihabal3amri/DiPlay", launched.single().last())
     }
 
     @Test
@@ -156,7 +157,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
         assertTrue(ui.open("firewall-rules"))
 
         assertEquals("explorer.exe", launched.single()[0])
-        assertTrue(launched.single()[1], launched.single()[1].endsWith("wf.msc"))
+        assertTrue(launched.single().last(), launched.single().last().endsWith("wf.msc"))
     }
 
     @Test

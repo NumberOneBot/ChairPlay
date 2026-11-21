@@ -55,8 +55,13 @@ internal class WindowsShell : DesktopShell {
         check(code > 32) { "ShellExecute failed ($code)" }
     }
 
-    /** Through explorer.exe, which hands the target to the shell: a Settings address opens its page, a web address the browser. */
-    override fun openCommand(target: String): List<String> = listOf("explorer.exe", target)
+    /**
+     * A web address through url.dll, which hands it to the browser whole: explorer.exe opened Documents for one with a
+     * query (the links' tags, 2026-11-21). Anything else through explorer.exe: a Settings address opens its page.
+     */
+    override fun openCommand(target: String): List<String> =
+        if (target.startsWith("https://") || target.startsWith("http://")) listOf("rundll32.exe", "url.dll,FileProtocolHandler", target)
+        else listOf("explorer.exe", target)
 
     override fun textFileCommand(file: Path): List<String> = listOf("notepad.exe", file.toString())
 
