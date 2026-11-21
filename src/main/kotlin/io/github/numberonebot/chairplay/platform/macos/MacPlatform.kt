@@ -62,7 +62,7 @@ internal class MacPlatform : Platform {
 
     override fun updateToast(toast: UpdateToast): Unit = notReady()
 
-    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = notReady()
+    override fun openFile(title: String, filterName: String, patterns: List<String>, folder: Path): Path? = notReady()
 }
 
 private object MacWindows : WindowHooks {

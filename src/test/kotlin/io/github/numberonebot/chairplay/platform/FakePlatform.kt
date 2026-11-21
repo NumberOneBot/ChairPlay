@@ -59,7 +59,7 @@ internal class FakePlatform(
 
     override fun updateToast(toast: UpdateToast) = Unit
 
-    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? = null
+    override fun openFile(title: String, filterName: String, patterns: List<String>, folder: Path): Path? = null
 }
 
 /** A global keyboard that counts its starts and closes and is ready when started. */

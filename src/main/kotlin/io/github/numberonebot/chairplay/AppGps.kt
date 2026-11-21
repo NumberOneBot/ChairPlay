@@ -63,12 +63,16 @@ internal class AppGps(
     )
 
     /**
-     * Track playback's commands: Open… shows the platform's Open dialog, and a file it cannot play is the GPS page's
+     * Track playback's commands: Open… shows the platform's Open dialog, first in the sample recordings' tracks
+     * folder, and a file it cannot play is the GPS page's
      * notice.
      */
     val track = TrackCommands(
         driving,
-        { Platforms.current.openFile("Open a recording", "GPX files", listOf("*.gpx")) },
+        {
+            val samples = Platforms.current.shell.dataDirectory().resolve("tracks")
+            Platforms.current.openFile("Open a recording", "GPX and VBO files", listOf("*.gpx", "*.vbo"), samples)
+        },
         object : TrackNotices {
             override fun unreadable(reason: TrackFormatReason) =
                 coordinator.showNotice(NoticeCode.TRACK_UNREADABLE, NoticeTone.BAD, mapOf("reason" to reason.key))

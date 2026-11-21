@@ -115,6 +115,11 @@ val jpackageImage by tasks.registering(Exec::class) {
             from(installDir.get().dir("apac"))
             into(outDir.get().dir("ChairPlay/apac"))
         }
+        // Sample recordings for Track playback; its Open dialog starts in this folder.
+        ops.fs.copy {
+            from(layout.projectDirectory.dir("packaging/tracks"))
+            into(outDir.get().dir("ChairPlay/tracks"))
+        }
     }
 }
 
@@ -141,7 +146,8 @@ val syncApp by tasks.registering(Sync::class) {
     from(layout.buildDirectory.dir("jpackage/ChairPlay"))
     into(appHome)
     // helper\ is the USB GPS helper's, which deployHelper keeps: the image the app runs from here has none.
-    preserve { include(appDataFiles + "helper/**") }
+    // tracks\ may hold the user's own recordings beside the samples.
+    preserve { include(appDataFiles + "helper/**" + "tracks/**") }
     // jpackage leaves ChairPlay.exe read-only, and Windows refuses to replace a read-only file: the copies stay
     // writable, so the next deploy can replace them.
     filePermissions { user { write = true } }

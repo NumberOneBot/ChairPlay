@@ -57,6 +57,9 @@ internal interface Platform {
     /** Shows [toast] as the system's notification, which takes no focus. */
     fun updateToast(toast: UpdateToast)
 
-    /** Shows the system's Open dialog for one file kind ([patterns] like `*.gpx`); null when the user cancelled. */
-    fun openFile(title: String, filterName: String, patterns: List<String>): Path?
+    /**
+     * Shows the system's Open dialog for one file kind ([patterns] like `*.gpx`), in [folder] until the user has
+     * opened a file elsewhere; null when the user cancelled.
+     */
+    fun openFile(title: String, filterName: String, patterns: List<String>, folder: Path): Path?
 }

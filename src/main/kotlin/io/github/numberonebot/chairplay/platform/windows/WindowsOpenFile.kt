@@ -11,7 +11,9 @@ internal object WindowsOpenFile {
     private const val PATH_CHARS = 32_768
 
     private interface Api : Library {
-        fun cpw_open_file(title: WString, filterName: WString, filterSpec: WString, path: CharArray, pathChars: Int): Int
+        fun cpw_open_file(
+            title: WString, filterName: WString, filterSpec: WString, folder: WString, path: CharArray, pathChars: Int,
+        ): Int
     }
 
     private val api: Api by lazy {
@@ -19,10 +21,13 @@ internal object WindowsOpenFile {
         Native.load(dll.absolutePath, Api::class.java)
     }
 
-    /** The file the user chose, or null when they cancelled. [patterns] are like `*.gpx`. */
-    fun show(title: String, filterName: String, patterns: List<String>): Path? {
+    /** The file the user chose, or null when they cancelled. [patterns] are like `*.gpx`; see Platform.openFile. */
+    fun show(title: String, filterName: String, patterns: List<String>, folder: Path): Path? {
         val buffer = CharArray(PATH_CHARS)
-        val result = api.cpw_open_file(WString(title), WString(filterName), WString(patterns.joinToString(";")), buffer, PATH_CHARS)
+        val result = api.cpw_open_file(
+            WString(title), WString(filterName), WString(patterns.joinToString(";")), WString(folder.toAbsolutePath().toString()),
+            buffer, PATH_CHARS,
+        )
         check(result >= 0) { "Windows open dialog failed (HRESULT 0x${result.toUInt().toString(16)})" }
         if (result == 0) return null
         return Paths.get(String(buffer, 0, buffer.indexOf('\u0000')))

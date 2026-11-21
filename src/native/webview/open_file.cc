@@ -40,7 +40,7 @@ private:
 
 // 1 chosen (path written), 0 cancelled, < 0 HRESULT
 extern "C" __declspec(dllexport) int cpw_open_file(const wchar_t *title, const wchar_t *filter_name,
-        const wchar_t *filter_spec, wchar_t *path, int path_chars) {
+        const wchar_t *filter_spec, const wchar_t *folder, wchar_t *path, int path_chars) {
     HRESULT init = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     // RPC_E_CHANGED_MODE: the thread is already a multithreaded apartment, which the dialog works in too.
     if (FAILED(init) && init != RPC_E_CHANGED_MODE) return init;
@@ -54,6 +54,13 @@ extern "C" __declspec(dllexport) int cpw_open_file(const wchar_t *title, const w
         dialog->GetOptions(&options);
         dialog->SetOptions(options | FOS_FORCEFILESYSTEM | FOS_FILEMUSTEXIST | FOS_PATHMUSTEXIST);
         dialog->SetTitle(title);
+        // A default only: Windows opens the folder of the app's last chosen file once there is one. A folder that
+        // does not exist is skipped.
+        IShellItem *start = nullptr;
+        if (SUCCEEDED(SHCreateItemFromParsingName(folder, nullptr, IID_PPV_ARGS(&start)))) {
+            dialog->SetDefaultFolder(start);
+            start->Release();
+        }
         result = dialog->SetFileTypes(1, &filter);
         if (SUCCEEDED(result)) dialog->SetFileTypeIndex(1);
         Foreground events;

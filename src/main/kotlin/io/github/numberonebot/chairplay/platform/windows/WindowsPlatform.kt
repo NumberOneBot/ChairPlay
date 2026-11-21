@@ -45,6 +45,6 @@ internal class WindowsPlatform : Platform {
 
     override fun updateToast(toast: UpdateToast) = WindowsToast.show(toast)
 
-    override fun openFile(title: String, filterName: String, patterns: List<String>): Path? =
-        WindowsOpenFile.show(title, filterName, patterns)
+    override fun openFile(title: String, filterName: String, patterns: List<String>, folder: Path): Path? =
+        WindowsOpenFile.show(title, filterName, patterns, folder)
 }
