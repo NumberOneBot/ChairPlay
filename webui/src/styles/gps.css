@@ -51,6 +51,24 @@
   accent-color: var(--accent-fill);
 }
 
+/* With a size known, the fill takes the bar's whole height, not an inset inside its edge */
+.shell .step .acts progress[value] {
+  appearance: none;
+  border: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--fill) 32%, transparent);
+}
+
+.shell .step .acts progress[value]::-webkit-progress-bar {
+  background: transparent;
+}
+
+.shell .step .acts progress[value]::-webkit-progress-value {
+  border-radius: 3px;
+  background: var(--accent-fill);
+}
+
 /* A step's error: the triangle and its reason in red, as large as the information sign */
 .shell .step-error {
   display: flex;
