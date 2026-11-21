@@ -31,7 +31,7 @@ New features and fixed bugs in ChairPlay.
 - **Application** takes the place of **Experiments** and holds the app's own settings: both windows' **Always on top** and **Bring to front on a call**, **Theme**, the settings browser, logs, integrations, and the HUD demo.
 - A new install asks the iPhone for H.264 video. **Settings > CarPlay > Video codec** can still offer H.265, and settings from an earlier version keep their codec.
 - Global shortcuts leave Enter and Escape to the app that has the focus.
-- The GPS page no longer has the **Updates** row or the speed and heading switches. CarPlay GPS sends the position 4 times a second with the speed and heading. `gps.rate` and `gps.usb.rate` take any number from 1 to 20 as a hand edit, and `gps.wheel.speed` and `gps.heading.send` stay in settings.properties.
+- The GPS page no longer has the **Updates** row or the speed and heading switches. CarPlay GPS sends the position 4 times a second with the speed and heading, and USB GPS 10 times a second. `gps.rate` and `gps.usb.rate` take any number from 1 to 20 as a hand edit, and `gps.wheel.speed` and `gps.heading.send` stay in settings.properties.
 - Every gauge style shows the heading arrow, whatever the wheel shows.
 - **Settings > CarPlay** and **AltScreen** stay open while the iPhone connects. A change the connection has already read is marked to apply at the next one.
 - **Settings > Connection** says at once when the iPhone has answered over Bluetooth and is joining the Wi-Fi, not only after the attempt fails. The error that follows also names CarPlay turned off for this PC on the iPhone.

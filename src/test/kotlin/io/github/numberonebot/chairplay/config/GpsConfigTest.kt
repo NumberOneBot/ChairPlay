@@ -77,8 +77,8 @@ class GpsConfigTest {
         assertEquals(GpsMethod.CARPLAY, old.method)
         assertTrue(old.enabled)
         assertEquals(10, old.rate)
-        // USB's own rate, 4 a second by default as CarPlay's (owner, 2026-11-11: 10 and 20 looked no smoother).
-        assertEquals(4, old.usbRate)
+        // USB's own rate, 10 a second by default (owner, 2026-11-22), CarPlay's staying 4.
+        assertEquals(10, old.usbRate)
         assertNull(old.usbDevice)
         val usb = configWith("gps.method=usb", "gps.usb.rate=5", "gps.usb.device=00008110-000A").gps
         assertEquals(GpsMethod.USB, usb.method)
