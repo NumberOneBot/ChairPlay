@@ -69,6 +69,23 @@
   vertical-align: -1px;
 }
 
+/* The support card's coffee button on Buy Me a Coffee's own dark, in every tint (owner, 2026-11-21) */
+.shell .alert.info .btn.coffee {
+  background-color: #0d0c22;
+  color: #fff;
+}
+
+/* A lighter touch than other buttons' 9 %: on this near black, 9 % reads as another colour */
+.shell .alert .btn.coffee:hover {
+  background-image: linear-gradient(rgb(255 255 255 / 4%), rgb(255 255 255 / 4%));
+}
+
+/* Buy Me a Coffee's cup on it, as tall as the button's text */
+.shell .alert .coffee-cup {
+  width: auto;
+  height: 16px;
+}
+
 .shell .alert .when {
   align-self: start;
   color: var(--dim);

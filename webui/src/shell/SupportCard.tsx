@@ -1,4 +1,6 @@
 import type { Backend } from '../api'
+// The cup of Buy Me a Coffee's official button (buy-me-a-coffee-dark.png), its dark ground made clear
+import cup from '../assets/buy-me-a-coffee-cup.png'
 import { Message } from './controls'
 
 /** Ukraine's flag, drawn: Windows has no flag emoji, and WebView2 shows the letters "UA" for it. */
@@ -28,9 +30,10 @@ export function SupportCard({ backend }: { backend: Backend }) {
       text="One developer, between air-raid alerts and power cuts. It's free and always will be. If it helps, a coffee keeps it going."
     >
       <div className="acts">
-        <button type="button" className="btn small" title="Open Buy Me a Coffee in your browser" data-testid="support-coffee"
+        <button type="button" className="btn small coffee" title="Open Buy Me a Coffee in your browser" data-testid="support-coffee"
           onClick={coffee}>
-          ☕ Buy me a coffee
+          <img className="coffee-cup" src={cup} alt="" />
+          Buy me a coffee
         </button>
         <button type="button" className="btn small" title="Ask again in three days" data-testid="support-later"
           onClick={() => backend.support('later')}>
