@@ -45,7 +45,7 @@ A newer installer updates ChairPlay and keeps your settings, pairing and MFi fil
 
 **Portable.** `ChairPlay-…-portable.zip` runs without installing: unpack it to a folder you can write to and open `ChairPlay.exe`. Its settings, pairing and logs stay in that folder. To update, close ChairPlay, delete the `app` and `runtime` folders, and unpack the new zip over the old one. After moving the folder, Get started asks for the firewall rule again. The iPhone sees the installed copy and a portable one as two different cars and pairs with each, and only one copy runs at a time.
 
-See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 release notes](docs/RELEASE-NOTES-1.0.11.md) for this update. The [roadmap](ROADMAP.md) lists what's planned next.
+See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 release notes](docs/RELEASE-NOTES-1.0.11.md) for this update.
 
 ## Features
 
@@ -90,9 +90,18 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 
 </details>
 
+## What's next
+
+- **1.1:** USB GPS. Navigation apps on the iPhone follow the GPS car, including recorded trips from GPX files.
+- **Game bridge:** CarPlay on a screen in the game's car, with the iPhone navigating your drive in Assetto Corsa, Assetto Corsa EVO, Euro Truck Simulator 2, and American Truck Simulator.
+- **1.2 to 1.4:** first versions for macOS and Linux, and **CouchPlay** for Android TV.
+- **1.5+:** USB CarPlay and Android Auto.
+
+The order can change, and there are no dates. See the [roadmap](ROADMAP.md) for details.
+
 ## Support the project
 
-ChairPlay is a hobby project I build and test on real hardware in my spare time. It’s free and fully open source under GPL-3.0, and donations are the only way I earn anything from this work. If it saves you a trip to the car, helps you build CarPlay apps, or makes your desk a little more fun, you can buy me a coffee.
+ChairPlay is a hobby project I build and test on real hardware in my spare time. It’s free and fully open source under GPL-3.0, and donations are the only way I earn anything from this work. If it saves you a trip to the car, helps you build CarPlay apps, or makes your desk a little more fun, you can buy me a coffee. Donations buy the time for what's next.
 
 <p align="center">
   <a href="https://www.buymeacoffee.com/alexstrelets"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217"></a>

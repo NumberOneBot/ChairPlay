@@ -11,8 +11,8 @@ What's planned for the next versions of ChairPlay. The order can change, and the
 
 A separate app, released after 1.1. It shows CarPlay from ChairPlay on a screen in the game's car and drives the GPS car with the game's position, speed, and gauges, so the iPhone navigates the trip in the game.
 
-- First: Assetto Corsa, Euro Truck Simulator 2, and American Truck Simulator.
-- Later: Assetto Corsa EVO, BeamNG.drive, and the Forza series.
+- First: Assetto Corsa, Assetto Corsa EVO, Euro Truck Simulator 2, and American Truck Simulator.
+- Later: BeamNG.drive and the Forza series.
 
 Other apps can use the same interface: see [Integrations](docs/INTEGRATIONS.md).
 
