@@ -36,6 +36,25 @@ class AppUiApiTest : UiControllerFixture() {
         assertEquals("nothing changed", after, ui.version)
     }
 
+    @Test
+    fun `the card's buttons store their answer and tell the pages`() {
+        val ui = controller()
+        val store = io.github.numberonebot.chairplay.config.SupportStore(dir)
+        store.addCarPlay(7200)
+        val api = AppUiApi(ui, support = store) { null }
+        assertEquals(true, api.state()["supportDue"])
+
+        val before = ui.version
+        assertEquals(200, postRoute(api, "support", mapOf("action" to "later")).first)
+        assertEquals(false, api.state()["supportDue"])
+        assertTrue(ui.version > before)
+        assertFalse(store.done())
+
+        assertEquals(200, postRoute(api, "support", mapOf("action" to "done")).first)
+        assertTrue(store.done())
+        assertEquals(400, postRoute(api, "support", mapOf("action" to "maybe")).first)
+    }
+
     // The wrapper once lacked the forwarding method and answered the default, an empty map.
     @Test
     fun `the folder sizes come through the app's API from the real folders`() {

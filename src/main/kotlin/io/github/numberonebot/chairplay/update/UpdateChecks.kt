@@ -33,6 +33,13 @@ internal fun newerRelease(stored: String?, installed: String?, published: String
 internal const val LATEST_RELEASE_PAGE = "https://github.com/NumberOneBot/ChairPlay/releases/latest"
 
 /**
+ * One of the project's own pages, [url], tagged with where in the app it was opened ([campaign]) and the build
+ * ([version], "dev" without one): GitHub ignores the tags, a page of our own later counts them (owner, 2026-11-21).
+ */
+internal fun tagged(url: String, campaign: String, version: String?): String =
+    url + (if ('?' in url) "&" else "?") + "utm_source=chairplay&utm_medium=app&utm_campaign=$campaign&utm_content=${version ?: "dev"}"
+
+/**
  * One check/dialog at a time. Each check that reaches GitHub tells [remember] the release it found, so the About page
  * can offer it after the dialog is gone (owner, 2026-11-12). Startup is quiet unless an update exists; an explicit
  * check always reports its result. A build without a version ([current] null) made from a commit of [built] takes a
@@ -44,7 +51,7 @@ internal class UpdateChecks(
     private val lookup: () -> Release? = ReleaseClient()::latest,
     private val show: (UpdateResult) -> Boolean = Platforms.current::updateDialog,
     private val openReleases: () -> Unit = {
-        ProcessBuilder(Platforms.current.shell.openCommand(LATEST_RELEASE_PAGE)).start()
+        ProcessBuilder(Platforms.current.shell.openCommand(tagged(LATEST_RELEASE_PAGE, "update-dialog", current))).start()
     },
     private val remember: (Release) -> Unit = {},
     private val log: (String) -> Unit,

@@ -1,7 +1,7 @@
 // Fakes for the tests: app states, and the key bindings of a fresh controls.properties; the backend is fakeBackend.ts.
 // Also how the tests find a control: by its data-testid, never by the words it shows (CLAUDE.md).
 import { screen } from '@testing-library/react'
-import type { AppState, ControlsData } from './api'
+import type { AppState, ControlsData, SettingsData } from './api'
 
 /**
  * The element with data-testid [testId], checked to be a [role] the page exposes, so the control stays reachable.
@@ -47,6 +47,7 @@ export function appState(overrides: Partial<AppState> = {}): AppState {
     tint: 'black',
     controlsTint: 'black',
     updateAvailable: null,
+    supportDue: false,
     about: {
       version: null,
       app: { commit: '4e6d50df', date: '2026-10-23' },
@@ -164,6 +165,50 @@ export function controlsData(): ControlsData {
       'key.repeat.every': '3',
       'global.enabled': 'false',
       'key.zoom.repeat.every': '10',
+    },
+  }
+}
+
+/** The settings FakeBackend starts with. */
+export function settingsData(): SettingsData {
+  return {
+    values: {
+      'wifi.ssid': 'Home',
+      'wifi.security': 'WPA_WPA2',
+      'ui.autoconnect': 'true',
+      'ui.autoshow': 'true',
+      'altscreen.enabled': 'false',
+      'window.width': '',
+      'window.height': '',
+      'altscreen.width': '1440',
+      'altscreen.height': '540',
+    },
+    passphraseSet: true,
+    applies: {
+      'audio.music.mode': 'reconnect',
+      'wifi.ssid': 'reconnect',
+      'wifi.passphrase': 'reconnect',
+      'wifi.security': 'reconnect',
+      'ui.autoconnect': 'restart',
+      'ui.autoshow': 'now',
+      'device.name': 'restart',
+      'iphone.address': 'restart',
+      'iphone.join.seconds': 'restart',
+      'ui.port': 'restart',
+      'ui.network': 'restart',
+      'altscreen.enabled': 'restart',
+      'window.width': 'restart',
+      'window.height': 'restart',
+      'altscreen.width': 'restart',
+      'altscreen.height': 'restart',
+      'log.carplay.data': 'restart',
+    },
+    display: { width: 1280, height: 720 },
+    audio: {
+      outputs: ['Speakers (Realtek Audio)', 'Headphones (USB Audio)'],
+      inputs: ['Microphone (Realtek Audio)'],
+      defaultOutput: 'Speakers (Realtek(R) Audio)',
+      defaultInput: 'Microphone (Realtek(R) Audio)',
     },
   }
 }

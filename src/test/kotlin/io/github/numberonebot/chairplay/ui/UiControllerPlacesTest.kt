@@ -45,7 +45,7 @@ class UiControllerPlacesTest : UiControllerFixture() {
         val (program, url) = launched.single()
         assertEquals("explorer.exe", program)
         assertTrue(url, url.startsWith("https://github.com/NumberOneBot/ChairPlay/issues/new?body="))
-        val body = java.net.URLDecoder.decode(url.substringAfter("body="), Charsets.UTF_8)
+        val body = java.net.URLDecoder.decode(url.substringAfter("body=").substringBefore("&utm_"), Charsets.UTF_8)
         assertTrue(body, body.endsWith((ui.state()["about"] as Map<*, *>)["details"] as String))
     }
 
@@ -67,12 +67,39 @@ class UiControllerPlacesTest : UiControllerFixture() {
         for ((place, url) in pages) {
             launched.clear()
             assertTrue(place, ui.open(place))
-            assertEquals(listOf("explorer.exe", url), launched.single())
+            assertEquals(listOf("explorer.exe", url), launched.single().map { it.substringBefore("?utm_") })
         }
 
         launched.clear()
         assertTrue(ui.open("notices"))
         assertEquals(listOf("notepad.exe", dir.resolve("THIRD_PARTY_NOTICES").toString()), launched.single())
+    }
+
+    // Our own pages say where in the app they were opened, and which build; others' pages get nothing (owner, 2026-11-21).
+    @Test
+    fun `the project's own links are tagged with where they were opened and the build`() {
+        val ui = controller(about = BuildInfo(null, null, "1.2.0"))
+        val tags = "utm_source=chairplay&utm_medium=app&utm_campaign=support-card&utm_content=1.2.0"
+        assertTrue(ui.open("buy-me-a-coffee", "support-card"))
+        assertEquals("https://www.buymeacoffee.com/alexstrelets?$tags", launched.single()[1])
+
+        launched.clear()
+        assertTrue(ui.open("issues", "about"))
+        assertTrue(launched.single()[1], launched.single()[1].endsWith("&${tags.replace("support-card", "about")}"))
+
+        launched.clear()
+        assertTrue(ui.open("releases", "<script>"))
+        assertTrue("an odd place is not passed on", launched.single()[1].endsWith("utm_campaign=app&utm_content=1.2.0"))
+
+        launched.clear()
+        assertTrue(controller().open("diplay", "about"))
+        assertEquals("https://github.com/shihabal3amri/DiPlay", launched.single()[1])
+    }
+
+    @Test
+    fun `a development build is tagged as one`() {
+        assertEquals("https://x.org/a?b=1&utm_source=chairplay&utm_medium=app&utm_campaign=about&utm_content=dev",
+            io.github.numberonebot.chairplay.update.tagged("https://x.org/a?b=1", "about", null))
     }
 
     // Add the rule: the netsh commands the page shows, run once with the administrator's consent; then read again.

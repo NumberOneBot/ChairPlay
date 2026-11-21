@@ -48,7 +48,7 @@ class UiPlacesTest {
         for ((place, command) in expected) {
             launched.clear()
             assertTrue(place, ui.open(place))
-            assertEquals(place, command, launched.single())
+            assertEquals(place, command, launched.single().map { it.substringBefore("?utm_") })
         }
 
         launched.clear()
@@ -58,7 +58,7 @@ class UiPlacesTest {
         assertTrue(url.startsWith("$project/issues/new?body="))
         assertEquals(
             "What happened, and what you expected:\n\n\n---\n${ui.details}",
-            URLDecoder.decode(url.substringAfter("body="), Charsets.UTF_8),
+            URLDecoder.decode(url.substringAfter("body=").substringBefore("&utm_"), Charsets.UTF_8),
         )
         assertFalse(ui.open("calc.exe"))
     }

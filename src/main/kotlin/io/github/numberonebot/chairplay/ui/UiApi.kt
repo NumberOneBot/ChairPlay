@@ -192,11 +192,17 @@ interface UiApi {
     /** The controls window's AltScreen modes. */
     fun altscreenContent(content: String): Boolean
 
-    /** Opens the Windows page or folder [place] names ([UiController.open]); false when there is none or it failed. */
-    fun open(place: String): Boolean
+    /**
+     * Opens the Windows page or folder [place] names ([UiController.open]), our own web pages tagged with where in the
+     * app ([from]); false when there is none or it failed.
+     */
+    fun open(place: String, from: String? = null): Boolean
 
     /** Checks for a new release and shows the result in a Windows dialog. */
     fun checkUpdates(): Boolean = false
+
+    /** The support card's "done" (Buy me a coffee, I already did) or "later"; false for another action or no store. */
+    fun support(action: String): Boolean = false
 
     /** The logs and screenshots folders' sizes in bytes, by name ([UiPlaces.folderSizes]). */
     fun folderSizes(): Map<String, Long> = emptyMap()

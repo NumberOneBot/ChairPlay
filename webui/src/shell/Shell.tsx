@@ -12,6 +12,7 @@ import { GetStarted } from '../setup/GetStarted'
 import { setupSteps } from '../setup/steps'
 import { Message } from './controls'
 import { SECTIONS, type Section } from './sections'
+import { SupportCard } from './SupportCard'
 import { Toolbar } from './Toolbar'
 import { useKeyboardFocus } from './useKeyboardFocus'
 import { useKeysToApp } from './useKeysToApp'
@@ -113,6 +114,7 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
           </nav>
           <div ref={page} className="page" role="tabpanel" id={`${ids}-page`} aria-labelledby={`${ids}-tab-${section}`}>
             <div className="page-inner">
+              {state.supportDue && <SupportCard backend={backend} />}
               {settings.loadError && (
                 <Message tone="bad" head="Couldn't read the settings." text={settings.loadError} />
               )}

@@ -16,7 +16,7 @@ import type {
 } from './api'
 import type { TrackAction } from './gps/trackApi'
 import type { CommandOutcome, GpsMethod, SetupAction, SetupIntent, SetupStep } from './gpsApi'
-import { controlsData } from './testing'
+import { controlsData, settingsData } from './testing'
 
 export class FakeBackend implements Backend {
   updateChecks = 0
@@ -27,46 +27,7 @@ export class FakeBackend implements Backend {
   connects = 0
   reconnects = 0
   nextOutcome: SaveOutcome | null = null
-  data: SettingsData = {
-    values: {
-      'wifi.ssid': 'Home',
-      'wifi.security': 'WPA_WPA2',
-      'ui.autoconnect': 'true',
-      'ui.autoshow': 'true',
-      'altscreen.enabled': 'false',
-      'window.width': '',
-      'window.height': '',
-      'altscreen.width': '1440',
-      'altscreen.height': '540',
-    },
-    passphraseSet: true,
-    applies: {
-      'audio.music.mode': 'reconnect',
-      'wifi.ssid': 'reconnect',
-      'wifi.passphrase': 'reconnect',
-      'wifi.security': 'reconnect',
-      'ui.autoconnect': 'restart',
-      'ui.autoshow': 'now',
-      'device.name': 'restart',
-      'iphone.address': 'restart',
-      'iphone.join.seconds': 'restart',
-      'ui.port': 'restart',
-      'ui.network': 'restart',
-      'altscreen.enabled': 'restart',
-      'window.width': 'restart',
-      'window.height': 'restart',
-      'altscreen.width': 'restart',
-      'altscreen.height': 'restart',
-      'log.carplay.data': 'restart',
-    },
-    display: { width: 1280, height: 720 },
-    audio: {
-      outputs: ['Speakers (Realtek Audio)', 'Headphones (USB Audio)'],
-      inputs: ['Microphone (Realtek Audio)'],
-      defaultOutput: 'Speakers (Realtek(R) Audio)',
-      defaultInput: 'Microphone (Realtek(R) Audio)',
-    },
-  }
+  data: SettingsData = settingsData()
 
   async settings() {
     return this.data
@@ -214,12 +175,16 @@ export class FakeBackend implements Backend {
     this.setupChecks++
   }
 
-  async open(place: WindowsPlace) {
+  openedFrom: (string | undefined)[] = []
+  async open(place: WindowsPlace, from?: string) {
+    this.openedFrom.push(from)
     this.opened.push(place)
     return true
   }
 
   framesShown = 0
+  supports: string[] = []
+  async support(action: string) { this.supports.push(action); return true }
 
   /** The views whose frames were asked for, by Show frame under View areas. */
   viewFrames: string[] = []

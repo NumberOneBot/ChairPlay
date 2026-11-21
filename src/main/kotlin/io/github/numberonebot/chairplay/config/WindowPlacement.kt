@@ -191,14 +191,14 @@ private val WINDOW_STATE_HEADER = listOf(
 )
 
 /** window.properties, or null without it; one the app cannot read leaves the windows at their defaults. */
-private fun readWindowState(dir: Path): Properties? {
+internal fun readWindowState(dir: Path): Properties? {
     val file = dir.resolve(WindowPlacementStore.FILE)
     if (!file.exists()) return null
     return runCatching { loadProperties(file, "") }.getOrNull()
 }
 
 /** Sets [values] in window.properties, each on its own line, leaving the other lines as they are. */
-private fun writeWindowState(dir: Path, values: List<Pair<String, String>>) {
+internal fun writeWindowState(dir: Path, values: List<Pair<String, String>>) {
     Files.createDirectories(dir)
     val file = dir.resolve(WindowPlacementStore.FILE)
     val lines = if (file.exists()) Files.readAllLines(file).toMutableList() else WINDOW_STATE_HEADER.toMutableList()

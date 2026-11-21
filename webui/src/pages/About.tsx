@@ -56,7 +56,7 @@ export function Version({ state, backend, settings }: { state: AppState; backend
           text="Download it from its release page on GitHub.">
           <div className="acts">
             <button type="button" className="btn small" title="Open the latest release on GitHub"
-              data-testid="app-update-download" onClick={() => backend.open('latest-release')}>
+              data-testid="app-update-download" onClick={() => backend.open('latest-release', 'app-update')}>
               <DownloadIcon />
               Download
             </button>
@@ -83,7 +83,7 @@ export function About({ state, backend, onShowGuide }: { state: AppState; backen
   // The links open in the browser, or the notices in Notepad; they are buttons that read as links.
   const link = (place: WindowsPlace, text: string, title?: string): ReactNode => (
     <button type="button" className="link" title={title} data-testid={`app-open-${place}`}
-      onClick={() => backend.open(place)}>
+      onClick={() => backend.open(place, 'about')}>
       {text}
     </button>
   )
@@ -94,7 +94,7 @@ export function About({ state, backend, onShowGuide }: { state: AppState; backen
         <Row label="Author" className="author-credit">
           {link('author', 'Oleksiy Strelets', "Open the author's GitHub profile")}
           <button type="button" className="coffee-button" title="Open Buy Me a Coffee in your browser"
-            onClick={() => backend.open('buy-me-a-coffee')}>
+            onClick={() => backend.open('buy-me-a-coffee', 'about')}>
             <svg className="coffee-filter" width="0" height="0" aria-hidden="true">
               <defs>
                 {/* Remove the artwork's #0d0c22 background; its white and yellow foreground stays opaque. */}

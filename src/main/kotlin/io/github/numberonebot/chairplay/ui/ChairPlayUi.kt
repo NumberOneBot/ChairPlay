@@ -6,6 +6,10 @@ import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.gps.GpsCommands
 import io.github.numberonebot.chairplay.config.SettingsFile
 import io.github.numberonebot.chairplay.config.SetupStore
+import io.github.numberonebot.chairplay.config.CarPlayTime
+import io.github.numberonebot.chairplay.config.SupportStore
+import java.util.Timer
+import kotlin.concurrent.timerTask
 import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.ControlsFile
 import io.github.numberonebot.chairplay.phone.LinkStatus
@@ -162,7 +166,22 @@ class ChairPlayUi(
     /** The GPS output coordinator's own save of gps.method, gps.enabled and gps.usb.device. */
     fun saveGps(changes: Map<String, String>) = controller.saveGps(changes)
 
-    private val api = AppUiApi(controller, { updates.check() }, checks, gpsCommands, trackCommands) { driving }
+    // The coffee card's state, and the CarPlay time it waits for: a session is live while the model is ACTIVE, which
+    // every end (the iPhone's, Disconnect, a dropped link) leaves. Saved every few minutes too; a change tells the pages.
+    private val support = SupportStore(dir)
+    private val carPlayTime = CarPlayTime(support)
+    private val timeSaver = Timer("carplay-time", true).apply {
+        model.addListener { state -> runCatching { carPlayTime.live(state.phase == Phase.ACTIVE) }.onFailure { log("CarPlay time not saved: $it") } }
+        scheduleAtFixedRate(timerTask { saveCarPlayTime() }, TIME_SAVE_MILLIS, TIME_SAVE_MILLIS)
+    }
+
+    private fun saveCarPlayTime() = runCatching {
+        val due = support.due()
+        carPlayTime.save()
+        if (support.due() != due) controller.changed()
+    }.onFailure { log("CarPlay time not saved: $it") }
+
+    private val api = AppUiApi(controller, { updates.check() }, checks, gpsCommands, trackCommands, support) { driving }
 
     private val server = UiServer(
         api,
@@ -239,11 +258,16 @@ class ChairPlayUi(
     }
 
     override fun close() {
+        timeSaver.cancel()
+        saveCarPlayTime()
         updates.close()
         server.close()
     }
 
     private companion object {
+        /** How often a live session's CarPlay time is saved: a crash loses no more. */
+        const val TIME_SAVE_MILLIS = 5 * 60_000L
+
         /** The built page, and the window's own icon as the page's. */
         fun pageAssets(): (String) -> ByteArray? {
             val page = classpathAssets()

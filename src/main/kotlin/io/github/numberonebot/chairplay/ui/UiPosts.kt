@@ -88,7 +88,7 @@ internal fun postRoute(api: UiApi, route: String, body: Map<*, *>): Pair<Int, Ma
             val place = body["place"] as? String
             when {
                 place == null -> json(400, mapOf("error" to "place missing"))
-                api.open(place) -> json(200, mapOf("ok" to true))
+                api.open(place, body["from"] as? String) -> json(200, mapOf("ok" to true))
                 else -> json(404, mapOf("error" to "cannot open $place"))
             }
         }
@@ -138,6 +138,9 @@ internal fun postRoute(api: UiApi, route: String, body: Map<*, *>): Pair<Int, Ma
                 else -> json(409, mapOf("error" to "no such action, or no recording loaded"))
             }
         }
+        "support" ->
+            if (api.support(body["action"] as? String ?: "")) json(200, mapOf("ok" to true))
+            else json(400, mapOf("error" to "action must be done or later"))
         "screenshot" ->
             if (api.screenshot()) json(200, mapOf("ok" to true)) else json(409, mapOf("error" to "no screens"))
         "firewall-rule" ->

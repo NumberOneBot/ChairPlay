@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.ui
 
+import io.github.numberonebot.chairplay.config.SupportStore
 import io.github.numberonebot.chairplay.gps.GpsCommands
 
 /**
@@ -13,8 +14,23 @@ internal class AppUiApi(
     private val checks: SetupChecks? = null,
     private val gps: () -> GpsCommands? = { null },
     private val track: (String) -> Boolean = { false },
+    private val support: SupportStore? = null,
     private val driving: () -> UiDriving?,
 ) : UiApi by controller {
+    // The card's state lives beside the controller's, whose file has no room for it.
+    override fun state(): Map<String, Any?> = controller.state() + ("supportDue" to (support?.due() == true))
+
+    override fun support(action: String): Boolean {
+        val store = support ?: return false
+        val done = when (action) {
+            "done" -> runCatching { store.supported() }
+            "later" -> runCatching { store.later() }
+            else -> return false
+        }.isSuccess
+        controller.changed()
+        return done
+    }
+
     override fun gpsCommands(): GpsCommands? = gps()
 
     override fun checkUpdates(): Boolean = updateCheck()

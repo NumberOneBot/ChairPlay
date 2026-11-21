@@ -5,6 +5,7 @@ import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Platforms
 import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.update.LATEST_RELEASE_PAGE
+import io.github.numberonebot.chairplay.update.tagged
 import java.net.URLEncoder
 import java.nio.file.Files
 
@@ -28,11 +29,13 @@ internal class UiPlaces(
      * opens its page, a web address the browser, and the console asks for the administrator's consent it needs. False
      * for a name the app does not know, or when the system did not start it.
      */
-    fun open(place: String): Boolean {
+    fun open(place: String, from: String? = null): Boolean {
         if (place !in PLACES) return false
+        // The project's own pages say where the page opened them ([from], "app" for none or an odd one) and the build.
+        val campaign = from?.takeIf { it.matches(Regex("[a-z-]{1,40}")) } ?: "app"
         return runCatching {
             if (place == "notices") launch(shell.textFileCommand(setup.settingsFile.resolveSibling("THIRD_PARTY_NOTICES")))
-            else launch(shell.openCommand(target(place)))
+            else launch(shell.openCommand(target(place).let { if (place in OURS) tagged(it, campaign, about.version) else it }))
         }
             .onFailure { log("could not open $place: $it") }
             .isSuccess
@@ -106,6 +109,9 @@ internal class UiPlaces(
             "issues", "discussions", "pull-requests", "author", "source", "releases", "latest-release", "notices", "diplay", "xcertplay", "livi", "rgi",
             "logs", "screenshots", "buy-me-a-coffee", "developer-tools", "apple-devices", "apple-devices-app",
         )
+
+        /** The project's own pages, which [open] tags. */
+        val OURS = setOf("issues", "discussions", "pull-requests", "author", "buy-me-a-coffee", "source", "releases", "latest-release")
 
         /** The project's home on GitHub. */
         const val PROJECT = "https://github.com/NumberOneBot/ChairPlay"

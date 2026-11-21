@@ -1,6 +1,7 @@
 // The app's API (UiServer.kt): what it sends and takes, and what the screens need from it; the client is apiClient.ts.
 import type { TrackAction, TrackState } from './gps/trackApi'
 import type { GpsBackend, GpsOutput, UsbSetupView } from './gpsApi'
+import type { SupportBackend, SupportState } from './supportApi'
 
 export type Phase = 'setup' | 'idle' | 'starting' | 'calling' | 'joining' | 'active' | 'retrying'
 export type Screen = 'start' | 'settings' | 'carplay'
@@ -120,7 +121,7 @@ export interface WindowState {
   visible: boolean
 }
 
-export interface AppState {
+export interface AppState extends SupportState {
   bufferedAudio: {
     state: 'loading' | 'playing' | 'paused' | 'empty'; seconds: number; bytes: number
     multichannelOutput?: 'surround' | 'downmix'
@@ -238,7 +239,7 @@ export type WindowsLocation = { latitude: number; longitude: number } | { error:
 export type FolderSizes = Partial<Record<'logs' | 'screenshots' | 'developerTools', number>>
 
 /** What the screens need from the app; tests pass a fake. */
-export interface Backend extends GpsBackend {
+export interface Backend extends GpsBackend, SupportBackend {
   settings(): Promise<SettingsData>
   save(changes: Record<string, string>): Promise<SaveOutcome>
   /** The saved Wi-Fi password, for the eye beside it; null when none is saved. Nothing else carries it. */
@@ -271,8 +272,8 @@ export interface Backend extends GpsBackend {
   keyboardFocus(client: string, focused: boolean): Promise<void>
   /** Shows [content] on the AltScreen; false when it cannot be shown now. */
   altscreen(content: AltscreenContent): Promise<boolean>
-  /** Opens a Windows page or the MFi folder; false when Windows did not open it. */
-  open(place: WindowsPlace): Promise<boolean>
+  /** Opens a Windows page or folder, or a web page tagged with where in the app [from]; false when it did not open. */
+  open(place: WindowsPlace, from?: string): Promise<boolean>
   /** Checks for an update and keeps the request pending until its Windows dialog is dismissed. */
   checkUpdates(): Promise<boolean>
   /** The logs and screenshots folders' sizes in bytes; 0 for an empty or missing one. */
@@ -285,7 +286,6 @@ export interface Backend extends GpsBackend {
   checkSetup(): Promise<void>
   /** Forget this iPhone: ChairPlay's pairing records go, and Get started opens. */
   forget(): Promise<boolean>
-  /** Frames the AltScreen's saved safe area on its window for a moment; false without an AltScreen. */
   /** Draws the AltScreen's safe area for a moment, or [view]'s, inside its part of the frame. */
   showAltscreenFrame(view?: string): Promise<boolean>
   /** The key bindings; null when the app has none to change. */

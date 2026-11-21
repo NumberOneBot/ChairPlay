@@ -51,7 +51,7 @@ internal class FakeUiApi : UiApi {
         calls += "altscreen $content"
         return content == "hud"
     }
-    override fun open(place: String): Boolean {
+    override fun open(place: String, from: String?): Boolean {
         calls += "open $place"
         return place == "bluetooth"
     }

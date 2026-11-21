@@ -164,7 +164,7 @@ export function Switch(props: {
  */
 export function Message(props: {
   tone: 'bad' | 'warn' | 'info'
-  head: string
+  head: ReactNode
   text: ReactNode
   at?: string
   title?: string

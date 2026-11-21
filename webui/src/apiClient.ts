@@ -18,6 +18,7 @@ import type {
 } from './api'
 import type { TrackAction } from './gps/trackApi'
 import type { CommandOutcome, GpsMethod, SetupAction, SetupIntent, SetupStep } from './gpsApi'
+import type { SupportAction } from './supportApi'
 
 export class ApiError extends Error {}
 
@@ -165,8 +166,12 @@ export class Api implements Backend {
     return (await this.request('POST', 'altscreen', { content })).status === 200
   }
 
-  async open(place: WindowsPlace): Promise<boolean> {
-    return (await this.request('POST', 'open', { place })).status === 200
+  async open(place: WindowsPlace, from?: string): Promise<boolean> {
+    return (await this.request('POST', 'open', { place, from })).status === 200
+  }
+
+  async support(action: SupportAction): Promise<boolean> {
+    return (await this.request('POST', 'support', { action })).status === 200
   }
 
   async actualSize(window: PictureWindow): Promise<boolean> {
