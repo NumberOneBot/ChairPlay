@@ -13,7 +13,7 @@ interface TrackNotices {
 }
 
 /**
- * Track playback's commands from the GPS page, on its HTTP thread: Open… asks [openFile] for a GPX file and loads it
+ * Track playback's commands from the GPS page, on its HTTP thread: Open… asks [openFile] for a recording and loads it
  * into [driving], and the deck plays, pauses and stops what is loaded. A file that cannot be played leaves the
  * recording loaded as it was and says why through [notices]; the next file chosen takes the notice away.
  */
@@ -53,13 +53,16 @@ class TrackCommands(
     private fun open(path: Path) {
         notices.clear()
         val name = path.fileName.toString()
+        val vbo = name.endsWith(".vbo", ignoreCase = true)
         val recording = try {
-            Files.newInputStream(path).use { GpxReader.read(name, it) }
+            Files.newInputStream(path).use { input ->
+                if (vbo) VboReader.read(name, input) else GpxReader.read(name, input)
+            }
         } catch (e: TrackFormatException) {
             return unreadable(name, e.reason)
         } catch (e: IOException) {
             log("Track $name not read: $e")
-            return unreadable(name, TrackFormatReason.NOT_GPX)
+            return unreadable(name, if (vbo) TrackFormatReason.NOT_VBO else TrackFormatReason.NOT_GPX)
         }
         driving.load(recording)
         log("Track $name loaded: ${recording.duration.toInt()} s, ${recording.distanceMeters.toInt()} m")

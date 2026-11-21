@@ -6,7 +6,7 @@ export type TrackPhase = 'stopped' | 'playing' | 'paused'
 export type TrackAction = 'open' | 'play' | 'pause' | 'stop'
 
 /** Why Open…'s file cannot be played: the track-unreadable notice's args.reason (Kotlin's TrackFormatReason). */
-export type TrackFormatReason = 'not-gpx' | 'no-track' | 'no-times' | 'too-short'
+export type TrackFormatReason = 'not-gpx' | 'not-vbo' | 'no-track' | 'no-times' | 'too-short'
 
 /** The recording loaded: its file's name, where the player is in it and its length, in seconds. */
 export interface TrackState {

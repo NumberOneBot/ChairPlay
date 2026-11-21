@@ -10,6 +10,7 @@ export interface NoticeText {
 /** Why Open…'s file cannot be played, by the code the app sends (track-unreadable's args.reason). */
 const TRACK_REASON_TEXT: Record<TrackFormatReason, string> = {
   'not-gpx': "It isn't a readable GPX file.",
+  'not-vbo': "It isn't a readable VBO file.",
   'no-track': 'It has no GPS track.',
   'no-times': 'Its GPS points have no times.',
   'too-short': 'Its GPS track is too short.',

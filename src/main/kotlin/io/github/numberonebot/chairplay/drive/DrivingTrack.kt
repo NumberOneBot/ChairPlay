@@ -45,7 +45,9 @@ internal class DrivingTrack(
 
     /** A GPS operation holds the car: a playing track pauses, so its clock does not run through the hold. */
     fun hold() {
-        player?.pause()
+        val current = player ?: return
+        current.pause()
+        if (tracking && current.phase == TrackPhase.STOPPED) release(current)
     }
 
     /**
@@ -57,7 +59,7 @@ internal class DrivingTrack(
         val drives = on && live()
         if (player != null && player.owns && !drives) player.pause()
         if (drives && player != null && player.owns) return player
-        if (tracking) release()
+        if (tracking) release(player)
         return null
     }
 
@@ -71,25 +73,30 @@ internal class DrivingTrack(
         }
         player.advance()
         val (phase, time) = player.state()
-        // Stopped at its start, the page stopped it since the last look: the car stands where it is. Stopped further on,
-        // the recording ended: the car is at its last point.
-        if (phase != TrackPhase.STOPPED || time > 0.0) {
-            val sample = player.recording.at(time)
-            drive.follow(sample.position, sample.heading, if (phase == TrackPhase.PLAYING) sample.speed else 0.0, null, null)
-            placed()
+        if (phase == TrackPhase.STOPPED) {
+            release(player, time)
+            return DriveControl.FRAME_SECONDS
         }
+        val sample = player.recording.at(time)
+        val playing = phase == TrackPhase.PLAYING
+        val speed = if (playing) sample.speed else 0.0
+        drive.follow(sample.position, sample.heading, speed, sample.rpm, sample.gear, preserveRpm = true)
+        placed()
         tracking = true
-        return when (phase) {
-            TrackPhase.PLAYING -> DriveControl.FRAME_SECONDS
-            TrackPhase.PAUSED -> null
-            // One more pass hands the car to the keys and the gamepad.
-            TrackPhase.STOPPED -> DriveControl.FRAME_SECONDS.also { release() }
-        }
+        return if (playing) DriveControl.FRAME_SECONDS else null
     }
 
-    private fun release() {
+    private fun release(player: TrackPlayer?, time: Double? = player?.time) {
         tracking = false
-        drive.stop()
+        val finished = player?.recording?.takeIf { time == it.duration }
+        if (finished != null) {
+            val last = finished.at(finished.duration)
+            drive.input = CarInput()
+            drive.place(last.position, last.heading)
+            placed()
+        } else {
+            drive.stop()
+        }
         remember(drive.snapshot())
     }
 }

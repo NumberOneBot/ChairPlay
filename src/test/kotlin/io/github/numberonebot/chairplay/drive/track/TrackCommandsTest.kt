@@ -21,7 +21,8 @@ import java.util.concurrent.TimeUnit
 class TrackCommandsTest {
     @get:Rule val folder = TemporaryFolder()
 
-    private val driving = Driving(GpsSettings(true, start = GeoPoint(50.45, 30.52)), gamepad = { null }, nanoTime = { 0L },
+    private var nowNanos = 0L
+    private val driving = Driving(GpsSettings(true, start = GeoPoint(50.45, 30.52)), gamepad = { null }, nanoTime = { nowNanos },
         locate = { LocationResult.Unknown }, lookup = { it.run() })
     private val told = mutableListOf<String>()
     private val notices = object : TrackNotices {
@@ -115,6 +116,81 @@ class TrackCommandsTest {
         assertEquals("spa.gpx", driving.track!!.recording.name)
         assertEquals(10.0, driving.track!!.recording.duration, 0.0)
         assertEquals(TrackPhase.STOPPED to 0.0, driving.track!!.state())
+    }
+
+    @Test
+    fun `Open plays VBO by named columns with recorded speed and a midnight rollover`() {
+        opened("spa.VBO", """
+            [header]
+            longitude
+            velocity mph
+            time
+            latitude
+            heading
+            height
+            [column names]
+            lng velocity time lat heading height
+            [data]
+            -360 30 235959.50 3000 90 420
+            -100 90 235959.50 1000 1 5
+            -360.06 50 000000.50 3000.06 100 422
+        """.trimIndent())
+
+        assertEquals(listOf("clear"), told)
+        val track = driving.track!!.recording
+        assertEquals(1.0, track.duration, 1e-9)
+        assertEquals(2, track.segments.single().size)
+        assertEquals(GeoPoint(50.0, 6.0), track.at(0.0).position)
+        assertEquals(GeoPoint(50.001, 6.001), track.at(1.0).position)
+        assertEquals(40 * 0.44704, track.at(0.5).speed, 1e-9)
+        assertEquals(95.0, track.at(0.5).heading, 1e-9)
+        assertEquals(420.0, track.segments.single().first().altitude!!, 1e-9)
+        assertEquals(50 * 0.44704, track.gaugeLimits.peakSpeed!!, 1e-9)
+        assertTrue(commands.act("play"))
+        assertEquals(TrackPhase.PLAYING, driving.track!!.phase)
+    }
+
+    @Test
+    fun `VBO RPM and gear reach AltScreen and recorded RPM sets its tachometer scale`() {
+        opened("telemetry.vbo", """
+            [column names]
+            time lat long velocity RPM Gear
+            [data]
+            000000.00 3000 -360 0 0.0e0 0.0e0
+            000010.00 3000.06 -360 220 1.1585e4 8.0e0
+            000020.00 3000.12 -360 230 Infinity 7.5
+        """.trimIndent())
+
+        val recording = driving.track!!.recording
+        val last = recording.segments.single().last()
+        assertNull(last.rpm)
+        assertNull(last.gear)
+        assertEquals(11_585.0, recording.gaugeLimits.peakRpm)
+        driving.driveMode(true)
+        commands.act("play")
+        driving.pass()
+        assertEquals(0.0, driving.gauges()!!.rpm, 0.0)
+        assertEquals("N", driving.gauges()!!.gear)
+
+        nowNanos += 10_000_000_000L
+        driving.pass()
+        val gauges = driving.gauges()!!
+        assertEquals(11_585.0, gauges.rpm, 0.0)
+        assertEquals("D8", gauges.gear)
+        assertEquals(11.5, gauges.tachometer.redFrom!!, 0.0)
+        assertEquals(12.5, gauges.tachometer.max, 0.0)
+    }
+
+    @Test
+    fun `unreadable VBO identifies its format and keeps the previous track`() {
+        opened()
+        val loaded = driving.track
+        told.clear()
+
+        opened("broken.vbo", "[data]\n30 235959.50 3000")
+
+        assertSame(loaded, driving.track)
+        assertEquals(listOf("clear", "unreadable ${TrackFormatReason.NOT_VBO}"), told)
     }
 
     @Test

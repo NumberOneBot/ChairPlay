@@ -65,7 +65,10 @@ internal class GaugeDial(private val pen: NanoPen, private val accent: Int) {
             pen.ray(cx, cy, angle, face * from, face * TICKS_TO)
             nvgStrokeWidth(vg, face * width)
             pen.stroke(if (red) redMark else if (tick.major) WHITE else TICK)
-            if (tick.major) label(tick.value.roundToInt().toString(), cx, cy, angle, face * MAJOR_FROM, face * labelSize, if (red) redMark else LABEL, numbers, face * OUTLINE)
+            if (tick.major) {
+                val number = tick.value.toString().removeSuffix(".0")
+                label(number, cx, cy, angle, face * MAJOR_FROM, face * labelSize, if (red) redMark else LABEL, numbers, face * OUTLINE)
+            }
         }
         needle(cx, cy, face, scale.angle(value), needle)
         nvgBeginPath(vg)

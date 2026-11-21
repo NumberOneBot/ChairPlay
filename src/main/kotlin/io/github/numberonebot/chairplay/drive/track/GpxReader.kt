@@ -14,12 +14,10 @@ import javax.xml.stream.XMLStreamReader
 object GpxReader {
     private const val GPX_NAMESPACE = "http://www.topografix.com/GPX/1/1"
     private const val TELEMETRY_NAMESPACE = "urn:chairplay:gpx:telemetry:1"
-    private const val MAX_GAUGE_SPEED = 1000.0 // m/s; bound the number of gauge marks from file input.
-    private const val MAX_GAUGE_RPM = 100_000
 
     private class RawPoint(
         val epochSeconds: Double, val position: GeoPoint, val altitude: Double?,
-        val observedSpeed: Double?, val observedRpm: Double?,
+        val speed: Double?, val rpm: Double?, val gear: Int?,
     )
 
     private class RawTrack(val segments: List<List<RawPoint>>, val gaugeLimits: GaugeLimits)
@@ -33,12 +31,12 @@ object GpxReader {
         val start = track.segments.firstOrNull { it.isNotEmpty() }?.first()?.epochSeconds
             ?: throw TrackFormatException(TrackFormatReason.NO_TIMES)
         val segments = track.segments.filter { it.isNotEmpty() }.map { segment ->
-            segment.map { TrackPoint(it.epochSeconds - start, it.position, it.altitude) }
+            segment.map { TrackPoint(it.epochSeconds - start, it.position, it.altitude, it.speed, rpm = it.rpm, gear = it.gear) }
         }
         val points = track.segments.asSequence().flatten()
         val limits = track.gaugeLimits.copy(
-            peakSpeed = points.mapNotNull { it.observedSpeed }.maxOrNull(),
-            peakRpm = points.mapNotNull { it.observedRpm }.maxOrNull(),
+            peakSpeed = points.mapNotNull { it.speed }.maxOrNull(),
+            peakRpm = points.mapNotNull { it.rpm }.maxOrNull(),
         )
         return TrackRecording(name, segments, limits)
     }
@@ -100,8 +98,9 @@ object GpxReader {
         val longitude = reader.getAttributeValue(null, "lon")?.toDoubleOrNull()
         var altitude: Double? = null
         var time: Double? = null
-        var observedSpeed: Double? = null
-        var observedRpm: Double? = null
+        var speed: Double? = null
+        var rpm: Double? = null
+        var gear: Int? = null
         var depth = 1
         while (depth > 0 && reader.hasNext()) {
             when (reader.next()) {
@@ -112,9 +111,10 @@ object GpxReader {
                         "ele" -> altitude = reader.elementText.trim().toDoubleOrNull().also { depth-- }
                         "time" -> time = parseTime(reader.elementText).also { depth-- }
                         "extensions" -> if (reader.namespaceURI == GPX_NAMESPACE) {
-                            val fields = readExtension(reader, "telemetry", "speed", "rpm")
-                            observedSpeed = readGaugeSpeed(fields["speed"])
-                            observedRpm = fields["rpm"]?.toIntOrNull()?.takeIf { it in 0..MAX_GAUGE_RPM }?.toDouble()
+                            val fields = readExtension(reader, "telemetry", "speed", "rpm", "gear")
+                            speed = readGaugeSpeed(fields["speed"])
+                            rpm = fields["rpm"]?.toIntOrNull()?.takeIf { it in 0..MAX_RECORDED_RPM }?.toDouble()
+                            gear = fields["gear"]?.toIntOrNull()?.takeIf { it >= -1 }
                             depth--
                         }
                     }
@@ -123,7 +123,7 @@ object GpxReader {
             }
         }
         if (latitude == null || longitude == null || time == null) return null
-        return RawPoint(time, GeoPoint(latitude, longitude), altitude, observedSpeed, observedRpm)
+        return RawPoint(time, GeoPoint(latitude, longitude), altitude, speed, rpm, gear)
     }
 
     /** Consumes an extensions element, taking only text fields directly inside the named ChairPlay block. */
@@ -153,7 +153,7 @@ object GpxReader {
         return fields
     }
 
-    private fun readGaugeSpeed(text: String?): Double? = text?.toDoubleOrNull()?.takeIf { it in 0.0..MAX_GAUGE_SPEED }
+    private fun readGaugeSpeed(text: String?): Double? = text?.toDoubleOrNull()?.takeIf { it in 0.0..MAX_RECORDED_SPEED }
 
     private fun parseTime(text: String): Double? =
         try {

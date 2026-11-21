@@ -75,14 +75,17 @@ class Drive(
     }
 
     /**
-     * Puts the car where a game says it is, facing, as fast (m/s, negative backing up), and in the gear it says: a
-     * game's telemetry driving it. The pedals and the wheel are as the game holds them ([input], at rest unless given),
-     * and the wheel speed is sampled as [advance] samples it.
+     * Follows telemetry for position, heading, speed (m/s, negative backing up), and gear. A recording can ask to
+     * [preserveRpm] for a supplied reading below idle. The wheel speed is sampled as [advance] samples it.
      */
     fun follow(
         position: GeoPoint, headingDegrees: Double, speed: Double, rpm: Double?, gear: Int?, input: CarInput = CarInput(),
+        preserveRpm: Boolean = false,
     ): Unit = synchronized(lock) {
-        car = CarModel(spec, CarState(speed, headingDegrees, rpm ?: 0.0, gear ?: 1, parked = false))
+        car = CarModel(
+            spec, CarState(speed, headingDegrees, rpm ?: 0.0, gear ?: 1, parked = false),
+            preserveRpm = preserveRpm && rpm != null,
+        )
         this.position = position
         this.input = input
         val now = nanoTime()

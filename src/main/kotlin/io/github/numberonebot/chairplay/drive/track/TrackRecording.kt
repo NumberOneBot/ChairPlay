@@ -3,6 +3,10 @@ package io.github.numberonebot.chairplay.drive.track
 import io.github.numberonebot.chairplay.drive.GaugeLimits
 import io.github.numberonebot.chairplay.drive.GeoPoint
 
+// Bound the number of instrument marks generated from peaks supplied by a file.
+internal const val MAX_RECORDED_SPEED = 1000.0 // m/s
+internal const val MAX_RECORDED_RPM = 100_000
+
 /** One recorded fix. [seconds] count from the recording's first point; [speed] is in m/s, [heading] in degrees. */
 data class TrackPoint(
     val seconds: Double,
@@ -10,6 +14,8 @@ data class TrackPoint(
     val altitude: Double? = null,
     val speed: Double? = null,
     val heading: Double? = null,
+    val rpm: Double? = null,
+    val gear: Int? = null,
 )
 
 /**
@@ -17,8 +23,8 @@ data class TrackPoint(
  * after "Can't play this file" (webui/src/gps/noticeText.ts).
  */
 enum class TrackFormatReason(val key: String) {
-    /** Not GPX at all, or a file the disk cannot give. */
     NOT_GPX("not-gpx"),
+    NOT_VBO("not-vbo"),
     NO_TRACK("no-track"),
     NO_TIMES("no-times"),
     TOO_SHORT("too-short"),
@@ -75,22 +81,28 @@ class TrackRecording @JvmOverloads constructor(
                 ),
                 pairHeading(i, f),
                 pairSpeed(i, f),
+                rpm = interpolate(here.rpm, next.rpm, f),
+                gear = here.gear,
             )
         }
         // The last point of a segment: a gap follows, or the recording ends.
         val heading = here.heading
             ?: if (i > 0 && segmentOf[i - 1] == segmentOf[i]) pairHeading(i - 1, 1.0) else 0.0
-        return TrackSample(here.position, heading, 0.0)
+        val speed = if (t == here.seconds) here.speed ?: 0.0 else 0.0
+        return TrackSample(here.position, heading, speed, here.rpm, here.gear)
     }
 
     private fun pairSpeed(i: Int, f: Double): Double {
         val a = points[i]
         val b = points[i + 1]
-        val sa = a.speed
-        val sb = b.speed
-        if (sa != null && sb != null) return sa + (sb - sa) * f
+        interpolate(a.speed, b.speed, f)?.let { return it }
         val span = b.seconds - a.seconds
         return if (span > 0.0) distanceMeters(a.position, b.position) / span else 0.0
+    }
+
+    private fun interpolate(from: Double?, to: Double?, fraction: Double): Double? {
+        if (fraction == 0.0) return from
+        return if (from != null && to != null) from + (to - from) * fraction else null
     }
 
     private fun pairHeading(i: Int, f: Double): Double {
@@ -124,4 +136,10 @@ class TrackRecording @JvmOverloads constructor(
 }
 
 /** The car's place, [heading] in degrees from north and [speed] in m/s at one moment of a recording. */
-data class TrackSample(val position: GeoPoint, val heading: Double, val speed: Double)
+data class TrackSample(
+    val position: GeoPoint,
+    val heading: Double,
+    val speed: Double,
+    val rpm: Double? = null,
+    val gear: Int? = null,
+)

@@ -120,6 +120,6 @@ class GpxReaderTest {
     // The page words each reason by its key (webui/src/gps/trackApi.ts): the keys are the protocol.
     @Test
     fun `each reason travels as its code`() {
-        assertEquals(listOf("not-gpx", "no-track", "no-times", "too-short"), TrackFormatReason.entries.map { it.key })
+        assertEquals(listOf("not-gpx", "not-vbo", "no-track", "no-times", "too-short"), TrackFormatReason.entries.map { it.key })
     }
 }

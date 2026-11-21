@@ -53,7 +53,7 @@ export function TrackPlayback({
       inert={held !== null}
       title={held ?? undefined}
     >
-      <Group title="Track playback" note="GPX" />
+      <Group title="Track playback" note="GPX, VBO" />
       {notices.map((notice) => (
         <NoticeBlock key={notice.id} notice={notice} />
       ))}
