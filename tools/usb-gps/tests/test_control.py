@@ -26,8 +26,8 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         self.backend = FakeBackend()
         self.device = self.backend.devices[UDID]
         self.wire = Wire()
-        self.ops = ControlOps(self.backend, self.store,
-                              Downloads(self.store, head=self.remote.head, fetch=self.remote.fetch, progress_interval=0),
+        self.downloads = Downloads(self.store, head=self.remote.head, fetch=self.remote.fetch, progress_interval=0)
+        self.ops = ControlOps(self.backend, self.store, self.downloads,
                               components=lambda: 'not-running', write=self.wire)
 
     def tearDown(self):
@@ -173,6 +173,13 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HelperError) as caught:
             await task
         self.assertEqual('cancelled', caught.exception.code)
+        # The answer comes at once; the download's thread stops after its chunk and deletes its partial folder, which
+        # Windows cannot delete under it while it still writes there.
+        for _ in range(400):
+            if not self.downloads.running():
+                break
+            await asyncio.sleep(.005)
+        self.assertFalse(self.downloads.running())
         self.assertEqual({'cancelled': False}, await self.call('cancel', 'c2', target='p'))
         self.assertIsNone(self.store.find(packages.CRYPTEX))
         self.assertEqual([], [call for call in self.backend.calls if call[0] == 'mount'])
