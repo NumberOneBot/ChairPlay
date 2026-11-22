@@ -51,6 +51,11 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 r
 
 - **Connection:** wireless CarPlay with the PC connected over Wi-Fi or Ethernet.
 - **Displays:** customizable CarPlay layouts and appearance, plus an experimental AltScreen with maps, turn cards, and a HUD for navigation and music. Both screens support H.264/H.265 video with GPU decoding.
+
+  ![The AltScreen HUD: the turn card, lane and gauge demos, then the map with the gauges made small and the GPS car driving off](docs/images/altscreen-hud.webp)
+
+  [Watch it at full frame rate (MP4)](docs/images/altscreen-hud.mp4)
+
 - **Controls:** mouse, keyboard, and on-screen car controls. Type in CarPlay fields and use global shortcuts while another app has focus. See [Controls](#controls).
 - **Audio:** music, calls, and Siri through your chosen speakers and microphone, with independent volume and buffered music playback.
 - **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
