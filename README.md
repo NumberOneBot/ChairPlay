@@ -64,7 +64,7 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 r
 
 - **Audio:** music, calls, and Siri through your chosen speakers and microphone, with independent volume and buffered music playback.
 - **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
-- **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation, with a speedometer and tachometer in German, Italian, or British [style](docs/images/gauge-styles.png) on the AltScreen. **USB GPS** sets the iPhone's own location over a USB cable, with no 80 km limit, and **Track playback** drives the car along a recorded GPX or VBO trip; two sample tracks come with the app.
+- **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation, with a speedometer and tachometer in three [styles](docs/images/gauge-styles.png) on the AltScreen. **USB GPS** sets the iPhone's own location over a USB cable, with no 80 km limit, and **Track playback** drives the car along a recorded GPX or VBO trip; two sample tracks come with the app.
 
   ![Track playback on the AltScreen: George Russell's pole lap of the 2024 Las Vegas GP from the sample tracks, with the recording's speed, revs, gear, and pedals on the gauges](docs/images/track-playback.webp)
 
