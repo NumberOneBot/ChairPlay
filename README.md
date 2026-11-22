@@ -50,13 +50,18 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 r
 ## Features
 
 - **Connection:** wireless CarPlay with the PC connected over Wi-Fi or Ethernet.
+- **Controls:** mouse, keyboard, and on-screen car controls. Type in CarPlay fields and use global shortcuts while another app has focus. See [Controls](#controls).
+
+  ![CarPlay in the ChairPlay window driven by the mouse: the home pages swiped left and right, Google Maps opened, McDonald's searched on CarPlay's keyboard, and a route to one of them](docs/images/carplay-use.webp)
+
+  [Watch it at full frame rate (MP4)](docs/images/carplay-use.mp4)
+
 - **Displays:** customizable CarPlay layouts and appearance, plus an experimental AltScreen with maps, turn cards, and a HUD for navigation and music. Both screens support H.264/H.265 video with GPU decoding.
 
   ![The AltScreen HUD: the turn card, lane and gauge demos, then the map with the gauges made small and the GPS car driving off](docs/images/altscreen-hud.webp)
 
   [Watch it at full frame rate (MP4)](docs/images/altscreen-hud.mp4)
 
-- **Controls:** mouse, keyboard, and on-screen car controls. Type in CarPlay fields and use global shortcuts while another app has focus. See [Controls](#controls).
 - **Audio:** music, calls, and Siri through your chosen speakers and microphone, with independent volume and buffered music playback.
 - **Apple Spatial Audio:** APAC 5.1 from supported iPhone apps, with surround output or automatic stereo downmix.
 - **GPS simulation** (experimental): set a virtual location and drive with a keyboard or gamepad to test navigation, with a speedometer and tachometer in German, Italian, or British [style](docs/images/gauge-styles.png) on the AltScreen. **USB GPS** sets the iPhone's own location over a USB cable, with no 80 km limit, and **Track playback** drives the car along a recorded GPX or VBO trip; two sample tracks come with the app.
