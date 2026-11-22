@@ -49,6 +49,18 @@ class DrivingTrackTest {
     }
 
     @Test
+    fun `loading a recording parks the car at its start facing its way, before it plays`() {
+        driving.load(recording)
+        assertAt(GeoPoint(50.0, 6.0), position())
+        assertEquals(0.0, driving.drive.snapshot().car.headingDegrees, 1e-6)
+        assertTrue(driving.drive.snapshot().car.parked)
+        assertEquals(TrackPhase.STOPPED, driving.track!!.phase)
+
+        drive(1.0)
+        assertAt(GeoPoint(50.0, 6.0), position())
+    }
+
+    @Test
     fun `a playing track puts the car where the recording is, and the keys drive nothing`() {
         driving.control.scripted = CarInput(1.0, 0.0, 0.5)
         playing()
@@ -187,19 +199,18 @@ class DrivingTrackTest {
     }
 
     @Test
-    fun `a new recording loaded while one plays leaves the car where it was, saved, and waits stopped at its start`() {
+    fun `a new recording loaded while one plays moves the car to its start, saved, and waits stopped there`() {
         playing()
         drive(2.0)
         val old = driving.track
-        val there = position()
 
         driving.load(recording)
         drive(0.1)
 
         assertNotSame(old, driving.track)
         assertEquals(TrackPhase.STOPPED to 0.0, driving.track!!.state())
-        assertAt(there, position())
-        assertEquals(place(there), saved.last()["gps.start"])
+        assertAt(GeoPoint(50.0, 6.0), position())
+        assertEquals(place(GeoPoint(50.0, 6.0)), saved.last()["gps.start"])
     }
 
     @Test

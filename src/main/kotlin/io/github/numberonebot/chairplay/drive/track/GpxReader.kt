@@ -17,7 +17,7 @@ object GpxReader {
 
     private class RawPoint(
         val epochSeconds: Double, val position: GeoPoint, val altitude: Double?,
-        val speed: Double?, val rpm: Double?, val gear: Int?,
+        val speed: Double?, val rpm: Double?, val gear: Int?, val throttle: Double?, val brake: Double?,
     )
 
     private class RawTrack(val segments: List<List<RawPoint>>, val gaugeLimits: GaugeLimits)
@@ -31,7 +31,12 @@ object GpxReader {
         val start = track.segments.firstOrNull { it.isNotEmpty() }?.first()?.epochSeconds
             ?: throw TrackFormatException(TrackFormatReason.NO_TIMES)
         val segments = track.segments.filter { it.isNotEmpty() }.map { segment ->
-            segment.map { TrackPoint(it.epochSeconds - start, it.position, it.altitude, it.speed, rpm = it.rpm, gear = it.gear) }
+            segment.map {
+                TrackPoint(
+                    it.epochSeconds - start, it.position, it.altitude, it.speed,
+                    rpm = it.rpm, gear = it.gear, throttle = it.throttle, brake = it.brake,
+                )
+            }
         }
         val points = track.segments.asSequence().flatten()
         val limits = track.gaugeLimits.copy(
@@ -101,6 +106,8 @@ object GpxReader {
         var speed: Double? = null
         var rpm: Double? = null
         var gear: Int? = null
+        var throttle: Double? = null
+        var brake: Double? = null
         var depth = 1
         while (depth > 0 && reader.hasNext()) {
             when (reader.next()) {
@@ -111,10 +118,12 @@ object GpxReader {
                         "ele" -> altitude = reader.elementText.trim().toDoubleOrNull().also { depth-- }
                         "time" -> time = parseTime(reader.elementText).also { depth-- }
                         "extensions" -> if (reader.namespaceURI == GPX_NAMESPACE) {
-                            val fields = readExtension(reader, "telemetry", "speed", "rpm", "gear")
+                            val fields = readExtension(reader, "telemetry", "speed", "rpm", "gear", "throttle", "brake")
                             speed = readGaugeSpeed(fields["speed"])
                             rpm = fields["rpm"]?.toIntOrNull()?.takeIf { it in 0..MAX_RECORDED_RPM }?.toDouble()
                             gear = fields["gear"]?.toIntOrNull()?.takeIf { it >= -1 }
+                            throttle = pedalShare(fields["throttle"]?.toDoubleOrNull())
+                            brake = pedalShare(fields["brake"]?.toDoubleOrNull())
                             depth--
                         }
                     }
@@ -123,7 +132,7 @@ object GpxReader {
             }
         }
         if (latitude == null || longitude == null || time == null) return null
-        return RawPoint(time, GeoPoint(latitude, longitude), altitude, speed, rpm, gear)
+        return RawPoint(time, GeoPoint(latitude, longitude), altitude, speed, rpm, gear, throttle, brake)
     }
 
     /** Consumes an extensions element, taking only text fields directly inside the named ChairPlay block. */

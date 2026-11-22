@@ -5,7 +5,7 @@ import io.github.numberonebot.chairplay.drive.GeoPoint
 import io.github.numberonebot.chairplay.drive.SpeedUnits
 import java.io.InputStream
 
-/** Reads position, motion and optional RPM and gear channels of a VBOX/RaceBox text recording. */
+/** Reads position, motion and optional RPM, gear, throttle and brake channels of a VBOX/RaceBox text recording. */
 object VboReader {
     private const val SECONDS_PER_DAY = 86_400.0
     private val whitespace = Regex("\\s+")
@@ -41,6 +41,8 @@ object VboReader {
         val altitudeColumn = names.indexOf("height")
         val rpmColumn = names.indexOf("rpm")
         val gearColumn = names.indexOf("gear")
+        val throttleColumn = names.indexOf("throttle")
+        val brakeColumn = names.indexOf("brake")
         val speedFactor = when (velocityUnit) {
             "km/h", "kmh", "kph" -> 1.0 / 3.6
             "mph" -> SpeedUnits.IMPERIAL.toKmh(1.0) / 3.6
@@ -81,6 +83,8 @@ object VboReader {
                 heading = fields.number(headingColumn)?.takeIf { it in 0.0..360.0 },
                 rpm = fields.number(rpmColumn)?.takeIf { it in 0.0..MAX_RECORDED_RPM.toDouble() },
                 gear = gear,
+                throttle = pedalShare(fields.number(throttleColumn)),
+                brake = pedalShare(fields.number(brakeColumn)),
             ))
         }
 

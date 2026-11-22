@@ -174,6 +174,20 @@ class TrackCommandsTest {
     }
 
     @Test
+    fun `VBO throttle and brake in percent are read as shares of a full press`() {
+        opened("pedals.vbo", """
+            [column names]
+            time lat long velocity throttle brake
+            [data]
+            000000.00 3000 -360 100 100 0
+            000010.00 3000.06 -360 120 -5 104
+        """.trimIndent())
+        val (first, second) = driving.track!!.recording.segments.single()
+        assertEquals(1.0 to 0.0, first.throttle to first.brake)
+        assertEquals(null to null, second.throttle to second.brake)
+    }
+
+    @Test
     fun `VBO RPM and gear reach AltScreen and recorded RPM sets its tachometer scale`() {
         opened("telemetry.vbo", """
             [column names]

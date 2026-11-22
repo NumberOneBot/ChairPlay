@@ -161,6 +161,20 @@ class TrackGaugePlaybackTest {
         assertReadings(0.0, 8000.0, "D3")
     }
 
+    @Test
+    fun `the recording's pedals reach the gauges while it plays and rest while it pauses`() {
+        val pressed = "<cp:speed>30</cp:speed><cp:throttle>60</cp:throttle><cp:brake>20</cp:brake>"
+        load(first = pressed, second = pressed)
+        driving.track!!.play()
+        pass()
+        pass()
+        assertEquals(0.6 to 0.2, driving.gauges()!!.run { throttle to brake })
+
+        driving.track!!.pause()
+        pass()
+        assertEquals(0.0 to 0.0, driving.gauges()!!.run { throttle to brake })
+    }
+
     private fun assertReadings(speedKmh: Double, rpm: Double, gear: String) {
         val gauges = driving.gauges()!!
         assertEquals(speedKmh, gauges.speedKmh, 1e-6)

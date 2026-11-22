@@ -3,12 +3,14 @@ package io.github.numberonebot.chairplay.drive
 import io.github.numberonebot.chairplay.drive.track.TrackPhase
 import io.github.numberonebot.chairplay.drive.track.TrackPlayer
 import io.github.numberonebot.chairplay.drive.track.TrackRecording
+import io.github.numberonebot.chairplay.drive.track.pedals
 import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The recording the GPS page loaded, as the car's source: while it plays or pauses it puts [drive] where the recording
- * is ([placed] tells the car it is somewhere), and the keys and the gamepad drive nothing. Once it stops, ends or gives
- * way to another file, the car stands where it is and [remember] saves its place, as a game's car is handed back. A car
+ * is ([placed] tells the car it is somewhere), and the keys and the gamepad drive nothing. Loading it parks the car at
+ * its start. Once it stops, or another file takes its place, the car stands where it is, and at its end at its last
+ * point; [remember] saves its place, as a game's car is handed back. A car
  * that cannot send, or USB not in force ([live]), pauses it and hands the car back, as a GPS operation's hold pauses it;
  * coming back does not play it.
  */
@@ -33,8 +35,13 @@ internal class DrivingTrack(
      */
     @Volatile var live: () -> Boolean = { true }
 
+    /** Loads [recording] stopped at its start, and parks the car at its first point facing its way, before it plays. */
     fun load(recording: TrackRecording) {
         loaded.set(Loaded(TrackPlayer(recording, nanoTime)))
+        val start = recording.at(0.0)
+        drive.input = CarInput()
+        drive.place(start.position, start.heading)
+        placed()
     }
 
     /** The next source actually drove the car. A simultaneous Open can still select its new track. */
@@ -80,7 +87,8 @@ internal class DrivingTrack(
         val sample = player.recording.at(time)
         val playing = phase == TrackPhase.PLAYING
         val speed = if (playing) sample.speed else 0.0
-        drive.follow(sample.position, sample.heading, speed, sample.rpm, sample.gear, preserveRpm = true)
+        val pedals = if (playing) player.recording.pedals(time).let { CarInput(it.throttle, it.brake) } else CarInput()
+        drive.follow(sample.position, sample.heading, speed, sample.rpm, sample.gear, pedals, preserveRpm = true)
         placed()
         tracking = true
         return if (playing) DriveControl.FRAME_SECONDS else null

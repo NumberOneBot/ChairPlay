@@ -117,6 +117,20 @@ class GpxReaderTest {
         assertEquals(TrackFormatReason.TOO_SHORT, reasonOf(gpx(body)))
     }
 
+    @Test
+    fun `ChairPlay telemetry's throttle and brake are read as shares of a full press`() {
+        val ns = "<gpx version=\"1.1\" xmlns=\"http://www.topografix.com/GPX/1/1\" xmlns:cp=\"urn:chairplay:gpx:telemetry:1\">"
+        fun point(seconds: Int, pedals: String) = "<trkpt lat=\"50.0\" lon=\"6.0\"><time>2024-08-10T14:00:0${seconds}Z</time>" +
+            "<extensions><cp:telemetry>$pedals</cp:telemetry></extensions></trkpt>"
+        val body = "<trk><trkseg>" + point(0, "<cp:throttle>80</cp:throttle><cp:brake>0</cp:brake>") +
+            point(1, "<cp:throttle>130</cp:throttle><cp:brake>25.5</cp:brake>") + "</trkseg></trk>"
+        val (first, second) = read(gpx(body, ns)).segments.single()
+        assertEquals(0.8, first.throttle!!, 1e-9)
+        assertEquals(0.0, first.brake!!, 1e-9)
+        assertNull(second.throttle)
+        assertEquals(0.255, second.brake!!, 1e-9)
+    }
+
     // The page words each reason by its key (webui/src/gps/trackApi.ts): the keys are the protocol.
     @Test
     fun `each reason travels as its code`() {

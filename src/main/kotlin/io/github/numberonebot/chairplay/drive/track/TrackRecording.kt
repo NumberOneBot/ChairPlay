@@ -16,7 +16,13 @@ data class TrackPoint(
     val heading: Double? = null,
     val rpm: Double? = null,
     val gear: Int? = null,
+    /** The pedals as recorded, 0 at rest to 1 pressed fully. */
+    val throttle: Double? = null,
+    val brake: Double? = null,
 )
+
+/** A recorded pedal's [percent], as files give it, as a share of a full press; null outside 0 to 100. */
+internal fun pedalShare(percent: Double?): Double? = percent?.takeIf { it in 0.0..100.0 }?.div(100)
 
 /**
  * Why a file cannot be played, as the GPS page's notice carries it: a code ([key]), never English, which the page words
@@ -83,13 +89,15 @@ class TrackRecording @JvmOverloads constructor(
                 pairSpeed(i, f),
                 rpm = interpolate(here.rpm, next.rpm, f),
                 gear = here.gear,
+                throttle = interpolate(here.throttle, next.throttle, f),
+                brake = interpolate(here.brake, next.brake, f),
             )
         }
         // The last point of a segment: a gap follows, or the recording ends.
         val heading = here.heading
             ?: if (i > 0 && segmentOf[i - 1] == segmentOf[i]) pairHeading(i - 1, 1.0) else 0.0
         val speed = if (t == here.seconds) here.speed ?: 0.0 else 0.0
-        return TrackSample(here.position, heading, speed, here.rpm, here.gear)
+        return TrackSample(here.position, heading, speed, here.rpm, here.gear, here.throttle, here.brake)
     }
 
     private fun pairSpeed(i: Int, f: Double): Double {
@@ -142,4 +150,6 @@ data class TrackSample(
     val speed: Double,
     val rpm: Double? = null,
     val gear: Int? = null,
+    val throttle: Double? = null,
+    val brake: Double? = null,
 )
