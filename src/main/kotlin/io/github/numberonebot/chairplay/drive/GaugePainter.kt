@@ -101,10 +101,12 @@ class GaugePainter(
         val needle = now.design.needle ?: accent
         val fill = now.design.fill ?: (0x59000000 or needle)
         val numbers = now.design.numbersFont
-        // Each dial with its inset: the tachometer's single digits half as large again as the speedometer's three.
+        // Each dial with its inset: the tachometer's single digits half as large again as the speedometer's three; a
+        // scale past 9 has two-digit numbers, which take the speedometer's size to fit.
+        val tachLabels = if (now.tachometer.max > 9) LABEL_SIZE else LABEL_SIZE * 1.5f
         val engine = { x: Float ->
             dial.draw(
-                x, cy, face, now.tachometer, LABEL_SIZE * 1.5f, now.rpm / 1000, now.gear, "×1000 rpm", needle, fill,
+                x, cy, face, now.tachometer, tachLabels, now.rpm / 1000, now.gear, "×1000 rpm", needle, fill,
                 now.design.redZone, now.design.reading, numbers,
             )
             positionInset(pen, now, x, cy, face, now.tachometer.sweep)
