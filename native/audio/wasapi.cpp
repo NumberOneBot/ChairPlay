@@ -111,10 +111,11 @@ struct Output : Device {
         hr = format(&mix);
         if (FAILED(hr)) return hr;
         if (mix.rate != 48000) return AUDCLNT_E_UNSUPPORTED_FORMAT;
-        const bool surround = mix.channels == 6 && (mix.mask == 0x60f || mix.mask == 0x3f);
-        channels = requested == 0 ? (surround ? 6 : 2) : (UINT32)requested;
-        if (channels != 2 && channels != 6) return E_INVALIDARG;
-        if (channels == 6 && !surround) return AUDCLNT_E_UNSUPPORTED_FORMAT;
+        // Whether the device's speakers hold 5.1 is decided in Kotlin (surroundSlots): 6 opens the device's own
+        // channels and mask, which Kotlin fills by its slots; 2 is stereo that Windows converts.
+        if (requested != 2 && requested != 6) return E_INVALIDARG;
+        if (requested == 6 && mix.channels < 6) return AUDCLNT_E_UNSUPPORTED_FORMAT;
+        channels = requested == 6 ? mix.channels : 2;
         WAVEFORMATEXTENSIBLE wave{};
         wave.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
         wave.Format.nChannels = (WORD)channels;
@@ -124,10 +125,10 @@ struct Output : Device {
         wave.Format.nAvgBytesPerSec = 48000 * wave.Format.nBlockAlign;
         wave.Format.cbSize = 22;
         wave.Samples.wValidBitsPerSample = 32;
-        wave.dwChannelMask = channels == 6 ? mix.mask : 3;
+        wave.dwChannelMask = requested == 6 ? mix.mask : 3;
         wave.SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
         DWORD flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_NOPERSIST;
-        if (channels == 2) flags |= AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM;
+        if (requested == 2) flags |= AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM;
         else {
             WAVEFORMATEX* closest = NULL;
             hr = client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, &wave.Format, &closest);

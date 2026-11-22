@@ -35,6 +35,7 @@ New features and fixed bugs in ChairPlay.
 - Every gauge style shows the heading arrow, whatever the wheel shows.
 - **Settings > CarPlay** and **AltScreen** stay open while the iPhone connects. A change the connection has already read is marked to apply at the next one.
 - **Settings > Connection** says at once when the iPhone has answered over Bluetooth and is joining the Wi-Fi, not only after the attempt fails. The error that follows also names CarPlay turned off for this PC on the iPhone.
+- Apple Spatial Audio plays in 5.1 on 7.1 speaker setups instead of stereo.
 - The settings window has a new look. The toolbar is translucent and the page scrolls under it, the list of pages floats beside the page, and a page shorter than the window sits in its middle. In a wide window the page keeps to 760 px.
 
 ### Fixed

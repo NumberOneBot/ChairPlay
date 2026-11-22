@@ -29,7 +29,7 @@ class WasapiOutputTest {
 
     @Test fun `explicit surround refuses a stereo endpoint rather than silently converting`() {
         val device = WasapiOutput.defaultDevice()
-        if (device.channels != 6 || device.mask !in listOf(0x60f, 0x3f)) {
+        if (surroundSlots(device.mask) == null) {
             assertThrows(IOException::class.java) { WasapiOutput.open(device.id, 6) }
         }
     }
