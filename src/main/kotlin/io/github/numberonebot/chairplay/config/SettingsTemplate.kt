@@ -141,7 +141,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "window.controls" to "false",
     ),
     SettingBlock(
-        "Altscreen (experimental): the car's instrument cluster as a second CarPlay screen in a window of its\n" +
+        "Altscreen: the car's instrument cluster as a second CarPlay screen in a window of its\n" +
             "own, 'true' or 'false' (the iPhone learns of it when it connects); its size in pixels (positive even\n" +
             "numbers); what it starts with: 'map', 'map-card', 'hud' or 'card' (the turn card).",
         "altscreen.enabled" to "false", "altscreen.width" to "1440", "altscreen.height" to "540",

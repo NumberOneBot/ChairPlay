@@ -56,7 +56,7 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.0.11 r
 
   [Watch it at full frame rate (MP4)](docs/images/carplay-use.mp4)
 
-- **Displays:** customizable CarPlay layouts and appearance, plus an experimental AltScreen with maps, turn cards, and a HUD for navigation and music. Both screens support H.264/H.265 video with GPU decoding.
+- **Displays:** customizable CarPlay layouts and appearance, plus the AltScreen with maps, turn cards, and a HUD for navigation and music. Both screens support H.264/H.265 video with GPU decoding.
 
   ![The AltScreen HUD: the turn card, lane and gauge demos, then the map with the gauges made small and the GPS car driving off](docs/images/altscreen-hud.webp)
 
