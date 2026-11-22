@@ -7,6 +7,7 @@ Read and follow [CLAUDE.md](CLAUDE.md) for the project's development, build, and
 - Include only new features and fixed bugs in the release's change list.
 - Do not include internal experiments, temporary development workflows, or test results in release notes.
 - X.Y.0 release notes start with the update toast's line, hidden on GitHub: `<!-- highlight: USB GPS: drive anywhere, no 80 km limit -->` (about 60 characters at most).
+- A release also moves the README's "release notes for this update" link to its notes, and drops the version from the README's and the roadmap's plans.
 
 ## Updating upstream
 
