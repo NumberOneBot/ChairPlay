@@ -144,7 +144,7 @@ class ChairPlayUi(
         onBindings = onBindings,
         checks = checks,
         elevate = Platforms.current.firewall::addRules,
-        setupStore = SetupStore(dir),
+        setupStore = SetupStore(dir, config.pairings::clear),
         onSaved = onSaved,
         demo = demo,
         gps = gps,

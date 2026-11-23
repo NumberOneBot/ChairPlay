@@ -42,6 +42,18 @@ class UiControllerTest : UiControllerFixture() {
         assertFalse(controller().forget())
     }
 
+    // A forgotten iPhone does not keep playing: Forget ends the session as Disconnect does.
+    @Test
+    fun `Forget this iPhone ends the session`() {
+        val ui = controller(setupStore = SetupStore(dir))
+        ui.model.sessionActive()
+
+        assertTrue(ui.forget())
+
+        assertEquals(1, disconnects.get())
+        assertEquals("idle", ui.state()["phase"])
+    }
+
     // The Experiments page plays the HUD's demos on the AltScreen, one at a time, and stops them.
     @Test
     fun `the Experiments page plays a HUD demo and stops it`() {

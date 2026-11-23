@@ -134,19 +134,27 @@ export function GetStarted(props: {
         </Step>
       )}
       <Step n={1 + optionalCount} title="Pair the iPhone" {...steps.pair}>
-        <span>
-          Turn on Bluetooth on the iPhone, then pair it with this PC in Settings › Bluetooth &amp; devices › Add device.
-        </span>
+        {steps.pairForgotten ? (
+          <span>
+            ChairPlay forgot {steps.pairForgotten}, but Windows still has it paired. To pair from scratch, remove it in
+            Settings › Bluetooth &amp; devices, and forget this car on the iPhone in Settings › General › CarPlay.
+          </span>
+        ) : (
+          <span>
+            Turn on Bluetooth on the iPhone, then pair it with this PC in Settings › Bluetooth &amp; devices › Add device.
+          </span>
+        )}
         <div className="acts">
           <button
             type="button"
             className="btn"
+            data-testid={steps.pairForgotten ? 'setup-pair-forgotten' : 'setup-pair-bluetooth'}
             title="Open Bluetooth settings"
             onClick={() => backend.open('bluetooth')}
           >
             Open Bluetooth settings
           </button>
-          <Waiting>Waiting for a paired iPhone…</Waiting>
+          <Waiting>{steps.pairForgotten ? 'Waiting for the iPhone to be removed…' : 'Waiting for a paired iPhone…'}</Waiting>
         </div>
       </Step>
       <Step

@@ -6,7 +6,12 @@ New features and fixed bugs in ChairPlay.
 
 ### Changed
 
-- The installer is 77 MB instead of 93 MB, and the portable zip 92 MB instead of 104 MB: they leave out the FFmpeg libraries ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
+- The installer is 70 MB instead of 93 MB, and the portable zip 85 MB instead of 104 MB: they leave out the FFmpeg libraries and the BouncyCastle classes ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
+
+### Fixed
+
+- **Forget** on the Connection page left the CarPlay session running, music and all, and the iPhone's pairing in force until ChairPlay restarted. It now ends the session and drops the pairing at once.
+- After **Forget**, Get started counted the iPhone as paired as long as Windows still listed it in its Bluetooth devices, though that pairing no longer works once the iPhone forgets the car, and ChairPlay kept calling the iPhone in vain. **Pair the iPhone** now stays open and says to remove the iPhone in Windows' Bluetooth settings, with **Open Bluetooth settings**, and to forget the car on the iPhone.
 
 [Release notes](docs/RELEASE-NOTES-1.1.2.md) · [Changes since v1.1.1](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.1...v1.1.2)
 

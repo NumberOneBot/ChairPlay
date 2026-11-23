@@ -67,6 +67,7 @@ export function Toolbar({ state, backend, guide }: { state: AppState; backend: B
         <button
           type="button"
           className={`btn primary ${guide?.allDone ? 'lit' : ''}`}
+          data-testid="tb-connect"
           disabled={connectWaits !== null}
           title={connectWaits ?? 'Connect to the iPhone'}
           onClick={() => backend.connect()}

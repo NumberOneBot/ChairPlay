@@ -157,7 +157,8 @@ class UiController(
             return false
         }
         setupDone = false
-        log("iPhone forgotten: its pairing records are deleted; Get started opens")
+        disconnect()
+        log("iPhone forgotten: its pairing records are deleted and the session ended; Get started opens")
         changed()
         return true
     }

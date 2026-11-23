@@ -63,6 +63,16 @@ class WindowPlacementTest {
         assertEquals(0L, Files.list(pairings).use { it.count() })
     }
 
+    // The keys the running app loaded go too: the iPhone pairs again at its next connection, without a restart.
+    @Test
+    fun `forgetting clears the pairings the app has loaded`() {
+        var cleared = 0
+
+        SetupStore(Files.createTempDirectory("chairplay-setup")) { cleared++ }.forget()
+
+        assertEquals(1, cleared)
+    }
+
     @Test
     fun `nothing is remembered before the first close`() {
         assertNull(WindowPlacementStore(Files.createTempDirectory("chairplay-window")).load(configured))

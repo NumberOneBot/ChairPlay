@@ -41,6 +41,8 @@ export function ConnectionPage(props: {
   backend: Backend
   settings: Settings
   onShowGuide?: () => void
+  /** Forget was pressed for the iPhone Windows has paired. */
+  onForget?: (iphone: string) => void
 }) {
   const { state, backend, settings } = props
   const { value, error, save } = settings
@@ -105,8 +107,12 @@ export function ConnectionPage(props: {
           <button
             type="button"
             className="btn small forget"
-            title="Forget this iPhone: it pairs again at its next connection after a restart, and Get started opens"
-            onClick={() => backend.forget()}
+            data-testid="connection-forget"
+            title="Forget this iPhone: end the session, delete its pairing, and open Get started"
+            onClick={() => {
+              props.onForget?.(state.setup.pairedIphone!)
+              backend.forget()
+            }}
           >
             Forget
           </button>

@@ -19,6 +19,8 @@ export interface Steps {
   /** Null while the firewall is off: there is nothing to let ChairPlay through, and the guide is a step shorter. */
   firewall: Step | null
   pair: Step
+  /** The iPhone Forget was pressed for, while Windows still has it paired: the pair step asks to remove it there. */
+  pairForgotten: string | null
   wifi: Step
   wifiProblem: WifiProblem
   allDone: boolean
@@ -31,9 +33,11 @@ export interface Steps {
  * Present MFi files and a disabled firewall need no visible step.
  * A join that timed out reopens the Wi-Fi step, since the password is the likely cause, until a password is saved
  * after it ([joinFailureSeen] is that error's time).
+ * The iPhone [forgotten] by Forget does not count as paired while Windows still lists it: its pairing is stale.
  */
-export function setupSteps(state: AppState, joinFailureSeen: string | null): Steps {
+export function setupSteps(state: AppState, joinFailureSeen: string | null, forgotten: string | null = null): Steps {
   const { setup, wifi, error } = state
+  const pairForgotten = forgotten !== null && setup.pairedIphone === forgotten ? forgotten : null
   const firewallDone = setup.firewall !== 'missing' && setup.firewall !== 'blocked'
   const failed =
     error !== null && state.phase !== 'active' && errorKind(error.message) === 'join' && error.at !== joinFailureSeen
@@ -41,8 +45,11 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null): Ste
   const otherNetwork = wifi.ssid !== '' && setup.pcWifi !== null && setup.pcWifi !== wifi.ssid
   const networkProblem = networkWaits(state)
   const wifiDone = wifi.ssid !== '' && !passwordNeeded && !otherNetwork && !failed && !networkProblem
-  const done = [setup.mfiPresent, firewallDone, setup.pairedIphone !== null, wifiDone]
+  const paired = setup.pairedIphone !== null
+  const done = [setup.mfiPresent, firewallDone, paired && pairForgotten === null, wifiDone]
   const open = done.indexOf(false)
+  // Connect stays open to a forgotten iPhone Windows lists: it may be paired again already, which only a call shows.
+  const connectOpen = [setup.mfiPresent, firewallDone, paired, wifiDone].indexOf(false)
   const stateOf = (index: number): StepState => (done[index] ? 'done' : index === open ? 'now' : 'todo')
   const firewallNote = {
     present: 'Rule added',
@@ -71,7 +78,8 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null): Ste
   return {
     mfi: setup.mfiPresent ? null : { state: stateOf(0), note: 'Not found' },
     firewall: setup.firewall === 'off' ? null : { state: stateOf(1), note: firewallNote },
-    pair: { state: stateOf(2), note: setup.pairedIphone ?? 'No iPhone paired' },
+    pair: { state: stateOf(2), note: pairForgotten ? 'Still paired in Windows' : setup.pairedIphone ?? 'No iPhone paired' },
+    pairForgotten,
     wifi: { state: stateOf(3), note: wifiNote },
     wifiProblem: failed
       ? { kind: 'failed', ssid: wifi.ssid }
@@ -79,6 +87,6 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null): Ste
         ? { kind: 'other-network', pcWifi: setup.pcWifi! }
         : null,
     allDone: open === -1,
-    connectWaits: open === -1 ? null : waits[open],
+    connectWaits: connectOpen === -1 ? null : waits[connectOpen],
   }
 }

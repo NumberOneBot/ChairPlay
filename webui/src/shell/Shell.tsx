@@ -44,8 +44,14 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
   const ids = useId()
   const showable = state.canShowCarPlay && state.embedded
   const settings = useSettings(backend, state.settingsVersion)
+  // The iPhone Windows had paired when Forget was pressed: its pairing may be stale (the iPhone forgets the PC too), so
+  // Get started does not count it as paired until Windows drops it or a call gets past Bluetooth (joining or later).
+  const [forgotten, setForgotten] = useState<string | null>(null)
+  useEffect(() => {
+    if (state.setup.pairedIphone === null || state.phase === 'joining' || state.phase === 'active') setForgotten(null)
+  }, [state.setup.pairedIphone, state.phase])
   const guiding = guide === 'shown' || (guide === 'auto' && !state.setupDone)
-  const steps = guiding ? setupSteps(state, joinFailureSeen) : null
+  const steps = guiding ? setupSteps(state, joinFailureSeen, forgotten) : null
   const showGuide = () => setGuide('shown')
   // Every page stays open while the iPhone connects: each attempt tells the app which values it read (UiSettings
   // .connected), so a change it has already read is marked to wait for the next connection (owner, 2026-11-12).
@@ -119,7 +125,13 @@ export function Shell({ state, backend }: { state: AppState; backend: Backend })
                 <Message tone="bad" head="Couldn't read the settings." text={settings.loadError} />
               )}
               {settings.data && section === 'connection' && (
-                <ConnectionPage state={state} backend={backend} settings={settings} onShowGuide={showGuide} />
+                <ConnectionPage
+                  state={state}
+                  backend={backend}
+                  settings={settings}
+                  onShowGuide={showGuide}
+                  onForget={setForgotten}
+                />
               )}
               {settings.data && section === 'carplay' && <CarPlayPage state={state} backend={backend} settings={settings} />}
               {settings.data && section === 'altscreen' && (

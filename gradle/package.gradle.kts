@@ -68,7 +68,9 @@ val javacppDlls = listOf("avcodec", "avutil", "swresample", "swscale").flatMap {
 
 val imageJars by tasks.registering(Sync::class) {
     dependsOn("installDist")
-    from(layout.buildDirectory.dir("install/chairplay/lib")) { exclude(javacppNatives) }
+    // gradle/bcprov.gradle.kts writes the bcprov the image carries.
+    from(layout.buildDirectory.dir("install/chairplay/lib")) { exclude(javacppNatives, "bcprov-*.jar") }
+    from(tasks.named("trimBcprov"))
     into(layout.buildDirectory.dir("jpackage-input"))
 }
 

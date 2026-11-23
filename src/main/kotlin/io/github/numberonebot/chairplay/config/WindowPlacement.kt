@@ -160,18 +160,19 @@ class ControlsWindowStore(private val dir: Path) {
  * again after Forget this iPhone. An install that connected before this mark existed has its pairing records in
  * pairings/, which count as done until the mark says otherwise.
  */
-class SetupStore(private val dir: Path) {
+class SetupStore(private val dir: Path, private val forgetLoaded: () -> Unit = {}) {
     fun done(): Boolean = readWindowState(dir)?.getProperty(DONE)?.trim()?.toBooleanStrictOrNull() ?: paired()
 
     fun save(done: Boolean) = writeWindowState(dir, listOf(DONE to done.toString()))
 
     /**
-     * Forget this iPhone: deletes ChairPlay's pairing records and undoes the setup. The running app keeps the pairing
-     * it loaded until it restarts; Windows' own Bluetooth pairing stays.
+     * Forget this iPhone: deletes ChairPlay's pairing records, and through [forgetLoaded] the keys the running app loaded
+     * from them, and undoes the setup. Windows' own Bluetooth pairing stays.
      */
     fun forget() {
         val pairings = dir.resolve("pairings")
         if (Files.isDirectory(pairings)) Files.list(pairings).use { files -> files.forEach(Files::deleteIfExists) }
+        forgetLoaded()
         save(false)
     }
 
