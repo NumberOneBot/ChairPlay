@@ -2,6 +2,19 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.1.1 - 2026-11-23
+
+### Changed
+
+- The USB GPS helper takes 52 MB in 175 files instead of 98 MB in about 6,400: it leaves out the packages it never runs.
+
+### Fixed
+
+- With USB GPS running, a new CarPlay connection (**Reconnect**, a changed setting that reconnects, or a lost connection) kept calling the iPhone over Bluetooth and never connected: the iPhone refuses the call while a USB GPS session is open. ChairPlay now closes the USB GPS session before it calls the iPhone and resumes it once the iPhone answers; the car stands meanwhile.
+- With USB GPS on and Apple's USB service not running (Apple Devices not opened since Windows started), **Settings > GPS** asked for a USB cable even when the iPhone was connected. It now says to open Apple Devices and connect the iPhone, with **Open Apple Devices**, and the switch waits until the service answers. USB GPS then resumes by itself.
+
+[Release notes](docs/RELEASE-NOTES-1.1.1.md) · [Changes since v1.1.0](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.0...v1.1.1)
+
 ## 1.1.0 - 2026-11-22
 
 ### Added
