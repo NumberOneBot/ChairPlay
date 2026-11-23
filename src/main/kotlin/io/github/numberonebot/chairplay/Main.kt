@@ -246,7 +246,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         window.clearPicture()
         title.notConnected()
     }
-    connection.onStatus = ui::bringUp
+    connection.onStatus = { ui.bringUp(it); appGps.linkStatus(it) }
     connection.onLink = sessions::linked
     // The screens saved since come with the next connection: the main window takes the new picture's shape and size,
     // and the AltScreen turns on or off, or takes its new size and the view it starts with.

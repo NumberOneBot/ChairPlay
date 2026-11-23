@@ -18,6 +18,7 @@ import io.github.numberonebot.chairplay.gps.UsbGpsChannel
 import io.github.numberonebot.chairplay.gps.UsbHelper
 import io.github.numberonebot.chairplay.gps.setup.ThreadSetupExecutor
 import io.github.numberonebot.chairplay.gps.setup.UsbSetupController
+import io.github.numberonebot.chairplay.phone.LinkStatus
 import io.github.numberonebot.chairplay.platform.Platforms
 
 /**
@@ -90,6 +91,11 @@ internal class AppGps(
     fun start() {
         usb.start()
         coordinator.start()
+    }
+
+    /** A bring-up's progress: the iPhone answered the Bluetooth call (Joining) or it failed, so USB may open again. */
+    fun linkStatus(status: LinkStatus) {
+        if (status is LinkStatus.Joining || status is LinkStatus.Failed) coordinator.called()
     }
 
     /** The GPS page's state: the car, the output and the USB setup. */

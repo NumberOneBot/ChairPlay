@@ -43,23 +43,44 @@ class GpsSwitchTest {
         h.calls.clear()
 
         h.gps.connected()
+        h.gps.called()
         h.idle()
 
-        assertEquals(listOf("usb.quiesce", "usb.release", "carplay.start 40.7,-74.0"), h.calls)
+        assertEquals(listOf("usb.quiesce", "usb.release", "usb.quiesce", "carplay.start 40.7,-74.0"), h.calls)
         val out = h.output()
         assertEquals(GpsMethod.CARPLAY, out.applied)
         assertEquals(emptyList<GpsNotice>(), out.notices)
         assertEquals(0, h.hold.held)
     }
 
+    // An open USB session makes the iPhone refuse the Bluetooth call (2026-11-23): it is closed before connected() returns,
+    // nothing starts while the call lasts, and the saved simulation resumes once the iPhone answered.
     @Test
-    fun `a connection with nothing chosen since changes nothing`() {
+    fun `a connection closes the USB session before the call and resumes it once the iPhone answered`() {
         val h = runningUsb()
 
         h.gps.connected()
-        h.idle()
 
-        assertEquals(emptyList<String>(), h.calls)
+        assertEquals(listOf("usb.quiesce", "usb.release"), h.calls)
+        assertFalse(h.usb.running)
+        h.reconcile()
+        assertFalse(h.usb.running)
+        h.gps.called()
+        h.idle()
+        assertEquals(listOf("usb.quiesce", "usb.release", "setup.readiness", "usb.start 40.7,-74.0 UDID-1"), h.calls)
+        assertTrue(h.usb.running)
+        assertTrue(h.store.current().enabled)
+    }
+
+    // A call nobody reports the end of (Disconnect meanwhile) holds USB no longer than an operation may last.
+    @Test
+    fun `a call never reported over holds USB only until the operation deadline`() {
+        val h = runningUsb()
+
+        h.gps.connected()
+        h.now += GpsTiming().operationMillis + 1
+        h.reconcile()
+
         assertTrue(h.usb.running)
     }
 

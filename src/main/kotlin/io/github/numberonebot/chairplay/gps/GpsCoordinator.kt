@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay.gps
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -35,6 +36,8 @@ class GpsCoordinator(
     private val flows = GpsFlows(store, car, carplay, usb, setup, ops, log)
     private val queued = AtomicBoolean()
     @Volatile private var connecting = false
+    // Until then a CarPlay bring-up calls the iPhone over Bluetooth, and USB stays closed ([connected]).
+    @Volatile private var callEnds = 0L
     private var wizardWasOpen = false
     private var lastOutput: GpsOutput? = null
 
@@ -55,9 +58,31 @@ class GpsCoordinator(
         if (queued.compareAndSet(false, true)) worker.execute { queued.set(false); reconcile() }
     }
 
-    /** A CarPlay bring-up read the settings: the method chosen since goes in force with it (D8). */
+    /**
+     * A CarPlay bring-up read the settings and is about to call the iPhone over Bluetooth, which the iPhone refuses while
+     * a USB session is open (2026-11-23): the session closes before this returns, and nothing starts until [called] or
+     * [GpsTiming.operationMillis]. The method chosen since then goes in force (D8).
+     */
     fun connected() {
+        callEnds = clock() + timing.operationMillis
         connecting = true
+        if (!flows.usb.running) return
+        val operation = synchronized(flows.lock) { ops.begin(OperationKind.APPLY, flows.generation, null) } ?: return
+        val closed = CountDownLatch(1)
+        ops.run(operation) {
+            try {
+                flows.stopUsb(operation)
+                flows.resumeArmed = true
+            } finally {
+                closed.countDown()
+            }
+        }
+        closed.await(timing.shutdownMillis, TimeUnit.MILLISECONDS)
+    }
+
+    /** The bring-up's call to the iPhone is over, answered or failed: what waited for it goes on. */
+    fun called() {
+        callEnds = 0
         poke()
     }
 
@@ -152,7 +177,7 @@ class GpsCoordinator(
 
     /** On the coordinator's thread, between operations: see the class. */
     private fun reconcile() {
-        if (ops.current != null) return
+        if (ops.current != null || clock() < callEnds) return
         val (selected, applied, enabled) = synchronized(flows.lock) { Triple(flows.selected, flows.applied, flows.enabled) }
         if (connecting) {
             connecting = false
