@@ -97,6 +97,15 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
             </Row>
           )}
           {usbReady && <CityPresets settings={settings} place={placeOf(state.gps, value('gps.start'))} />}
+          {/* By default the iPhone takes its time zone from where it is, so a car moved far shifts its clock. */}
+          {usb && (
+            <Row className="hint-row">
+              <span className="hint">
+                The iPhone takes its time zone from its location, so its clock changes as the car crosses time zones. To
+                keep it, turn off the automatic time zone in Settings › General › Date &amp; Time on the iPhone.
+              </span>
+            </Row>
+          )}
           {!usb && value('gps.heading.send') !== 'false' && (
             <Row
               label="Heading"
