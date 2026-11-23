@@ -52,7 +52,7 @@ class UsbGpsChannel(
 
     override fun state(): ChannelState {
         if (helper() == null) return ChannelState(GpsReason.USB_HELPER_FAILED)
-        if (usbmuxSilent) return ChannelState(GpsReason.USB_NOT_READY)
+        if (usbmuxSilent) return ChannelState(GpsReason.USB_DRIVER_OFF)
         val device = attached ?: return ChannelState(GpsReason.USB_NOT_CONNECTED)
         return ChannelState(null, device = device.view())
     }

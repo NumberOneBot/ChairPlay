@@ -26,6 +26,8 @@ enum class GpsReason(val key: String) {
     USB_NOT_CONNECTED("usb-not-connected"),
     /** Plugged in but a prerequisite went (trust, Developer Mode, the image): [UsbSetupView] says which. */
     USB_NOT_READY("usb-not-ready"),
+    /** usbmux does not answer (Apple Devices closed, or no drivers): whether the cable is in cannot be known. */
+    USB_DRIVER_OFF("usb-driver-off"),
     USB_HELPER_FAILED("usb-helper-failed"),
     /** The car is nowhere yet (placed=false): the page lets the user place it. */
     NO_POSITION("no-position"),
@@ -55,6 +57,8 @@ enum class NoticeTone(val key: String) { INFO("info"), WARN("warn"), BAD("bad") 
 enum class NoticeCode(val key: String) {
     /** usb + enabled saved, no phone: the warning above Settings' content (UI-23); stays until it changes. */
     USB_UNAVAILABLE("usb-unavailable"),
+    /** usb + enabled saved, usbmux silent ([GpsReason.USB_DRIVER_OFF]): the same place, with Open Apple Devices. */
+    USB_DRIVER_OFF("usb-driver-off"),
 }
 
 data class GpsNotice(

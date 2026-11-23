@@ -12,6 +12,7 @@ export type GpsReason =
   | 'usb-setup-needed'
   | 'usb-not-connected'
   | 'usb-not-ready'
+  | 'usb-driver-off'
   | 'usb-helper-failed'
   | 'no-position'
 
@@ -31,7 +32,7 @@ export interface GpsOperation {
 
 export type NoticeTone = 'info' | 'warn' | 'bad'
 
-export type GpsNoticeCode = 'usb-unavailable'
+export type GpsNoticeCode = 'usb-unavailable' | 'usb-driver-off'
 
 export interface GpsNotice {
   id: number

@@ -11,5 +11,7 @@ export function noticeText(notice: GpsNotice): NoticeText {
   switch (notice.code) {
     case 'usb-unavailable':
       return { head: 'USB GPS unavailable', text: 'Connect your iPhone with a USB cable to resume simulation.' }
+    case 'usb-driver-off':
+      return { head: 'USB GPS unavailable', text: 'Open Apple Devices and connect your iPhone with a USB cable.' }
   }
 }

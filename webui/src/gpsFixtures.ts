@@ -62,6 +62,11 @@ export const outputs = {
     selected: 'usb', applied: 'usb', enabledIntent: true, availability: 'unavailable', reason: 'usb-not-connected',
     usbPrepared: true, rateHz: 10, notices: [notice('usb-unavailable', 'warn')],
   }),
+  /** As usbStartupMissing, but usbmux silent (Apple Devices closed): the cable may be in (owner, 2026-11-23). */
+  usbDriverOff: gpsOutput({
+    selected: 'usb', applied: 'usb', enabledIntent: true, availability: 'unavailable', reason: 'usb-driver-off',
+    usbPrepared: true, rateHz: 10, notices: [notice('usb-driver-off', 'warn')],
+  }),
   usbNoPosition: gpsOutput({
     selected: 'usb', applied: 'usb', enabledIntent: true, availability: 'unavailable', reason: 'no-position',
     usbPrepared: true, device: PHONE, rateHz: 10,

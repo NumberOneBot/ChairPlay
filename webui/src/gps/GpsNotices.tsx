@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Backend } from '../api'
 import type { GpsNotice, GpsOutput } from '../gpsApi'
 import { Message } from '../shell/controls'
+import { PhoneIcon } from './icons'
 import { noticeText } from './noticeText'
 
 /** The notices not yet gone: one with an expiresAt leaves the page then, by the clock the page has. */
@@ -21,9 +22,27 @@ export function useLiveNotices(notices: GpsNotice[]): GpsNotice[] {
 }
 
 /** One notice as a block. A reconnect that waits is the settings' own mark, not a notice. */
-export function NoticeBlock({ notice }: { notice: GpsNotice; backend?: Backend }) {
+export function NoticeBlock({ notice, backend }: { notice: GpsNotice; backend?: Backend }) {
   const { head, text } = noticeText(notice)
-  return <Message tone={notice.tone} head={head} text={text} testId={`gps-notice-${notice.code}`} />
+  return (
+    <Message tone={notice.tone} head={head} text={text} testId={`gps-notice-${notice.code}`}>
+      {/* The setup's own Open Apple Devices: its usbmux runs while the app does. */}
+      {notice.code === 'usb-driver-off' && backend && (
+        <div className="acts">
+          <button
+            type="button"
+            className="btn small"
+            title="Start Apple Devices"
+            data-testid="gps-open-apple-devices"
+            onClick={() => void backend.open('apple-devices-app')}
+          >
+            <PhoneIcon />
+            Open Apple Devices
+          </button>
+        </div>
+      )}
+    </Message>
+  )
 }
 
 /**
