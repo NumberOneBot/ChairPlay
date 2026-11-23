@@ -21,6 +21,8 @@ export function noticeText(notice: GpsNotice): NoticeText {
   switch (notice.code) {
     case 'usb-unavailable':
       return { head: 'USB GPS unavailable', text: 'Connect your iPhone with a USB cable to resume simulation.' }
+    case 'usb-driver-off':
+      return { head: 'USB GPS unavailable', text: 'Open Apple Devices and connect your iPhone with a USB cable.' }
     case 'track-unreadable': {
       // A reason this page does not know yet reads as a file it cannot read.
       const reason = notice.args.reason

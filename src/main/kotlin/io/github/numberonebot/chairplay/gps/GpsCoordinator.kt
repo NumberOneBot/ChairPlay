@@ -186,7 +186,8 @@ class GpsCoordinator(
 
     private fun resumeUsb(state: ChannelState) {
         if (state.device == null) {
-            synchronized(flows.lock) { flows.reason = GpsReason.USB_NOT_CONNECTED }
+            // The channel's own why: a silent usbmux is no missing cable.
+            synchronized(flows.lock) { flows.reason = state.reason ?: GpsReason.USB_NOT_CONNECTED }
             return
         }
         // An explicit Enable that waited for the car's place goes once the user places it (L-09), armed or not.
@@ -203,8 +204,9 @@ class GpsCoordinator(
 
     // A reconnect that waits is the settings' own mark (UiSettings' reconnect pending), not a notice of this.
     private fun keepNotices(applied: GpsMethod, enabled: Boolean) {
-        val missing = applied == GpsMethod.USB && enabled && !flows.usb.running && flows.reason == GpsReason.USB_NOT_CONNECTED
-        notices.keep(NoticeCode.USB_UNAVAILABLE, NoticeTone.WARN, missing)
+        val waiting = applied == GpsMethod.USB && enabled && !flows.usb.running
+        notices.keep(NoticeCode.USB_UNAVAILABLE, NoticeTone.WARN, waiting && flows.reason == GpsReason.USB_NOT_CONNECTED)
+        notices.keep(NoticeCode.USB_DRIVER_OFF, NoticeTone.WARN, waiting && flows.reason == GpsReason.USB_DRIVER_OFF)
     }
 
     /** Whether the car may drive: the switch on, and CarPlay in force or USB sending; USB on without a cable stands (P-06). */

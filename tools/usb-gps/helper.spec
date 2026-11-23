@@ -20,10 +20,13 @@ metadata = [entry for name in ('pymobiledevice3', 'pyimg4', 'developer_disk_imag
                                'opentelemetry-api')
             for entry in copy_metadata(name)]
 
-# Only what is foreign to the library. Its own shells and tools stay: its core imports some of them (pygments,
-# questionary), and imports inside functions are out of the self-test's sight, so trimming more risks a helper that
-# fails on the phone only.
-excluded = ['tkinter', 'pytest']
+# What the helper never runs. Each is imported only inside a function, a try with a fallback, or a path the helper
+# does not take, so the self-test cannot see a mistake here; a change to this list is tested on the phone.
+#   IPython (with jedi, parso, sqlite3): only the library's REPL and rich's Jupyter output import it.
+#   PIL: pygments' image formatter, inside a try.   chardet: requests falls back to charset_normalizer.
+#   tzdata: arrow's parser of time zone names.   sslpsk_pmd3: the Wi-Fi pairing tunnel; ours goes through
+#   CoreDeviceTunnelProxy. It also dragged in OpenSSL 1.1 DLLs from whatever folder PATH offered (Git's).
+excluded = ['tkinter', 'pytest', 'IPython', 'PIL', 'tzdata', 'chardet', 'sslpsk_pmd3']
 
 analysis = Analysis(
     [str(here / 'helper_main.py')],

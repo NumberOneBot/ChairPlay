@@ -12,6 +12,7 @@ export type GpsReason =
   | 'usb-setup-needed'
   | 'usb-not-connected'
   | 'usb-not-ready'
+  | 'usb-driver-off'
   | 'usb-helper-failed'
   | 'no-position'
 
@@ -32,7 +33,7 @@ export interface GpsOperation {
 export type NoticeTone = 'info' | 'warn' | 'bad'
 
 /** track-unreadable: the file Open… chose cannot be played, args.reason its code (gps/trackApi.ts TrackFormatReason), shown in Track playback. */
-export type GpsNoticeCode = 'usb-unavailable' | 'track-unreadable'
+export type GpsNoticeCode = 'usb-unavailable' | 'usb-driver-off' | 'track-unreadable'
 
 export interface GpsNotice {
   id: number

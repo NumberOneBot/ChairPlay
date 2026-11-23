@@ -29,6 +29,22 @@ class GpsLifecycleTest {
         assertFalse(h.carplay.running)
     }
 
+    // usbmux silent (Apple Devices closed): the cable may be in, so the warning asks for Apple Devices, not the cable.
+    @Test
+    fun `a silent usbmux keeps its own reason and warning, not the cable's`() {
+        val h = GpsHarness(usbOn)
+        h.usb.state = ChannelState(GpsReason.USB_DRIVER_OFF)
+
+        h.reconcile()
+
+        val out = h.output()
+        assertEquals(GpsReason.USB_DRIVER_OFF, out.reason)
+        assertEquals(listOf(NoticeCode.USB_DRIVER_OFF), out.notices.map { it.code })
+        h.usb.state = ChannelState(GpsReason.USB_NOT_CONNECTED)
+        h.reconcile()
+        assertEquals(listOf(NoticeCode.USB_UNAVAILABLE), h.output().notices.map { it.code })
+    }
+
     // L-05, V03: prepared but off, no cable is no warning.
     @Test
     fun `USB off without the cable shows no warning`() {

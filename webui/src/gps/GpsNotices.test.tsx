@@ -72,6 +72,28 @@ describe('GPS warning (USB unavailable)', () => {
   })
 })
 
+// usbmux silent: the warning opens Apple Devices itself, and the switch waits as for the cable (owner, 2026-11-23).
+describe('GPS warning (Apple Devices closed)', () => {
+  it('opens Apple Devices from the warning and holds the switch until usbmux answers', async () => {
+    const { backend, update } = await openSection(gpsState(outputs.usbDriverOff))
+    expect(screen.queryAllByTestId('gps-notice-usb-unavailable')).toHaveLength(0)
+    const warning = screen.getByTestId('gps-notice-usb-driver-off')
+    const open = control('gps-open-apple-devices', 'button')
+    expect(warning.contains(open)).toBe(true)
+    const enable = control('gps-enable', 'switch') as HTMLInputElement
+    expect(enable.checked).toBe(true)
+    expect(enable.disabled).toBe(true)
+
+    fireEvent.click(open)
+    expect(backend.opened).toEqual(['apple-devices-app'])
+    expect(backend.gpsCommands).toEqual([])
+
+    update(gpsState(outputs.usbOn))
+    expect(screen.queryAllByTestId('gps-notice-usb-driver-off')).toHaveLength(0)
+    expect((control('gps-enable', 'switch') as HTMLInputElement).disabled).toBe(false)
+  })
+})
+
 // D9: an operation holds the switch and nothing else.
 describe('the window while an operation runs', () => {
   it('holds the switch only, on every part of the window', async () => {

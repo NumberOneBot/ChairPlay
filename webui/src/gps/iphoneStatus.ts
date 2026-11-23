@@ -5,6 +5,7 @@ const REASON_TEXT: Partial<Record<NonNullable<GpsOutput['reason']>, string>> = {
   'usb-setup-needed': 'Setup required',
   'usb-not-connected': 'Not connected over USB',
   'usb-not-ready': 'Not ready, open USB setup',
+  'usb-driver-off': 'Not ready, open Apple Devices',
   'usb-helper-failed': 'The USB service stopped',
   'no-position': 'Waiting for a position',
 }

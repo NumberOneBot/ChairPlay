@@ -26,6 +26,8 @@ enum class GpsReason(val key: String) {
     USB_NOT_CONNECTED("usb-not-connected"),
     /** Plugged in but a prerequisite went (trust, Developer Mode, the image): [UsbSetupView] says which. */
     USB_NOT_READY("usb-not-ready"),
+    /** usbmux does not answer (Apple Devices closed, or no drivers): whether the cable is in cannot be known. */
+    USB_DRIVER_OFF("usb-driver-off"),
     USB_HELPER_FAILED("usb-helper-failed"),
     /** The car is nowhere yet (placed=false): the page lets the user place it. */
     NO_POSITION("no-position"),
@@ -57,6 +59,8 @@ enum class NoticeCode(val key: String) {
     USB_UNAVAILABLE("usb-unavailable"),
     /** The file track playback's Open… chose cannot be played, args.reason saying why; stays until the next file. */
     TRACK_UNREADABLE("track-unreadable"),
+    /** usb + enabled saved, usbmux silent ([GpsReason.USB_DRIVER_OFF]): the same place, with Open Apple Devices. */
+    USB_DRIVER_OFF("usb-driver-off"),
 }
 
 data class GpsNotice(

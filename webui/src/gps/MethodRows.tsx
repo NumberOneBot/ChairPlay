@@ -9,13 +9,20 @@ const METHODS: readonly Choice[] = [
   ['usb', 'USB'],
 ]
 
-/** USB saved as the method and the switch as on, with the phone off the cable: the switch holds, checked, until it is back. */
+// What enables the held switch, by why the phone is out of reach.
+const WAIT_TITLE: Partial<Record<NonNullable<GpsOutput['reason']>, string>> = {
+  'usb-not-connected': 'Connect your iPhone with a USB cable to resume simulation',
+  'usb-driver-off': 'Open Apple Devices and connect your iPhone with a USB cable to resume simulation',
+}
+
+/** USB saved as the method and the switch as on, with the phone out of reach: the switch holds, checked, until it is back. */
 export function waitsForCable(output: GpsOutput): boolean {
   return (
     output.enabledIntent &&
     output.selected === 'usb' &&
     output.availability !== 'ready' &&
-    output.reason === 'usb-not-connected'
+    output.reason !== null &&
+    output.reason in WAIT_TITLE
   )
 }
 
@@ -25,9 +32,10 @@ export function EnableRow({ output, backend, pending }: { output: GpsOutput; bac
   const waiting = waitsForCable(output)
   const busy = output.operation !== null
   return (
-    <Row title={waiting ? 'Connect your iPhone with a USB cable to resume simulation' : undefined}>
+    <Row title={waiting ? WAIT_TITLE[output.reason!] : undefined}>
       <Switch
         label="Enable signal simulation"
+        testId="gps-enable"
         checked={output.enabledIntent}
         disabled={waiting || busy}
         onChange={(enabled) => void backend.gpsEnabled(enabled)}
