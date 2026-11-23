@@ -34,9 +34,9 @@ Roboto Flex Wide (the gauges)     instance of    SIL OFL 1.1 (RobotoFlex-OFL.txt
                                                  https://github.com/googlefonts/roboto-flex
   (in chairplay.jar's fonts/)
 JavaCPP                           1.5.12         Apache-2.0 OR GPL-2.0 with Classpath Exception; used under
-  (+ windows-x86_64 natives)                     Apache-2.0 (JavaCPP-LICENSE.txt)  https://github.com/bytedeco/javacpp
+  (+ jnijavacpp.dll)                             Apache-2.0 (JavaCPP-LICENSE.txt)  https://github.com/bytedeco/javacpp
 JavaCPP Presets for FFmpeg        7.1.1-1.5.12   Apache-2.0 for the bindings      https://github.com/bytedeco/javacpp-presets
-  (+ windows-x86_64 natives)                     (JavaCPP-LICENSE.txt); the FFmpeg libraries in it are LGPL-3.0-or-later
+  (+ jni* DLLs and FFmpeg DLLs)                  (JavaCPP-LICENSE.txt); the FFmpeg libraries in it are LGPL-3.0-or-later
 React, React DOM, Scheduler       19.3.0,        MIT (React-MIT.txt)              https://react.dev/
   (the start and settings screens  0.28.0
   in chairplay.jar's ui/ folder, bundled by Vite)
@@ -48,4 +48,4 @@ Microsoft WebView2 SDK            1.0.4258.31    BSD-3-Clause-style Microsoft li
 
 The WebView2 runtime itself (Microsoft Edge WebView2) is part of Windows and is not shipped with the app.
 
-FFmpeg (avcodec-61, avformat-61, avutil-59, avfilter-10, avdevice-61, swresample-5, swscale-8 DLLs inside ffmpeg-7.1.1-1.5.12-windows-x86_64.jar) - https://ffmpeg.org/ The bundled build was configured with --enable-version3 and without --enable-gpl or --enable-nonfree (read from the configuration string embedded in avcodec-61.dll), so it is licensed under the GNU LGPL version 3 or later: licenses/LGPL-3.0.txt (it refers to the GNU GPL v3, which is the LICENSE file in this folder). The DLLs are shared libraries loaded at run time from that jar, so they can be replaced by another build of the same API. FFmpeg source for this version: https://ffmpeg.org/releases/ and the build scripts at https://github.com/bytedeco/javacpp-presets/tree/1.5.12/ffmpeg. Libraries linked into that build carry their own licences (libopus, libvpx, libaom, openh264, libwebp, OpenSSL, lame, speex and others); see the FFmpeg and bytedeco presets pages above.
+FFmpeg (avcodec-61, avutil-59, swresample-5, swscale-8 DLLs next to ChairPlay.exe, taken from ffmpeg-7.1.1-1.5.12-windows-x86_64.jar) - https://ffmpeg.org/ The bundled build was configured with --enable-version3 and without --enable-gpl or --enable-nonfree (read from the configuration string embedded in avcodec-61.dll), so it is licensed under the GNU LGPL version 3 or later: licenses/LGPL-3.0.txt (it refers to the GNU GPL v3, which is the LICENSE file in this folder). The DLLs are shared libraries loaded at run time from that folder, so they can be replaced by another build of the same API. FFmpeg source for this version: https://ffmpeg.org/releases/ and the build scripts at https://github.com/bytedeco/javacpp-presets/tree/1.5.12/ffmpeg. Libraries linked into that build carry their own licences (libopus, libvpx, libaom, openh264, libwebp, OpenSSL, lame, speex and others); see the FFmpeg and bytedeco presets pages above.

@@ -4,6 +4,7 @@
 
 interface FileOps {
     @get:Inject val fs: FileSystemOperations
+    @get:Inject val archives: ArchiveOperations
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -56,10 +57,26 @@ val appImageModules = listOf(
     "java.net.http",
 )
 
+// The JavaCPP natives jars stay out of the image's app\: from a jar JavaCPP extracts its DLLs into the user's
+// %USERPROFILE%\.javacpp\cache on the first start (some 50 MB) and leaves each older version there. jpackageImage puts
+// the DLLs the app loads next to ChairPlay.exe instead, and the launcher's options load them there. The jars also
+// hold FFmpeg libraries the app never loads (avformat, avfilter, avdevice, the ffmpeg and ffprobe exes).
+val javacppNatives = "*-windows-x86_64.jar"
+// avcodec needs swresample; the jni* DLLs are the bindings of the libraries, jnijavacpp is JavaCPP's own.
+val javacppDlls = listOf("avcodec", "avutil", "swresample", "swscale").flatMap { listOf("**/$it-*.dll", "**/jni$it.dll") } +
+    "**/jnijavacpp.dll"
+
+val imageJars by tasks.registering(Sync::class) {
+    dependsOn("installDist")
+    from(layout.buildDirectory.dir("install/chairplay/lib")) { exclude(javacppNatives) }
+    into(layout.buildDirectory.dir("jpackage-input"))
+}
+
 val jpackageImage by tasks.registering(Exec::class) {
     group = "distribution"
     description = "Builds build/jpackage/ChairPlay with the launcher ChairPlay.exe."
-    dependsOn("installDist")
+    dependsOn("installDist", imageJars)
+    val imageInput = layout.buildDirectory.dir("jpackage-input")
     val launcher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(17) }
     val installDir = layout.buildDirectory.dir("install/chairplay")
     val outDir = layout.buildDirectory.dir("jpackage")
@@ -80,7 +97,7 @@ val jpackageImage by tasks.registering(Exec::class) {
             // The exe's file version takes numbers only: a pre-release (1.1.0-rc1) goes in as 1.1.0.
             "--app-version", project.extra["appNumericVersion"] as String? ?: "0.0.0",
             "--vendor", "Oleksiy Strelets",
-            "--input", installDir.get().dir("lib").asFile.path,
+            "--input", imageInput.get().asFile.path,
             "--main-jar", "chairplay.jar",
             "--main-class", "io.github.numberonebot.chairplay.MainKt",
             "--arguments", "run",
@@ -88,6 +105,9 @@ val jpackageImage by tasks.registering(Exec::class) {
             "--add-modules", appImageModules.joinToString(","),
             "--dest", outDir.get().asFile.path,
             *socketHandleOpens.flatMap { listOf("--java-options", it) }.toTypedArray(),
+            // JavaCPP loads the DLLs from the library paths (runtime\bin, the exe's folder), and makes no cache folder.
+            "--java-options", "-Dorg.bytedeco.javacpp.pathsFirst=true",
+            "--java-options", "-Dorg.bytedeco.javacpp.cacheLibraries=false",
         )
     }
     // jpackage on JDK 17 has no --app-content, so notices are copied into the image afterwards, and so are the
@@ -109,6 +129,13 @@ val jpackageImage by tasks.registering(Exec::class) {
             from(installDir.get().file("bin/chairplay_maneuver.dll"))
             from(installDir.get().file("bin/chairplay_audio.dll"))
             from(installDir.get().file("bin/chairplay_bridge.dll"))
+            into(outDir.get().dir("ChairPlay"))
+        }
+        ops.fs.copy {
+            installDir.get().dir("lib").asFileTree.matching { include(javacppNatives) }.forEach { from(ops.archives.zipTree(it)) }
+            include(javacppDlls)
+            eachFile { path = name }
+            includeEmptyDirs = false
             into(outDir.get().dir("ChairPlay"))
         }
         ops.fs.copy {

@@ -2,6 +2,14 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.1.2 - Unreleased
+
+### Changed
+
+- The installer is 77 MB instead of 93 MB, and the portable zip 92 MB instead of 104 MB: they leave out the FFmpeg libraries ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
+
+[Release notes](docs/RELEASE-NOTES-1.1.2.md) · [Changes since v1.1.1](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.1...v1.1.2)
+
 ## 1.1.1 - 2026-11-23
 
 ### Changed
