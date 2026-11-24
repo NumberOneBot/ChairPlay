@@ -265,8 +265,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         appGps.coordinator.connected()
     }
     Runtime.getRuntime().addShutdownHook(Thread {
-        // The window is gone at once; the sound fades over the seconds the session takes to end.
-        audio.fadeOut()
+        // The window and the shared picture are gone at once; the sound fades over the seconds the session takes to end.
+        audio.closing()
         appControls.close()
         // A USB simulation ends as an explicit stop's does, within its budget; the switch stays saved.
         appGps.close()

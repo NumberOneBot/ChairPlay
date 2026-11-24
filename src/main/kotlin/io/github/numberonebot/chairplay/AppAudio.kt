@@ -53,6 +53,15 @@ internal class AppAudio(dir: Path, config: DesktopConfig, private val window: Vi
     /** Fades the sound out as long as the music fades in, for a reconnect or a close. */
     fun fadeOut() = renderer.fadeOut()
 
+    /**
+     * The app closes: the sound fades out, and the shared picture closes at once (state 0 for a game), not after the
+     * seconds the session takes to end.
+     */
+    fun closing() {
+        fadeOut()
+        frameOutput.close()
+    }
+
     /** Whose screen a game showing the shared picture shows, CarPlay's or its car's own, as a car decides it. */
     val bridgeScreen = BridgeScreen(frameOutput::screen)
 
