@@ -15,6 +15,7 @@ New features and fixed bugs in ChairPlay.
 
 - **Drive from other apps** on the Experiments page is now **Receive from other apps** (`bridge.telemetry`, was `gps.external`), and it works without GPS spoofing. **Publish as a shared texture** is saved as `bridge.picture` (was `display.share`). Turn both on again after the update. A telemetry record moves the GPS car only with its new position flag (bit 8) set.
 - With CarPlay's GPS, each update gives the iPhone the car's position, course, speed, and wheel speed of one moment, 10 times a second by default instead of 4 (`gps.rate`; a settings file that already sets it keeps its rate). Before, the wheel speed went in batches sampled on a timer of its own.
+- Internationalization begins, for versions on other systems such as Linux: the settings page takes its texts that name Windows, the controls only some systems have, and its buttons to the system's settings by the system ChairPlay runs on. Nothing changes on Windows.
 
 [Release notes](docs/RELEASE-NOTES-1.1.3.md) · [Changes since v1.1.2](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.2...v1.1.3)
 
