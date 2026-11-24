@@ -135,17 +135,22 @@ begin
     Result := SuppressibleMsgBox(RunningMessage, mbError, MB_RETRYCANCEL, IDCANCEL) = IDRETRY;
 end;
 
-// Closes the ChairPlay running from {app} as its own exit does: taskkill without /F sends its window WM_CLOSE, and the
-// app ends the CarPlay session and lets go of ChairPlay.lock before it exits. Only one copy runs at a time, so the only
-// ChairPlay.exe is this one. Waits up to CloseWaitMillis for it to exit; Exec keeps the window answering meanwhile. A
-// copy still running is left to WaitUntilClosed.
+// Closes the ChairPlay running from {app} as its own exit does: taskkill without /F sends its windows WM_CLOSE, and the
+// app ends the CarPlay session and lets go of ChairPlay.lock before it exits. Only one copy runs at a time. Started from
+// Explorer, jpackage's launcher runs that copy as two ChairPlay.exe: itself, waiting, and the app as its child. Only the
+// app is closed, the ChairPlay.exe that is no other's parent: a WM_CLOSE to the launcher breaks its message loop
+// ("GetMessage() failed", error 1400), and its message box then holds ChairPlay.exe. The launcher ends with the app.
+// Waits up to CloseWaitMillis for both to exit; Exec keeps the window answering meanwhile. A copy still running is left
+// to WaitUntilClosed.
 procedure StopRunning();
 var
   ResultCode: Integer;
 begin
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/IM ChairPlay.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), Format('-NoProfile -NonInteractive -Command ' +
-    '"Wait-Process -Name ChairPlay -Timeout %d -ErrorAction SilentlyContinue"', [CloseWaitMillis div 1000]),
+    '"$all = @(Get-CimInstance Win32_Process | Where-Object Name -eq ''ChairPlay.exe''); ' +
+    '$all | Where-Object { $all.ParentProcessId -notcontains $_.ProcessId } | ' +
+    'ForEach-Object { taskkill.exe /PID $_.ProcessId }; ' +
+    'Wait-Process -Name ChairPlay -Timeout %d -ErrorAction SilentlyContinue"', [CloseWaitMillis div 1000]),
     '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 

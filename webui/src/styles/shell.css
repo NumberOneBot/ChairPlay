@@ -46,6 +46,14 @@ html:has(.shell) {
  */
 .shell {
   transition: opacity 150ms ease;
+  /* A page drawn anew has no opacity to move from: the settings, first shown after the waiting screen, rise as well. */
+  animation: shell-rise 150ms ease;
+}
+
+@keyframes shell-rise {
+  from {
+    opacity: 0;
+  }
 }
 
 .shell.away {

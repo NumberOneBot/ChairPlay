@@ -2,7 +2,7 @@
 
 New features and fixed bugs in ChairPlay.
 
-## 1.1.2 - Unreleased
+## 1.1.3 - Unreleased
 
 ### Added
 
@@ -13,12 +13,24 @@ New features and fixed bugs in ChairPlay.
 
 ### Changed
 
-- The installer is 70 MB instead of 93 MB, and the portable zip 85 MB instead of 104 MB: they leave out the FFmpeg libraries and the BouncyCastle classes ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
 - **Drive from other apps** on the Experiments page is now **Receive from other apps** (`bridge.telemetry`, was `gps.external`), and it works without GPS spoofing; turn it on again after the update. A telemetry record moves the GPS car only with its new position flag (bit 8) set.
+
+[Release notes](docs/RELEASE-NOTES-1.1.3.md) · [Changes since v1.1.2](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.2...v1.1.3)
+
+## 1.1.2 - 2026-11-24
+
+### Added
+
+- With USB GPS ready, the GPS page says that the iPhone takes its time zone from its location, so its clock changes as the car crosses time zones, and that turning off the automatic time zone on the iPhone keeps it.
+
+### Changed
+
+- The installer is 72 MB instead of 93 MB, and the portable zip 87 MB instead of 104 MB: they leave out the FFmpeg libraries and the BouncyCastle classes ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
 
 ### Fixed
 
 - **Forget** on the Connection page left the CarPlay session running, music and all, and the iPhone's pairing in force until ChairPlay restarted. It now ends the session and drops the pairing at once.
+- Updating or uninstalling ChairPlay while it ran from the Start menu stopped with a "GetMessage() failed" message, and Setup could not replace ChairPlay.exe until it was closed. Setup now closes only ChairPlay itself, and its launcher ends with it.
 - After **Forget**, Get started counted the iPhone as paired as long as Windows still listed it in its Bluetooth devices, though that pairing no longer works once the iPhone forgets the car, and ChairPlay kept calling the iPhone in vain. **Pair the iPhone** now stays open and says to remove the iPhone in Windows' Bluetooth settings, with **Open Bluetooth settings**, and to forget the car on the iPhone.
 
 [Release notes](docs/RELEASE-NOTES-1.1.2.md) · [Changes since v1.1.1](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.1...v1.1.2)
