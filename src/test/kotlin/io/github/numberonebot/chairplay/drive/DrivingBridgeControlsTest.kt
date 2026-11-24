@@ -1,12 +1,15 @@
 package io.github.numberonebot.chairplay.drive
 
+import io.github.numberonebot.chairplay.bridge.BridgeTouch
 import io.github.numberonebot.chairplay.bridge.GameControls
+import io.github.numberonebot.chairplay.bridge.GameTouch
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import io.github.numberonebot.chairplay.bridge.TelemetryRecord
 import io.github.numberonebot.chairplay.config.CarDisplay
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.phone.Dock
 import io.github.numberonebot.chairplay.phone.KnobInput
+import io.github.numberonebot.chairplay.phone.TouchPoint
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -148,6 +151,32 @@ class DrivingBridgeControlsTest {
         driving.step()
 
         assertEquals(listOf(true, false, null, true, null, false, null), themes)
+    }
+
+    // A game's finger works paused too; a record without it, the game quiet for half a second, or the switch off lifts
+    // it, as the knob is let go.
+    @Test
+    fun `a game's touch is lifted as the knob is let go`() {
+        val touches = mutableListOf<TouchPoint>()
+        val driving = driving(on.copy(enabled = false)).also { it.bridgeTouch.send = { point -> touches += point } }.found()
+        fun touch(counter: Int, touch: GameTouch?) {
+            source.record = record(counter, paused = true).copy(touch = touch)
+            driving.step()
+        }
+        touch(2, GameTouch(0.5, 0.5, true))
+        touch(3, null)
+        touch(4, GameTouch(0.25, 0.375, true))
+        at(0.6)
+        driving.step()
+        touch(5, GameTouch(0.75, 0.875, true))
+        driving.saved(on.copy(enabled = false, external = false), setOf("bridge.telemetry"))
+        driving.step()
+
+        fun point(x: Double, y: Double, down: Boolean) = TouchPoint(BridgeTouch.ID, x, y, down)
+        assertEquals(
+            listOf(0.5 to 0.5, 0.25 to 0.375, 0.75 to 0.875).flatMap { (x, y) -> listOf(point(x, y, true), point(x, y, false)) },
+            touches,
+        )
     }
 
     // A game's car display goes to the app once per change, of its driving side or dock alone too, the GPS on or off:

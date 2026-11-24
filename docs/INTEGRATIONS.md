@@ -136,10 +136,10 @@ One app writes at a time. Two writers at once are not supported.
 |---:|---|---|---|
 | 0 | u32 | `magic` | `0x54435043` ("CPCT" in memory); 0 while no app has written |
 | 4 | u16 | `version` | 1 |
-| 6 | u16 | `size` | Bytes of defined fields: 144 in version 1 (96 before the pedals and the wheel, 108 before the top speed, 112 before the controls, 128 before the car's display, 140 before the display's options) |
+| 6 | u16 | `size` | Bytes of defined fields: 156 in version 1 (96 before the pedals and the wheel, 108 before the top speed, 112 before the controls, 128 before the car's display, 140 before the display's options, 144 before the touch) |
 | 8 | u32 | `seq` | Seqlock: odd while the app writes |
 | 12 | u32 | `counter` | The app adds one with each update; ChairPlay judges freshness by its changes, not by a clock |
-| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given. Bit 8 (256): the position is given: `speed`, `heading`, `latitude`, and `longitude`. Bit 9 (512): the controls are given: `buttons` and the three steps. Bit 10 (1024): the car's display is given: `display_width`, `display_height`, `display_width_mm`, and `display_options`. Bit 11 (2048): the car's theme is given. Bit 12 (4096): the theme is dark, light without it; read only with bit 11 |
+| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given. Bit 8 (256): the position is given: `speed`, `heading`, `latitude`, and `longitude`. Bit 9 (512): the controls are given: `buttons` and the three steps. Bit 10 (1024): the car's display is given: `display_width`, `display_height`, `display_width_mm`, and `display_options`. Bit 11 (2048): the car's theme is given. Bit 12 (4096): the theme is dark, light without it; read only with bit 11. Bit 13 (8192): the touch is given: `touch_x`, `touch_y`, and `touch_down` |
 | 20 | i32 | `gear` | −1 reverse, 0 neutral, 1 and up forward gears |
 | 24 | f64 | `speed` | m/s, signed: below 0 is reversing. Required with bit 8 |
 | 32 | f64 | `heading` | Degrees clockwise from true north, 0 to 360. Required with bit 8 |
@@ -160,7 +160,10 @@ One app writes at a time. Two writers at once are not supported.
 | 132 | u32 | `display_height` | CarPlay's picture height, px, even |
 | 136 | u32 | `display_width_mm` | The display's physical width, mm, from which the iPhone picks CarPlay's scale |
 | 140 | u32 | `display_options` | Bit 0 (1): the driver sits on the right. Bits 1–2: the dock, 0 (0) auto, 1 (2) driver side, 2 (4) bottom |
-| 144 | — | reserved | Write zero, up to byte 256 |
+| 144 | f32 | `touch_x` | The finger's place across CarPlay's picture, 0 at its left edge to 1 at its right; see [Touch](#touch) |
+| 148 | f32 | `touch_y` | The finger's place down the picture, 0 at its top edge to 1 at its bottom |
+| 152 | u32 | `touch_down` | 1 while the finger is on the screen, 0 when it is lifted |
+| 156 | — | reserved | Write zero, up to byte 256 |
 
 ### Writing
 
@@ -227,6 +230,16 @@ With bit 11, the app sets CarPlay's look: dark with bit 12, light without it, as
 
 - Keep the bits in every update while you set the theme, in menus and while paused too.
 - ChairPlay's own **Theme** setting is in force again when a record comes without bit 11, when `counter` stops changing for 0.5 s, and when **Receive from other apps** is turned off.
+
+### Touch
+
+With bit 13, the app touches CarPlay's picture as a click in ChairPlay's window does, for example where the player's hand meets the car's screen. `touch_x` and `touch_y` say where, as fractions of the picture from its top-left corner, and `touch_down` says whether the finger is on the screen. A move while it is down is a drag.
+
+- Keep the bit and the fields in every update while you touch, as for the buttons: ChairPlay sends only the changes, a press, a move, or a release.
+- `touch_x` and `touch_y` must be finite numbers from 0 to 1; otherwise the touch is ignored, and the rest of the record stands.
+- ChairPlay reads the touch only in a record whose `size` is 156 or more.
+- The finger is lifted when a record comes without bit 13, when `counter` stops changing for 0.5 s, and when **Receive from other apps** is turned off. The touch works while the app is paused (bit 2) too.
+- One finger at a time: a click in ChairPlay's window lifts the app's finger, and the app's next press or move lifts the window's.
 - The status file's `width` and `height` show the picture's new size once the iPhone sends it.
 
 ### What ChairPlay does with the position
@@ -281,6 +294,7 @@ These snippets use [`bridge_layout.h`](../native/bridge/bridge_layout.h), whose 
 #define CPB_TELEMETRY_DISPLAY 1024u
 #define CPB_TELEMETRY_THEME 2048u
 #define CPB_TELEMETRY_DARK 4096u
+#define CPB_TELEMETRY_TOUCH 8192u
 
 #define CPB_BUTTON_LEFT 1u
 #define CPB_BUTTON_RIGHT 2u
@@ -333,7 +347,7 @@ struct cpb_status {
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 144 */
+    uint16_t size;              /*   6: 156 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -357,7 +371,10 @@ struct cpb_telemetry {
     uint32_t display_height;    /* 132: its height, px, even */
     uint32_t display_width_mm;  /* 136: the display's width, mm, for CarPlay's scale */
     uint32_t display_options;   /* 140: CPB_DISPLAY_RIGHT_HAND_DRIVE, one CPB_DISPLAY_DOCK_* */
-    uint8_t reserved[112];      /* 144 */
+    float touch_x;              /* 144: the finger, 0 to 1 of CarPlay's picture from its left */
+    float touch_y;              /* 148: 0 to 1 from its top */
+    uint32_t touch_down;        /* 152: 1 while the finger is on the screen, 0 lifted */
+    uint8_t reserved[100];      /* 156 */
 };
 ```
 

@@ -9,6 +9,7 @@ import io.github.numberonebot.chairplay.input.ControlsConfig
 import io.github.numberonebot.chairplay.input.KeyControls
 import io.github.numberonebot.chairplay.input.KnobOwners
 import io.github.numberonebot.chairplay.input.PageKeys
+import io.github.numberonebot.chairplay.input.TouchQueue
 import io.github.numberonebot.chairplay.input.CarPlayTextInput
 import io.github.numberonebot.chairplay.media.Volume
 import io.github.numberonebot.chairplay.media.VideoWindow
@@ -61,6 +62,15 @@ internal class AppControls(
         // A game's pause, its menus, pauses the iPhone's music as a car switched off does.
         driving.bridgePause.send = { send(it) }
         driving.bridgePause.playing = { playing() }
+        // A game's finger goes as the window's clicks do, in order with them on the touch sender, with a queue of its own
+        // so neither's moves replace the other's.
+        val gameTouches = TouchQueue()
+        driving.bridgeTouch.send = { point ->
+            if (active() != null) {
+                gameTouches.offer(point)
+                touchSender.execute { gameTouches.poll()?.let { active()?.control?.touch(listOf(it)) } }
+            }
+        }
         // A game's car display, sent as its driving starts, holds until the app restarts; a session running takes it
         // at once, through a reconnect (owner, 2026-11-24).
         driving.carDisplay = { display ->

@@ -73,6 +73,9 @@ class Driving(
     /** The game's pause, which pauses the iPhone's music ([BridgePause]). */
     val bridgePause get() = game.pause
 
+    /** The game's finger on the picture, which the app sends as the window's clicks ([BridgeTouch.send]). */
+    val bridgeTouch get() = game.touch
+
     /** Hears the game's car display once per change ([GameTelemetry.display]). */
     var carDisplay by game::display
 

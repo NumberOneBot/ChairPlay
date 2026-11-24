@@ -8,7 +8,7 @@ New features and fixed bugs in ChairPlay.
 
 - Another app on this PC can work CarPlay through the telemetry file: the knob, select, back, home, media, calls, Siri, the AltScreen map's zoom, and ChairPlay's volume. Nothing needs to be bound in ChairPlay, and no global shortcut is needed while that app has the keyboard. See [Integrations](docs/INTEGRATIONS.md).
 - Another app that says it is paused pauses the iPhone's music as a car switched off does, and plays it again as the app goes on.
-- Another app can set CarPlay's display for the car it shows, its picture's size and physical width, the driver side, and the dock, through the telemetry file: ChairPlay reconnects to take it, and keeps it until it restarts, its own display settings unchanged. It can also set CarPlay's light or dark theme, which changes at once, without a reconnect.
+- Another app can set CarPlay's display for the car it shows, its picture's size and physical width, the driver side, and the dock, through the telemetry file: ChairPlay reconnects to take it, and keeps it until it restarts, its own display settings unchanged. It can also set CarPlay's light or dark theme, which changes at once, without a reconnect, and touch CarPlay's picture as a click in the window does.
 - The shared picture's status file says whether the app's car display shows CarPlay or the car's own screen, as a car decides it: the armchair (or Back on CarPlay's home screen) goes to the car's own screen, Siri and calls show CarPlay while they last, and the app's own CarPlay button goes back to CarPlay.
 
 ### Changed

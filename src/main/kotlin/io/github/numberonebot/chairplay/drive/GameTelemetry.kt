@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.drive
 
 import io.github.numberonebot.chairplay.bridge.BridgeControls
 import io.github.numberonebot.chairplay.bridge.BridgePause
+import io.github.numberonebot.chairplay.bridge.BridgeTouch
 import io.github.numberonebot.chairplay.bridge.External
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import io.github.numberonebot.chairplay.config.CarDisplay
@@ -15,6 +16,7 @@ import io.github.numberonebot.chairplay.config.CarDisplay
 internal class GameTelemetry(private val open: () -> TelemetryInput, private val wake: () -> Unit) {
     val controls = BridgeControls()
     val pause = BridgePause()
+    val touch = BridgeTouch()
 
     /** Hears the game's car display once per change, on the window loop: the app puts it in force and reconnects. */
     @Volatile var display: (CarDisplay) -> Unit = {}
@@ -47,7 +49,8 @@ internal class GameTelemetry(private val open: () -> TelemetryInput, private val
         val fresh = synchronized(lock) { reader?.fresh }
         controls.update(fresh?.controls)
         pause.update(fresh?.paused)
-        // As the knob: a record without it or a game quiet for half a second gives the look back.
+        // As the knob: a record without them or a game quiet for half a second lifts the finger and gives the look back.
+        touch.update(fresh?.touch)
         dark(fresh?.dark)
         fresh?.display?.takeIf { it != lastDisplay }?.let {
             lastDisplay = it
@@ -69,7 +72,7 @@ internal class GameTelemetry(private val open: () -> TelemetryInput, private val
         else -> DriveControl.GAMEPAD_POLL_SECONDS
     }
 
-    /** bridge.telemetry off: the file closes, and the knob and the look the game held are let go. */
+    /** bridge.telemetry off: the file closes, and the knob, the finger and the look the game held are let go. */
     fun close() {
         synchronized(lock) {
             reader?.close()
@@ -77,6 +80,7 @@ internal class GameTelemetry(private val open: () -> TelemetryInput, private val
             there = false
         }
         controls.update(null)
+        touch.update(null)
         dark(null)
     }
 

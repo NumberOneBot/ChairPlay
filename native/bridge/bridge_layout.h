@@ -26,6 +26,7 @@
 #define CPB_TELEMETRY_DISPLAY 1024u
 #define CPB_TELEMETRY_THEME 2048u
 #define CPB_TELEMETRY_DARK 4096u
+#define CPB_TELEMETRY_TOUCH 8192u
 
 /* cpb_telemetry.buttons: held while set. The first seven hold CarPlay's knob, the rest act as they turn on. */
 #define CPB_BUTTON_LEFT 1u
@@ -81,7 +82,7 @@ struct cpb_status {
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 144 */
+    uint16_t size;              /*   6: 156 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -105,7 +106,10 @@ struct cpb_telemetry {
     uint32_t display_height;    /* 132: its height, px, even */
     uint32_t display_width_mm;  /* 136: the display's width, mm, for CarPlay's scale */
     uint32_t display_options;   /* 140: CPB_DISPLAY_RIGHT_HAND_DRIVE, one CPB_DISPLAY_DOCK_* */
-    uint8_t reserved[112];      /* 144 */
+    float touch_x;              /* 144: the finger, 0 to 1 of CarPlay's picture from its left */
+    float touch_y;              /* 148: 0 to 1 from its top */
+    uint32_t touch_down;        /* 152: 1 while the finger is on the screen, 0 lifted */
+    uint8_t reserved[100];      /* 156 */
 };
 
 static_assert(sizeof(struct cpb_status) == 256, "status size");
@@ -158,6 +162,9 @@ static_assert(offsetof(struct cpb_telemetry, display_width) == 128, "display_wid
 static_assert(offsetof(struct cpb_telemetry, display_height) == 132, "display_height");
 static_assert(offsetof(struct cpb_telemetry, display_width_mm) == 136, "display_width_mm");
 static_assert(offsetof(struct cpb_telemetry, display_options) == 140, "display_options");
-static_assert(offsetof(struct cpb_telemetry, reserved) == 144, "telemetry reserved");
+static_assert(offsetof(struct cpb_telemetry, touch_x) == 144, "touch_x");
+static_assert(offsetof(struct cpb_telemetry, touch_y) == 148, "touch_y");
+static_assert(offsetof(struct cpb_telemetry, touch_down) == 152, "touch_down");
+static_assert(offsetof(struct cpb_telemetry, reserved) == 156, "telemetry reserved");
 
 #endif
