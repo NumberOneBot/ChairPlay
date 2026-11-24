@@ -10,7 +10,7 @@ New features and fixed bugs in ChairPlay.
 
 ### Changed
 
-- The installer is 70 MB instead of 93 MB, and the portable zip 85 MB instead of 104 MB: they leave out the FFmpeg libraries and the BouncyCastle classes ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
+- The installer is 72 MB instead of 93 MB, and the portable zip 87 MB instead of 104 MB: they leave out the FFmpeg libraries and the BouncyCastle classes ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
 
 ### Fixed
 
