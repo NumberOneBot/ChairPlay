@@ -16,8 +16,11 @@ data class GpsSettings(
     /** gps.heading.send: whether the car's heading goes as the course in the position sentences. */
     val sendHeading: Boolean = true,
     val car: CarSpec = CarSpec(),
-    /** Experiments: fixes a second on the tunnel (the iPhone asks for 4), and which sentences carry them. */
-    val rate: Int = 4,
+    /**
+     * Experiments: updates a second on the tunnel, each the position, course, speed and wheel speed of one moment (10 by
+     * default; the iPhone asks for 4), and which sentences carry them.
+     */
+    val rate: Int = 10,
     val nmea: NmeaDialect = NmeaDialect.CLASSIC,
     val framing: NmeaFraming = NmeaFraming.PARAMETERS,
     /** How large drive mode's gauges show, gps.gauges. */
@@ -28,7 +31,10 @@ data class GpsSettings(
     val wheel: WheelMode = WheelMode.STEERING,
     /** gps.units: the speedometer scale and speed readouts; applied immediately. */
     val units: SpeedUnits = SpeedUnits.METRIC,
-    /** gps.external: whether a game's telemetry drives the car while it sends, instead of the gamepad and keys. */
+    /**
+     * bridge.telemetry: whether a game's telemetry file is read, its controls sent and, with the GPS on, its place
+     * driving the car while it sends one, instead of the gamepad and keys.
+     */
     val external: Boolean = false,
     /** gps.method: the channel to the iPhone, CarPlay's location messages or USB developer simulation. */
     val method: GpsMethod = GpsMethod.CARPLAY,

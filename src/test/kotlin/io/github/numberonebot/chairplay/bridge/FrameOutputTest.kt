@@ -35,6 +35,27 @@ class FrameOutputTest {
         assertEquals(2, sink.state)
     }
 
+    // Whose screen a game shows goes to it through the status file, by the worker: the latest one, and again whenever
+    // sharing turns on, as the native side starts each status at CarPlay's.
+    @Test fun `the screen's owner reaches the sink, the latest one, and again as sharing turns on`() {
+        val sink = FakeFrameSink()
+        val output = output(sink)
+        output.screen(1)
+        output.enabled = true
+        output.pass(0)
+        assertEquals(listOf("open", "screen 1"), sink.events)
+        output.screen(0)
+        output.screen(1)
+        output.screen(0)
+        output.pass(0)
+        assertEquals(listOf("open", "screen 1", "screen 0"), sink.events)
+        output.screen(1)
+        output.enabled = false
+        output.enabled = true
+        output.pass(0)
+        assertEquals(listOf("open", "screen 1", "screen 0", "close", "open", "screen 1"), sink.events)
+    }
+
     @Test fun `sharing on over an active stream asks for a picture once`() {
         var asked = 0
         val output = output(FakeFrameSink())

@@ -23,7 +23,7 @@ class Driving(
     val nanoTime: () -> Long = System::nanoTime,
     private val locate: () -> LocationResult = Platforms.current.location::read,
     private val lookup: (Runnable) -> Unit = { Thread(it, "gps-start").apply { isDaemon = true }.start() },
-    /** A fresh reader of a game's telemetry, made each time gps.external comes into force. */
+    /** A fresh reader of a game's telemetry, made each time bridge.telemetry comes into force. */
     private val telemetry: () -> TelemetryInput = { TelemetryInput(log = log) },
 ) {
     /** Wakes the window loop, which may wait for an event, to put a switch saved on another thread in force. */
@@ -64,28 +64,43 @@ class Driving(
     /** The location the last connection made from the car, which puts itself here for the GPS page. */
     @Volatile var location: LocationLink? = null
 
-    // The game's telemetry while the GPS and gps.external are on: read on the status tick while no game is there
-    // ([lookForGame]), on the window loop while one is ([gameThere]), and closed there; the lock keeps the two apart.
-    private val telemetryLock = Any()
-    private var reader: TelemetryInput? = null
-    @Volatile private var gameThere = false
-    // Whether the last poll had a game there, driving or halted; the window loop's thread only.
+    // A game's telemetry while bridge.telemetry is on, its controls sent whatever the GPS does.
+    private val game = GameTelemetry(telemetry) { wake() }
+
+    /** The game's controls, which the app sends as the keys' ([BridgeControls.send]). */
+    val bridgeControls get() = game.controls
+
+    /** The game's pause, which pauses the iPhone's music ([BridgePause]). */
+    val bridgePause get() = game.pause
+
+    /** Hears the game's car display once per change ([GameTelemetry.display]). */
+    var carDisplay by game::display
+    // Whether the last pass had a game driving or halting the car; the window loop's thread only.
     private var following = false
     // The game's last limits, kept until the gamepad or keys drive again ([ownControls]).
     @Volatile private var gameGauges = GaugeLimits.DEFAULT
 
     /**
-     * [DriveControl.pass] while the GPS is on, after a track playing or paused ([tracks], drive mode's switch still taking
-     * its gauges) and a game's telemetry with gps.external on ([external]); off, the telemetry closes ([unfollow]). Off,
-     * the car stays put: one driven or moving as the GPS went off stops, drive mode ends, one more pass hides the gauges.
+     * A pass of the window loop: a game's telemetry read with bridge.telemetry on (closed off), its controls sent, then
+     * the car's own pass ([carPass]); the sooner of the two says when the next is due.
      */
     fun pass(): Double? {
         val settings = settings
+        val said = if (settings.external) game.pass() else External.Absent.also { game.close() }
+        return listOfNotNull(carPass(settings, said), game.due()).minOrNull()
+    }
+
+    /**
+     * [DriveControl.pass] while the GPS is on, after a track playing or paused ([tracks], drive mode's switch still taking
+     * its gauges) and a game's place with bridge.telemetry on ([external]). Off, the car stays put: a game's is handed back,
+     * one driven or moving as the GPS went off stops, drive mode ends, one more pass hides the gauges.
+     */
+    private fun carPass(settings: GpsSettings, said: External): Double? {
         val on = settings.enabled && live()
         if (on && held()) return hold()
         tracks.driver(on)?.let { control.takeKeyboardRequest(); return tracks.pass(it) }
-        if (on && settings.external) return external()
-        unfollow()
+        if (on && settings.external) return external(said)
+        handBack()
         if (on) return control.pass().also { ownControls() }
         if (!control.keyboard && !drive.moving) return null
         if (control.keyboard) control.toggleKeyboard()
@@ -110,15 +125,15 @@ class Driving(
     }
 
     /**
-     * A pass with gps.external on: a game sending puts the car where it says, one paused or quiet stops it there, and
-     * with none the gamepad and keys drive, the place the game left saved first. It polls at least 20 times a second
-     * while a game is there, and not at all while none is: the status tick looks for one.
+     * A pass with the GPS and bridge.telemetry on, after the game's [said]: a game sending its place puts the car where it
+     * says, one paused or quiet stops it there, and with none (or one sending no place, flag bit 8) the gamepad and keys
+     * drive, the place the game left saved first.
      */
-    private fun external(): Double? {
+    private fun external(said: External): Double? {
         // The GPS page's drive mode switch shows or hides the gauges while the game drives, too.
         control.takeKeyboardRequest()
-        if (gameThere) when (val said = poll()) {
-            is External.Drives -> {
+        when (said) {
+            is External.Drives -> if (said.record.position) {
                 val record = said.record
                 drive.follow(
                     GeoPoint(record.latitude, record.longitude), record.headingDegrees, record.speed, record.rpm, record.gear,
@@ -131,40 +146,20 @@ class Driving(
                 following = true
                 return DriveControl.FRAME_SECONDS
             }
-            External.Halted -> {
+            External.Halted -> if (game.positioned) {
                 if (drive.moving) drive.stop()
                 following = true
                 return DriveControl.GAMEPAD_POLL_SECONDS
             }
-            External.Absent -> gameThere = false
+            External.Absent -> {}
         }
         handBack()
         return control.pass().also { ownControls() }
     }
 
-    /**
-     * The status tick's look for a game, four times a second while the GPS and gps.external are on and none is there:
-     * one sending or paused wakes the window loop, which follows it from its next pass until it is gone.
-     */
+    /** The status tick's look for a game, four times a second while bridge.telemetry is on and none is there. */
     fun lookForGame() {
-        synchronized(telemetryLock) {
-            val settings = settings
-            if (!settings.enabled || !settings.external || gameThere || poll() == External.Absent) return
-            gameThere = true
-        }
-        wake()
-    }
-
-    private fun poll(): External = synchronized(telemetryLock) { (reader ?: telemetry().also { reader = it }).poll() }
-
-    // gps.external or the GPS gone off: the file closes, and a car the game had is handed back.
-    private fun unfollow() {
-        synchronized(telemetryLock) {
-            reader?.close()
-            reader = null
-            gameThere = false
-        }
-        handBack()
+        if (settings.external) game.lookForGame()
     }
 
     // A car the game had stops where it is, parked and facing as it did, and keeps its place: the model never steps
@@ -206,7 +201,7 @@ class Driving(
         val was = settings
         settings = now
         // On, the status tick looks for a game; off, the window loop closes the telemetry on its next pass.
-        if (was.enabled && was.external && !(now.enabled && now.external)) wake()
+        if (was.external && !now.external) wake()
         val here = drive.snapshot()
         val own = now.start?.let { abs(it.latitude - here.position.latitude) < SAME && abs(it.longitude - here.position.longitude) < SAME }
         if ("gps.start" in keys && own != true) {

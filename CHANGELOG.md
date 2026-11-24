@@ -2,6 +2,22 @@
 
 New features and fixed bugs in ChairPlay.
 
+## 1.1.3 - Unreleased
+
+### Added
+
+- Another app on this PC, such as a game mod, can work CarPlay through the telemetry file: the knob, select, back, home, media, calls, Siri, the AltScreen map's zoom, and ChairPlay's volume. Nothing needs to be bound in ChairPlay, and no global shortcut is needed while the game has the keyboard. See [Integrations](docs/INTEGRATIONS.md).
+- A game paused, in its menus or choosing a car, pauses the iPhone's music as a car switched off does, and plays it again as driving goes on.
+- A game can set CarPlay's display for the car being driven, its picture's size and physical width, through the telemetry file: ChairPlay reconnects to take it, and keeps it until it restarts, its own display settings unchanged.
+- The shared picture's status file says whether a game's car display shows CarPlay or its own screen, as a car decides it: the armchair (or Back on CarPlay's home screen) goes to the car's own screen, Siri and calls show CarPlay while they last, and the game's own CarPlay button goes back to CarPlay.
+
+### Changed
+
+- **Drive from other apps** on the Experiments page is now **Receive from other apps** (`bridge.telemetry`, was `gps.external`), and it works without GPS spoofing. **Publish as a shared texture** is saved as `bridge.picture` (was `display.share`). Turn both on again after the update. A telemetry record moves the GPS car only with its new position flag (bit 8) set.
+- With CarPlay's GPS, each update gives the iPhone the car's position, course, speed, and wheel speed of one moment, 10 times a second by default instead of 4 (`gps.rate`; a settings file that already sets it keeps its rate). Before, the wheel speed went in batches sampled on a timer of its own.
+
+[Release notes](docs/RELEASE-NOTES-1.1.3.md) · [Changes since v1.1.2](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.2...v1.1.3)
+
 ## 1.1.2 - 2026-11-24
 
 ### Added

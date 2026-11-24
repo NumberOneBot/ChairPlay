@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay
 
+import io.github.numberonebot.chairplay.bridge.BridgeScreen
 import io.github.numberonebot.chairplay.bridge.FrameOutput
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.VolumeStore
@@ -23,7 +24,7 @@ import javax.sound.sampled.Mixer
  * prompt puts it, and the screens decoded into [window] and [altscreen], for a phone's sink to play and show.
  * [changed] tells the controls window's page that the volume changed.
  */
-internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, altscreen: VideoWindow, private val changed: () -> Unit) {
+internal class AppAudio(dir: Path, config: DesktopConfig, private val window: VideoWindow, altscreen: VideoWindow, private val changed: () -> Unit) {
     /** The app's own volume (Ctrl+Up, Ctrl+Down, Ctrl+M), kept from the last run. */
     val volume: Volume
 
@@ -31,7 +32,7 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
     // the Audio page changes both at once.
     private val musicStart = AtomicReference(StartFade(config.musicStartSilenceMillis, config.musicStartFadeMillis))
     private val duck = AtomicReference(config.duckSetting)
-    // The picture shared with games (display.share), its safe area in the display's pixels; the sink closes it.
+    // The picture shared with games (bridge.picture), its safe area in the display's pixels; the sink closes it.
     private val display = AtomicReference(config.display)
     private val frameOutput = FrameOutput(
         screen = { display.get().let { WindowSize(it.width, it.height) } }, safe = { display.get().safeRect }, log = ::log,
@@ -51,6 +52,27 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
 
     /** Fades the sound out as long as the music fades in, for a reconnect or a close. */
     fun fadeOut() = renderer.fadeOut()
+
+    /**
+     * The app closes: the sound fades out, and the shared picture closes at once (state 0 for a game), not after the
+     * seconds the session takes to end.
+     */
+    fun closing() {
+        fadeOut()
+        frameOutput.close()
+    }
+
+    /** Whose screen a game showing the shared picture shows, CarPlay's or its car's own, as a car decides it. */
+    val bridgeScreen = BridgeScreen(frameOutput::screen)
+
+    /**
+     * A session dropped (a reconnect): the window goes black, and the shared picture says it waits for the iPhone at
+     * once, not still while the old session takes seconds to end, so a game stops showing the old picture too.
+     */
+    fun clearPicture() {
+        window.clearPicture()
+        frameOutput.active(ScreenKind.MAIN, false)
+    }
 
     init {
         // A device that is gone gives way to the Windows default, with a warning that lists the devices.
@@ -90,7 +112,7 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
                 log("prompts duck the music to ${now.duckSetting.level}" + if (now.duckSetting.iPhoneFirst) ", or the iPhone's level" else "")
             }
         }
-        if (saved.keys.any { it.startsWith("display.") }) {
+        if (saved.keys.any { it.startsWith("display.") || it == "bridge.picture" }) {
             runCatching { config.now() }.onSuccess { now ->
                 display.set(now.display)
                 frameOutput.enabled = now.display.share

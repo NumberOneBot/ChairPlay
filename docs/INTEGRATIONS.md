@@ -2,8 +2,8 @@
 
 ChairPlay offers two experimental interfaces to other apps on the same PC, such as a game mod, a plugin, or a telemetry tool:
 
-- **CarPlay picture:** ChairPlay publishes the main CarPlay screen as a named Direct3D 11 shared texture, with a status file that says whether a picture is there, its size, and the texture's current name. Another app can show it on a screen of its own, for example a car's center display in a racing game.
-- **GPS car from other apps:** another app writes a position, heading, and speed (and optionally rpm, gear, red line, the pedals, the steering wheel, and the top speed) into a telemetry file. ChairPlay moves its GPS car there, and the iPhone navigates by it.
+- **CarPlay picture:** ChairPlay publishes the main CarPlay screen as a named Direct3D 11 shared texture, with a status file that says whether a picture is there, its size, the texture's current name, and whether the car's display should show CarPlay or its own screen. Another app can show it on a screen of its own, for example a car's center display in a racing game.
+- **Telemetry from other apps:** another app writes into a telemetry file CarPlay's knob and buttons, the car's position, heading, and speed (and optionally rpm, gear, red line, the pedals, the steering wheel, and the top speed), or both. The knob and buttons work CarPlay as the keys do; with GPS spoofing on, ChairPlay moves its GPS car to the position, and the iPhone navigates by it.
 
 Both work through Windows shared memory and a DXGI shared resource. The other app needs no ChairPlay code; everything it needs is the names and byte layouts below. The C definitions are in [`native/bridge/bridge_layout.h`](../native/bridge/bridge_layout.h).
 
@@ -15,8 +15,8 @@ Both switches are in the settings, on the **Experiments** page under **Integrati
 
 | Row | Switch | Setting | Needs |
 |---|---|---|---|
-| CarPlay picture | Publish as a shared texture | `display.share` | nothing else |
-| GPS car | Drive from other apps | `gps.external` | GPS spoofing on (**Enable spoofing** on the GPS page, `gps.enabled`) |
+| CarPlay picture | Publish as a shared texture | `bridge.picture` | nothing else |
+| Telemetry | Receive from other apps | `bridge.telemetry` | nothing else; the position moves the GPS car only with GPS spoofing on (**Enable spoofing** on the GPS page, `gps.enabled`) |
 
 Both apply at once. The iPhone learns of the spoofed GPS when it connects, so after turning GPS spoofing on, reconnect (Ctrl+R).
 
@@ -48,7 +48,7 @@ ChairPlay creates `Local\ChairPlay.Bridge.v1` when **Publish as a shared texture
 |---:|---|---|---|
 | 0 | u32 | `magic` | `0x52425043` ("CPBR" in memory) |
 | 4 | u16 | `version` | 1 |
-| 6 | u16 | `size` | Bytes of defined fields: 136 in version 1 |
+| 6 | u16 | `size` | Bytes of defined fields: 140 in version 1 (136 before `screen`) |
 | 8 | u32 | `seq` | Seqlock: odd while ChairPlay writes |
 | 12 | u32 | `state` | 0 no picture, 1 waiting for the iPhone, 2 picture flowing, 3 picture still |
 | 16 | u32 | `generation` | Goes up each time ChairPlay makes a new texture |
@@ -65,7 +65,8 @@ ChairPlay creates `Local\ChairPlay.Bridge.v1` when **Publish as a shared texture
 | 64 | u32 | `streamFps` | Pictures in the last second |
 | 68 | u32 | `producerPid` | ChairPlay's process ID |
 | 72 | char[64] | `textureName` | The current texture's name, UTF-8, zero-ended; empty when there is none |
-| 136 | — | reserved | Zero, up to byte 256 |
+| 136 | u32 | `screen` | What the car's display shows: 0 CarPlay (the texture), 1 the car's own screen; see [The car's own screen](#the-cars-own-screen) |
+| 140 | — | reserved | Zero, up to byte 256 |
 
 ### States
 
@@ -79,6 +80,21 @@ ChairPlay creates `Local\ChairPlay.Bridge.v1` when **Publish as a shared texture
 State 3 is not a failure. CarPlay sends no pictures while its screen does not change, and the texture keeps the last one. When sharing is turned on while the screen is still, ChairPlay asks the iPhone for a new picture, so the texture fills at once.
 
 When ChairPlay turns sharing off or closes normally, it writes `state = 0` and an empty `textureName`. If ChairPlay ends without that (it crashed or was killed), the file still says what it said last: treat a `producerPid` that is no longer a running process as state 0.
+
+### The car's own screen
+
+ChairPlay decides what the car's display shows as a car's head unit does, and says it in `screen`. Show the texture while `screen` is 0, and the display's own content while it is 1, for example the car's original screen texture.
+
+| Event | `screen` |
+|---|---|
+| CarPlay's car button (the first app on its home screen, ChairPlay's armchair here), or Back on CarPlay's home screen | 1: the car's own screen |
+| Siri or a phone call, while the car's own screen shows | 0 for as long as it lasts, then 1 again, as CarPlay borrows a car's screen |
+| The app's CarPlay button (bit 14 of the telemetry's `buttons`, see [Controls](#controls)) | 0: CarPlay |
+| ChairPlay's window showing CarPlay again (Esc or **Show CarPlay** over its settings) | 0: CarPlay |
+
+- `screen` is 0 each time ChairPlay creates the file.
+- The iPhone keeps sending pictures meanwhile, so the texture is current as soon as you show it again.
+- The armchair's picture and name are `car.icon` and `car.label` in ChairPlay's settings file; the iPhone takes them when it connects.
 
 ### Opening the texture
 
@@ -110,7 +126,7 @@ If the device is lost, the status says state 1 with an empty name until the new 
 |---|---|
 | Telemetry file (file mapping) | `Local\ChairPlay.Telemetry.v1` |
 
-Whoever opens it first creates it: ChairPlay when GPS spoofing and **Drive from other apps** are both on, or the other app. ChairPlay creates it zeroed and never writes to it. Create or open it with `CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 256, L"Local\\ChairPlay.Telemetry.v1")` and map it with `FILE_MAP_WRITE`. The file lasts while either side holds it.
+Whoever opens it first creates it: ChairPlay when **Receive from other apps** is on, or the other app. ChairPlay creates it zeroed and never writes to it. Create or open it with `CreateFileMappingW(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 256, L"Local\\ChairPlay.Telemetry.v1")` and map it with `FILE_MAP_WRITE`. The file lasts while either side holds it.
 
 One app writes at a time. Two writers at once are not supported.
 
@@ -120,15 +136,15 @@ One app writes at a time. Two writers at once are not supported.
 |---:|---|---|---|
 | 0 | u32 | `magic` | `0x54435043` ("CPCT" in memory); 0 while no app has written |
 | 4 | u16 | `version` | 1 |
-| 6 | u16 | `size` | Bytes of defined fields: 112 in version 1 (96 before the pedals and the wheel, 108 before the top speed) |
+| 6 | u16 | `size` | Bytes of defined fields: 140 in version 1 (96 before the pedals and the wheel, 108 before the top speed, 112 before the controls, 128 before the car's display) |
 | 8 | u32 | `seq` | Seqlock: odd while the app writes |
 | 12 | u32 | `counter` | The app adds one with each update; ChairPlay judges freshness by its changes, not by a clock |
-| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given |
+| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given. Bit 8 (256): the position is given: `speed`, `heading`, `latitude`, and `longitude`. Bit 9 (512): the controls are given: `buttons` and the three steps. Bit 10 (1024): the car's display is given: `display_width`, `display_height`, and `display_width_mm` |
 | 20 | i32 | `gear` | −1 reverse, 0 neutral, 1 and up forward gears |
-| 24 | f64 | `speed` | m/s, signed: below 0 is reversing. Required |
-| 32 | f64 | `heading` | Degrees clockwise from true north, 0 to 360. Required |
-| 40 | f64 | `latitude` | WGS84 degrees, −90 to 90. Required |
-| 48 | f64 | `longitude` | WGS84 degrees, −180 to 180. Required |
+| 24 | f64 | `speed` | m/s, signed: below 0 is reversing. Required with bit 8 |
+| 32 | f64 | `heading` | Degrees clockwise from true north, 0 to 360. Required with bit 8 |
+| 40 | f64 | `latitude` | WGS84 degrees, −90 to 90. Required with bit 8 |
+| 48 | f64 | `longitude` | WGS84 degrees, −180 to 180. Required with bit 8 |
 | 56 | f32 | `rpm` | Engine speed, rpm |
 | 60 | f32 | `redline` | The rpm where the tachometer's red zone starts |
 | 64 | char[32] | `source` | The app's name, UTF-8, zero-ended, for ChairPlay's log (for example "Assetto Corsa") |
@@ -136,25 +152,77 @@ One app writes at a time. Two writers at once are not supported.
 | 100 | f32 | `brake` | The brake pedal, 0 released to 1 fully pressed |
 | 104 | f32 | `steer_degrees` | The steering wheel's angle in degrees, below 0 to the left, as far round as the game turns it (±450 on a 900° wheel) |
 | 108 | f32 | `top_speed` | The car's top speed, m/s, for the speedometer's scale |
-| 112 | — | reserved | Write zero, up to byte 256 |
+| 112 | u32 | `buttons` | The buttons held now, one bit each; see [Controls](#controls) |
+| 116 | i32 | `knob_steps` | The knob's turns so far: add one for each step forward, take one for each step back |
+| 120 | i32 | `zoom_steps` | The AltScreen map's zoom steps so far: add one to zoom in, take one to zoom out |
+| 124 | i32 | `volume_steps` | ChairPlay's volume steps so far: add one for louder, take one for quieter |
+| 128 | u32 | `display_width` | The car's display: CarPlay's picture width, px, even; see [The car's display](#the-cars-display) |
+| 132 | u32 | `display_height` | CarPlay's picture height, px, even |
+| 136 | u32 | `display_width_mm` | The display's physical width, mm, from which the iPhone picks CarPlay's scale |
+| 140 | — | reserved | Write zero, up to byte 256 |
 
 ### Writing
 
-For each update: make `seq` odd (an interlocked increment), write the fields, add one to `counter`, then make `seq` even again (a second interlocked increment), with a memory barrier after the first increment and before the second. Never write `seq` as part of copying a whole record. Update at your simulation or frame rate; ChairPlay reads the file at least 20 times a second.
+For each update: make `seq` odd (an interlocked increment), write the fields, add one to `counter`, then make `seq` even again (a second interlocked increment), with a memory barrier after the first increment and before the second. Never write `seq` as part of copying a whole record. Update at your simulation or frame rate; ChairPlay reads the file 60 times a second while you send the controls, else at least 20 times a second.
 
 ChairPlay does not map game coordinates. The app converts its own world into real latitude, longitude, and heading: a map projection, a track placed at a real place, a chosen starting point. ChairPlay takes position, heading, and speed as they come and does not know which game sent them.
 
 ### What ChairPlay reads
 
 - A record with another `magic` or `version` is ignored.
-- A record whose `speed` or `heading` is not a finite number, or whose `latitude` or `longitude` is not a finite number in range, is ignored whole. `heading` is taken modulo 360.
+- With bit 8, a record whose `speed` or `heading` is not a finite number, or whose `latitude` or `longitude` is not a finite number in range, is ignored whole. `heading` is taken modulo 360. Without bit 8 these four fields are not read.
 - `rpm` counts only with bit 0 and as a finite number; `gear` only with bit 1.
 - `redline` counts only with bit 3 and when above 1000 and at most 20000; otherwise it is treated as not given.
 - `throttle`, `brake`, and `steer_degrees` count only with their bits and as finite numbers. The pedals are held to 0 to 1; the wheel is taken as it is, past a full turn too.
 - `top_speed` counts only with bit 7 and as a finite number above 0.
+- `buttons` and the three steps count only with bit 9.
 - The `counter` ChairPlay finds when it opens the file is the starting point: the app drives only once `counter` changes after that.
 
-### What ChairPlay does
+### Controls
+
+With bit 9, the app works CarPlay as ChairPlay's keys do, whether or not GPS spoofing is on. Bind your game's own controls, a steering wheel's buttons, or a rotary encoder to them: nothing needs to be bound in ChairPlay, and no global shortcut is needed while the game has the keyboard.
+
+| Bit | Value | Button | Acts |
+|---:|---:|---|---|
+| 0 | 1 | Left | Tilts the knob left while held |
+| 1 | 2 | Right | Tilts the knob right while held |
+| 2 | 4 | Up | Tilts the knob up while held |
+| 3 | 8 | Down | Tilts the knob down while held |
+| 4 | 16 | Select | Presses the knob while held: a long hold is CarPlay's long press |
+| 5 | 32 | Back | Presses Back while held |
+| 6 | 64 | Home | Presses Home while held |
+| 7 | 128 | Mute | Mutes or unmutes ChairPlay as the bit turns on |
+| 8 | 256 | Previous | Previous track as the bit turns on |
+| 9 | 512 | Play/pause | Plays or pauses as the bit turns on |
+| 10 | 1024 | Next | Next track as the bit turns on |
+| 11 | 2048 | Answer | Answers a call as the bit turns on |
+| 12 | 4096 | End call | Ends a call as the bit turns on |
+| 13 | 8192 | Siri | Siri as the bit turns on |
+| 14 | 16384 | CarPlay | Shows CarPlay on the car's display again (`screen` 0 in the status file) as the bit turns on, as a car's CarPlay button does |
+
+- Set a bit while the button is down and clear it when it is let go, every update. ChairPlay sees what is held at each read, so keep a bit set for at least 50 ms: a press shorter than one read can be missed.
+- The steps are counters, not presses: on each step add one to the field (or take one), and keep the sum. ChairPlay turns the knob, zooms, or steps the volume by the difference since its last read, so no step is lost however fast an encoder turns. They wrap round as 32-bit integers.
+- What the first record ChairPlay reads holds and counts is the starting point: nothing happens for it.
+- With the app paused (bit 2) the controls still work: a game's menu is where they are wanted most.
+
+### Pause
+
+Set bit 2 in your menus, while the player chooses a car, and in replays, as if the car were switched off. While it is set, ChairPlay pauses the iPhone's music if it plays, and plays it again when the bit clears, if ChairPlay paused it; music the player starts meanwhile is left as it is. Calls and navigation prompts go on. With bit 8, the GPS car also stops (see below).
+- When `counter` stops changing for 0.5 s, or **Receive from other apps** is turned off, ChairPlay lets go of what the app held; the next record is a starting point again.
+- The knob the app holds is apart from the keys': letting go of one does not let go of the other.
+
+### The car's display
+
+With bit 10, the app sets the display CarPlay draws for: its picture's size, and the display's physical width, from which the iPhone picks CarPlay's scale (its height follows the picture's aspect). ChairPlay takes them over its own **Display** settings, without changing those, until it restarts. CarPlay takes a new display only as it connects, so each change ends the running session and connects again, which takes a few seconds.
+
+- Write the car's display as driving starts, not in menus or while the player looks through cars: each change reconnects CarPlay.
+- Keep writing it with every update: ChairPlay acts only on a change.
+- The picture's width and height must be even and above 0, and the width in millimetres above 0; otherwise the display is ignored.
+- The status file's `width` and `height` show the picture's new size once the iPhone sends it.
+
+### What ChairPlay does with the position
+
+These hold with bit 8 and GPS spoofing on. Without either, the app's position moves nothing, and the gamepad and keys drive the GPS car.
 
 | Telemetry | GPS car |
 |---|---|
@@ -164,9 +232,9 @@ ChairPlay does not map game coordinates. The app converts its own world into rea
 | `counter` never changed since ChairPlay opened the file | The gamepad and keys drive the car |
 
 - The pause flag counts at once, even without a new `counter`. To stop the car right away, set bit 2; to hand the car back, stop updating `counter` for 5 s.
-- ChairPlay sends the car to the iPhone as it does in its own GPS simulation: the position once a second and, with **Send the vehicle speed** on, the speed ten times a second.
-- With GPS spoofing or **Drive from other apps** off, ChairPlay does not read the file and closes its handle.
-- ChairPlay's log notes the `source` name when an app starts driving, and why the file did not open, if it did not.
+- ChairPlay sends the car to the iPhone as it does in its own GPS simulation: its position, course, and speed, and with `gps.wheel.speed` on (the default) its wheel speed, all of one moment, `gps.rate` times a second over CarPlay and `gps.usb.rate` times over USB, 10 by default.
+- With **Receive from other apps** off, ChairPlay does not read the file and closes its handle.
+- ChairPlay's log notes the `source` name when an app starts sending, and why the file did not open, if it did not.
 
 ### Gauges
 
@@ -199,11 +267,33 @@ These snippets use [`bridge_layout.h`](../native/bridge/bridge_layout.h), whose 
 #define CPB_TELEMETRY_BRAKE 32u
 #define CPB_TELEMETRY_STEER 64u
 #define CPB_TELEMETRY_TOP_SPEED 128u
+#define CPB_TELEMETRY_POSITION 256u
+#define CPB_TELEMETRY_CONTROLS 512u
+#define CPB_TELEMETRY_DISPLAY 1024u
+
+#define CPB_BUTTON_LEFT 1u
+#define CPB_BUTTON_RIGHT 2u
+#define CPB_BUTTON_UP 4u
+#define CPB_BUTTON_DOWN 8u
+#define CPB_BUTTON_SELECT 16u
+#define CPB_BUTTON_BACK 32u
+#define CPB_BUTTON_HOME 64u
+#define CPB_BUTTON_MUTE 128u
+#define CPB_BUTTON_PREVIOUS 256u
+#define CPB_BUTTON_PLAY_PAUSE 512u
+#define CPB_BUTTON_NEXT 1024u
+#define CPB_BUTTON_ANSWER 2048u
+#define CPB_BUTTON_END_CALL 4096u
+#define CPB_BUTTON_SIRI 8192u
+#define CPB_BUTTON_CARPLAY 16384u
+
+#define CPB_SCREEN_CARPLAY 0u
+#define CPB_SCREEN_CAR 1u
 
 struct cpb_status {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 136 */
+    uint16_t size;              /*   6: 140 */
     uint32_t seq;               /*   8: odd while being written */
     uint32_t state;             /*  12: 0 none, 1 waiting, 2 flowing, 3 frozen */
     uint32_t generation;        /*  16 */
@@ -220,13 +310,14 @@ struct cpb_status {
     uint32_t stream_fps;        /*  64 */
     uint32_t producer_pid;      /*  68 */
     char texture_name[64];      /*  72 */
-    uint8_t reserved[120];      /* 136 */
+    uint32_t screen;            /* 136: whose screen to show: 0 CarPlay's (the texture), 1 the car's own */
+    uint8_t reserved[116];      /* 140 */
 };
 
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 112 */
+    uint16_t size;              /*   6: 140 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -242,7 +333,14 @@ struct cpb_telemetry {
     float brake;                /* 100: 0 released to 1 pressed */
     float steer_degrees;        /* 104: steering wheel angle, negative = left, past a turn too */
     float top_speed;            /* 108: m/s, the speedometer's scale */
-    uint8_t reserved[144];      /* 112 */
+    uint32_t buttons;           /* 112: CPB_BUTTON_* held now */
+    int32_t knob_steps;         /* 116: the knob's turns so far, + forward */
+    int32_t zoom_steps;         /* 120: the AltScreen map's zoom steps so far, + in */
+    int32_t volume_steps;       /* 124: ChairPlay's volume steps so far, + up */
+    uint32_t display_width;     /* 128: the car's display: CarPlay's picture width, px, even */
+    uint32_t display_height;    /* 132: its height, px, even */
+    uint32_t display_width_mm;  /* 136: the display's width, mm, for CarPlay's scale */
+    uint8_t reserved[116];      /* 140 */
 };
 ```
 
@@ -372,8 +470,8 @@ void telemetry_write(double latitude, double longitude, double heading, double s
     t->brake = brake;
     t->steer_degrees = steer_degrees;
     t->top_speed = top_speed;
-    t->flags = CPB_TELEMETRY_RPM | CPB_TELEMETRY_GEAR | CPB_TELEMETRY_REDLINE | CPB_TELEMETRY_THROTTLE |
-               CPB_TELEMETRY_BRAKE | CPB_TELEMETRY_STEER | CPB_TELEMETRY_TOP_SPEED |
+    t->flags = CPB_TELEMETRY_POSITION | CPB_TELEMETRY_RPM | CPB_TELEMETRY_GEAR | CPB_TELEMETRY_REDLINE |
+               CPB_TELEMETRY_THROTTLE | CPB_TELEMETRY_BRAKE | CPB_TELEMETRY_STEER | CPB_TELEMETRY_TOP_SPEED |
                (paused ? CPB_TELEMETRY_PAUSED : 0);
     t->counter = t->counter + 1;
     MemoryBarrier();

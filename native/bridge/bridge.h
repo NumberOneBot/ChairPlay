@@ -25,6 +25,10 @@ CPB_API int cpb_frame_publish(const void* bgra, int width, int height, int strid
 /* Writes state (0 none, 1 waiting, 2 flowing, 3 frozen) to the status; nothing when closed. */
 CPB_API void cpb_frame_state(int state);
 
+/* Writes whose screen a game's car display shows to the status: 0 CarPlay's (the texture), 1 the car's own. Each
+   open starts at 0; nothing when closed. */
+CPB_API void cpb_frame_screen(int screen);
+
 /* Writes state 0 and an empty texture name, then releases the device and the textures; the status file goes with
    its last handle. */
 CPB_API void cpb_frame_close(void);

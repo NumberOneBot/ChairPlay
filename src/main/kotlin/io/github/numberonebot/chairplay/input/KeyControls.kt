@@ -37,6 +37,8 @@ sealed interface Control {
     data object DriveMode : Control
     /** Switches the GPS car's gauges between large and small, saved as gps.gauges; nothing goes to the iPhone. */
     data object GaugeSize : Control
+    /** A game's CarPlay button: its car display shows CarPlay again (BridgeScreen); nothing goes to the iPhone. */
+    data object CarPlayScreen : Control
 }
 
 /**

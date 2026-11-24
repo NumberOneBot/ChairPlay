@@ -90,15 +90,24 @@ class UiModel(
         listeners += listener
     }
 
+    private val carPlayShown = CopyOnWriteArrayList<() -> Unit>()
+
+    /** Hears the screen turn to CarPlay from another, as a car's CarPlay button turns it; on the thread that turned it. */
+    fun onCarPlayShown(listener: () -> Unit) {
+        carPlayShown += listener
+    }
+
     private fun update(change: (UiState) -> UiState) {
+        val previous: UiState
         val next: UiState
         synchronized(this) {
-            val previous = state
+            previous = state
             next = change(previous)
             if (next == previous) return
             state = next
         }
         listeners.forEach { it(next) }
+        if (next.screen == Screen.CARPLAY && previous.screen != Screen.CARPLAY) carPlayShown.forEach { it() }
     }
 
     fun bringUp(status: LinkStatus) = update { state ->

@@ -16,4 +16,7 @@ internal interface FrameSink {
 
     /** Leaves state 0 and an empty texture name for a game still reading, and lets the shared side go. */
     fun close()
+
+    /** Writes whose screen a game shows to the status: 0 CarPlay's, 1 the car's own; nothing when closed. */
+    fun screen(screen: Int)
 }

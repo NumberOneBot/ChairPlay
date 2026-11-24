@@ -135,28 +135,22 @@ describe('Experiments page', () => {
   it('saves sharing the CarPlay picture', async () => {
     const backend = await experiments()
 
-    fireEvent.click(screen.getByRole('switch', { name: 'Publish as a shared texture' }))
+    fireEvent.click(control('integrations-picture', 'switch'))
 
-    await waitFor(() => expect(backend.saved).toEqual([{ 'display.share': 'true' }]))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'bridge.picture': 'true' }]))
   })
 
-  it('saves driving the GPS car from other apps', async () => {
-    const backend = new FakeBackend()
-    backend.data = { ...backend.data, values: { ...backend.data.values, 'gps.enabled': 'true' } }
-    await experiments(appState(live), backend)
-
-    fireEvent.click(screen.getByRole('switch', { name: 'Drive from other apps' }))
-
-    await waitFor(() => expect(backend.saved).toEqual([{ 'gps.external': 'true' }]))
-  })
-
-  it('the GPS off disables driving from other apps', async () => {
+  // A game's controls work CarPlay without the GPS: the switch waits for nothing (owner, 2026-11-24).
+  it('saves receiving telemetry from other apps, with the GPS off too', async () => {
     const backend = new FakeBackend()
     backend.data = { ...backend.data, values: { ...backend.data.values, 'gps.enabled': 'false' } }
     await experiments(appState(live), backend)
 
-    const drive = screen.getByRole('switch', { name: 'Drive from other apps' }) as HTMLInputElement
-    expect(drive.disabled).toBe(true)
+    const telemetry = control('integrations-telemetry', 'switch') as HTMLInputElement
+    expect(telemetry.disabled).toBe(false)
+    fireEvent.click(telemetry)
+
+    await waitFor(() => expect(backend.saved).toEqual([{ 'bridge.telemetry': 'true' }]))
   })
 
   it('waits for the AltScreen', async () => {

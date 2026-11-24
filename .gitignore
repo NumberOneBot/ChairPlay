@@ -25,6 +25,8 @@ identity.properties
 
 # Local notes and agent working files, kept out of the repository.
 desktop-docs/
+# Test apps for the game bridge: a picture viewer and a telemetry writer, built by hand.
+/bridge/
 .superpowers/
 .playwright-mcp/
 ChairPlay.code-workspace

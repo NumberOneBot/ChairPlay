@@ -21,11 +21,35 @@
 #define CPB_TELEMETRY_BRAKE 32u
 #define CPB_TELEMETRY_STEER 64u
 #define CPB_TELEMETRY_TOP_SPEED 128u
+#define CPB_TELEMETRY_POSITION 256u
+#define CPB_TELEMETRY_CONTROLS 512u
+#define CPB_TELEMETRY_DISPLAY 1024u
+
+/* cpb_telemetry.buttons: held while set. The first seven hold CarPlay's knob, the rest act as they turn on. */
+#define CPB_BUTTON_LEFT 1u
+#define CPB_BUTTON_RIGHT 2u
+#define CPB_BUTTON_UP 4u
+#define CPB_BUTTON_DOWN 8u
+#define CPB_BUTTON_SELECT 16u
+#define CPB_BUTTON_BACK 32u
+#define CPB_BUTTON_HOME 64u
+#define CPB_BUTTON_MUTE 128u
+#define CPB_BUTTON_PREVIOUS 256u
+#define CPB_BUTTON_PLAY_PAUSE 512u
+#define CPB_BUTTON_NEXT 1024u
+#define CPB_BUTTON_ANSWER 2048u
+#define CPB_BUTTON_END_CALL 4096u
+#define CPB_BUTTON_SIRI 8192u
+#define CPB_BUTTON_CARPLAY 16384u
+
+/* cpb_status.screen */
+#define CPB_SCREEN_CARPLAY 0u
+#define CPB_SCREEN_CAR 1u
 
 struct cpb_status {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 136 */
+    uint16_t size;              /*   6: 140 */
     uint32_t seq;               /*   8: odd while being written */
     uint32_t state;             /*  12: 0 none, 1 waiting, 2 flowing, 3 frozen */
     uint32_t generation;        /*  16 */
@@ -42,13 +66,14 @@ struct cpb_status {
     uint32_t stream_fps;        /*  64 */
     uint32_t producer_pid;      /*  68 */
     char texture_name[64];      /*  72 */
-    uint8_t reserved[120];      /* 136 */
+    uint32_t screen;            /* 136: whose screen to show: 0 CarPlay's (the texture), 1 the car's own */
+    uint8_t reserved[116];      /* 140 */
 };
 
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 112 */
+    uint16_t size;              /*   6: 140 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -64,7 +89,14 @@ struct cpb_telemetry {
     float brake;                /* 100: 0 released to 1 pressed */
     float steer_degrees;        /* 104: steering wheel angle, negative = left, past a turn too */
     float top_speed;            /* 108: m/s, the speedometer's scale */
-    uint8_t reserved[144];      /* 112 */
+    uint32_t buttons;           /* 112: CPB_BUTTON_* held now */
+    int32_t knob_steps;         /* 116: the knob's turns so far, + forward */
+    int32_t zoom_steps;         /* 120: the AltScreen map's zoom steps so far, + in */
+    int32_t volume_steps;       /* 124: ChairPlay's volume steps so far, + up */
+    uint32_t display_width;     /* 128: the car's display: CarPlay's picture width, px, even */
+    uint32_t display_height;    /* 132: its height, px, even */
+    uint32_t display_width_mm;  /* 136: the display's width, mm, for CarPlay's scale */
+    uint8_t reserved[116];      /* 140 */
 };
 
 static_assert(sizeof(struct cpb_status) == 256, "status size");
@@ -87,7 +119,8 @@ static_assert(offsetof(struct cpb_status, frame_counter) == 56, "frame_counter")
 static_assert(offsetof(struct cpb_status, stream_fps) == 64, "stream_fps");
 static_assert(offsetof(struct cpb_status, producer_pid) == 68, "producer_pid");
 static_assert(offsetof(struct cpb_status, texture_name) == 72, "texture_name");
-static_assert(offsetof(struct cpb_status, reserved) == 136, "status reserved");
+static_assert(offsetof(struct cpb_status, screen) == 136, "screen");
+static_assert(offsetof(struct cpb_status, reserved) == 140, "status reserved");
 
 static_assert(sizeof(struct cpb_telemetry) == 256, "telemetry size");
 static_assert(offsetof(struct cpb_telemetry, magic) == 0, "magic");
@@ -108,6 +141,13 @@ static_assert(offsetof(struct cpb_telemetry, throttle) == 96, "throttle");
 static_assert(offsetof(struct cpb_telemetry, brake) == 100, "brake");
 static_assert(offsetof(struct cpb_telemetry, steer_degrees) == 104, "steer_degrees");
 static_assert(offsetof(struct cpb_telemetry, top_speed) == 108, "top_speed");
-static_assert(offsetof(struct cpb_telemetry, reserved) == 112, "telemetry reserved");
+static_assert(offsetof(struct cpb_telemetry, buttons) == 112, "buttons");
+static_assert(offsetof(struct cpb_telemetry, knob_steps) == 116, "knob_steps");
+static_assert(offsetof(struct cpb_telemetry, zoom_steps) == 120, "zoom_steps");
+static_assert(offsetof(struct cpb_telemetry, volume_steps) == 124, "volume_steps");
+static_assert(offsetof(struct cpb_telemetry, display_width) == 128, "display_width");
+static_assert(offsetof(struct cpb_telemetry, display_height) == 132, "display_height");
+static_assert(offsetof(struct cpb_telemetry, display_width_mm) == 136, "display_width_mm");
+static_assert(offsetof(struct cpb_telemetry, reserved) == 140, "telemetry reserved");
 
 #endif

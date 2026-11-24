@@ -12,6 +12,22 @@ class UiModelTest {
     private fun model(wifi: Boolean = true, autoconnect: Boolean = true, autoshow: Boolean = true, setupDone: Boolean = true) =
         UiModel(wifi, autoconnect, autoshow, setupDone) { LocalTime.of(14, 3, 5) }
 
+    // The window turning back to CarPlay is a car's CarPlay button: a game's car display, which the car button gave to
+    // the car, shows CarPlay again (owner, 2026-11-24).
+    @Test
+    fun `turning back to CarPlay is heard once per turn`() {
+        val model = model()
+        var shown = 0
+        model.onCarPlayShown { shown++ }
+        model.sessionActive()
+        assertEquals(Screen.CARPLAY, model.state.screen)
+        assertEquals(1, shown)
+        model.carButton()
+        model.show(Screen.CARPLAY)
+        model.show(Screen.CARPLAY)
+        assertEquals(2, shown)
+    }
+
     @Test
     fun `the start screen opens first and says whether the app is connecting`() {
         assertEquals(UiState(Phase.STARTING, Screen.START, autoshow = true, waiting = true), model().state)

@@ -23,7 +23,8 @@ import java.time.Instant
  * expected transcript (iap2/location-transcript.txt) was recorded from DriveLocation, built as Driving.location built
  * it, before it moved here as CarPlayLocation: the move changed nothing the iPhone is sent. From "a game drives" on it
  * was recorded again once the status tick, not the window loop, looked for a game: the car follows it a tick later.
- * Its $GPGSV went with the satellites in view, the rest unchanged.
+ * Its $GPGSV went with the satellites in view, the rest unchanged. Recorded again once $PASCD carried one sample, the
+ * car's speed at each update, and gps.rate went to 10 by default (owner, 2026-11-24): $GPGGA and $GPRMC unchanged.
  */
 class CarPlayLocationTranscriptTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
@@ -134,14 +135,14 @@ class CarPlayLocationTranscriptTest {
         ticks("modern sentences")
         save(settings.copy(nmea = NmeaDialect.CLASSIC, rate = 4, sendHeading = false), "gps.nmea", "gps.rate", "gps.heading.send")
         ticks("no heading sent")
-        save(settings.copy(sendHeading = true, external = true), "gps.heading.send", "gps.external")
+        save(settings.copy(sendHeading = true, external = true), "gps.heading.send", "bridge.telemetry")
         source.game = record(speed = 20.0, gear = 3)
         ticks("a game drives", 4)
         source.game = record(speed = -3.0, gear = -1)
         ticks("the game backs up", 2)
         source.game = record(speed = 0.0, gear = 1, paused = true)
         ticks("the game paused", 3)
-        save(settings.copy(external = false), "gps.external")
+        save(settings.copy(external = false), "bridge.telemetry")
         ticks("the game let go", 2)
 
         lines += "> once a second, unattached"

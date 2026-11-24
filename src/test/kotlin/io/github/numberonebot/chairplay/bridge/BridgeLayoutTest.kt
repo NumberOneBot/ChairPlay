@@ -1,9 +1,12 @@
 package io.github.numberonebot.chairplay.bridge
 
 import io.github.numberonebot.chairplay.config.AreaRect
+import io.github.numberonebot.chairplay.config.CarDisplay
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -33,16 +36,18 @@ class BridgeLayoutTest {
         b.putInt(64, 30)
         b.putInt(68, 4242)
         text(b, 72, "ChairPlay.Main.v1.7")
+        b.putInt(136, 1)
         return b
     }
 
-    private fun telemetry(flags: Int, magic: Int = BridgeLayout.TELEMETRY_MAGIC): ByteBuffer {
+    /** A record with a position (flag bit 8) unless [position] is false, and the other [flags]. */
+    private fun telemetry(flags: Int, magic: Int = BridgeLayout.TELEMETRY_MAGIC, position: Boolean = true): ByteBuffer {
         val b = buffer()
         b.putInt(0, magic)
         b.putShort(4, 1)
         b.putShort(6, 96)
         b.putInt(12, 5)
-        b.putInt(16, flags)
+        b.putInt(16, if (position) flags or POSITION else flags)
         b.putInt(20, 3)
         b.putDouble(24, 13.9)
         b.putDouble(32, 270.0)
@@ -68,6 +73,7 @@ class BridgeLayoutTest {
         assertEquals(30, s.streamFps)
         assertEquals(4242, s.producerPid)
         assertEquals("ChairPlay.Main.v1.7", s.textureName)
+        assertEquals(1, s.screen)
     }
 
     @Test
@@ -169,6 +175,52 @@ class BridgeLayoutTest {
         assertEquals(270.0, TelemetryRecord.parse(telemetry(0).also { it.putDouble(32, -90.0) })!!.headingDegrees, 0.0)
     }
 
+    // A record without bit 8 carries no position: its speed, heading, latitude and longitude are not read, so what
+    // stands there cannot refuse it (owner, 2026-11-24: games in the bridge without GPS coordinates).
+    @Test
+    fun `telemetry without the position bit is read without a position`() {
+        val t = TelemetryRecord.parse(telemetry(0, position = false).also { it.putDouble(40, Double.NaN) })!!
+        assertFalse(t.position)
+        assertEquals(5, t.counter)
+        assertTrue(TelemetryRecord.parse(telemetry(0))!!.position)
+    }
+
+    // The controls (bit 9): the buttons held at 112, the knob's, the zoom's and the volume's steps at 116, 120 and 124.
+    @Test
+    fun `telemetry gives the controls with flag bit 9`() {
+        fun controls(flags: Int) = telemetry(flags, position = false).also {
+            it.putInt(112, 0x2010); it.putInt(116, 3); it.putInt(120, -1); it.putInt(124, 2)
+        }
+        assertEquals(GameControls(0x2010, 3, -1, 2), TelemetryRecord.parse(controls(CONTROLS))!!.controls)
+        assertNull(TelemetryRecord.parse(controls(0))!!.controls)
+    }
+
+    // The car's display (bit 10): its picture's size at 128 and 132, its width in millimetres at 136; a size no setting
+    // could hold (odd, or not above 0) gives none.
+    @Test
+    fun `telemetry gives the car's display with flag bit 10`() {
+        fun display(flags: Int, width: Int = 800, height: Int = 480, mm: Int = 180) = telemetry(flags).also {
+            it.putInt(128, width); it.putInt(132, height); it.putInt(136, mm)
+        }
+        assertEquals(CarDisplay(800, 480, 180), TelemetryRecord.parse(display(DISPLAY))!!.display)
+        assertNull(TelemetryRecord.parse(display(0))!!.display)
+        for (bad in listOf(display(DISPLAY, width = 801), display(DISPLAY, height = 0), display(DISPLAY, mm = -5))) {
+            assertNull(TelemetryRecord.parse(bad)!!.display)
+        }
+    }
+
+    @Test
+    fun `write then parse gives a record of controls alone back`() {
+        val r = TelemetryRecord(
+            4, false, null, 0.0, 0.0, 0.0, 0.0, null, "Bridge test", position = false, controls = GameControls(1, -7, 2, 0),
+            display = CarDisplay(1280, 720, 300),
+        )
+        val b = buffer()
+        TelemetryRecord.write(r, b)
+        assertEquals(r, TelemetryRecord.parse(b))
+        assertEquals(CONTROLS or DISPLAY, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16))
+    }
+
     @Test
     fun `write then parse gives the record back`() {
         val r = TelemetryRecord(
@@ -181,7 +233,7 @@ class BridgeLayoutTest {
         assertEquals(r, TelemetryRecord.parse(b))
         assertEquals(8, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16) and 8)
         assertEquals(8250f, b.getFloat(60), 0f)
-        assertEquals(112, b.getShort(6).toInt())
+        assertEquals(140, b.getShort(6).toInt())
         val bare = r.copy(gear = null, rpm = null, paused = false, redline = null, throttle = null, brake = null, steerDegrees = null, topSpeed = null)
         TelemetryRecord.write(bare, b)
         assertEquals(bare, TelemetryRecord.parse(b))
@@ -190,5 +242,11 @@ class BridgeLayoutTest {
     @Test
     fun `texture name follows the generation`() {
         assertEquals("ChairPlay.Main.v1.12", BridgeLayout.textureName(12))
+    }
+
+    private companion object {
+        const val POSITION = 256
+        const val CONTROLS = 512
+        const val DISPLAY = 1024
     }
 }

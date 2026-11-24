@@ -88,8 +88,11 @@ class ChairPlayUi(
     trackCommands: (String) -> Boolean = { false },
     /** The GPS method the coordinator has in force, read without its lock; null before it exists. */
     gpsApplied: () -> String? = { null },
+    /** The screen turned back to CarPlay, as a car's CarPlay button turns it: a game's car display shows CarPlay too. */
+    carPlayShown: () -> Unit = {},
 ) : Closeable, UiSessions {
     val model = UiModel(config.wifi != null, config.autoconnect, config.autoshow, setupDone = SetupStore(dir).done())
+        .apply { onCarPlayShown(carPlayShown) }
     private val settingsFile = SettingsFile(dir.resolve(DesktopConfig.SETTINGS_FILE))
     // A release found stays for the About page (updates.latest), called on the check's worker once the UI is up. A build
     // without a version compares by its commit's day (owner, 2026-11-12).

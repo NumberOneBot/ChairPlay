@@ -16,11 +16,8 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Properties
-import kotlin.io.path.appendText
-import kotlin.io.path.exists
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.io.path.name
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
 
 data class WindowSize(val width: Int, val height: Int)
 
@@ -85,8 +82,11 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
         name
     }
 
+    // A game's car display (takeGameDisplay), over display.* until the app restarts: never in the file or in [values].
+    private val gameDisplay: AtomicReference<CarDisplay?> = startedWith?.gameDisplay ?: AtomicReference()
+
     /** The CarPlay screen (display.*) and its window (window.*). */
-    internal val display = DisplaySettings(settings)
+    internal val display = DisplaySettings(settings, gameDisplay.get())
     val displayWidth = display.width
     val displayHeight = display.height
 
@@ -226,28 +226,18 @@ class DesktopConfig private constructor(private val dir: Path, startedWith: Desk
     /** The settings as settings.properties has them now, with this start's identity and pairings. */
     fun now(): DesktopConfig = DesktopConfig(dir, this)
 
+    /** Puts a game's car [display] in force for the next connections; false when the file and it have it in force now. */
+    fun takeGameDisplay(display: CarDisplay): Boolean {
+        if (now().display.shows(display)) return false
+        gameDisplay.set(display)
+        return true
+    }
+
     fun mfiDirectory(): File = dir.resolve("offline-mfi").toFile()
 
     private fun readSettings() = loadProperties(dir.resolve(SETTINGS_FILE), SETTINGS_REMEDY)
 
-    private fun loadSettings(): Properties {
-        val file = dir.resolve(SETTINGS_FILE)
-        if (!file.exists()) {
-            Files.createDirectories(dir)
-            file.writeText(defaultSettingsText())
-        } else {
-            // A file from an older version gains what it lacks, after its own lines, which stay as they were.
-            val saved = loadProperties(file, SETTINGS_REMEDY)
-            val missing = SETTINGS_TEMPLATE.mapNotNull { block ->
-                block.entries.filter { (key, _) -> !saved.containsKey(key) }.takeIf { it.isNotEmpty() }?.let(block::text)
-            }
-            if (missing.isNotEmpty()) {
-                val text = file.readText()
-                file.appendText((if (text.isEmpty() || text.endsWith("\n")) "" else "\n") + missing.joinToString(""))
-            }
-        }
-        return loadProperties(file, SETTINGS_REMEDY)
-    }
+    private fun loadSettings() = startSettings(dir.resolve(SETTINGS_FILE), ::defaultSettingsText, SETTINGS_REMEDY)
 
     companion object {
         /** settings.properties with every setting at its default, as the first start or deploy writes it. */

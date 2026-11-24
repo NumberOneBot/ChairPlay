@@ -186,7 +186,13 @@ internal val SETTINGS_TEMPLATE = listOf(
     SettingBlock(
         "Whether the CarPlay picture is published as a shared texture for other apps on this PC to show,\n" +
             "'true' or 'false'.",
-        "display.share" to "false",
+        "bridge.picture" to "false",
+    ),
+    SettingBlock(
+        "Whether the telemetry another app on this PC sends is received, 'true' or 'false': its knob and\n" +
+            "buttons work CarPlay, and with the GPS on, the position, heading, and speed it gives drive the GPS\n" +
+            "car instead of the gamepad and keys while they come.",
+        "bridge.telemetry" to "false",
     ),
     SettingBlock("'square' (the picture fills the window to its corners) or 'rounded' (CarPlay rounds them).",
         "display.corners" to "square"),
@@ -210,11 +216,6 @@ internal val SETTINGS_TEMPLATE = listOf(
         "gps.method" to "carplay", "gps.usb.device" to "", "gps.usb.rate" to "10",
     ),
     SettingBlock(
-        "Whether the position, heading, and speed another app on this PC sends drive the GPS car instead\n" +
-            "of the gamepad and keys while they come, 'true' or 'false'.",
-        "gps.external" to "false",
-    ),
-    SettingBlock(
         "Where the car is: 'latitude, longitude' or a Google or Apple Maps link, and its heading in degrees\n" +
             "(0 north, 90 east); the app writes them as the car stops, and the next start begins there. Whether\n" +
             "the heading goes to the iPhone as the course in the sentences, 'true' or 'false'.",
@@ -232,9 +233,9 @@ internal val SETTINGS_TEMPLATE = listOf(
         "gps.wheel" to "steering", "gps.units" to "metric", "gps.gauges.style" to "german",
     ),
     SettingBlock(
-        "Experiments in what the iPhone takes from the GPS: fixes a second, a whole number from 1 to 20 (4 as the iPhone asks);\n" +
+        "Experiments in what the iPhone takes from the GPS: fixes a second, a whole number from 1 to 20 (the iPhone asks for 4);\n" +
             "and the sentences, 'classic' (\$GPGGA, \$GPRMC) or 'modern' (\$GNGGA, \$GNRMC, \$GNGSA, \$GNVTG).",
-        "gps.rate" to "4", "gps.nmea" to "classic",
+        "gps.rate" to "10", "gps.nmea" to "classic",
     ),
     SettingBlock(
         "How an update's sentences go to the iPhone: 'params' (a parameter each, in one message) or 'messages' (a\n" +

@@ -113,7 +113,7 @@ class CarPlayMediaSinkTest {
         override fun close() { events += "close" }
     }
 
-    // display.share: the tap reads each picture before the window releases it, and hears of a stop only once the
+    // bridge.picture: the tap reads each picture before the window releases it, and hears of a stop only once the
     // decoder is closed, so no picture follows it.
     @Test
     fun `the frame tap sees the stream and its pictures and closes with the sink`() {

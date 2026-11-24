@@ -111,13 +111,13 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // way to the waiting screen instead of its last picture standing still.
     val sessionDropped = AtomicReference<() -> Unit> {}
     fun reconnect() = Thread({ restartBootstrap.get()() }, "reconnect").apply { isDaemon = true }.start()
-    val appControls = AppControls(bindings, audio.volume, driving, altView, touchSender, active::get, ::screenshots, reconnect = {
+    val appControls = AppControls(bindings, audio.volume, driving, config, altView, touchSender, active::get, ::screenshots, reconnect = {
         log("reconnecting at the user's request")
         title.reconnect()
         audio.fadeOut()
         sessionDropped.get()()
         reconnect()
-    }) { controlsChanged.get()() }.apply { fullscreen = window::toggleFullscreen }
+    }) { controlsChanged.get()() }.apply { fullscreen = window::toggleFullscreen; carPlayScreen = audio.bridgeScreen::carPlay }
     val lockReady = CountDownLatch(1)
     val startBootstrap = AtomicReference<() -> Unit> {}
     val stopBootstrap = AtomicReference<() -> Unit> {}
@@ -160,13 +160,13 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
                 runCatching { config.now() }.onSuccess(altView::areasSaved)
             }
             // A start or heading saved puts the GPS car there; a power or mass saved remakes it where it is.
-            if (saved.keys.any { it.startsWith("gps.") }) runCatching { config.now() }.onSuccess { now -> driving.saved(now.gps, saved.keys) }
+            if (saved.keys.any { it.startsWith("gps.") || it == "bridge.telemetry" }) runCatching { config.now() }.onSuccess { now -> driving.saved(now.gps, saved.keys) }
             // A saved turn card moves at once, as Shift+F11 moves it.
             saved["altscreen.cards"]?.let(altView::cardsSaved)
         },
         demo = altView.demos, gps = { gps.get()?.state() ?: driving.state() }, driving = uiDriving(driving, window, ::screenshots, ::log),
         bufferedAudio = audio::bufferedAudio, gpsCommands = { gps.get()?.coordinator }, trackCommands = { gps.get()?.track?.act(it) ?: false },
-        gpsApplied = { gps.get()?.coordinator?.appliedMethod?.key })
+        gpsApplied = { gps.get()?.coordinator?.appliedMethod?.key }, carPlayShown = audio.bridgeScreen::carPlay)
     // The GPS output: CarPlay's and USB's channels for the car, and their one coordinator (gps/).
     val appGps = AppGps(driving, { ui.saveGps(it) }, { active.get() != null }, ::log,
         appUsbHelper(dir, Platforms.current.shell.usbGpsHelper(), ::log))
@@ -223,7 +223,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
     // CarPlay: the iPhone's sound and screens, its route, song, call and battery messages, its GPS, and the connection.
     val sessions = SessionListener(active, ui, window, title, theme, ::sessionChanged)
-    val carPlay = CarPlayProtocol(dir, config, audio, appControls.textInput, driving, appGps.carplay.gate, sessions::carButton)
+    val carPlay = CarPlayProtocol(dir, config, audio, appControls.textInput, driving, appGps.carplay.gate) { sessions.carButton(); audio.bridgeScreen.carButton() }
     // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it. An incoming
     // call flashes the CarPlay window's taskbar button, and brings the window forward with window.front.on.call.
     appControls.playing = { active.get() != null && carPlay.bus.snapshot().nowPlaying?.playing == true }
@@ -236,7 +236,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
             sessionChanged()
             ui.sessionEnded()
         }
-        window.clearPicture()
+        audio.clearPicture()
     }
     startBootstrap.set(connection::start)
     // A retired stack's session ends unheard (onSessionEnded above stays quiet), so Disconnect clears it here.
@@ -265,8 +265,8 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         appGps.coordinator.connected()
     }
     Runtime.getRuntime().addShutdownHook(Thread {
-        // The window is gone at once; the sound fades over the seconds the session takes to end.
-        audio.fadeOut()
+        // The window and the shared picture are gone at once; the sound fades over the seconds the session takes to end.
+        audio.closing()
         appControls.close()
         // A USB simulation ends as an explicit stop's does, within its budget; the switch stays saved.
         appGps.close()

@@ -102,7 +102,7 @@ class ScreenDecodersTest {
         screens.close()
     }
 
-    // display.share: the tap reads each picture of each screen before its window takes it, and hears of a stop only once
+    // bridge.picture: the tap reads each picture of each screen before its window takes it, and hears of a stop only once
     // the decoder is closed, so no picture follows it.
     @Test
     fun `the frame tap sees main screen frames`() {

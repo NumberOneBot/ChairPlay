@@ -28,8 +28,8 @@ class GpsConfigTest {
         assertNull(off.start)
         assertEquals(0.0, off.headingDegrees, 0.0)
         assertEquals(CarSpec(), off.car)
-        // The experiments: the rate the iPhone asks for, and DiPlay's sentences.
-        assertEquals(4, off.rate)
+        // The experiments: 10 fixes a second by default, as USB's (owner, 2026-11-24), and DiPlay's sentences.
+        assertEquals(10, off.rate)
         assertEquals(NmeaDialect.CLASSIC, off.nmea)
         // Any whole number of fixes a second from 1 to 20.
         for (rate in listOf(1, 7, 10, 20)) assertEquals(rate, configWith("gps.rate=$rate").gps.rate)
@@ -67,7 +67,7 @@ class GpsConfigTest {
     @Test
     fun `a game drives the car only when asked`() {
         assertFalse(configWith().gps.external)
-        assertTrue(configWith("gps.external=true").gps.external)
+        assertTrue(configWith("bridge.telemetry=true").gps.external)
     }
 
     // A settings file from before USB GPS sends by CarPlay, its switch as it was (V01); USB keeps its own rate.
@@ -77,13 +77,13 @@ class GpsConfigTest {
         assertEquals(GpsMethod.CARPLAY, old.method)
         assertTrue(old.enabled)
         assertEquals(10, old.rate)
-        // USB's own rate, 10 a second by default (owner, 2026-11-22), CarPlay's staying 4.
+        // USB's own rate, 10 a second by default (owner, 2026-11-22), apart from CarPlay's.
         assertEquals(10, old.usbRate)
         assertNull(old.usbDevice)
         val usb = configWith("gps.method=usb", "gps.usb.rate=5", "gps.usb.device=00008110-000A").gps
         assertEquals(GpsMethod.USB, usb.method)
         assertEquals(5, usb.usbRate)
-        assertEquals(4, usb.rate)
+        assertEquals(10, usb.rate)
         assertEquals("00008110-000A", usb.usbDevice)
         assertEquals(GpsMethod.CARPLAY, configWith("gps.method=pigeon").gps.method)
     }

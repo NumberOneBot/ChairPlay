@@ -27,7 +27,7 @@ class DisplayConfigTest {
     @Test
     fun `display share is off unless set`() {
         assertFalse(configWith().display.share)
-        assertTrue(configWith("display.share=true").display.share)
+        assertTrue(configWith("bridge.picture=true").display.share)
     }
 
     @Test
