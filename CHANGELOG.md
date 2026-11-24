@@ -2,7 +2,11 @@
 
 New features and fixed bugs in ChairPlay.
 
-## 1.1.2 - Unreleased
+## 1.1.2 - 2026-11-24
+
+### Added
+
+- With USB GPS ready, the GPS page says that the iPhone takes its time zone from its location, so its clock changes as the car crosses time zones, and that turning off the automatic time zone on the iPhone keeps it.
 
 ### Changed
 
