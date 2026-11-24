@@ -1,6 +1,7 @@
 // The app's API (UiServer.kt): what it sends and takes, and what the screens need from it; the client is apiClient.ts.
 import type { TrackAction, TrackState } from './gps/trackApi'
 import type { GpsBackend, GpsOutput, UsbSetupView } from './gpsApi'
+import type { PlatformState } from './i18n/platform'
 import type { SupportBackend, SupportState } from './supportApi'
 
 export type Phase = 'setup' | 'idle' | 'starting' | 'calling' | 'joining' | 'active' | 'retrying'
@@ -121,7 +122,7 @@ export interface WindowState {
   visible: boolean
 }
 
-export interface AppState extends SupportState {
+export interface AppState extends SupportState, PlatformState {
   bufferedAudio: {
     state: 'loading' | 'playing' | 'paused' | 'empty'; seconds: number; bytes: number
     multichannelOutput?: 'surround' | 'downmix'
@@ -130,8 +131,7 @@ export interface AppState extends SupportState {
   version: number
   /** Moves on with each settings save; the page re-reads /api/settings when it changes, since the state omits them. */
   settingsVersion: number
-  phase: Phase
-  screen: Screen
+  phase: Phase; screen: Screen
   error: { message: string; at: string } | null
   knownIphone: boolean
   canShowCarPlay: boolean

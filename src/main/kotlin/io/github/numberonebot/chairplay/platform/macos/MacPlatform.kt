@@ -13,6 +13,7 @@ import io.github.numberonebot.chairplay.network.WlanConnection
 import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.CloseWatch
 import io.github.numberonebot.chairplay.platform.DesktopShell
+import io.github.numberonebot.chairplay.platform.Feature
 import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.GameBridge
 import io.github.numberonebot.chairplay.platform.HardwareVideo
@@ -42,6 +43,8 @@ import java.util.UUID
 
 /** macOS, chosen for a Mac but not ready: every use of it throws [notReady]'s exception. */
 internal class MacPlatform : Platform {
+    override val id = "macos"
+    override val features = emptySet<Feature>()
     override val shell: DesktopShell = MacShell
     override val oneCopy: OneCopyClaim = MacOneCopy
     override val keepAlive: KeepAliveTuning = MacKeepAlive
@@ -159,7 +162,7 @@ private object MacShell : DesktopShell {
 
     override fun textFileCommand(file: Path): List<String> = notReady()
 
-    override fun systemPage(page: SystemPage): String = notReady()
+    override fun systemPage(page: SystemPage): String? = notReady()
 }
 
 private object MacOneCopy : OneCopyClaim {

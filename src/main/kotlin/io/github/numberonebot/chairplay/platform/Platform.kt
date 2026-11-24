@@ -12,6 +12,12 @@ import java.nio.file.Path
  * each adapter is made the first time it is asked for, so a system's libraries load only when they are used.
  */
 internal interface Platform {
+    /** The system's name the settings page picks its texts by: "windows", "macos". */
+    val id: String
+
+    /** What this system can do of what not every system can; the settings page hides the others. */
+    val features: Set<Feature>
+
     /** The desktop's own facts: the system's name, its theme, and the app's data folder; its message box and pages. */
     val shell: DesktopShell
 
@@ -62,4 +68,12 @@ internal interface Platform {
      * opened a file elsewhere; null when the user cancelled.
      */
     fun openFile(title: String, filterName: String, patterns: List<String>, folder: Path): Path?
+}
+
+/** A part of the app only some systems have, by the [key] the settings page knows it by. */
+internal enum class Feature(val key: String) {
+    USB_GPS("usbGps"),
+    GAME_BRIDGE("gameBridge"),
+    GLOBAL_KEYBOARD("globalKeyboard"),
+    LOCATION("location"),
 }

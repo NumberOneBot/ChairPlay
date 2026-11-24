@@ -3,6 +3,7 @@ import { applyAccent, applyTint } from './accent'
 import type { AppState } from './api'
 import { Api } from './apiClient'
 import { ControlsScreen } from './ControlsScreen'
+import { setPlatform } from './i18n/platform'
 import { Shell } from './shell/Shell'
 
 export function App() {
@@ -23,6 +24,8 @@ export function App() {
   // The settings take ui.tint; the controls window its own, black unless ui.tint.controls lets the tint reach it.
   const tint = controlsPage ? state?.controlsTint : state?.tint
   useEffect(() => applyTint(tint), [tint])
+  // Before the pages render: they pick their texts and parts by it.
+  if (state) setPlatform(state)
   if (controlsPage) {
     return state ? <ControlsScreen state={state} backend={api} /> : <div className="controls-screen" />
   }

@@ -99,6 +99,11 @@
   color: rgb(from var(--text) calc(r - 23) calc(g - 23) calc(b - 21));
 }
 
+/* A card whose only button opens a system page this system lacks keeps no empty row for it. */
+.shell .alert .acts:empty {
+  display: none;
+}
+
 .shell .code {
   grid-column: 1 / 2;
   overflow: hidden;

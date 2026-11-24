@@ -5,6 +5,8 @@ import type { AppState, Backend } from '../api'
 import { Message } from '../shell/controls'
 import { ShieldIcon } from '../shell/icons'
 import { errorKind, type ErrorKind } from '../status'
+import { t } from '../i18n/texts'
+import { SystemPageButton } from '../shell/SystemPageButton'
 
 /** A path or command to read or copy, and its button beside it. */
 export function CodeLine({ text, children }: { text: string; children: ReactNode }) {
@@ -99,14 +101,9 @@ export function ErrorMessage({
       "Couldn't reach the iPhone.",
       'No paired iPhone answered over Bluetooth. Make sure the iPhone is paired, nearby, and has Bluetooth turned on.',
       <div className="acts">
-        <button
-          type="button"
-          className="btn small"
-          title="Open Bluetooth settings"
-          onClick={() => backend.open('bluetooth')}
-        >
+        <SystemPageButton place="bluetooth" backend={backend} title="Open Bluetooth settings">
           Open Bluetooth settings
-        </button>
+        </SystemPageButton>
         <GuideLink onShowGuide={onShowGuide} />
       </div>,
     ],
@@ -114,9 +111,9 @@ export function ErrorMessage({
       "Couldn't open the Wi-Fi.",
       'Check the network below, and that this PC is connected to it.',
       <div className="acts">
-        <button type="button" className="btn small" title="Open Wi-Fi settings" onClick={() => backend.open('wifi')}>
+        <SystemPageButton place="wifi" backend={backend} title="Open Wi-Fi settings">
           Open Wi-Fi settings
-        </button>
+        </SystemPageButton>
       </div>,
     ],
     mfi: [
@@ -162,9 +159,7 @@ export function AddRule({ backend }: { backend: Backend }) {
       <button
         type="button"
         className="btn small"
-        title={
-          waiting ? 'Waiting for your consent' : 'Add an inbound rule for ChairPlay.exe; Windows asks for your consent'
-        }
+        title={waiting ? 'Waiting for your consent' : t('firewall.addRule')}
         disabled={waiting}
         onClick={async () => {
           setWaiting(true)
@@ -204,17 +199,12 @@ export function SetupMessages({
         <Message
           tone="warn"
           head="No iPhone is paired with this PC."
-          text="On the iPhone, open Settings › Bluetooth. On this PC, open Settings › Bluetooth & devices › Add device › Bluetooth, choose the iPhone, and confirm the code on both."
+          text={t('pair.howCard')}
         >
           <div className="acts">
-            <button
-              type="button"
-              className="btn small"
-              title="Open Bluetooth settings"
-              onClick={() => backend.open('bluetooth')}
-            >
+            <SystemPageButton place="bluetooth" backend={backend} title="Open Bluetooth settings">
               Open Bluetooth settings
-            </button>
+            </SystemPageButton>
             <GuideLink onShowGuide={onShowGuide} />
           </div>
         </Message>
@@ -231,7 +221,7 @@ export function SetupMessages({
         <Message
           tone="warn"
           head="No firewall rule for ChairPlay."
-          text="If the iPhone cannot connect, let ChairPlay in through Windows Firewall."
+          text={t('firewall.letIn')}
         >
           <AddRule backend={backend} />
           <CodeLine text={setup.firewallCommands}>
@@ -256,7 +246,7 @@ export function SetupMessages({
         <Message
           tone="warn"
           head="The firewall's rules could not be read."
-          text="If the iPhone cannot connect, run this in Terminal (Admin):"
+          text={t('firewall.runAsAdmin')}
         >
           <CodeLine text={setup.firewallCommands}>
             <CopyButton text={setup.firewallCommands} />
@@ -267,18 +257,13 @@ export function SetupMessages({
         <Message
           tone="warn"
           head="A firewall rule blocks ChairPlay."
-          text="Delete the rule, or set it to Allow, in the firewall's Inbound Rules."
+          text={t('firewall.blockedHow')}
         >
           <div className="acts">
-            <button
-              type="button"
-              className="btn small"
-              title="Open Windows Defender Firewall with Advanced Security"
-              onClick={() => backend.open('firewall-rules')}
-            >
+            <SystemPageButton place="firewall-rules" backend={backend} title={t('firewall.openRules')}>
               <ShieldIcon />
               Open the firewall's rules
-            </button>
+            </SystemPageButton>
           </div>
         </Message>
       )}

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import type { AppState, Backend, BuildCommit, WindowsPlace } from '../api'
 import { Group, Message, Row } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
+import { t } from '../i18n/texts'
 import { CopyButton } from './messages'
 import { UpdateSettings } from './UpdateSettings'
 
@@ -35,7 +36,7 @@ export function AboutHead() {
     <div className="about-head">
       <img src={icon} alt="" />
       <span className="about-name">ChairPlay</span>
-      <span className="hint">Wireless CarPlay receiver for Windows</span>
+      <span className="hint">{t('about.tagline')}</span>
     </div>
   )
 }
@@ -130,7 +131,7 @@ export function About({ state, backend, onShowGuide }: { state: AppState; backen
             <CopyButton
               text={state.about.details}
               label="Copy details"
-              title="Copy the build, the DiPlay core, and the Windows version"
+              title={t('about.copyDetails')}
               testId="app-copy-details"
             />
           </span>

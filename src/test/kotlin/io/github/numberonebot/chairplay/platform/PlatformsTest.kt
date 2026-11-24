@@ -16,6 +16,15 @@ class PlatformsTest {
         assertTrue(Platforms.select("Windows 10") is WindowsPlatform)
     }
 
+    // The page shows a feature only where the platform has it (owner, 2026-11-24): Windows has them all, the Mac stub none.
+    @Test
+    fun `each platform names itself and the features it has`() {
+        assertEquals("windows", WindowsPlatform().id)
+        assertEquals(Feature.entries.toSet(), WindowsPlatform().features)
+        assertEquals("macos", MacPlatform().id)
+        assertEquals(emptySet<Feature>(), MacPlatform().features)
+    }
+
     @Test
     fun `Mac names select the Mac platform`() {
         assertTrue(Platforms.select("Mac OS X") is MacPlatform)

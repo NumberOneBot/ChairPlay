@@ -4,6 +4,7 @@ import io.github.numberonebot.chairplay.input.GlobalKeyboardCallbacks
 import io.github.numberonebot.chairplay.input.GlobalKeyboardSource
 import io.github.numberonebot.chairplay.platform.Bluetooth
 import io.github.numberonebot.chairplay.platform.DesktopShell
+import io.github.numberonebot.chairplay.platform.Feature
 import io.github.numberonebot.chairplay.platform.Firewall
 import io.github.numberonebot.chairplay.platform.GameBridge
 import io.github.numberonebot.chairplay.platform.HardwareVideo
@@ -23,6 +24,8 @@ import org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_D3D11
 
 /** Windows, through today's adapters; each is made the first time it is asked for, so none loads its DLLs before. */
 internal class WindowsPlatform : Platform {
+    override val id get() = "windows"
+    override val features get() = Feature.entries.toSet()
     override val shell: DesktopShell by lazy { WindowsShell() }
     override val oneCopy: OneCopyClaim by lazy { OneCopyClaim { name, timeoutMillis -> NamedMutex.claim("Local\\$name", timeoutMillis) } }
     override val keepAlive: KeepAliveTuning by lazy { WinsockKeepAlive() }

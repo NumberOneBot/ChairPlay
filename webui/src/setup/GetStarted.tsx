@@ -8,6 +8,8 @@ import { PencilIcon, ShieldIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
 import type { Steps, StepState } from './steps'
 import { useSetupChecks } from './useSetupChecks'
+import { t } from '../i18n/texts'
+import { SystemPageButton } from '../shell/SystemPageButton'
 import { NetworkConnection, showNetworkConnection, WifiHidden } from '../pages/NetworkConnection'
 
 function Tick() {
@@ -101,28 +103,18 @@ export function GetStarted(props: {
         <Step n={1 + mfiCount} title="Firewall" {...firewall}>
           {setup.firewall === 'blocked' ? (
             <>
-              <span>
-                A rule in Windows Defender Firewall blocks ChairPlay, so the iPhone cannot reach it. Delete the rule, or
-                set it to Allow, then come back.
-              </span>
+              <span>{t('firewall.blocked')}</span>
               <div className="acts">
-                <button
-                  type="button"
-                  className="btn"
-                  title="Open Windows Defender Firewall with Advanced Security"
-                  onClick={() => backend.open('firewall-rules')}
-                >
+                <SystemPageButton place="firewall-rules" backend={backend} className="btn" title={t('firewall.openRules')}>
                   <ShieldIcon />
                   Open the firewall's rules
-                </button>
+                </SystemPageButton>
                 <Waiting>Waiting for the rule to change…</Waiting>
               </div>
             </>
           ) : (
             <>
-              <span>
-                Windows Firewall is on and has no rule for ChairPlay, so it may drop the iPhone's connections.
-              </span>
+              <span>{t('firewall.noRule')}</span>
               <AddRule backend={backend} />
               <div className="acts">
                 <CodeLine text={setup.firewallCommands}>
@@ -135,25 +127,15 @@ export function GetStarted(props: {
       )}
       <Step n={1 + optionalCount} title="Pair the iPhone" {...steps.pair}>
         {steps.pairForgotten ? (
-          <span>
-            ChairPlay forgot {steps.pairForgotten}, but Windows still has it paired. To pair from scratch, remove it in
-            Settings › Bluetooth &amp; devices, and forget this car on the iPhone in Settings › General › CarPlay.
-          </span>
+          <span>{t('pair.forgotten', { name: steps.pairForgotten })}</span>
         ) : (
-          <span>
-            Turn on Bluetooth on the iPhone, then pair it with this PC in Settings › Bluetooth &amp; devices › Add device.
-          </span>
+          <span>{t('pair.how')}</span>
         )}
         <div className="acts">
-          <button
-            type="button"
-            className="btn"
-            data-testid={steps.pairForgotten ? 'setup-pair-forgotten' : 'setup-pair-bluetooth'}
-            title="Open Bluetooth settings"
-            onClick={() => backend.open('bluetooth')}
-          >
+          <SystemPageButton place="bluetooth" backend={backend} className="btn" title="Open Bluetooth settings"
+            testId={steps.pairForgotten ? 'setup-pair-forgotten' : 'setup-pair-bluetooth'}>
             Open Bluetooth settings
-          </button>
+          </SystemPageButton>
           <Waiting>{steps.pairForgotten ? 'Waiting for the iPhone to be removed…' : 'Waiting for a paired iPhone…'}</Waiting>
         </div>
       </Step>

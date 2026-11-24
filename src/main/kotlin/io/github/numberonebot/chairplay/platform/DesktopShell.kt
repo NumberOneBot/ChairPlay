@@ -28,8 +28,8 @@ internal interface DesktopShell {
     /** The command that opens [file] in a text editor. */
     fun textFileCommand(file: Path): List<String>
 
-    /** What [openCommand] takes to open [page]. */
-    fun systemPage(page: SystemPage): String
+    /** What [openCommand] takes to open [page]; null where the system has no such page. */
+    fun systemPage(page: SystemPage): String?
 
     /** The USB GPS helper program the app's image ships (helper/ beside the app), or null when it has none. */
     fun usbGpsHelper(): Path? = null

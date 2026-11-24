@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { AppState, Backend, DemoKind, FolderSizes } from '../api'
 import { keyLabel } from '../ControlsScreen'
 import { PhoneIcon } from '../gps/icons'
+import { WhenSupported } from '../i18n/platform'
 import { Group, Row, Segmented, Switch, type Choice } from '../shell/controls'
 import { LogsIcon, ScreenshotsIcon } from '../shell/icons'
 import type { Settings } from '../shell/useSettings'
@@ -118,30 +119,32 @@ export function ExperimentsPage({
           </span>
         )}
       </Row>
-      <Group title="Integrations" note="With other apps on this PC" />
-      <Row
-        label="CarPlay picture"
-        title="Let another app on this PC show the CarPlay picture on its own screen"
-      >
-        <Switch
-          label="Publish as a shared texture"
-          testId="integrations-picture"
-          checked={settings.value('bridge.picture') === 'true'}
-          onChange={(checked) => settings.save({ 'bridge.picture': String(checked) })}
-        />
-      </Row>
-      {/* Its controls work without the GPS; its position drives the GPS car only while the GPS is on (owner, 2026-11-24). */}
-      <Row
-        label="Telemetry"
-        title="Take the CarPlay knob and buttons, and the GPS car's position, from the telemetry another app sends"
-      >
-        <Switch
-          label="Receive from other apps"
-          testId="integrations-telemetry"
-          checked={settings.value('bridge.telemetry') === 'true'}
-          onChange={(checked) => settings.save({ 'bridge.telemetry': String(checked) })}
-        />
-      </Row>
+      <WhenSupported feature="gameBridge">
+        <Group title="Integrations" note="With other apps on this PC" />
+        <Row
+          label="CarPlay picture"
+          title="Let another app on this PC show the CarPlay picture on its own screen"
+        >
+          <Switch
+            label="Publish as a shared texture"
+            testId="integrations-picture"
+            checked={settings.value('bridge.picture') === 'true'}
+            onChange={(checked) => settings.save({ 'bridge.picture': String(checked) })}
+          />
+        </Row>
+        {/* Its controls work without the GPS; its position drives the GPS car only while the GPS is on (owner, 2026-11-24). */}
+        <Row
+          label="Telemetry"
+          title="Take the CarPlay knob and buttons, and the GPS car's position, from the telemetry another app sends"
+        >
+          <Switch
+            label="Receive from other apps"
+            testId="integrations-telemetry"
+            checked={settings.value('bridge.telemetry') === 'true'}
+            onChange={(checked) => settings.save({ 'bridge.telemetry': String(checked) })}
+          />
+        </Row>
+      </WhenSupported>
       <Group title="HUD demo" note="On the AltScreen's HUD" />
       {DEMOS.map(([kind, label, title]) => {
         const playing = demo?.playing === kind

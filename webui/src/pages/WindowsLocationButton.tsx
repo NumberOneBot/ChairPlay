@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import type { Backend } from '../api'
+import { opens } from '../i18n/platform'
+import { t } from '../i18n/texts'
+import { SystemPageButton } from '../shell/SystemPageButton'
 import type { Settings } from '../shell/useSettings'
 
 /**
@@ -35,21 +38,24 @@ export function WindowsLocationButton({
       <button
         type="button"
         className="btn small"
-        title="Put the car where Windows locates this PC"
+        title={t('location.useTitle')}
         disabled={asking}
         onClick={() => void locate()}
+        data-testid="gps-locate"
       >
-        Use Windows location
+        {t('location.use')}
       </button>
       {problem === 'denied' && (
         <span className="errtext">
-          Windows does not share this PC's location. Turn it on for desktop apps in{' '}
-          <button type="button" className="link" onClick={() => void backend.open('location')}>
-            Location settings
-          </button>
+          {t('location.denied')}
+          {/* The way to turn it on only where the app can open the system's location settings. */}
+          {opens('location') && <>
+            {' '}{t('location.turnOn')}{' '}
+            <SystemPageButton place="location" backend={backend} className="link">Location settings</SystemPageButton>
+          </>}
         </span>
       )}
-      {problem === 'unknown' && <span className="errtext">Windows found no position. Try again in a moment.</span>}
+      {problem === 'unknown' && <span className="errtext">{t('location.unknown')}</span>}
     </>
   )
 }

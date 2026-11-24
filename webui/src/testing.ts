@@ -22,6 +22,9 @@ export function appState(overrides: Partial<AppState> = {}): AppState {
   return {
     version: 1,
     settingsVersion: 1,
+    platform: 'windows',
+    features: ['usbGps', 'gameBridge', 'globalKeyboard', 'location'],
+    systemPages: ['bluetooth', 'wifi', 'firewall', 'firewall-rules', 'location', 'apple-devices-app'],
     phase: 'calling',
     screen: 'start',
     error: null,

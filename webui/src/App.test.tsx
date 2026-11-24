@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from './api'
 import { App } from './App'
 import { FakeBackend } from './fakeBackend'
+import { setPlatform, supports, WINDOWS } from './i18n/platform'
 import { absent, appState, control } from './testing'
 
 afterEach(() => {
@@ -10,6 +11,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
   history.replaceState(null, '', '/')
   document.documentElement.removeAttribute('data-tint')
+  setPlatform(WINDOWS)
 })
 
 /**
@@ -54,6 +56,14 @@ describe('the tint', () => {
     open('/controls', appState({ tint: 'teal', controlsTint: 'teal' }))
     expect(document.documentElement.dataset.tint).toBe('teal')
   })
+})
+
+// The pages pick their texts and parts by the system the state names (i18n/platform.tsx).
+it('takes the system and its features from the state', () => {
+  open('/', appState({ platform: 'linux', features: ['gameBridge'] }))
+
+  expect(supports('gameBridge')).toBe(true)
+  expect(supports('usbGps')).toBe(false)
 })
 
 // The app's state says what its window shows; ChairPlay's window opens the page at ?window, a browser tab without it.

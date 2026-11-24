@@ -1,5 +1,10 @@
-/** The Keyboard page's actions by group, in the page's order: each setting, the name the page gives it, and its tooltip. */
-export const KEY_GROUPS: [group: string, actions: [key: string, label: string, title?: string][]][] = [
+import { t } from '../i18n/texts'
+
+/**
+ * The Keyboard page's actions by group, in the page's order: each setting, the name the page gives it, and its tooltip.
+ * Made as the page renders, after the state named the system the texts are for.
+ */
+export const keyGroups = (): [group: string, actions: [key: string, label: string, title?: string][]][] => [
   [
     'CarPlay',
     [
@@ -21,7 +26,7 @@ export const KEY_GROUPS: [group: string, actions: [key: string, label: string, t
       ['key.media.previous', 'Previous track'],
       ['key.media.playpause', 'Play or pause'],
       ['key.media.next', 'Next track'],
-      ['key.volume.up', 'Volume up', "ChairPlay's own volume; the Windows volume stays"],
+      ['key.volume.up', 'Volume up', t('keys.volumeUp')],
       ['key.volume.down', 'Volume down'],
       ['key.volume.mute', 'Mute'],
       ['key.call.answer', 'Answer call'],

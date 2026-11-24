@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 /** A platform for tests: each answer is a field the test sets, and nothing reaches the real system. */
 internal class FakePlatform(
+    override val id: String = "windows",
+    override val features: Set<Feature> = Feature.entries.toSet(),
     override val shell: FakeShell = FakeShell(),
     override val oneCopy: OneCopyClaim = OneCopyClaim { _, _ -> Closeable { } },
     override val keepAlive: KeepAliveTuning = FakeKeepAlive(),
@@ -189,7 +191,10 @@ internal class FakeShell(
 
     override fun textFileCommand(file: Path): List<String> = listOf("edit", file.toString())
 
-    override fun systemPage(page: SystemPage): String = "page:${page.name}"
+    /** The system pages this system has; [systemPage] is null for the others. */
+    var pages: Set<SystemPage> = SystemPage.entries.toSet()
+
+    override fun systemPage(page: SystemPage): String? = "page:${page.name}".takeIf { page in pages }
 }
 
 /** Keep-alive tuning that remembers the last values it was given. */

@@ -3,7 +3,6 @@ package io.github.numberonebot.chairplay.ui
 import io.github.numberonebot.chairplay.gps.DeveloperToolsStore
 import io.github.numberonebot.chairplay.platform.DesktopShell
 import io.github.numberonebot.chairplay.platform.Platforms
-import io.github.numberonebot.chairplay.platform.SystemPage
 import io.github.numberonebot.chairplay.update.BUY_ME_A_COFFEE_PAGE
 import io.github.numberonebot.chairplay.update.LATEST_RELEASE_PAGE
 import io.github.numberonebot.chairplay.update.tagged
@@ -43,11 +42,7 @@ internal class UiPlaces(
     }
 
     private fun target(place: String): String = when (place) {
-        "bluetooth" -> shell.systemPage(SystemPage.BLUETOOTH)
-        "wifi" -> shell.systemPage(SystemPage.WIFI)
-        "firewall" -> shell.systemPage(SystemPage.FIREWALL)
-        "location" -> shell.systemPage(SystemPage.LOCATION)
-        "firewall-rules" -> shell.systemPage(SystemPage.FIREWALL_RULES)
+        in SYSTEM_PLACES -> shell.systemPage(SYSTEM_PLACES.getValue(place)) ?: error("this system has no $place page")
         "issues" -> "$PROJECT/issues/new?body=" +
             URLEncoder.encode("What happened, and what you expected:\n\n\n---\n$details", Charsets.UTF_8).replace("+", "%20")
         "discussions" -> "$PROJECT/discussions"
@@ -62,7 +57,6 @@ internal class UiPlaces(
         "livi" -> "https://github.com/f-io/LIVI"
         "rgi" -> "https://github.com/luka-dev/mib2q-carplay-rgi"
         "apple-devices" -> "https://apps.microsoft.com/detail/9NP83LWLPZ9K"
-        "apple-devices-app" -> shell.systemPage(SystemPage.APPLE_DEVICES)
         "logs", "screenshots" -> Files.createDirectories(setup.settingsFile.resolveSibling(place)).toString()
         "developer-tools" -> Files.createDirectories(developerTools).toString()
         else -> Files.createDirectories(setup.mfiDirectory).toString()

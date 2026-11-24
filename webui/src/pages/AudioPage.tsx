@@ -3,13 +3,14 @@ import { Group, Row, Segmented, Slider, Switch, type Choice } from '../shell/con
 import { Select } from '../shell/fields'
 import type { Settings } from '../shell/useSettings'
 import { Changed, parts, pendingOf } from './parts'
+import { t } from '../i18n/texts'
 
 /**
  * A device list: the Windows default first, then the devices Java Sound lists. A saved device the list lacks (one
  * unplugged, or a part of a name written in the file) stays as chosen, marked as not found.
  */
 function deviceChoices(devices: readonly string[], saved: string): Choice[] {
-  const choices: Choice[] = [['default', 'Windows default'], ...devices.map((name): Choice => [name, name])]
+  const choices: Choice[] = [['default', t('audio.systemDefault')], ...devices.map((name): Choice => [name, name])]
   if (saved && saved !== 'default' && !devices.includes(saved)) choices.push([saved, `${saved} (not found)`])
   return choices
 }
@@ -54,7 +55,7 @@ export function AudioPage({ state, backend, settings }: { state: AppState; backe
       {volume && (
         <Row
           label="Volume"
-          title="ChairPlay's own volume, as the volume keys and the controls window set it; Windows' own stays as it is"
+          title={t('audio.volume')}
         >
           <Slider
             label="Volume"

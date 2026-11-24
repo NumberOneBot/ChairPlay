@@ -7,6 +7,7 @@ import { outputOf, usbGpsReady } from '../gps/output'
 import { TrackPlayback } from '../gps/TrackPlayback'
 import { trackOwnsCar } from '../gps/trackRules'
 import { UsbSetupWizard } from '../gps/UsbSetupWizard'
+import { WhenSupported } from '../i18n/platform'
 import { VirtualCar } from '../gps/VirtualCar'
 import { Group, Row } from '../shell/controls'
 import type { Settings } from '../shell/useSettings'
@@ -79,9 +80,11 @@ export function GpsPage({ state, backend, settings }: { state: AppState; backend
           title={positionHold ?? undefined}
           data-testid="gps-position-hold"
         >
-          <Row>
-            <WindowsLocationButton backend={backend} settings={settings} heading={heading} />
-          </Row>
+          <WhenSupported feature="location">
+            <Row>
+              <WindowsLocationButton backend={backend} settings={settings} heading={heading} />
+            </Row>
+          </WhenSupported>
           <Row
             label="Coordinates"
             title="Where the car is now, following it as it drives; change it to move the car there, or paste a map link"

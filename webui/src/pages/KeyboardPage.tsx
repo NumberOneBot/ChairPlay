@@ -8,7 +8,8 @@ import type { Settings } from '../shell/useSettings'
 import { bindingName, isModifier } from './keyNames'
 import { TextInputSettings } from './TextInputSettings'
 import { GlobalShortcuts } from './GlobalShortcuts'
-import { KEY_GROUPS } from './keyGroups'
+import { keyGroups } from './keyGroups'
+import { WhenSupported } from '../i18n/platform'
 
 /** Why a fixed key stays where it is. */
 const FIXED_REASON: Record<string, string> = {
@@ -197,7 +198,9 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
     <div className="keyboard">
       {/* As Audio's Music group: the one setting here that waits (keyboard.text.input), named */}
       <Group title="General" note="Type in CarPlay applies at the next connection" />
-      <GlobalShortcuts data={data} state={state} save={save} error={errors['global.enabled']} />
+      <WhenSupported feature="globalKeyboard">
+        <GlobalShortcuts data={data} state={state} save={save} error={errors['global.enabled']} />
+      </WhenSupported>
       <TextInputSettings state={state} settings={settings} />
       <Row title="Hold Alt to see them for a moment">
         <Switch
@@ -242,7 +245,7 @@ export function KeyboardPage({ state, backend, settings }: { state: AppState; ba
         {numberField('key.zoom.repeat.every', 'AltScreen zoom')}
         <span className="unit">repeats per step</span>
       </Row>
-      {KEY_GROUPS.map(([group, actions]) => (
+      {keyGroups().map(([group, actions]) => (
         <div key={group}>
           <Group title={group} />
           {actions.map(actionRow)}

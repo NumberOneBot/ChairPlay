@@ -11,7 +11,7 @@ export function GlobalShortcuts({ data, state, save, error }: {
   return (
     <>
       <Row>
-        <Switch label="Global shortcuts" checked={data.settings['global.enabled'] === 'true'}
+        <Switch label="Global shortcuts" testId="global-shortcuts" checked={data.settings['global.enabled'] === 'true'}
           onChange={(enabled) => void save({ 'global.enabled': String(enabled) })} />
       </Row>
       <Row className="hint-row">

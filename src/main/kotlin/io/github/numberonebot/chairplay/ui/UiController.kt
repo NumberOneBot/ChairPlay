@@ -60,6 +60,7 @@ class UiController(
     private val bufferedAudio: () -> Map<String, Any>? = { null },
     /** The GPS method the coordinator has in force ("carplay", "usb"), read without its lock; null without one. */
     gpsApplied: () -> String? = { null },
+    private val platform: UiPlatform = Platforms.current.forPage(),
 ) : UiApi {
     private val places = UiPlaces(setup, launch, log, about, systemVersion)
 
@@ -224,13 +225,11 @@ class UiController(
         val values = settingsApi.values
         return linkedMapOf(
             "version" to version, "settingsVersion" to settingsApi.version,
-            "phase" to state.phase.name.lowercase(),
-            "screen" to state.screen.name.lowercase(),
+            "platform" to platform.id, "features" to platform.features, "systemPages" to platform.pages,
+            "phase" to state.phase.name.lowercase(), "screen" to state.screen.name.lowercase(),
             "error" to state.error?.let { mapOf("message" to it.message, "at" to it.at.format(TIME)) },
-            "knownIphone" to state.knownIphone,
-            "canShowCarPlay" to state.canShowCarPlay,
-            "autoshow" to state.autoshow,
-            "waiting" to state.waiting,
+            "knownIphone" to state.knownIphone, "canShowCarPlay" to state.canShowCarPlay,
+            "autoshow" to state.autoshow, "waiting" to state.waiting,
             "demo" to demo?.let { mapOf("playing" to it.playing, "available" to it.available) },
             "gps" to gps?.invoke(),
             "bufferedAudio" to bufferedAudio(),

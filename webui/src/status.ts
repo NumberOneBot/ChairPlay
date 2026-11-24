@@ -1,4 +1,5 @@
 import type { AppState } from './api'
+import { t } from './i18n/texts'
 
 export type Tone = 'ok' | 'busy' | 'warn' | 'idle'
 
@@ -62,7 +63,7 @@ export function errorHint(message: string, setup: Pick<AppState['setup'], 'mfiFo
     case 'mfi':
       return `Put the MFi identity files (identity.pk8 and certificate.p7b) into ${setup.mfiFolder}.`
     case 'bluetooth':
-      return 'Check that the iPhone is paired in Windows Bluetooth settings, nearby, and has Bluetooth on.'
+      return t('error.bluetooth')
     case 'join':
     case 'wifi':
       return 'Check the Wi-Fi network below, and that this PC is connected to it.'

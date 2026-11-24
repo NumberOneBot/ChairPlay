@@ -1,6 +1,7 @@
 import type { AppState } from '../api'
 import { errorKind } from '../status'
 import { networkWaits } from '../pages/NetworkConnection'
+import { t } from '../i18n/texts'
 
 export type StepState = 'done' | 'now' | 'todo'
 
@@ -78,7 +79,7 @@ export function setupSteps(state: AppState, joinFailureSeen: string | null, forg
   return {
     mfi: setup.mfiPresent ? null : { state: stateOf(0), note: 'Not found' },
     firewall: setup.firewall === 'off' ? null : { state: stateOf(1), note: firewallNote },
-    pair: { state: stateOf(2), note: pairForgotten ? 'Still paired in Windows' : setup.pairedIphone ?? 'No iPhone paired' },
+    pair: { state: stateOf(2), note: pairForgotten ? t('pair.stillPaired') : setup.pairedIphone ?? 'No iPhone paired' },
     pairForgotten,
     wifi: { state: stateOf(3), note: wifiNote },
     wifiProblem: failed

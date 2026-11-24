@@ -1,5 +1,6 @@
 import type { Backend } from '../api'
 import type { GpsOutput } from '../gpsApi'
+import { supports } from '../i18n/platform'
 import { Changed, type Pending } from '../pages/parts'
 import { Row, Segmented, Switch, type Choice } from '../shell/controls'
 import { UsbIcon } from './icons'
@@ -53,7 +54,8 @@ export function EnableRow({ output, backend, pending }: { output: GpsOutput; bac
 export function MethodRows({ output, backend, pending }: { output: GpsOutput; backend: Backend; pending: Pending }) {
   return (
     <>
-      <Row label="GPS method" title="Send the position over the CarPlay connection, or over a USB cable">
+      {/* CarPlay is the only method where the system has no USB GPS: nothing to choose. */}
+      {supports('usbGps') && <Row label="GPS method" title="Send the position over the CarPlay connection, or over a USB cable">
         <Segmented
           label="GPS method"
           value={output.selected}
@@ -65,7 +67,7 @@ export function MethodRows({ output, backend, pending }: { output: GpsOutput; ba
         {output.selected === 'usb' && <span className="exp">Advanced</span>}
         {/* A method chosen applies at the next connection (D8), marked as any such setting. */}
         <Changed keys={['gps.method']} pending={pending} />
-      </Row>
+      </Row>}
       {output.selected === 'carplay' && (
         <Row className="hint-row">
           <span className="hint">

@@ -1,7 +1,10 @@
 package io.github.numberonebot.chairplay.ui
 
 import io.github.numberonebot.chairplay.drive.GeoPoint
+import io.github.numberonebot.chairplay.platform.FakePlatform
+import io.github.numberonebot.chairplay.platform.FakeShell
 import io.github.numberonebot.chairplay.platform.LocationResult
+import io.github.numberonebot.chairplay.platform.SystemPage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -27,6 +30,26 @@ class UiControllerPlacesTest : UiControllerFixture() {
         val details = (controller().state()["about"] as Map<*, *>)["details"] as String
 
         for (part in listOf("4e6d50df", "143f4674", "Windows 11 24H2 (build 26300)")) assertTrue(details, part in details)
+    }
+
+    // The page picks its texts by the platform and shows a part only where the platform has its feature.
+    @Test
+    fun `the state names the platform and its features`() {
+        val state = controller(platform = UiPlatform("linux", listOf("gameBridge"), listOf("bluetooth"))).state()
+
+        assertEquals("linux", state["platform"])
+        assertEquals(listOf("gameBridge"), state["features"])
+        assertEquals(listOf("bluetooth"), state["systemPages"])
+    }
+
+    // A card's button that opens a system page shows only where the system has that page (owner, 2026-11-24).
+    @Test
+    fun `the page is told the system pages the system opens`() {
+        val shell = FakeShell().apply { pages = setOf(SystemPage.BLUETOOTH, SystemPage.LOCATION) }
+
+        assertEquals(listOf("bluetooth", "location"), FakePlatform(shell = shell).forPage().pages)
+        assertEquals(listOf("bluetooth", "wifi", "firewall", "firewall-rules", "location", "apple-devices-app"),
+            FakePlatform().forPage().pages)
     }
 
     @Test
