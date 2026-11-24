@@ -90,6 +90,7 @@ ChairPlay decides what the car's display shows as a car's head unit does, and sa
 | CarPlay's car button (the first app on its home screen, ChairPlay's armchair here), or Back on CarPlay's home screen | 1: the car's own screen |
 | Siri or a phone call, while the car's own screen shows | 0 for as long as it lasts, then 1 again, as CarPlay borrows a car's screen |
 | The app's CarPlay button (bit 14 of the telemetry's `buttons`, see [Controls](#controls)) | 0: CarPlay |
+| ChairPlay's window showing CarPlay again (Esc or **Show CarPlay** over its settings) | 0: CarPlay |
 
 - `screen` is 0 each time ChairPlay creates the file.
 - The iPhone keeps sending pictures meanwhile, so the texture is current as soon as you show it again.

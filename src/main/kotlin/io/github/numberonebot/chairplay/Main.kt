@@ -166,7 +166,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         },
         demo = altView.demos, gps = { gps.get()?.state() ?: driving.state() }, driving = uiDriving(driving, window, ::screenshots, ::log),
         bufferedAudio = audio::bufferedAudio, gpsCommands = { gps.get()?.coordinator }, trackCommands = { gps.get()?.track?.act(it) ?: false },
-        gpsApplied = { gps.get()?.coordinator?.appliedMethod?.key })
+        gpsApplied = { gps.get()?.coordinator?.appliedMethod?.key }, carPlayShown = audio.bridgeScreen::carPlay)
     // The GPS output: CarPlay's and USB's channels for the car, and their one coordinator (gps/).
     val appGps = AppGps(driving, { ui.saveGps(it) }, { active.get() != null }, ::log,
         appUsbHelper(dir, Platforms.current.shell.usbGpsHelper(), ::log))
