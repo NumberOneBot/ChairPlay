@@ -28,7 +28,10 @@ data class GpsSettings(
     val wheel: WheelMode = WheelMode.STEERING,
     /** gps.units: the speedometer scale and speed readouts; applied immediately. */
     val units: SpeedUnits = SpeedUnits.METRIC,
-    /** gps.external: whether a game's telemetry drives the car while it sends, instead of the gamepad and keys. */
+    /**
+     * bridge.telemetry: whether a game's telemetry file is read, its controls sent and, with the GPS on, its place
+     * driving the car while it sends one, instead of the gamepad and keys.
+     */
     val external: Boolean = false,
     /** gps.method: the channel to the iPhone, CarPlay's location messages or USB developer simulation. */
     val method: GpsMethod = GpsMethod.CARPLAY,

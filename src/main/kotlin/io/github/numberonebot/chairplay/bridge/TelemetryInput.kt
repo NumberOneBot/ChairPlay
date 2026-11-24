@@ -45,6 +45,13 @@ class TelemetryInput(
     private var lastUpdateAt = 0L
     private var lastSource: String? = null
 
+    /** The latest record while fresh (news within 0.5 s), paused or not; null before a game's first and once stale. */
+    var fresh: TelemetryRecord? = null
+        private set
+
+    /** The latest record, however old; null before a game's first. */
+    val latest: TelemetryRecord? get() = last
+
     fun poll(): External {
         if (!opened) open()
         val now = nanoTime()
@@ -66,6 +73,7 @@ class TelemetryInput(
         }
         val record = last ?: return External.Absent
         val silent = now - lastUpdateAt
+        fresh = record.takeIf { silent < FRESH_NANOS }
         return when {
             silent >= GONE_NANOS -> External.Absent
             silent < FRESH_NANOS && !record.paused -> External.Drives(record)

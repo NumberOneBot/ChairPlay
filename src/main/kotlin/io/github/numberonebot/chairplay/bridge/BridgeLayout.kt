@@ -13,7 +13,7 @@ object BridgeLayout {
     const val STATUS_FILE = "ChairPlay.Bridge.v1"
     const val TELEMETRY_FILE = "ChairPlay.Telemetry.v1"
     const val STATUS_SIZE = 136
-    const val TELEMETRY_SIZE = 112
+    const val TELEMETRY_SIZE = 128
 
     fun textureName(generation: Int): String = "ChairPlay.Main.v1.$generation"
 
@@ -108,6 +108,13 @@ data class TelemetryRecord(
     val steerDegrees: Double? = null,
     /** The car's top speed, m/s, for the speedometer's scale; null when not given or not above 0. */
     val topSpeed: Double? = null,
+    /**
+     * Whether the record gives the car's place (flag bit 8): speed, heading, latitude and longitude, all 0 when it does
+     * not, for a game that sends its controls alone.
+     */
+    val position: Boolean = true,
+    /** The game's buttons and steps (flag bit 9); null when not given. */
+    val controls: GameControls? = null,
 ) {
     companion object {
         private const val MAGIC = 0
@@ -128,6 +135,10 @@ data class TelemetryRecord(
         private const val BRAKE = 100
         private const val STEER = 104
         private const val TOP_SPEED = 108
+        private const val BUTTONS = 112
+        private const val KNOB_STEPS = 116
+        private const val ZOOM_STEPS = 120
+        private const val VOLUME_STEPS = 124
         private const val FLAG_RPM = 1
         private const val FLAG_GEAR = 2
         private const val FLAG_PAUSED = 4
@@ -136,23 +147,30 @@ data class TelemetryRecord(
         private const val FLAG_BRAKE = 32
         private const val FLAG_STEER = 64
         private const val FLAG_TOP_SPEED = 128
+        private const val FLAG_POSITION = 256
+        private const val FLAG_CONTROLS = 512
         /** A red line at or below 1000 rpm or above 20000 is no engine's (and would number a dial past reading). */
         private const val LOWEST_REDLINE = 1000.0
         private const val HIGHEST_REDLINE = 20000.0
 
-        /** Null when the magic or version differ, or a required value is not finite or out of range. */
+        /**
+         * Null when the magic or version differ, or a position given (flag bit 8) is not finite or out of range; without
+         * one, its fields are not read.
+         */
         fun parse(bytes: ByteBuffer): TelemetryRecord? {
             val b = BridgeLayout.view(bytes)
             if (b.getInt(MAGIC) != BridgeLayout.TELEMETRY_MAGIC) return null
             if (b.getShort(VERSION).toInt() and 0xFFFF != BridgeLayout.VERSION) return null
-            val speed = b.getDouble(SPEED)
-            val heading = b.getDouble(HEADING)
-            val latitude = b.getDouble(LATITUDE)
-            val longitude = b.getDouble(LONGITUDE)
+            val flags = b.getInt(FLAGS)
+            val position = flags and FLAG_POSITION != 0
+            fun place(at: Int) = if (position) b.getDouble(at) else 0.0
+            val speed = place(SPEED)
+            val heading = place(HEADING)
+            val latitude = place(LATITUDE)
+            val longitude = place(LONGITUDE)
             if (!speed.isFinite() || !heading.isFinite()) return null
             if (!latitude.isFinite() || latitude !in -90.0..90.0) return null
             if (!longitude.isFinite() || longitude !in -180.0..180.0) return null
-            val flags = b.getInt(FLAGS)
             val rpm = b.getFloat(RPM).toDouble()
             val redline = b.getFloat(REDLINE).toDouble()
             // A pedal or the wheel given as a number, held to its range; not a number, as if not given.
@@ -174,6 +192,9 @@ data class TelemetryRecord(
                 brake = input(FLAG_BRAKE, BRAKE, 0.0..1.0),
                 steerDegrees = input(FLAG_STEER, STEER, -Double.MAX_VALUE..Double.MAX_VALUE),
                 topSpeed = b.getFloat(TOP_SPEED).toDouble().takeIf { flags and FLAG_TOP_SPEED != 0 && it.isFinite() && it > 0 },
+                position = position,
+                controls = if (flags and FLAG_CONTROLS == 0) null else
+                    GameControls(b.getInt(BUTTONS), b.getInt(KNOB_STEPS), b.getInt(ZOOM_STEPS), b.getInt(VOLUME_STEPS)),
             )
         }
 
@@ -194,6 +215,8 @@ data class TelemetryRecord(
             if (record.brake != null) flags = flags or FLAG_BRAKE
             if (record.steerDegrees != null) flags = flags or FLAG_STEER
             if (record.topSpeed != null) flags = flags or FLAG_TOP_SPEED
+            if (record.position) flags = flags or FLAG_POSITION
+            if (record.controls != null) flags = flags or FLAG_CONTROLS
             b.putInt(FLAGS, flags)
             b.putInt(GEAR, record.gear ?: 0)
             b.putDouble(SPEED, record.speed)
@@ -207,6 +230,12 @@ data class TelemetryRecord(
             b.putFloat(BRAKE, (record.brake ?: 0.0).toFloat())
             b.putFloat(STEER, (record.steerDegrees ?: 0.0).toFloat())
             b.putFloat(TOP_SPEED, (record.topSpeed ?: 0.0).toFloat())
+            record.controls?.let {
+                b.putInt(BUTTONS, it.buttons)
+                b.putInt(KNOB_STEPS, it.knobSteps)
+                b.putInt(ZOOM_STEPS, it.zoomSteps)
+                b.putInt(VOLUME_STEPS, it.volumeSteps)
+            }
         }
     }
 }

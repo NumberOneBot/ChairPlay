@@ -7,7 +7,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** A game's telemetry driving the GPS car while gps.external is on (DrivingTest covers the gamepad and keys). */
+/** A game's telemetry driving the GPS car while bridge.telemetry is on (DrivingTest covers the gamepad and keys). */
 class DrivingExternalTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
     private val paris = GeoPoint(48.85, 2.29)
@@ -179,16 +179,6 @@ class DrivingExternalTest {
         assertEquals(kyiv.latitude, driving.drive.snapshot().position.latitude, 1e-3)
     }
 
-    @Test
-    fun `the GPS off reads no telemetry`() {
-        val driving = driving(on.copy(enabled = false))
-        source.record = record(1)
-        driving.step()
-
-        assertEquals(0, inputs)
-        assertEquals(0, source.opens)
-    }
-
     // The switch turned off closes the file; turned on again, a fresh input reads it, knowing nothing of the last one:
     // the record a game left there is no news, and only its next one moves the car.
     @Test
@@ -197,7 +187,7 @@ class DrivingExternalTest {
         source.record = record(1)
         driving.step()
 
-        driving.saved(on.copy(external = false), setOf("gps.external"))
+        driving.saved(on.copy(external = false), setOf("bridge.telemetry"))
         driving.step()
         assertEquals(1, source.closes)
         assertFalse(driving.drive.moving)
@@ -205,7 +195,7 @@ class DrivingExternalTest {
 
         driving.saved(on.copy(external = false, start = kyiv), setOf("gps.start"))
         at(10.0)
-        driving.saved(on.copy(start = kyiv), setOf("gps.external"))
+        driving.saved(on.copy(start = kyiv), setOf("bridge.telemetry"))
         driving.step()
         assertEquals(2, inputs)
         assertEquals(kyiv.latitude, driving.drive.snapshot().position.latitude, 1e-9)
@@ -217,16 +207,27 @@ class DrivingExternalTest {
         assertEquals(paris, driving.drive.snapshot().position)
     }
 
+    // With the GPS off a game's position moves nothing: the car stays where the settings put it.
     @Test
-    fun `the GPS off closes the telemetry`() {
-        val driving = driving().found()
+    fun `the GPS off leaves the car where it is`() {
+        val driving = driving(on.copy(enabled = false)).found()
         source.record = record(1)
         driving.step()
 
-        driving.saved(on.copy(enabled = false), setOf("gps.enabled"))
-        driving.step()
-        assertEquals(1, source.closes)
+        assertEquals(kyiv, driving.drive.snapshot().position)
         assertFalse(driving.drive.moving)
+    }
+
+    // A record without flag bit 8 has no position: the gamepad keeps driving the car.
+    @Test
+    fun `a record without a position leaves the car to the gamepad`() {
+        val driving = driving().found()
+        throttle = 1f
+        source.record = record(1).copy(position = false)
+        repeat(60) { now += 16_666_667L; source.record = record(it + 1).copy(position = false); driving.step() }
+
+        assertTrue(driving.drive.moving)
+        assertTrue(driving.drive.snapshot().position.latitude > kyiv.latitude)
     }
 
     // The switch turned off on the settings thread wakes the window loop, which may be waiting for an event, to close
@@ -237,11 +238,11 @@ class DrivingExternalTest {
         var woken = 0
         driving.wake = { woken++ }
 
-        driving.saved(on, setOf("gps.external"))
+        driving.saved(on, setOf("bridge.telemetry"))
         assertEquals(0, woken)
         driving.saved(on.copy(headingDegrees = 90.0), setOf("gps.heading"))
         assertEquals(0, woken)
-        driving.saved(on.copy(external = false), setOf("gps.external"))
+        driving.saved(on.copy(external = false), setOf("bridge.telemetry"))
         assertEquals(1, woken)
     }
 }

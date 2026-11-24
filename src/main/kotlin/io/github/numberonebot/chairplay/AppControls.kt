@@ -53,6 +53,11 @@ internal class AppControls(
     // The controls window's page: a button pressed and released there makes the Controls a key does, through ControlPad.
     private val pad = ControlPad()
 
+    init {
+        // A game's knob and buttons through the telemetry file go as the keys' do, the knob held apart from theirs.
+        driving.bridgeControls.send = { send(it, owner = "bridge") }
+    }
+
     // The keys a page with the keyboard hands on, held and repeated apart from the window's own.
     private val pageKeys = PageKeys { bindings.get() }
     private val altHeld = AtomicBoolean()

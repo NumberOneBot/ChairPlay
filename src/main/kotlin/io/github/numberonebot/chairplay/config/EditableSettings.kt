@@ -66,6 +66,7 @@ object EditableSettings {
         "display.right.hand.drive" to switch(Applies.RECONNECT),
         "display.safe.draw.outside" to switch(Applies.RECONNECT),
         "display.share" to switch(Applies.NOW),
+        "bridge.telemetry" to switch(Applies.NOW),
         "display.corners" to choice("rounded", "square", applies = Applies.RECONNECT),
         "display.touch" to choice("swipe", "tap", "none", applies = Applies.RECONNECT),
         "display.safe.top" to Setting(Applies.RECONNECT, check = ::checkNonNegative),
@@ -118,7 +119,6 @@ object EditableSettings {
             if (it.isBlank() || GpsSettings.heading(it) != null) null else "Enter a heading from 0 to 359 degrees"
         },
         "gps.heading.send" to switch(Applies.NOW),
-        "gps.external" to switch(Applies.NOW),
         "gps.car.power.hp" to Setting(Applies.NOW) { checkNumber(it, GpsSettings.POWER_HP, "a power", "hp") },
         "gps.car.mass.kg" to Setting(Applies.NOW) { checkNumber(it, GpsSettings.MASS_KG, "a mass", "kg") },
         "gps.car.handling" to choice("gentle", "normal", "sharp", applies = Applies.NOW),

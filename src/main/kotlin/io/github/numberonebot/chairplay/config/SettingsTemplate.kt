@@ -188,6 +188,12 @@ internal val SETTINGS_TEMPLATE = listOf(
             "'true' or 'false'.",
         "display.share" to "false",
     ),
+    SettingBlock(
+        "Whether the telemetry another app on this PC sends is received, 'true' or 'false': its knob and\n" +
+            "buttons work CarPlay, and with the GPS on, the position, heading, and speed it gives drive the GPS\n" +
+            "car instead of the gamepad and keys while they come.",
+        "bridge.telemetry" to "false",
+    ),
     SettingBlock("'square' (the picture fills the window to its corners) or 'rounded' (CarPlay rounds them).",
         "display.corners" to "square"),
     SettingBlock(
@@ -208,11 +214,6 @@ internal val SETTINGS_TEMPLATE = listOf(
             "iPhone USB setup prepared, which the app writes; and positions a second over USB, a whole number from\n" +
             "1 to 20.",
         "gps.method" to "carplay", "gps.usb.device" to "", "gps.usb.rate" to "10",
-    ),
-    SettingBlock(
-        "Whether the position, heading, and speed another app on this PC sends drive the GPS car instead\n" +
-            "of the gamepad and keys while they come, 'true' or 'false'.",
-        "gps.external" to "false",
     ),
     SettingBlock(
         "Where the car is: 'latitude, longitude' or a Google or Apple Maps link, and its heading in degrees\n" +

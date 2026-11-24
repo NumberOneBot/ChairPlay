@@ -7,7 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * gps.external on with no game: the status tick looks for one, and only a game found wakes the window loop, which
+ * bridge.telemetry on with no game: the status tick looks for one, and only a game found wakes the window loop, which
  * follows it until it is gone (DrivingExternalTest covers the following).
  */
 class DrivingGameLookoutTest {

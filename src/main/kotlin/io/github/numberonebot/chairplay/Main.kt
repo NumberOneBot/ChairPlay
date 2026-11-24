@@ -160,7 +160,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
                 runCatching { config.now() }.onSuccess(altView::areasSaved)
             }
             // A start or heading saved puts the GPS car there; a power or mass saved remakes it where it is.
-            if (saved.keys.any { it.startsWith("gps.") }) runCatching { config.now() }.onSuccess { now -> driving.saved(now.gps, saved.keys) }
+            if (saved.keys.any { it.startsWith("gps.") || it == "bridge.telemetry" }) runCatching { config.now() }.onSuccess { now -> driving.saved(now.gps, saved.keys) }
             // A saved turn card moves at once, as Shift+F11 moves it.
             saved["altscreen.cards"]?.let(altView::cardsSaved)
         },

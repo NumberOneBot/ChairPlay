@@ -134,14 +134,14 @@ class CarPlayLocationTranscriptTest {
         ticks("modern sentences")
         save(settings.copy(nmea = NmeaDialect.CLASSIC, rate = 4, sendHeading = false), "gps.nmea", "gps.rate", "gps.heading.send")
         ticks("no heading sent")
-        save(settings.copy(sendHeading = true, external = true), "gps.heading.send", "gps.external")
+        save(settings.copy(sendHeading = true, external = true), "gps.heading.send", "bridge.telemetry")
         source.game = record(speed = 20.0, gear = 3)
         ticks("a game drives", 4)
         source.game = record(speed = -3.0, gear = -1)
         ticks("the game backs up", 2)
         source.game = record(speed = 0.0, gear = 1, paused = true)
         ticks("the game paused", 3)
-        save(settings.copy(external = false), "gps.external")
+        save(settings.copy(external = false), "bridge.telemetry")
         ticks("the game let go", 2)
 
         lines += "> once a second, unattached"

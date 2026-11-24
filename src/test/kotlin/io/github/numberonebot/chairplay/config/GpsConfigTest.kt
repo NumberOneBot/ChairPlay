@@ -67,7 +67,7 @@ class GpsConfigTest {
     @Test
     fun `a game drives the car only when asked`() {
         assertFalse(configWith().gps.external)
-        assertTrue(configWith("gps.external=true").gps.external)
+        assertTrue(configWith("bridge.telemetry=true").gps.external)
     }
 
     // A settings file from before USB GPS sends by CarPlay, its switch as it was (V01); USB keeps its own rate.

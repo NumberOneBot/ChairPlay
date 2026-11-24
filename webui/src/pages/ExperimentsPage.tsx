@@ -55,8 +55,6 @@ export function ExperimentsPage({
   const { note } = parts(settings)
   const screenshotKey = state.controls?.keys.screenshot
   const sizes = useFolderSizes(backend)
-  // Another app drives the GPS car only while the GPS is on.
-  const gpsOn = settings.value('gps.enabled') === 'true'
   return (
     <>
       <Group title="Logs" note={note(['log.carplay.data'])} />
@@ -127,23 +125,21 @@ export function ExperimentsPage({
       >
         <Switch
           label="Publish as a shared texture"
+          testId="integrations-picture"
           checked={settings.value('display.share') === 'true'}
           onChange={(checked) => settings.save({ 'display.share': String(checked) })}
         />
       </Row>
+      {/* Its controls work without the GPS; its position drives the GPS car only while the GPS is on (owner, 2026-11-24). */}
       <Row
-        label="GPS car"
-        title={
-          gpsOn
-            ? 'Move the GPS car by the position, heading, and speed another app sends; the gamepad and keys drive it again when it stops sending'
-            : 'Turn on the GPS on its page first'
-        }
+        label="Telemetry"
+        title="Take the CarPlay knob and buttons, and the GPS car's position, from the telemetry another app sends"
       >
         <Switch
-          label="Drive from other apps"
-          checked={settings.value('gps.external') === 'true'}
-          disabled={!gpsOn}
-          onChange={(checked) => settings.save({ 'gps.external': String(checked) })}
+          label="Receive from other apps"
+          testId="integrations-telemetry"
+          checked={settings.value('bridge.telemetry') === 'true'}
+          onChange={(checked) => settings.save({ 'bridge.telemetry': String(checked) })}
         />
       </Row>
       <Group title="HUD demo" note="On the AltScreen's HUD" />
