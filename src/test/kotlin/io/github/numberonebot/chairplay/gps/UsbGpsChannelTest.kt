@@ -6,6 +6,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** UsbGpsChannel: the USB channel over the helper's port (A4). */
 class UsbGpsChannelTest {
@@ -71,6 +74,32 @@ class UsbGpsChannelTest {
         assertEquals(offers, log.count { it == "s1.offer" })
         assertEquals(1, sessions)
         assertTrue(channel.running)
+    }
+
+    // A tick already reading the car's place when quiesce comes offers nothing after it: the old count grew by one.
+    @Test
+    fun `a tick under way when quiesced offers nothing after it`() {
+        val reading = CountDownLatch(1)
+        val resume = CountDownLatch(1)
+        val hold = AtomicBoolean(false)
+        val held = UsbGpsChannel({ helper }, {
+            if (hold.compareAndSet(true, false)) {
+                reading.countDown()
+                resume.await(5, TimeUnit.SECONDS)
+            }
+            GeoPoint(40.7, -74.0)
+        }, { 20 }, pollMillis = 20)
+        held.start(GeoPoint(1.0, 2.0), phone)
+        hold.set(true)
+        assertTrue("a tick reads the place", reading.await(5, TimeUnit.SECONDS))
+
+        held.quiesce()
+        val offers = log.count { it == "s1.offer" }
+        resume.countDown()
+        Thread.sleep(100)
+
+        assertEquals(offers, log.count { it == "s1.offer" })
+        held.close()
     }
 
     // L-01, D14: release only closes the session; nothing clears the simulated position.

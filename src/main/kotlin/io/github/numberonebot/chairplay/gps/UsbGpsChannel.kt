@@ -70,8 +70,18 @@ class UsbGpsChannel(
         session = opened
         opened.offer(seed)
         val period = 1_000L / rateHz().coerceIn(1, 20)
-        pump = scheduler.scheduleAtFixedRate({ position()?.let { session?.offer(it) } }, period, period, TimeUnit.MILLISECONDS)
+        offering = true
+        pump = scheduler.scheduleAtFixedRate(::tick, period, period, TimeUnit.MILLISECONDS)
         return null
+    }
+
+    /** Whether the pump may offer; set and cleared under this lock, so a tick under way offers nothing after a stop. */
+    private var offering = false
+
+    private fun tick() {
+        // The car's place is read outside this lock: the coordinator's own locks are taken in the other order.
+        val point = position() ?: return
+        synchronized(this) { if (offering) session?.offer(point) }
     }
 
     @Synchronized
@@ -91,6 +101,7 @@ class UsbGpsChannel(
     }
 
     private fun stopPump() {
+        offering = false
         pump?.cancel(false)
         pump = null
     }
