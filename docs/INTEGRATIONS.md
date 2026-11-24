@@ -15,7 +15,7 @@ Both switches are in the settings, on the **Experiments** page under **Integrati
 
 | Row | Switch | Setting | Needs |
 |---|---|---|---|
-| CarPlay picture | Publish as a shared texture | `display.share` | nothing else |
+| CarPlay picture | Publish as a shared texture | `bridge.picture` | nothing else |
 | Telemetry | Receive from other apps | `bridge.telemetry` | nothing else; the position moves the GPS car only with GPS spoofing on (**Enable spoofing** on the GPS page, `gps.enabled`) |
 
 Both apply at once. The iPhone learns of the spoofed GPS when it connects, so after turning GPS spoofing on, reconnect (Ctrl+R).
@@ -232,7 +232,7 @@ These hold with bit 8 and GPS spoofing on. Without either, the app's position mo
 | `counter` never changed since ChairPlay opened the file | The gamepad and keys drive the car |
 
 - The pause flag counts at once, even without a new `counter`. To stop the car right away, set bit 2; to hand the car back, stop updating `counter` for 5 s.
-- ChairPlay sends the car to the iPhone as it does in its own GPS simulation: the position once a second and, with **Send the vehicle speed** on, the speed ten times a second.
+- ChairPlay sends the car to the iPhone as it does in its own GPS simulation: its position, course, and speed, and with `gps.wheel.speed` on (the default) its wheel speed, all of one moment, `gps.rate` times a second over CarPlay and `gps.usb.rate` times over USB, 10 by default.
 - With **Receive from other apps** off, ChairPlay does not read the file and closes its handle.
 - ChairPlay's log notes the `source` name when an app starts sending, and why the file did not open, if it did not.
 

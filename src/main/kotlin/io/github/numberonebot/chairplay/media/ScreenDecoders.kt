@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ScreenDecoders(
     windows: Map<ScreenKind, VideoWindow>,
-    /** display.share: sees each picture before its window takes it, to publish the main screen for games. */
+    /** bridge.picture: sees each picture before its window takes it, to publish the main screen for games. */
     private val frameTap: FrameTap = FrameTap.NONE,
     private val log: (String) -> Unit = {},
     private val hardwareDecoding: () -> Boolean = { true },

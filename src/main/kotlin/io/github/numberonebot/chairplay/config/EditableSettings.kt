@@ -65,7 +65,7 @@ object EditableSettings {
         "display.dock" to choice("auto", "driver", "bottom", applies = Applies.RECONNECT),
         "display.right.hand.drive" to switch(Applies.RECONNECT),
         "display.safe.draw.outside" to switch(Applies.RECONNECT),
-        "display.share" to switch(Applies.NOW),
+        "bridge.picture" to switch(Applies.NOW),
         "bridge.telemetry" to switch(Applies.NOW),
         "display.corners" to choice("rounded", "square", applies = Applies.RECONNECT),
         "display.touch" to choice("swipe", "tap", "none", applies = Applies.RECONNECT),

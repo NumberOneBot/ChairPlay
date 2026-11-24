@@ -137,7 +137,7 @@ describe('Experiments page', () => {
 
     fireEvent.click(control('integrations-picture', 'switch'))
 
-    await waitFor(() => expect(backend.saved).toEqual([{ 'display.share': 'true' }]))
+    await waitFor(() => expect(backend.saved).toEqual([{ 'bridge.picture': 'true' }]))
   })
 
   // A game's controls work CarPlay without the GPS: the switch waits for nothing (owner, 2026-11-24).

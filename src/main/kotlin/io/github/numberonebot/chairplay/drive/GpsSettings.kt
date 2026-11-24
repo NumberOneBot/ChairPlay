@@ -16,8 +16,11 @@ data class GpsSettings(
     /** gps.heading.send: whether the car's heading goes as the course in the position sentences. */
     val sendHeading: Boolean = true,
     val car: CarSpec = CarSpec(),
-    /** Experiments: fixes a second on the tunnel (the iPhone asks for 4), and which sentences carry them. */
-    val rate: Int = 4,
+    /**
+     * Experiments: updates a second on the tunnel, each the position, course, speed and wheel speed of one moment (10 by
+     * default; the iPhone asks for 4), and which sentences carry them.
+     */
+    val rate: Int = 10,
     val nmea: NmeaDialect = NmeaDialect.CLASSIC,
     val framing: NmeaFraming = NmeaFraming.PARAMETERS,
     /** How large drive mode's gauges show, gps.gauges. */

@@ -78,8 +78,8 @@ internal class DisplaySettings(settings: Properties, game: CarDisplay? = null) {
     /** The screen less its insets, where the picture CarPlay keeps its controls inside lies; the whole screen without insets. */
     val safeRect: AreaRect = AreaRect(safe.left, safe.top, width - safe.left - safe.right, height - safe.top - safe.bottom)
 
-    /** Whether the CarPlay picture is published for other apps on this PC to show (display.share). */
-    val share = settings.booleanSetting("display.share", false)
+    /** Whether the CarPlay picture is published for other apps on this PC to show (bridge.picture). */
+    val share = settings.booleanSetting("bridge.picture", false)
 
     /** /info's default is true too, so an older file that lacks it declares the same. */
     private val safeAreaDrawOutside: Boolean = settings.booleanSetting("display.safe.draw.outside", true)

@@ -186,7 +186,7 @@ internal val SETTINGS_TEMPLATE = listOf(
     SettingBlock(
         "Whether the CarPlay picture is published as a shared texture for other apps on this PC to show,\n" +
             "'true' or 'false'.",
-        "display.share" to "false",
+        "bridge.picture" to "false",
     ),
     SettingBlock(
         "Whether the telemetry another app on this PC sends is received, 'true' or 'false': its knob and\n" +
@@ -233,9 +233,9 @@ internal val SETTINGS_TEMPLATE = listOf(
         "gps.wheel" to "steering", "gps.units" to "metric", "gps.gauges.style" to "german",
     ),
     SettingBlock(
-        "Experiments in what the iPhone takes from the GPS: fixes a second, a whole number from 1 to 20 (4 as the iPhone asks);\n" +
+        "Experiments in what the iPhone takes from the GPS: fixes a second, a whole number from 1 to 20 (the iPhone asks for 4);\n" +
             "and the sentences, 'classic' (\$GPGGA, \$GPRMC) or 'modern' (\$GNGGA, \$GNRMC, \$GNGSA, \$GNVTG).",
-        "gps.rate" to "4", "gps.nmea" to "classic",
+        "gps.rate" to "10", "gps.nmea" to "classic",
     ),
     SettingBlock(
         "How an update's sentences go to the iPhone: 'params' (a parameter each, in one message) or 'messages' (a\n" +

@@ -1,6 +1,5 @@
 package io.github.numberonebot.chairplay.drive
 
-import kotlin.math.abs
 import kotlin.math.min
 
 /** What the car is doing at one moment: for the gauges, the GPS page, and the position sent to the phone. */
@@ -8,7 +7,7 @@ data class DriveSnapshot(val position: GeoPoint, val car: CarState, val input: C
 
 /**
  * The spoofed car: a [CarModel] placed on the earth. The window loop calls [advance] on each pass while driving and
- * sets [input] from the gamepad or the keys; the phone's location reads [snapshot] and [drainSpeed] for its sentences.
+ * sets [input] from the gamepad or the keys; the phone's location reads [snapshot] for its sentences.
  */
 class Drive(
     spec: CarSpec,
@@ -23,8 +22,6 @@ class Drive(
     private var car = CarModel(spec, CarState(headingDegrees = headingDegrees, parked = true))
     private var position = start
     private var lastNanos: Long? = null
-    private var lastSampleNanos: Long? = null
-    private val samples = ArrayDeque<SpeedSample>()
 
     /** The pedals and the wheel as the controls hold them now. */
     @Volatile var input = CarInput()
@@ -48,19 +45,14 @@ class Drive(
                 left -= dt
             }
         }
-        sample(now)
     }
 
     fun snapshot(): DriveSnapshot = synchronized(lock) { DriveSnapshot(position, car.state, input) }
-
-    /** The wheel speeds sampled since the last call, oldest first. */
-    fun drainSpeed(): List<SpeedSample> = synchronized(lock) { samples.toList().also { samples.clear() } }
 
     /** Puts the car at [start] facing [headingDegrees], parked: a new start from the settings. */
     fun place(start: GeoPoint, headingDegrees: Double): Unit = synchronized(lock) {
         car = CarModel(spec, CarState(headingDegrees = headingDegrees, parked = true))
         position = start
-        samples.clear()
     }
 
     /** Turns the car where it is to face [headingDegrees], as fast as it goes: a heading typed on the GPS page. */
@@ -71,12 +63,11 @@ class Drive(
     /** Stops and parks the car where it is, facing as it does: the GPS turned off mid-drive. */
     fun stop(): Unit = synchronized(lock) {
         car = CarModel(spec, CarState(headingDegrees = car.state.headingDegrees, parked = true))
-        samples.clear()
     }
 
     /**
      * Follows telemetry for position, heading, speed (m/s, negative backing up), and gear. A recording can ask to
-     * [preserveRpm] for a supplied reading below idle. The wheel speed is sampled as [advance] samples it.
+     * [preserveRpm] for a supplied reading below idle.
      */
     fun follow(
         position: GeoPoint, headingDegrees: Double, speed: Double, rpm: Double?, gear: Int?, input: CarInput = CarInput(),
@@ -88,9 +79,7 @@ class Drive(
         )
         this.position = position
         this.input = input
-        val now = nanoTime()
-        lastNanos = now
-        sample(now)
+        lastNanos = nanoTime()
     }
 
     /** Makes the car [spec] where it is and as fast as it goes: a new power or mass from the settings. */
@@ -99,19 +88,8 @@ class Drive(
         car = CarModel(spec, car.state)
     }
 
-    // A wheel speed every 100 ms, the rate a head unit's $PASCD carries; kept short when nobody drains them.
-    private fun sample(now: Long) {
-        val last = lastSampleNanos
-        if (last != null && now - last < SAMPLE_NANOS) return
-        lastSampleNanos = now
-        samples.addLast(SpeedSample(now / 1_000_000, abs(car.state.speed)))
-        while (samples.size > MAX_SAMPLES) samples.removeFirst()
-    }
-
     companion object {
-        const val MAX_SAMPLES = 20
         private const val STEP_SECONDS = 1.0 / 60
         private const val MAX_GAP_SECONDS = 0.1
-        private const val SAMPLE_NANOS = 100_000_000L
     }
 }

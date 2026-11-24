@@ -32,7 +32,7 @@ internal class AppAudio(dir: Path, config: DesktopConfig, private val window: Vi
     // the Audio page changes both at once.
     private val musicStart = AtomicReference(StartFade(config.musicStartSilenceMillis, config.musicStartFadeMillis))
     private val duck = AtomicReference(config.duckSetting)
-    // The picture shared with games (display.share), its safe area in the display's pixels; the sink closes it.
+    // The picture shared with games (bridge.picture), its safe area in the display's pixels; the sink closes it.
     private val display = AtomicReference(config.display)
     private val frameOutput = FrameOutput(
         screen = { display.get().let { WindowSize(it.width, it.height) } }, safe = { display.get().safeRect }, log = ::log,
@@ -112,7 +112,7 @@ internal class AppAudio(dir: Path, config: DesktopConfig, private val window: Vi
                 log("prompts duck the music to ${now.duckSetting.level}" + if (now.duckSetting.iPhoneFirst) ", or the iPhone's level" else "")
             }
         }
-        if (saved.keys.any { it.startsWith("display.") }) {
+        if (saved.keys.any { it.startsWith("display.") || it == "bridge.picture" }) {
             runCatching { config.now() }.onSuccess { now ->
                 display.set(now.display)
                 frameOutput.enabled = now.display.share

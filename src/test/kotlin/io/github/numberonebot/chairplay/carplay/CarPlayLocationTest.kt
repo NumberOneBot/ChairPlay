@@ -12,6 +12,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Locale
 
 class CarPlayLocationTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
@@ -79,7 +80,8 @@ class CarPlayLocationTest {
         assertEquals("", rmc[8])
     }
 
-    // $PASCD when asked (selector 4): the samples since the last sentence, with the gear.
+    // $PASCD when asked (selector 4), with the gear: one sample, the car's speed at the moment the position is taken.
+    // One rate, gps.rate, for all the iPhone gets: place, course, speed and wheel speed alike (owner, 2026-11-24).
     @Test
     fun `wheel speed goes with the position when asked`() {
         val drive = drive()
@@ -90,7 +92,8 @@ class CarPlayLocationTest {
         drive.tick(1.0)
         val pascd = sentence(location.latestNmea()!!, "PASCD")!!.split(',')
         assertEquals("D", pascd[3])
-        assertTrue(pascd[5].toInt() in 9..11)
+        assertEquals("1", pascd[5])
+        assertEquals(String.format(Locale.ROOT, "%.3f", drive.snapshot().car.speed), pascd[7].substringBefore('*'))
 
         // Parked with nothing ticking: still one sample, at zero, in park.
         val parked = location(drive())

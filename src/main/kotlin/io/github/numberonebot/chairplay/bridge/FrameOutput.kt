@@ -28,7 +28,7 @@ interface FrameTap {
 }
 
 /**
- * Publishes the main CarPlay screen for games while [enabled] (display.share). The decoder's thread converts each
+ * Publishes the main CarPlay screen for games while [enabled] (bridge.picture). The decoder's thread converts each
  * picture into one of two BGRA buffers and leaves it for the worker, taking back the one still waiting if there is one:
  * the latest picture wins, and the decoder never waits on the worker or a game. The worker alone talks to [sink]: it
  * publishes, and between pictures wakes every 0.5 s to mark a picture over 1 s old frozen while the stream lasts.

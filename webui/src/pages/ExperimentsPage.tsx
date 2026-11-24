@@ -126,8 +126,8 @@ export function ExperimentsPage({
         <Switch
           label="Publish as a shared texture"
           testId="integrations-picture"
-          checked={settings.value('display.share') === 'true'}
-          onChange={(checked) => settings.save({ 'display.share': String(checked) })}
+          checked={settings.value('bridge.picture') === 'true'}
+          onChange={(checked) => settings.save({ 'bridge.picture': String(checked) })}
         />
       </Row>
       {/* Its controls work without the GPS; its position drives the GPS car only while the GPS is on (owner, 2026-11-24). */}

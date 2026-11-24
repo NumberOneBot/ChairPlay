@@ -23,7 +23,8 @@ import java.time.Instant
  * expected transcript (iap2/location-transcript.txt) was recorded from DriveLocation, built as Driving.location built
  * it, before it moved here as CarPlayLocation: the move changed nothing the iPhone is sent. From "a game drives" on it
  * was recorded again once the status tick, not the window loop, looked for a game: the car follows it a tick later.
- * Its $GPGSV went with the satellites in view, the rest unchanged.
+ * Its $GPGSV went with the satellites in view, the rest unchanged. Recorded again once $PASCD carried one sample, the
+ * car's speed at each update, and gps.rate went to 10 by default (owner, 2026-11-24): $GPGGA and $GPRMC unchanged.
  */
 class CarPlayLocationTranscriptTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)

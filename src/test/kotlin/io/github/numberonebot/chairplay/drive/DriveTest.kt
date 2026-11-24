@@ -48,28 +48,6 @@ class DriveTest {
         assertTrue("meters $meters", meters < before.car.speed * 0.11)
     }
 
-    // The wheel speed for $PASCD: a sample every 100 ms, each handed out once.
-    @Test
-    fun `wheel speed is sampled ten times a second and drained once`() {
-        val drive = Drive(CarSpec(), kyiv, headingDegrees = 0.0) { now }
-        drive.input = CarInput(throttle = 1.0)
-        drive.tick(1.0)
-
-        val samples: List<SpeedSample> = drive.drainSpeed()
-        assertTrue("samples ${samples.size}", samples.size in 9..11)
-        assertTrue(samples.zipWithNext().all { (a, b) -> b.timeMillis - a.timeMillis in 95..120 })
-        assertTrue(samples.zipWithNext().all { (a, b) -> b.metersPerSecond >= a.metersPerSecond })
-        assertTrue(drive.drainSpeed().isEmpty())
-    }
-
-    // Nobody draining (the iPhone did not ask for speed): the samples stay a short history, not a growing one.
-    @Test
-    fun `undrained samples keep only the latest`() {
-        val drive = Drive(CarSpec(), kyiv, headingDegrees = 0.0) { now }
-        drive.tick(60.0)
-        assertTrue(drive.drainSpeed().size <= Drive.MAX_SAMPLES)
-    }
-
     // A new start in the settings puts the car there, stopped, facing its heading.
     @Test
     fun `placing the car moves it to a new start and stops it`() {
@@ -109,12 +87,10 @@ class DriveTest {
         val snapshot = drive.snapshot()
         assertEquals(paris, snapshot.position)
         assertEquals(CarState(-3.0, 135.0, 2500.0, -1, parked = false), snapshot.car)
-        assertEquals(3.0, drive.drainSpeed().single().metersPerSecond, 0.0)
 
         now += 200_000_000L
         // No rpm from the game: the engine idles, as the car's model keeps a running engine.
         drive.follow(paris, 90.0, 10.0, null, null)
         assertEquals(CarState(10.0, 90.0, CarSpec().idleRpm, 1, parked = false), drive.snapshot().car)
-        assertEquals(10.0, drive.drainSpeed().single().metersPerSecond, 0.0)
     }
 }

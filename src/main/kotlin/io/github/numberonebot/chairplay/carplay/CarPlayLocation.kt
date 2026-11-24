@@ -22,11 +22,12 @@ import kotlin.math.abs
 
 /**
  * The spoofed car as the iPhone's GPS, for iAP2 LocationInformation: its place, speed and course in the sentences
- * gps.nmea picks; and $PASCD, its wheel speed ten times a second, when asked, for the iPhone to reckon between the fixes.
+ * gps.nmea picks; and $PASCD, its wheel speed at the same moment, when asked, for the iPhone to reckon between the fixes.
  * A car not [placed] anywhere yet sends no position, only its wheel speed.
  *
- * [attach]ed to the tunnel, it sends on its own at gps.rate fixes a second (the iPhone asks for one every 250 ms), each
- * with its own time, and DiPlay's once-a-second update sends nothing; unattached, it answers that update.
+ * [attach]ed to the tunnel, it sends on its own at gps.rate updates a second, 10 by default (the iPhone asks for one
+ * every 250 ms), each with its own time, and DiPlay's once-a-second update sends nothing; unattached, it answers that
+ * update.
  */
 class CarPlayLocation(
     private val drive: Drive,
@@ -143,10 +144,10 @@ class CarPlayLocation(
         return text.ifEmpty { null }
     }
 
-    // Parked with the loop idle, nothing was sampled: one sample at the standstill keeps the wheel speed going.
+    // One sample, the car's speed in the same snapshot as the position: everything the iPhone gets goes at one rate,
+    // gps.rate (owner, 2026-11-24).
     private fun wheelSpeed(car: DriveSnapshot): VehicleSpeedReading {
-        val samples = drive.drainSpeed().map { VehicleSpeedSample(it.timeMillis, it.metersPerSecond) }
-            .ifEmpty { listOf(VehicleSpeedSample(nanoTime() / 1_000_000, abs(car.car.speed))) }
+        val samples = listOf(VehicleSpeedSample(nanoTime() / 1_000_000, abs(car.car.speed)))
         val gear = when {
             car.car.gear < 0 -> VehicleGear.REVERSE
             car.car.speed == 0.0 && car.input == CarInput() -> VehicleGear.PARK
