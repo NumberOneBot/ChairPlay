@@ -11,6 +11,7 @@ New features and fixed bugs in ChairPlay.
 ### Fixed
 
 - **Forget** on the Connection page left the CarPlay session running, music and all, and the iPhone's pairing in force until ChairPlay restarted. It now ends the session and drops the pairing at once.
+- Updating or uninstalling ChairPlay while it ran from the Start menu stopped with a "GetMessage() failed" message, and Setup could not replace ChairPlay.exe until it was closed. Setup now closes only ChairPlay itself, and its launcher ends with it.
 - After **Forget**, Get started counted the iPhone as paired as long as Windows still listed it in its Bluetooth devices, though that pairing no longer works once the iPhone forgets the car, and ChairPlay kept calling the iPhone in vain. **Pair the iPhone** now stays open and says to remove the iPhone in Windows' Bluetooth settings, with **Open Bluetooth settings**, and to forget the car on the iPhone.
 
 [Release notes](docs/RELEASE-NOTES-1.1.2.md) · [Changes since v1.1.1](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.1...v1.1.2)
