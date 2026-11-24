@@ -50,6 +50,14 @@ class BridgeControlsTest {
         assertEquals(setOf(Control.Telephony(CallKey.ANSWER), Control.Telephony(CallKey.HANG_UP)), update(buttons = ANSWER or END).toSet())
     }
 
+    // The game's CarPlay button, as a car's: its screen back to CarPlay, as the bit turns on.
+    @Test
+    fun `the CarPlay button takes the screen back as its bit turns on`() {
+        update()
+        assertEquals(listOf(Control.CarPlayScreen), update(buttons = CARPLAY))
+        assertEquals(emptyList<Control>(), update(buttons = CARPLAY))
+    }
+
     // The counters' steps since the last record, however many there were between two reads: as the mouse wheel's.
     @Test
     fun `counters step the knob, the zoom and the volume by what they moved`() {
@@ -96,5 +104,6 @@ class BridgeControlsTest {
         const val ANSWER = 1 shl 11
         const val END = 1 shl 12
         const val SIRI = 1 shl 13
+        const val CARPLAY = 1 shl 14
     }
 }

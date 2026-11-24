@@ -92,6 +92,8 @@ private object MacFrames : FrameSink {
     override fun state(state: Int) = notReady()
 
     override fun close() = notReady()
+
+    override fun screen(screen: Int) = notReady()
 }
 
 private object MacTelemetry : TelemetrySource {

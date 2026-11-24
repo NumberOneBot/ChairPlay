@@ -62,6 +62,16 @@ class BridgeNativeTest {
         assertEquals(800, openTexture(after.textureName).width)
     }
 
+    // Whose screen a game shows (1, the car's) stays through a picture published; each open starts at CarPlay's (0).
+    @Test fun `the screen's owner is in the status until a reopen`() {
+        lib.cpb_frame_screen(1)
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        assertEquals(1, status().screen)
+        lib.cpb_frame_close()
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_frame_open(warp))
+        assertEquals(0, status().screen)
+    }
+
     @Test fun `closing tells a reader holding the status that the picture is gone`() {
         assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
         hold()

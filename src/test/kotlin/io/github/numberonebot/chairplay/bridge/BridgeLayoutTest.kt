@@ -35,6 +35,7 @@ class BridgeLayoutTest {
         b.putInt(64, 30)
         b.putInt(68, 4242)
         text(b, 72, "ChairPlay.Main.v1.7")
+        b.putInt(136, 1)
         return b
     }
 
@@ -71,6 +72,7 @@ class BridgeLayoutTest {
         assertEquals(30, s.streamFps)
         assertEquals(4242, s.producerPid)
         assertEquals("ChairPlay.Main.v1.7", s.textureName)
+        assertEquals(1, s.screen)
     }
 
     @Test

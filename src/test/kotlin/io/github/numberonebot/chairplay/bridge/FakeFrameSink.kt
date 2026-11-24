@@ -44,6 +44,10 @@ internal class FakeFrameSink(
         state = 0
     }
 
+    override fun screen(screen: Int) {
+        events += "screen $screen"
+    }
+
     fun count(event: String) = events.count { it == event }
 }
 

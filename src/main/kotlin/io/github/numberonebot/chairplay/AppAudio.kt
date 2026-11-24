@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay
 
+import io.github.numberonebot.chairplay.bridge.BridgeScreen
 import io.github.numberonebot.chairplay.bridge.FrameOutput
 import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.config.VolumeStore
@@ -51,6 +52,9 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
 
     /** Fades the sound out as long as the music fades in, for a reconnect or a close. */
     fun fadeOut() = renderer.fadeOut()
+
+    /** Whose screen a game showing the shared picture shows, CarPlay's or its car's own, as a car decides it. */
+    val bridgeScreen = BridgeScreen(frameOutput::screen)
 
     init {
         // A device that is gone gives way to the Windows default, with a warning that lists the devices.

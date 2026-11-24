@@ -36,6 +36,8 @@ private object NativeFrameSink : FrameSink {
     override fun state(state: Int) = BridgeNative.lib.cpb_frame_state(state)
 
     override fun close() = BridgeNative.lib.cpb_frame_close()
+
+    override fun screen(screen: Int) = BridgeNative.lib.cpb_frame_screen(screen)
 }
 
 private object NativeTelemetrySource : TelemetrySource {

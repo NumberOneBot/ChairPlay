@@ -4,9 +4,15 @@ New features and fixed bugs in ChairPlay.
 
 ## 1.1.2 - Unreleased
 
+### Added
+
+- Another app on this PC, such as a game mod, can work CarPlay through the telemetry file: the knob, select, back, home, media, calls, Siri, the AltScreen map's zoom, and ChairPlay's volume. Nothing needs to be bound in ChairPlay, and no global shortcut is needed while the game has the keyboard. See [Integrations](docs/INTEGRATIONS.md).
+- The shared picture's status file says whether a game's car display shows CarPlay or its own screen, as a car decides it: the armchair (or Back on CarPlay's home screen) goes to the car's own screen, Siri and calls show CarPlay while they last, and the game's own CarPlay button goes back to CarPlay.
+
 ### Changed
 
 - The installer is 70 MB instead of 93 MB, and the portable zip 85 MB instead of 104 MB: they leave out the FFmpeg libraries and the BouncyCastle classes ChairPlay never loads. ChairPlay also no longer unpacks 50 MB of FFmpeg libraries into the `.javacpp` folder of the user's profile at its first start: it loads them from its own folder. The `ffmpeg-*` and `javacpp-*` folders that earlier versions left in `%USERPROFILE%\.javacpp\cache` can be deleted.
+- **Drive from other apps** on the Experiments page is now **Receive from other apps** (`bridge.telemetry`, was `gps.external`), and it works without GPS spoofing; turn it on again after the update. A telemetry record moves the GPS car only with its new position flag (bit 8) set.
 
 ### Fixed
 

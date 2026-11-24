@@ -117,7 +117,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
         audio.fadeOut()
         sessionDropped.get()()
         reconnect()
-    }) { controlsChanged.get()() }.apply { fullscreen = window::toggleFullscreen }
+    }) { controlsChanged.get()() }.apply { fullscreen = window::toggleFullscreen; carPlayScreen = audio.bridgeScreen::carPlay }
     val lockReady = CountDownLatch(1)
     val startBootstrap = AtomicReference<() -> Unit> {}
     val stopBootstrap = AtomicReference<() -> Unit> {}
@@ -223,7 +223,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     }, STATUS_PAGE_MILLIS, STATUS_PAGE_MILLIS, TimeUnit.MILLISECONDS)
     // CarPlay: the iPhone's sound and screens, its route, song, call and battery messages, its GPS, and the connection.
     val sessions = SessionListener(active, ui, window, title, theme, ::sessionChanged)
-    val carPlay = CarPlayProtocol(dir, config, audio, appControls.textInput, driving, appGps.carplay.gate, sessions::carButton)
+    val carPlay = CarPlayProtocol(dir, config, audio, appControls.textInput, driving, appGps.carplay.gate) { sessions.carButton(); audio.bridgeScreen.carButton() }
     // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it. An incoming
     // call flashes the CarPlay window's taskbar button, and brings the window forward with window.front.on.call.
     appControls.playing = { active.get() != null && carPlay.bus.snapshot().nowPlaying?.playing == true }

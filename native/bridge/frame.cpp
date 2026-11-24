@@ -188,6 +188,15 @@ CPB_API void cpb_frame_state(int state) {
     cpb_seq_end(s);
 }
 
+CPB_API void cpb_frame_screen(int screen) {
+    CpbLock lock;
+    cpb_status* s = bridge.status;
+    if (!s) return;
+    cpb_seq_begin(s);
+    s->screen = (uint32_t)screen;
+    cpb_seq_end(s);
+}
+
 CPB_API void cpb_frame_close(void) {
     CpbLock lock;
     close_locked();

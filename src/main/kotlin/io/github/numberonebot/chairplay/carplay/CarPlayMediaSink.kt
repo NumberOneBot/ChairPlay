@@ -45,7 +45,10 @@ class CarPlayMediaSink(
     private val duckSetting: () -> DuckSetting = { DuckSetting() },
     /** Where the buffered music's state goes, for the Audio page. */
     val bufferedAudio: BufferedAudioMonitor = BufferedAudioMonitor(),
+    /** Hears Siri or a call start and end, for a game's car display (BridgeScreen). */
+    voice: (Boolean) -> Unit = {},
 ) : MediaSink, AudioDuckSink, BufferedAudioStatusSink, SpatialAudioSink, Closeable {
+    private val voices = VoiceStreams(voice)
     override val spatialAudio get() = audio.spatialAudio
     override fun bufferedAudioOpened(owner: Any) = bufferedAudio.bufferedAudioOpened(owner)
     override fun bufferedAudioUpdated(owner: Any, status: BufferedAudioStatus) = bufferedAudio.bufferedAudioUpdated(owner, status)
@@ -87,6 +90,7 @@ class CarPlayMediaSink(
     fun keyframe(screen: ScreenKind) = screens.requestKeyframe(screen)
 
     override fun onAudioStarted(id: AudioStreamId, format: AudioFormat, firstSample: Int) {
+        voices.started(id, format.audioType)
         // A restarted stream gets a fresh reference, as AndroidMediaSink gives each renderer its own ring.
         val echoReference = if (echoCancellation && format.audioType == TELEPHONY_AUDIO_TYPE && format.sampleRate > 0) {
             EchoReference(format.sampleRate).also { callEchoReferences[id] = it }
@@ -101,12 +105,15 @@ class CarPlayMediaSink(
         audio.push(id, rtp, sample)
 
     override fun onAudioStopped(id: AudioStreamId) {
+        voices.stopped(id)
         audio.stop(id)
         callEchoReferences.remove(id)
     }
 
     // The engine calls this on the downlink thread: a missing device only costs this stream its uplink.
     override fun onMicrophoneStarted(id: AudioStreamId, config: MicrophoneConfig) {
+        // Siri listening has its microphone stream alone; counted before a device can fail to open.
+        voices.started(MicStream(id), config.audioType)
         microphones.remove(id)?.close()
         val echoReference = if (config.audioType == TELEPHONY_AUDIO_TYPE) callEchoReferences[id] else null
         val sender = openMicrophoneSender(config, log, microphone, echoReference) ?: return
@@ -115,8 +122,12 @@ class CarPlayMediaSink(
     }
 
     override fun onMicrophoneStopped(id: AudioStreamId) {
+        voices.stopped(MicStream(id))
         microphones.remove(id)?.close()
     }
+
+    // A microphone stream shares its id with the sound stream of its type: kept apart in [voices].
+    private data class MicStream(val id: AudioStreamId)
 
     /** duckAudio and unduckAudio: the music makes way for a navigation prompt, as long as the prompt lasts. */
     override fun onAudioDuck(ducked: Boolean, params: Map<String, Any?>) {

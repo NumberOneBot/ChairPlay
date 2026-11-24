@@ -70,6 +70,9 @@ internal class FrameOutput(
     private var running = false
     private var streamStopped = false
     private var failure: String? = null
+    // Whose screen a game shows ([screen]), and whether the worker has still to write it.
+    private var screenShown = BridgeScreen.CARPLAY
+    private var screenDue = false
 
     // Keeps a conversion off the converter and buffers while sharing turns on or off.
     private val convertLock = Any()
@@ -126,6 +129,19 @@ internal class FrameOutput(
         }
     }
 
+    /**
+     * Whose screen a game shows now ([BridgeScreen]): the worker writes the latest to the status, and again each time
+     * sharing turns on, as each open starts at CarPlay's.
+     */
+    fun screen(screen: Int) {
+        lock.withLock {
+            screenShown = screen
+            if (!running) return
+            screenDue = true
+            wake.signal()
+        }
+    }
+
     override fun active(screen: ScreenKind, active: Boolean) {
         if (screen != ScreenKind.MAIN) return
         streamActive = active
@@ -146,16 +162,22 @@ internal class FrameOutput(
         val job: Slot?
         val stopped: Boolean
         val failed: String?
+        val screen: Int?
         lock.withLock {
             var left = waitNanos
-            while (running && pending == null && !streamStopped && failure == null && left > 0) left = wake.awaitNanos(left)
+            while (running && pending == null && !streamStopped && failure == null && !screenDue && left > 0) {
+                left = wake.awaitNanos(left)
+            }
             if (!running) return false
             failed = failure.also { failure = null }
             stopped = streamStopped.also { streamStopped = false }
             job = pending.also { pending = null }
+            screen = screenShown.takeIf { screenDue }
+            screenDue = false
         }
         try {
             if (failed != null) return fail(failed)
+            screen?.let(sink::screen)
             if (stopped) {
                 sink.state(WAITING)
                 lastPicture = null
@@ -231,6 +253,7 @@ internal class FrameOutput(
                 pending = null
                 streamStopped = false
                 failure = null
+                screenDue = screenShown != BridgeScreen.CARPLAY
                 running = true
             }
             publishing = true

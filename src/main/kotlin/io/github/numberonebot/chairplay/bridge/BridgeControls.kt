@@ -33,6 +33,7 @@ class BridgeControls {
         for ((bit, action) in PRESSES) {
             if (now.buttons and bit != 0 && was.buttons and bit == 0) pressControl(action)?.let(send)
         }
+        if (now.buttons and CARPLAY != 0 && was.buttons and CARPLAY == 0) send(Control.CarPlayScreen)
         // Int arithmetic wraps as the game's 32-bit counter does.
         (now.knobSteps - was.knobSteps).takeIf { it != 0 }?.let { send(Control.Knob(KnobInput(wheel = it), true)) }
         (now.zoomSteps - was.zoomSteps).takeIf { it != 0 }?.let { send(Control.MapZoom(it)) }
@@ -60,5 +61,7 @@ class BridgeControls {
             1 shl 9 to ControlAction.MEDIA_PLAY_PAUSE, 1 shl 10 to ControlAction.MEDIA_NEXT,
             1 shl 11 to ControlAction.CALL_ANSWER, 1 shl 12 to ControlAction.CALL_END, 1 shl 13 to ControlAction.SIRI,
         )
+        /** The game's CarPlay button, no key's: its car display shows CarPlay again (BridgeScreen). */
+        const val CARPLAY = 1 shl 14
     }
 }

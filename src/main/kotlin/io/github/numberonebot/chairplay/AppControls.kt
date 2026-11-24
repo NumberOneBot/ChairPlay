@@ -78,6 +78,8 @@ internal class AppControls(
     /** Switches the gauges between large and small and saves it, as the GPS page does; set once the UI exists. */
     var gaugeSize: () -> Unit = {}
     var fullscreen: () -> Unit = {}
+    /** A game's CarPlay button: its car display shows CarPlay again; set once the audio exists. */
+    var carPlayScreen: () -> Unit = {}
 
     fun close() {
         global.close()
@@ -122,6 +124,10 @@ internal class AppControls(
             reconnect()
             return
         }
+        if (control == Control.CarPlayScreen) {
+            carPlayScreen()
+            return
+        }
         val session = expectedSession ?: return
         touchSender.execute {
             if (active() !== session) return@execute
@@ -135,7 +141,8 @@ internal class AppControls(
                 is Control.MapZoom -> target.mapZoom(control.steps)
                 Control.NextAltscreenContent, Control.NextAltscreenCards, is Control.ShowAltscreenContent ->
                     altView.step(control, session)
-                Control.Fullscreen, Control.Screenshot, Control.Reconnect, is Control.VolumeStep, Control.MuteToggle, Control.DriveMode, Control.GaugeSize -> Unit
+                Control.Fullscreen, Control.Screenshot, Control.Reconnect, is Control.VolumeStep, Control.MuteToggle, Control.DriveMode, Control.GaugeSize,
+                Control.CarPlayScreen -> Unit
             }
         }
     }

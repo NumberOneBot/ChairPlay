@@ -12,7 +12,7 @@ object BridgeLayout {
     const val VERSION = 1
     const val STATUS_FILE = "ChairPlay.Bridge.v1"
     const val TELEMETRY_FILE = "ChairPlay.Telemetry.v1"
-    const val STATUS_SIZE = 136
+    const val STATUS_SIZE = 140
     const val TELEMETRY_SIZE = 128
 
     fun textureName(generation: Int): String = "ChairPlay.Main.v1.$generation"
@@ -47,6 +47,8 @@ data class BridgeStatus(
     val streamFps: Int,
     val producerPid: Int,
     val textureName: String,
+    /** Whose screen a game's car display shows: 0 CarPlay's (the texture), 1 the car's own; 0 at each open. */
+    val screen: Int,
 ) {
     companion object {
         private const val MAGIC = 0
@@ -64,6 +66,7 @@ data class BridgeStatus(
         private const val PRODUCER_PID = 68
         private const val TEXTURE_NAME = 72
         private const val TEXTURE_NAME_MAX = 64
+        private const val SCREEN = 136
 
         /** Null when the magic or the version differ. */
         fun parse(bytes: ByteBuffer): BridgeStatus? {
@@ -82,6 +85,7 @@ data class BridgeStatus(
                 streamFps = b.getInt(STREAM_FPS),
                 producerPid = b.getInt(PRODUCER_PID),
                 textureName = BridgeLayout.readText(b, TEXTURE_NAME, TEXTURE_NAME_MAX),
+                screen = b.getInt(SCREEN),
             )
         }
     }

@@ -28,6 +28,9 @@ internal interface BridgeLibrary : Library {
     /** Writes state 0 for a game still holding the status file, then releases the device and textures. */
     fun cpb_frame_close()
 
+    /** Writes whose screen a game shows to the status file: 0 CarPlay's, 1 the car's own; nothing when closed. */
+    fun cpb_frame_screen(screen: Int)
+
     /** Creates the 256-byte telemetry file when no game has, else opens it without clearing it; 0, else negative. */
     fun cpb_telemetry_open(): Int
 

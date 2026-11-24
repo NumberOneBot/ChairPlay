@@ -28,7 +28,7 @@ internal class CarPlayProtocol(
     carButton: () -> Unit,
 ) : Closeable {
     private val sink = CarPlayMediaSink(audio.screens, audio.renderer, ::log, audio.microphone, config.echoCancellation,
-        audio.duckSetting, audio.bufferedStatus)
+        audio.duckSetting, audio.bufferedStatus, voice = audio.bridgeScreen::voice)
     private val data = CarPlayDataFeed(if (config.logCarPlayData) CarPlayDataLog(dir.resolve("logs"), log = ::log) else null)
     private val bootstrap = WirelessBootstrap(config, sink, textInput.listener(carPlaySessions(carButton)), data).apply {
         // The iPhone's GPS for each connection that identifies with the GPS on, as the settings have it then: the car.
