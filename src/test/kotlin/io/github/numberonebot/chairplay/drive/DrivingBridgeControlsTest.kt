@@ -3,6 +3,7 @@ package io.github.numberonebot.chairplay.drive
 import io.github.numberonebot.chairplay.bridge.GameControls
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import io.github.numberonebot.chairplay.bridge.TelemetryRecord
+import io.github.numberonebot.chairplay.config.CarDisplay
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.phone.KnobInput
 import org.junit.Assert.assertEquals
@@ -126,6 +127,21 @@ class DrivingBridgeControlsTest {
         source.record = record(3, buttons = HOME, position = true)
         driving.step()
         assertTrue(Control.Knob(KnobInput(home = true), false) in sent)
+    }
+
+    // A game's car display goes to the app once per change, the GPS on or off: the app reconnects for each.
+    @Test
+    fun `a game's car display is told once per change`() {
+        val shown = mutableListOf<CarDisplay>()
+        val driving = driving(on.copy(enabled = false)).also { it.carDisplay = { display -> shown += display } }.found()
+        source.record = record(2).copy(display = CarDisplay(800, 480, 180))
+        driving.step()
+        source.record = record(3).copy(display = CarDisplay(800, 480, 180))
+        driving.step()
+        source.record = record(4).copy(display = CarDisplay(1280, 720, 300))
+        driving.step()
+
+        assertEquals(listOf(CarDisplay(800, 480, 180), CarDisplay(1280, 720, 300)), shown)
     }
 
     private companion object {

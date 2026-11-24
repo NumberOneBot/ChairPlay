@@ -1,5 +1,6 @@
 package io.github.numberonebot.chairplay
 
+import io.github.numberonebot.chairplay.config.DesktopConfig
 import io.github.numberonebot.chairplay.drive.Driving
 import io.github.numberonebot.chairplay.input.Control
 import io.github.numberonebot.chairplay.input.ControlAction
@@ -33,6 +34,7 @@ internal class AppControls(
     private val bindings: AtomicReference<ControlsConfig>,
     private val volume: Volume,
     private val driving: Driving,
+    private val config: DesktopConfig,
     private val altView: AltscreenView,
     private val touchSender: ExecutorService,
     private val active: () -> PhoneLink?,
@@ -56,6 +58,17 @@ internal class AppControls(
     init {
         // A game's knob and buttons through the telemetry file go as the keys' do, the knob held apart from theirs.
         driving.bridgeControls.send = { send(it, owner = "bridge") }
+        // A game's pause, its menus, pauses the iPhone's music as a car switched off does.
+        driving.bridgePause.send = { send(it) }
+        driving.bridgePause.playing = { playing() }
+        // A game's car display, sent as its driving starts, holds until the app restarts; a session running takes it
+        // at once, through a reconnect (owner, 2026-11-24).
+        driving.carDisplay = { display ->
+            if (config.takeGameDisplay(display)) {
+                log("CarPlay display from the game: ${display.width}x${display.height} px, ${display.widthMm} mm wide")
+                if (active() != null) send(Control.Reconnect)
+            }
+        }
     }
 
     // The keys a page with the keyboard hands on, held and repeated apart from the window's own.

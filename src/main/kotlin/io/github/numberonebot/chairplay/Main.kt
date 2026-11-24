@@ -111,7 +111,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // way to the waiting screen instead of its last picture standing still.
     val sessionDropped = AtomicReference<() -> Unit> {}
     fun reconnect() = Thread({ restartBootstrap.get()() }, "reconnect").apply { isDaemon = true }.start()
-    val appControls = AppControls(bindings, audio.volume, driving, altView, touchSender, active::get, ::screenshots, reconnect = {
+    val appControls = AppControls(bindings, audio.volume, driving, config, altView, touchSender, active::get, ::screenshots, reconnect = {
         log("reconnecting at the user's request")
         title.reconnect()
         audio.fadeOut()
@@ -236,7 +236,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
             sessionChanged()
             ui.sessionEnded()
         }
-        window.clearPicture()
+        audio.clearPicture()
     }
     startBootstrap.set(connection::start)
     // A retired stack's session ends unheard (onSessionEnded above stays quiet), so Disconnect clears it here.

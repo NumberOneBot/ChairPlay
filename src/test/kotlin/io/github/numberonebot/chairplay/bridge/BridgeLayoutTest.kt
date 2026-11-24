@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.bridge
 
 import io.github.numberonebot.chairplay.config.AreaRect
+import io.github.numberonebot.chairplay.config.CarDisplay
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -194,15 +195,30 @@ class BridgeLayoutTest {
         assertNull(TelemetryRecord.parse(controls(0))!!.controls)
     }
 
+    // The car's display (bit 10): its picture's size at 128 and 132, its width in millimetres at 136; a size no setting
+    // could hold (odd, or not above 0) gives none.
+    @Test
+    fun `telemetry gives the car's display with flag bit 10`() {
+        fun display(flags: Int, width: Int = 800, height: Int = 480, mm: Int = 180) = telemetry(flags).also {
+            it.putInt(128, width); it.putInt(132, height); it.putInt(136, mm)
+        }
+        assertEquals(CarDisplay(800, 480, 180), TelemetryRecord.parse(display(DISPLAY))!!.display)
+        assertNull(TelemetryRecord.parse(display(0))!!.display)
+        for (bad in listOf(display(DISPLAY, width = 801), display(DISPLAY, height = 0), display(DISPLAY, mm = -5))) {
+            assertNull(TelemetryRecord.parse(bad)!!.display)
+        }
+    }
+
     @Test
     fun `write then parse gives a record of controls alone back`() {
         val r = TelemetryRecord(
             4, false, null, 0.0, 0.0, 0.0, 0.0, null, "Bridge test", position = false, controls = GameControls(1, -7, 2, 0),
+            display = CarDisplay(1280, 720, 300),
         )
         val b = buffer()
         TelemetryRecord.write(r, b)
         assertEquals(r, TelemetryRecord.parse(b))
-        assertEquals(CONTROLS, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16))
+        assertEquals(CONTROLS or DISPLAY, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16))
     }
 
     @Test
@@ -217,7 +233,7 @@ class BridgeLayoutTest {
         assertEquals(r, TelemetryRecord.parse(b))
         assertEquals(8, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16) and 8)
         assertEquals(8250f, b.getFloat(60), 0f)
-        assertEquals(128, b.getShort(6).toInt())
+        assertEquals(140, b.getShort(6).toInt())
         val bare = r.copy(gear = null, rpm = null, paused = false, redline = null, throttle = null, brake = null, steerDegrees = null, topSpeed = null)
         TelemetryRecord.write(bare, b)
         assertEquals(bare, TelemetryRecord.parse(b))
@@ -231,5 +247,6 @@ class BridgeLayoutTest {
     private companion object {
         const val POSITION = 256
         const val CONTROLS = 512
+        const val DISPLAY = 1024
     }
 }

@@ -8,14 +8,23 @@ import java.util.Properties
 
 internal const val MM_PER_INCH = 25.4
 
+/**
+ * A game's car display (telemetry flag bit 10): its CarPlay picture's size and its width in millimetres, over
+ * display.width, display.height and the physical size until the app restarts.
+ */
+data class CarDisplay(val width: Int, val height: Int, val widthMm: Int)
+
 /** Upstream AirPlayDisplaySettings.DEFAULT_WIDTH_PHYSICAL_MM. */
 private const val DEFAULT_WIDTH_MM = 200
 
-/** The CarPlay screen as settings.properties ([settings]) sets it (display.*), and the window it shows in (window.*). */
-internal class DisplaySettings(settings: Properties) {
+/**
+ * The CarPlay screen as settings.properties ([settings]) sets it (display.*), and the window it shows in (window.*); a
+ * [game]'s car display over its size and physical size.
+ */
+internal class DisplaySettings(settings: Properties, game: CarDisplay? = null) {
     // 1280x720 by default: iOS draws at @3x from about that size, and a window of it fits most screens.
-    val width = settings.evenSetting("display.width", 1280)
-    val height = settings.evenSetting("display.height", 720)
+    val width = game?.width ?: settings.evenSetting("display.width", 1280)
+    val height = game?.height ?: settings.evenSetting("display.height", 720)
     private val fps = (settings.positiveSetting("display.fps") ?: 60).also {
         require(it in 30..60) { "display.fps must be between 30 and 60, not $it" }
     }
@@ -24,7 +33,9 @@ internal class DisplaySettings(settings: Properties) {
      * The physical size in /info, from which iOS picks its scale: millimetres as given, else from
      * display.ppi, else upstream's 200 mm width. A missing height follows the aspect ratio, as /info would.
      */
-    private val physicalMm: Pair<Int, Int> = run {
+    private val physicalMm: Pair<Int, Int> = if (game != null) {
+        game.widthMm to Math.round(game.widthMm * height.toDouble() / width).toInt()
+    } else run {
         val ppi = settings.positiveSetting("display.ppi")
         val setWidthMm = settings.positiveSetting("display.physical.width.mm")
         fun fromPpi(pixels: Int) = ppi?.let { Math.round(pixels * MM_PER_INCH / it).toInt() }
@@ -88,6 +99,9 @@ internal class DisplaySettings(settings: Properties) {
     private val touch: TouchMode = settings.choiceSetting(
         "display.touch", TouchMode.NONE, mapOf("swipe" to TouchMode.SWIPE, "tap" to TouchMode.TAP, "none" to TouchMode.NONE),
     )
+
+    /** Whether [display] is this screen's size and width in millimetres. */
+    fun shows(display: CarDisplay) = display == CarDisplay(width, height, physicalMm.first)
 
     /** The main screen as the iPhone is told of it. */
     val screen = ScreenSpec(width, height, fps, physicalMm, safe, roundedCorners, dock, touch, safeAreaDrawOutside)

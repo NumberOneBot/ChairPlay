@@ -135,10 +135,10 @@ One app writes at a time. Two writers at once are not supported.
 |---:|---|---|---|
 | 0 | u32 | `magic` | `0x54435043` ("CPCT" in memory); 0 while no app has written |
 | 4 | u16 | `version` | 1 |
-| 6 | u16 | `size` | Bytes of defined fields: 128 in version 1 (96 before the pedals and the wheel, 108 before the top speed, 112 before the controls) |
+| 6 | u16 | `size` | Bytes of defined fields: 140 in version 1 (96 before the pedals and the wheel, 108 before the top speed, 112 before the controls, 128 before the car's display) |
 | 8 | u32 | `seq` | Seqlock: odd while the app writes |
 | 12 | u32 | `counter` | The app adds one with each update; ChairPlay judges freshness by its changes, not by a clock |
-| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given. Bit 8 (256): the position is given: `speed`, `heading`, `latitude`, and `longitude`. Bit 9 (512): the controls are given: `buttons` and the three steps |
+| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given. Bit 8 (256): the position is given: `speed`, `heading`, `latitude`, and `longitude`. Bit 9 (512): the controls are given: `buttons` and the three steps. Bit 10 (1024): the car's display is given: `display_width`, `display_height`, and `display_width_mm` |
 | 20 | i32 | `gear` | −1 reverse, 0 neutral, 1 and up forward gears |
 | 24 | f64 | `speed` | m/s, signed: below 0 is reversing. Required with bit 8 |
 | 32 | f64 | `heading` | Degrees clockwise from true north, 0 to 360. Required with bit 8 |
@@ -155,7 +155,10 @@ One app writes at a time. Two writers at once are not supported.
 | 116 | i32 | `knob_steps` | The knob's turns so far: add one for each step forward, take one for each step back |
 | 120 | i32 | `zoom_steps` | The AltScreen map's zoom steps so far: add one to zoom in, take one to zoom out |
 | 124 | i32 | `volume_steps` | ChairPlay's volume steps so far: add one for louder, take one for quieter |
-| 128 | — | reserved | Write zero, up to byte 256 |
+| 128 | u32 | `display_width` | The car's display: CarPlay's picture width, px, even; see [The car's display](#the-cars-display) |
+| 132 | u32 | `display_height` | CarPlay's picture height, px, even |
+| 136 | u32 | `display_width_mm` | The display's physical width, mm, from which the iPhone picks CarPlay's scale |
+| 140 | — | reserved | Write zero, up to byte 256 |
 
 ### Writing
 
@@ -200,8 +203,21 @@ With bit 9, the app works CarPlay as ChairPlay's keys do, whether or not GPS spo
 - The steps are counters, not presses: on each step add one to the field (or take one), and keep the sum. ChairPlay turns the knob, zooms, or steps the volume by the difference since its last read, so no step is lost however fast an encoder turns. They wrap round as 32-bit integers.
 - What the first record ChairPlay reads holds and counts is the starting point: nothing happens for it.
 - With the app paused (bit 2) the controls still work: a game's menu is where they are wanted most.
+
+### Pause
+
+Set bit 2 in your menus, while the player chooses a car, and in replays, as if the car were switched off. While it is set, ChairPlay pauses the iPhone's music if it plays, and plays it again when the bit clears, if ChairPlay paused it; music the player starts meanwhile is left as it is. Calls and navigation prompts go on. With bit 8, the GPS car also stops (see below).
 - When `counter` stops changing for 0.5 s, or **Receive from other apps** is turned off, ChairPlay lets go of what the app held; the next record is a starting point again.
 - The knob the app holds is apart from the keys': letting go of one does not let go of the other.
+
+### The car's display
+
+With bit 10, the app sets the display CarPlay draws for: its picture's size, and the display's physical width, from which the iPhone picks CarPlay's scale (its height follows the picture's aspect). ChairPlay takes them over its own **Display** settings, without changing those, until it restarts. CarPlay takes a new display only as it connects, so each change ends the running session and connects again, which takes a few seconds.
+
+- Write the car's display as driving starts, not in menus or while the player looks through cars: each change reconnects CarPlay.
+- Keep writing it with every update: ChairPlay acts only on a change.
+- The picture's width and height must be even and above 0, and the width in millimetres above 0; otherwise the display is ignored.
+- The status file's `width` and `height` show the picture's new size once the iPhone sends it.
 
 ### What ChairPlay does with the position
 
@@ -252,6 +268,7 @@ These snippets use [`bridge_layout.h`](../native/bridge/bridge_layout.h), whose 
 #define CPB_TELEMETRY_TOP_SPEED 128u
 #define CPB_TELEMETRY_POSITION 256u
 #define CPB_TELEMETRY_CONTROLS 512u
+#define CPB_TELEMETRY_DISPLAY 1024u
 
 #define CPB_BUTTON_LEFT 1u
 #define CPB_BUTTON_RIGHT 2u
@@ -299,7 +316,7 @@ struct cpb_status {
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 128 */
+    uint16_t size;              /*   6: 140 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -319,7 +336,10 @@ struct cpb_telemetry {
     int32_t knob_steps;         /* 116: the knob's turns so far, + forward */
     int32_t zoom_steps;         /* 120: the AltScreen map's zoom steps so far, + in */
     int32_t volume_steps;       /* 124: ChairPlay's volume steps so far, + up */
-    uint8_t reserved[128];      /* 128 */
+    uint32_t display_width;     /* 128: the car's display: CarPlay's picture width, px, even */
+    uint32_t display_height;    /* 132: its height, px, even */
+    uint32_t display_width_mm;  /* 136: the display's width, mm, for CarPlay's scale */
+    uint8_t reserved[116];      /* 140 */
 };
 ```
 

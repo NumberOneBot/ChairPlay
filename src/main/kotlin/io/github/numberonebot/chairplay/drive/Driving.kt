@@ -69,6 +69,12 @@ class Driving(
 
     /** The game's controls, which the app sends as the keys' ([BridgeControls.send]). */
     val bridgeControls get() = game.controls
+
+    /** The game's pause, which pauses the iPhone's music ([BridgePause]). */
+    val bridgePause get() = game.pause
+
+    /** Hears the game's car display once per change ([GameTelemetry.display]). */
+    var carDisplay by game::display
     // Whether the last pass had a game driving or halting the car; the window loop's thread only.
     private var following = false
     // The game's last limits, kept until the gamepad or keys drive again ([ownControls]).

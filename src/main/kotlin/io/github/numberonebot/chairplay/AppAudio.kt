@@ -24,7 +24,7 @@ import javax.sound.sampled.Mixer
  * prompt puts it, and the screens decoded into [window] and [altscreen], for a phone's sink to play and show.
  * [changed] tells the controls window's page that the volume changed.
  */
-internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, altscreen: VideoWindow, private val changed: () -> Unit) {
+internal class AppAudio(dir: Path, config: DesktopConfig, private val window: VideoWindow, altscreen: VideoWindow, private val changed: () -> Unit) {
     /** The app's own volume (Ctrl+Up, Ctrl+Down, Ctrl+M), kept from the last run. */
     val volume: Volume
 
@@ -55,6 +55,15 @@ internal class AppAudio(dir: Path, config: DesktopConfig, window: VideoWindow, a
 
     /** Whose screen a game showing the shared picture shows, CarPlay's or its car's own, as a car decides it. */
     val bridgeScreen = BridgeScreen(frameOutput::screen)
+
+    /**
+     * A session dropped (a reconnect): the window goes black, and the shared picture says it waits for the iPhone at
+     * once, not still while the old session takes seconds to end, so a game stops showing the old picture too.
+     */
+    fun clearPicture() {
+        window.clearPicture()
+        frameOutput.active(ScreenKind.MAIN, false)
+    }
 
     init {
         // A device that is gone gives way to the Windows default, with a warning that lists the devices.

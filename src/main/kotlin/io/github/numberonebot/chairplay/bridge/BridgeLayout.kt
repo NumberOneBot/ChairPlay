@@ -1,6 +1,7 @@
 package io.github.numberonebot.chairplay.bridge
 
 import io.github.numberonebot.chairplay.config.AreaRect
+import io.github.numberonebot.chairplay.config.CarDisplay
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -13,7 +14,7 @@ object BridgeLayout {
     const val STATUS_FILE = "ChairPlay.Bridge.v1"
     const val TELEMETRY_FILE = "ChairPlay.Telemetry.v1"
     const val STATUS_SIZE = 140
-    const val TELEMETRY_SIZE = 128
+    const val TELEMETRY_SIZE = 140
 
     fun textureName(generation: Int): String = "ChairPlay.Main.v1.$generation"
 
@@ -119,6 +120,8 @@ data class TelemetryRecord(
     val position: Boolean = true,
     /** The game's buttons and steps (flag bit 9); null when not given. */
     val controls: GameControls? = null,
+    /** The car's display (flag bit 10), for CarPlay's picture; null when not given or a size no setting could hold. */
+    val display: CarDisplay? = null,
 ) {
     companion object {
         private const val MAGIC = 0
@@ -143,6 +146,9 @@ data class TelemetryRecord(
         private const val KNOB_STEPS = 116
         private const val ZOOM_STEPS = 120
         private const val VOLUME_STEPS = 124
+        private const val DISPLAY_WIDTH = 128
+        private const val DISPLAY_HEIGHT = 132
+        private const val DISPLAY_WIDTH_MM = 136
         private const val FLAG_RPM = 1
         private const val FLAG_GEAR = 2
         private const val FLAG_PAUSED = 4
@@ -153,6 +159,7 @@ data class TelemetryRecord(
         private const val FLAG_TOP_SPEED = 128
         private const val FLAG_POSITION = 256
         private const val FLAG_CONTROLS = 512
+        private const val FLAG_DISPLAY = 1024
         /** A red line at or below 1000 rpm or above 20000 is no engine's (and would number a dial past reading). */
         private const val LOWEST_REDLINE = 1000.0
         private const val HIGHEST_REDLINE = 20000.0
@@ -199,6 +206,11 @@ data class TelemetryRecord(
                 position = position,
                 controls = if (flags and FLAG_CONTROLS == 0) null else
                     GameControls(b.getInt(BUTTONS), b.getInt(KNOB_STEPS), b.getInt(ZOOM_STEPS), b.getInt(VOLUME_STEPS)),
+                // As display.width and display.height take them: even pixels above 0; millimetres above 0.
+                display = CarDisplay(b.getInt(DISPLAY_WIDTH), b.getInt(DISPLAY_HEIGHT), b.getInt(DISPLAY_WIDTH_MM)).takeIf {
+                    flags and FLAG_DISPLAY != 0 && it.width > 0 && it.width % 2 == 0 && it.height > 0 && it.height % 2 == 0 &&
+                        it.widthMm > 0
+                },
             )
         }
 
@@ -221,6 +233,7 @@ data class TelemetryRecord(
             if (record.topSpeed != null) flags = flags or FLAG_TOP_SPEED
             if (record.position) flags = flags or FLAG_POSITION
             if (record.controls != null) flags = flags or FLAG_CONTROLS
+            if (record.display != null) flags = flags or FLAG_DISPLAY
             b.putInt(FLAGS, flags)
             b.putInt(GEAR, record.gear ?: 0)
             b.putDouble(SPEED, record.speed)
@@ -239,6 +252,11 @@ data class TelemetryRecord(
                 b.putInt(KNOB_STEPS, it.knobSteps)
                 b.putInt(ZOOM_STEPS, it.zoomSteps)
                 b.putInt(VOLUME_STEPS, it.volumeSteps)
+            }
+            record.display?.let {
+                b.putInt(DISPLAY_WIDTH, it.width)
+                b.putInt(DISPLAY_HEIGHT, it.height)
+                b.putInt(DISPLAY_WIDTH_MM, it.widthMm)
             }
         }
     }

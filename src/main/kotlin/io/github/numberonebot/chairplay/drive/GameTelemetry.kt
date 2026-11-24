@@ -1,8 +1,10 @@
 package io.github.numberonebot.chairplay.drive
 
 import io.github.numberonebot.chairplay.bridge.BridgeControls
+import io.github.numberonebot.chairplay.bridge.BridgePause
 import io.github.numberonebot.chairplay.bridge.External
 import io.github.numberonebot.chairplay.bridge.TelemetryInput
+import io.github.numberonebot.chairplay.config.CarDisplay
 
 /**
  * A game's telemetry file while bridge.telemetry is on, whatever the GPS does (owner, 2026-11-24): looked at on the
@@ -12,6 +14,12 @@ import io.github.numberonebot.chairplay.bridge.TelemetryInput
  */
 internal class GameTelemetry(private val open: () -> TelemetryInput, private val wake: () -> Unit) {
     val controls = BridgeControls()
+    val pause = BridgePause()
+
+    /** Hears the game's car display once per change, on the window loop: the app puts it in force and reconnects. */
+    @Volatile var display: (CarDisplay) -> Unit = {}
+    // The car display the game sent last; the window loop's thread only.
+    private var lastDisplay: CarDisplay? = null
     private val lock = Any()
     private var reader: TelemetryInput? = null
     @Volatile private var there = false
@@ -33,7 +41,13 @@ internal class GameTelemetry(private val open: () -> TelemetryInput, private val
         if (!there) return External.Absent
         val said = poll()
         if (said == External.Absent) there = false
-        controls.update(synchronized(lock) { reader?.fresh?.controls })
+        val fresh = synchronized(lock) { reader?.fresh }
+        controls.update(fresh?.controls)
+        pause.update(fresh?.paused)
+        fresh?.display?.takeIf { it != lastDisplay }?.let {
+            lastDisplay = it
+            display(it)
+        }
         return said
     }
 
