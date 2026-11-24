@@ -107,7 +107,7 @@ Click to touch, use **Arrow keys** to move the focus, **Enter** or **Space** to 
 
 ## What's next
 
-- **Game bridge:** CarPlay on a screen in the game's car, with the iPhone navigating your drive in Assetto Corsa, Assetto Corsa EVO, Euro Truck Simulator 2, and American Truck Simulator.
+- **Bridge:** CarPlay on the display of a car another app on this PC draws, with the iPhone navigating that car's drive.
 - **1.2 to 1.4:** first versions for macOS and Linux, and **CouchPlay** for Android TV.
 - **1.5+:** USB CarPlay and Android Auto.
 

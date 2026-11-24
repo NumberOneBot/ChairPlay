@@ -1,10 +1,10 @@
 # ChairPlay 1.1.3
 
-This update lets a game work CarPlay's controls and show CarPlay on its car's display as a real car does.
+This update lets another app on this PC work CarPlay's controls and show CarPlay on a car display of its own, as a real car does.
 
 ## What's changed
 
-- **CarPlay controls from a game.** A game mod or another app on this PC can work CarPlay's knob, select, back, home, media, calls, and Siri, the AltScreen map's zoom, and ChairPlay's volume through the telemetry file, with nothing bound in ChairPlay. ChairPlay also tells it whether the game car's display shows CarPlay or its own screen, as a real car does: the armchair goes to the car's own screen, and Siri and calls bring CarPlay back while they last. A game can set CarPlay's display size for each car; ChairPlay reconnects to take it. In the game's menus the iPhone's music pauses, as in a car switched off. Turn on **Receive from other apps** under **Experiments > Integrations**; it no longer needs GPS spoofing. Details for developers are in [Integrations](https://github.com/NumberOneBot/ChairPlay/blob/v1.1.3/docs/INTEGRATIONS.md).
+- **CarPlay controls from another app.** Another app on this PC can work CarPlay's knob, select, back, home, media, calls, and Siri, the AltScreen map's zoom, and ChairPlay's volume through the telemetry file, with nothing bound in ChairPlay. ChairPlay also tells it whether its car display shows CarPlay or the car's own screen, as a real car does: the armchair goes to the car's own screen, and Siri and calls bring CarPlay back while they last. The app can set CarPlay's display size for each car; ChairPlay reconnects to take it. While the app says it is paused, the iPhone's music pauses, as in a car switched off. Turn on **Receive from other apps** under **Experiments > Integrations**; it no longer needs GPS spoofing. Details for developers are in [Integrations](https://github.com/NumberOneBot/ChairPlay/blob/v1.1.3/docs/INTEGRATIONS.md).
 - **Internationalization begins.** The settings page picks its texts that name Windows, and the parts only some systems have, by the system ChairPlay runs on: the groundwork for versions on other systems such as Linux. Nothing changes on Windows.
 
 ## Install or update

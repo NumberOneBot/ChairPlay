@@ -6,10 +6,10 @@ New features and fixed bugs in ChairPlay.
 
 ### Added
 
-- Another app on this PC, such as a game mod, can work CarPlay through the telemetry file: the knob, select, back, home, media, calls, Siri, the AltScreen map's zoom, and ChairPlay's volume. Nothing needs to be bound in ChairPlay, and no global shortcut is needed while the game has the keyboard. See [Integrations](docs/INTEGRATIONS.md).
-- A game paused, in its menus or choosing a car, pauses the iPhone's music as a car switched off does, and plays it again as driving goes on.
-- A game can set CarPlay's display for the car being driven, its picture's size and physical width, through the telemetry file: ChairPlay reconnects to take it, and keeps it until it restarts, its own display settings unchanged.
-- The shared picture's status file says whether a game's car display shows CarPlay or its own screen, as a car decides it: the armchair (or Back on CarPlay's home screen) goes to the car's own screen, Siri and calls show CarPlay while they last, and the game's own CarPlay button goes back to CarPlay.
+- Another app on this PC can work CarPlay through the telemetry file: the knob, select, back, home, media, calls, Siri, the AltScreen map's zoom, and ChairPlay's volume. Nothing needs to be bound in ChairPlay, and no global shortcut is needed while that app has the keyboard. See [Integrations](docs/INTEGRATIONS.md).
+- Another app that says it is paused pauses the iPhone's music as a car switched off does, and plays it again as the app goes on.
+- Another app can set CarPlay's display for the car it shows, its picture's size and physical width, through the telemetry file: ChairPlay reconnects to take it, and keeps it until it restarts, its own display settings unchanged.
+- The shared picture's status file says whether the app's car display shows CarPlay or the car's own screen, as a car decides it: the armchair (or Back on CarPlay's home screen) goes to the car's own screen, Siri and calls show CarPlay while they last, and the app's own CarPlay button goes back to CarPlay.
 
 ### Changed
 
