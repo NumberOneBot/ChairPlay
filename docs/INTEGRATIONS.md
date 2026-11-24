@@ -1,8 +1,8 @@
 # Integrations with other apps
 
-ChairPlay offers two experimental interfaces to other apps on the same PC, such as a plugin or a telemetry tool:
+ChairPlay offers two experimental interfaces to other apps on the same PC, such as a game mod, a plugin, or a telemetry tool:
 
-- **CarPlay picture:** ChairPlay publishes the main CarPlay screen as a named Direct3D 11 shared texture, with a status file that says whether a picture is there, its size, the texture's current name, and whether the car's display should show CarPlay or its own screen. Another app can show it on a screen of its own, for example the center display of a car it draws.
+- **CarPlay picture:** ChairPlay publishes the main CarPlay screen as a named Direct3D 11 shared texture, with a status file that says whether a picture is there, its size, the texture's current name, and whether the car's display should show CarPlay or its own screen. Another app can show it on a screen of its own, for example a car's center display in a racing game.
 - **Telemetry from other apps:** another app writes into a telemetry file CarPlay's knob and buttons, the car's position, heading, and speed (and optionally rpm, gear, red line, the pedals, the steering wheel, and the top speed), or both. The knob and buttons work CarPlay as the keys do; with GPS spoofing on, ChairPlay moves its GPS car to the position, and the iPhone navigates by it.
 
 Both work through Windows shared memory and a DXGI shared resource. The other app needs no ChairPlay code; everything it needs is the names and byte layouts below. The C definitions are in [`native/bridge/bridge_layout.h`](../native/bridge/bridge_layout.h).
@@ -150,7 +150,7 @@ One app writes at a time. Two writers at once are not supported.
 | 64 | char[32] | `source` | The app's name, UTF-8, zero-ended, for ChairPlay's log (for example "Assetto Corsa") |
 | 96 | f32 | `throttle` | The accelerator pedal, 0 released to 1 fully pressed |
 | 100 | f32 | `brake` | The brake pedal, 0 released to 1 fully pressed |
-| 104 | f32 | `steer_degrees` | The steering wheel's angle in degrees, below 0 to the left, as far round as the app turns it (±450 on a 900° wheel) |
+| 104 | f32 | `steer_degrees` | The steering wheel's angle in degrees, below 0 to the left, as far round as the game turns it (±450 on a 900° wheel) |
 | 108 | f32 | `top_speed` | The car's top speed, m/s, for the speedometer's scale |
 | 112 | u32 | `buttons` | The buttons held now, one bit each; see [Controls](#controls) |
 | 116 | i32 | `knob_steps` | The knob's turns so far: add one for each step forward, take one for each step back |
@@ -165,7 +165,7 @@ One app writes at a time. Two writers at once are not supported.
 
 For each update: make `seq` odd (an interlocked increment), write the fields, add one to `counter`, then make `seq` even again (a second interlocked increment), with a memory barrier after the first increment and before the second. Never write `seq` as part of copying a whole record. Update at your simulation or frame rate; ChairPlay reads the file 60 times a second while you send the controls, else at least 20 times a second.
 
-ChairPlay does not map an app's own coordinates. The app converts its own world into real latitude, longitude, and heading: a map projection, a track placed at a real place, a chosen starting point. ChairPlay takes position, heading, and speed as they come and does not know which app sent them.
+ChairPlay does not map game coordinates. The app converts its own world into real latitude, longitude, and heading: a map projection, a track placed at a real place, a chosen starting point. ChairPlay takes position, heading, and speed as they come and does not know which game sent them.
 
 ### What ChairPlay reads
 
@@ -180,7 +180,7 @@ ChairPlay does not map an app's own coordinates. The app converts its own world 
 
 ### Controls
 
-With bit 9, the app works CarPlay as ChairPlay's keys do, whether or not GPS spoofing is on. Bind your app's own controls, a steering wheel's buttons, or a rotary encoder to them: nothing needs to be bound in ChairPlay, and no global shortcut is needed while that app has the keyboard.
+With bit 9, the app works CarPlay as ChairPlay's keys do, whether or not GPS spoofing is on. Bind your game's own controls, a steering wheel's buttons, or a rotary encoder to them: nothing needs to be bound in ChairPlay, and no global shortcut is needed while the game has the keyboard.
 
 | Bit | Value | Button | Acts |
 |---:|---:|---|---|
@@ -203,7 +203,7 @@ With bit 9, the app works CarPlay as ChairPlay's keys do, whether or not GPS spo
 - Set a bit while the button is down and clear it when it is let go, every update. ChairPlay sees what is held at each read, so keep a bit set for at least 50 ms: a press shorter than one read can be missed.
 - The steps are counters, not presses: on each step add one to the field (or take one), and keep the sum. ChairPlay turns the knob, zooms, or steps the volume by the difference since its last read, so no step is lost however fast an encoder turns. They wrap round as 32-bit integers.
 - What the first record ChairPlay reads holds and counts is the starting point: nothing happens for it.
-- With the app paused (bit 2) the controls still work: an app's menu is where they are wanted most.
+- With the app paused (bit 2) the controls still work: a game's menu is where they are wanted most.
 
 ### Pause
 
@@ -452,7 +452,7 @@ int telemetry_open(const char* source) {
 }
 
 /* One update: real-world position and heading in degrees, speed in m/s; rpm, gear, redline, the pedals (0 to 1), the
-   steering wheel's angle in degrees, and the top speed in m/s as the app has them. */
+   steering wheel's angle in degrees, and the top speed in m/s as the game has them. */
 void telemetry_write(double latitude, double longitude, double heading, double speed,
                      float rpm, int gear, float redline, float throttle, float brake, float steer_degrees,
                      float top_speed, int paused) {
@@ -479,7 +479,7 @@ void telemetry_write(double latitude, double longitude, double heading, double s
 }
 ```
 
-Leave out a flag for a value the app does not have; ChairPlay then ignores that field.
+Leave out a flag for a value the game does not have; ChairPlay then ignores that field.
 
 ## Compatibility
 
