@@ -75,6 +75,9 @@ class Driving(
 
     /** Hears the game's car display once per change ([GameTelemetry.display]). */
     var carDisplay by game::display
+
+    /** Hears the game's look once per change ([GameTelemetry.theme]). */
+    var carTheme by game::theme
     // Whether the last pass had a game driving or halting the car; the window loop's thread only.
     private var following = false
     // The game's last limits, kept until the gamepad or keys drive again ([ownControls]).

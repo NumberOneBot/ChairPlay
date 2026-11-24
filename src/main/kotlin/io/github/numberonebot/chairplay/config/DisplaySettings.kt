@@ -10,9 +10,16 @@ internal const val MM_PER_INCH = 25.4
 
 /**
  * A game's car display (telemetry flag bit 10): its CarPlay picture's size and its width in millimetres, over
- * display.width, display.height and the physical size until the app restarts.
+ * display.width, display.height and the physical size until the app restarts; its driving side and dock over
+ * display.right.hand.drive and display.dock, each null (an older record) to leave the setting's.
  */
-data class CarDisplay(val width: Int, val height: Int, val widthMm: Int)
+data class CarDisplay(
+    val width: Int,
+    val height: Int,
+    val widthMm: Int,
+    val rightHandDrive: Boolean? = null,
+    val dock: Dock? = null,
+)
 
 /** Upstream AirPlayDisplaySettings.DEFAULT_WIDTH_PHYSICAL_MM. */
 private const val DEFAULT_WIDTH_MM = 200
@@ -53,12 +60,14 @@ internal class DisplaySettings(settings: Properties, game: CarDisplay? = null) {
     )
 
     /** Right-hand drive puts CarPlay's dock and controls on the right. */
-    val rightHandDrive = settings.booleanSetting("display.right.hand.drive", false)
+    private val setRightHandDrive = settings.booleanSetting("display.right.hand.drive", false)
+    val rightHandDrive = game?.rightHandDrive ?: setRightHandDrive
 
     /** One view area over the whole screen carrying the dock edge; auto declares none, as before. */
-    private val dock: Dock = settings.choiceSetting(
+    private val setDock: Dock = settings.choiceSetting(
         "display.dock", Dock.AUTO, mapOf("auto" to Dock.AUTO, "driver" to Dock.DRIVER, "bottom" to Dock.BOTTOM),
     )
+    private val dock: Dock = game?.dock ?: setDock
 
     /** Pixels at each edge CarPlay keeps its controls out of; all zero declares none, as before. */
     private val safe: Insets = Insets(
@@ -100,8 +109,10 @@ internal class DisplaySettings(settings: Properties, game: CarDisplay? = null) {
         "display.touch", TouchMode.NONE, mapOf("swipe" to TouchMode.SWIPE, "tap" to TouchMode.TAP, "none" to TouchMode.NONE),
     )
 
-    /** Whether [display] is this screen's size and width in millimetres. */
-    fun shows(display: CarDisplay) = display == CarDisplay(width, height, physicalMm.first)
+    /** Whether [display] would leave this screen as it is: its size, width in millimetres, driving side and dock. */
+    fun shows(display: CarDisplay) =
+        CarDisplay(display.width, display.height, display.widthMm, display.rightHandDrive ?: setRightHandDrive, display.dock ?: setDock) ==
+            CarDisplay(width, height, physicalMm.first, rightHandDrive, dock)
 
     /** The main screen as the iPhone is told of it. */
     val screen = ScreenSpec(width, height, fps, physicalMm, safe, roundedCorners, dock, touch, safeAreaDrawOutside)

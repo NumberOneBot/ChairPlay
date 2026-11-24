@@ -136,10 +136,10 @@ One app writes at a time. Two writers at once are not supported.
 |---:|---|---|---|
 | 0 | u32 | `magic` | `0x54435043` ("CPCT" in memory); 0 while no app has written |
 | 4 | u16 | `version` | 1 |
-| 6 | u16 | `size` | Bytes of defined fields: 140 in version 1 (96 before the pedals and the wheel, 108 before the top speed, 112 before the controls, 128 before the car's display) |
+| 6 | u16 | `size` | Bytes of defined fields: 144 in version 1 (96 before the pedals and the wheel, 108 before the top speed, 112 before the controls, 128 before the car's display, 140 before the display's options) |
 | 8 | u32 | `seq` | Seqlock: odd while the app writes |
 | 12 | u32 | `counter` | The app adds one with each update; ChairPlay judges freshness by its changes, not by a clock |
-| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given. Bit 8 (256): the position is given: `speed`, `heading`, `latitude`, and `longitude`. Bit 9 (512): the controls are given: `buttons` and the three steps. Bit 10 (1024): the car's display is given: `display_width`, `display_height`, and `display_width_mm` |
+| 16 | u32 | `flags` | Bit 0 (1): `rpm` is given. Bit 1 (2): `gear` is given. Bit 2 (4): paused, for example in a menu or a replay. Bit 3 (8): `redline` is given. Bit 4 (16): `throttle` is given. Bit 5 (32): `brake` is given. Bit 6 (64): `steer_degrees` is given. Bit 7 (128): `top_speed` is given. Bit 8 (256): the position is given: `speed`, `heading`, `latitude`, and `longitude`. Bit 9 (512): the controls are given: `buttons` and the three steps. Bit 10 (1024): the car's display is given: `display_width`, `display_height`, `display_width_mm`, and `display_options`. Bit 11 (2048): the car's theme is given. Bit 12 (4096): the theme is dark, light without it; read only with bit 11 |
 | 20 | i32 | `gear` | −1 reverse, 0 neutral, 1 and up forward gears |
 | 24 | f64 | `speed` | m/s, signed: below 0 is reversing. Required with bit 8 |
 | 32 | f64 | `heading` | Degrees clockwise from true north, 0 to 360. Required with bit 8 |
@@ -159,7 +159,8 @@ One app writes at a time. Two writers at once are not supported.
 | 128 | u32 | `display_width` | The car's display: CarPlay's picture width, px, even; see [The car's display](#the-cars-display) |
 | 132 | u32 | `display_height` | CarPlay's picture height, px, even |
 | 136 | u32 | `display_width_mm` | The display's physical width, mm, from which the iPhone picks CarPlay's scale |
-| 140 | — | reserved | Write zero, up to byte 256 |
+| 140 | u32 | `display_options` | Bit 0 (1): the driver sits on the right. Bits 1–2: the dock, 0 (0) auto, 1 (2) driver side, 2 (4) bottom |
+| 144 | — | reserved | Write zero, up to byte 256 |
 
 ### Writing
 
@@ -213,11 +214,19 @@ Set bit 2 in your menus, while the player chooses a car, and in replays, as if t
 
 ### The car's display
 
-With bit 10, the app sets the display CarPlay draws for: its picture's size, and the display's physical width, from which the iPhone picks CarPlay's scale (its height follows the picture's aspect). ChairPlay takes them over its own **Display** settings, without changing those, until it restarts. CarPlay takes a new display only as it connects, so each change ends the running session and connects again, which takes a few seconds.
+With bit 10, the app sets the display CarPlay draws for: its picture's size, the display's physical width, from which the iPhone picks CarPlay's scale (its height follows the picture's aspect), the side the driver sits on, and where CarPlay puts its dock. ChairPlay takes them over its own **Display**, **Driver side**, and **Dock** settings, without changing those, until it restarts. CarPlay takes a new display only as it connects, so each change ends the running session and connects again, which takes a few seconds.
 
-- Write the car's display as driving starts, not in menus or while the player looks through cars: each change reconnects CarPlay.
+- Write the car's display as driving starts, not in menus or while the player looks through cars: each change reconnects CarPlay, a change of the driver side or the dock alone too.
 - Keep writing it with every update: ChairPlay acts only on a change.
-- The picture's width and height must be even and above 0, and the width in millimetres above 0; otherwise the display is ignored.
+- The picture's width and height must be even and above 0, the width in millimetres above 0, and the dock 0, 1, or 2; otherwise the display is ignored.
+- ChairPlay reads `display_options` only in a record whose `size` is 144 or more. In an older record of 140 bytes, the driver side and the dock stay ChairPlay's own settings.
+
+### The car's theme
+
+With bit 11, the app sets CarPlay's look: dark with bit 12, light without it, as a car's headlights do. ChairPlay takes it over its own **Theme** setting, without changing it, and sends each change to the iPhone at once, without reconnecting. A session that connects meanwhile starts with the app's theme.
+
+- Keep the bits in every update while you set the theme, in menus and while paused too.
+- ChairPlay's own **Theme** setting is in force again when a record comes without bit 11, when `counter` stops changing for 0.5 s, and when **Receive from other apps** is turned off.
 - The status file's `width` and `height` show the picture's new size once the iPhone sends it.
 
 ### What ChairPlay does with the position
@@ -270,6 +279,8 @@ These snippets use [`bridge_layout.h`](../native/bridge/bridge_layout.h), whose 
 #define CPB_TELEMETRY_POSITION 256u
 #define CPB_TELEMETRY_CONTROLS 512u
 #define CPB_TELEMETRY_DISPLAY 1024u
+#define CPB_TELEMETRY_THEME 2048u
+#define CPB_TELEMETRY_DARK 4096u
 
 #define CPB_BUTTON_LEFT 1u
 #define CPB_BUTTON_RIGHT 2u
@@ -286,6 +297,11 @@ These snippets use [`bridge_layout.h`](../native/bridge/bridge_layout.h), whose 
 #define CPB_BUTTON_END_CALL 4096u
 #define CPB_BUTTON_SIRI 8192u
 #define CPB_BUTTON_CARPLAY 16384u
+
+#define CPB_DISPLAY_RIGHT_HAND_DRIVE 1u
+#define CPB_DISPLAY_DOCK_AUTO 0u
+#define CPB_DISPLAY_DOCK_DRIVER 2u
+#define CPB_DISPLAY_DOCK_BOTTOM 4u
 
 #define CPB_SCREEN_CARPLAY 0u
 #define CPB_SCREEN_CAR 1u
@@ -317,7 +333,7 @@ struct cpb_status {
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 140 */
+    uint16_t size;              /*   6: 144 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -340,7 +356,8 @@ struct cpb_telemetry {
     uint32_t display_width;     /* 128: the car's display: CarPlay's picture width, px, even */
     uint32_t display_height;    /* 132: its height, px, even */
     uint32_t display_width_mm;  /* 136: the display's width, mm, for CarPlay's scale */
-    uint8_t reserved[116];      /* 140 */
+    uint32_t display_options;   /* 140: CPB_DISPLAY_RIGHT_HAND_DRIVE, one CPB_DISPLAY_DOCK_* */
+    uint8_t reserved[112];      /* 144 */
 };
 ```
 

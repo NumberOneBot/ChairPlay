@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.bridge
 
 import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.config.CarDisplay
+import io.github.numberonebot.chairplay.phone.Dock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -209,16 +210,43 @@ class BridgeLayoutTest {
         }
     }
 
+    // Its options at 140, read only in a record of 144 bytes or more: bit 0 right-hand drive, bits 1-2 the dock (0 auto,
+    // 1 driver, 2 bottom); dock 3 gives no display. A record of 140 bytes leaves both to ChairPlay's settings.
+    @Test
+    fun `telemetry gives the car's driving side and dock in a record of 144 bytes`() {
+        fun display(size: Int, options: Int) = telemetry(DISPLAY).also {
+            it.putShort(6, size.toShort()); it.putInt(128, 800); it.putInt(132, 480); it.putInt(136, 180); it.putInt(140, options)
+        }
+        fun parsed(size: Int, options: Int) = TelemetryRecord.parse(display(size, options))!!.display
+        assertEquals(CarDisplay(800, 480, 180, rightHandDrive = true, dock = Dock.BOTTOM), parsed(144, 0b101))
+        assertEquals(CarDisplay(800, 480, 180, rightHandDrive = false, dock = Dock.DRIVER), parsed(144, 0b010))
+        assertEquals(CarDisplay(800, 480, 180, rightHandDrive = false, dock = Dock.AUTO), parsed(144, 0))
+        assertEquals(CarDisplay(800, 480, 180), parsed(140, 0b101))
+        assertNull(parsed(144, 0b110))
+    }
+
+    // The car's look (bit 11): dark with bit 12, light without; bit 12 alone gives none.
+    @Test
+    fun `telemetry gives the car's theme with flag bit 11`() {
+        fun dark(flags: Int) = TelemetryRecord.parse(telemetry(flags))!!.dark
+        assertEquals(true, dark(THEME or DARK))
+        assertEquals(false, dark(THEME))
+        assertNull(dark(DARK))
+        assertNull(dark(0))
+    }
+
     @Test
     fun `write then parse gives a record of controls alone back`() {
         val r = TelemetryRecord(
             4, false, null, 0.0, 0.0, 0.0, 0.0, null, "Bridge test", position = false, controls = GameControls(1, -7, 2, 0),
-            display = CarDisplay(1280, 720, 300),
+            display = CarDisplay(1280, 720, 300, rightHandDrive = true, dock = Dock.DRIVER), dark = true,
         )
         val b = buffer()
         TelemetryRecord.write(r, b)
         assertEquals(r, TelemetryRecord.parse(b))
-        assertEquals(CONTROLS or DISPLAY, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16))
+        assertEquals(CONTROLS or DISPLAY or THEME or DARK, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16))
+        TelemetryRecord.write(r.copy(dark = false), b)
+        assertEquals(false, TelemetryRecord.parse(b)!!.dark)
     }
 
     @Test
@@ -233,7 +261,7 @@ class BridgeLayoutTest {
         assertEquals(r, TelemetryRecord.parse(b))
         assertEquals(8, b.order(ByteOrder.LITTLE_ENDIAN).getInt(16) and 8)
         assertEquals(8250f, b.getFloat(60), 0f)
-        assertEquals(140, b.getShort(6).toInt())
+        assertEquals(144, b.getShort(6).toInt())
         val bare = r.copy(gear = null, rpm = null, paused = false, redline = null, throttle = null, brake = null, steerDegrees = null, topSpeed = null)
         TelemetryRecord.write(bare, b)
         assertEquals(bare, TelemetryRecord.parse(b))
@@ -248,5 +276,7 @@ class BridgeLayoutTest {
         const val POSITION = 256
         const val CONTROLS = 512
         const val DISPLAY = 1024
+        const val THEME = 2048
+        const val DARK = 4096
     }
 }

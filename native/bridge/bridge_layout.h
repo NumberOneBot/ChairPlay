@@ -24,6 +24,8 @@
 #define CPB_TELEMETRY_POSITION 256u
 #define CPB_TELEMETRY_CONTROLS 512u
 #define CPB_TELEMETRY_DISPLAY 1024u
+#define CPB_TELEMETRY_THEME 2048u
+#define CPB_TELEMETRY_DARK 4096u
 
 /* cpb_telemetry.buttons: held while set. The first seven hold CarPlay's knob, the rest act as they turn on. */
 #define CPB_BUTTON_LEFT 1u
@@ -41,6 +43,12 @@
 #define CPB_BUTTON_END_CALL 4096u
 #define CPB_BUTTON_SIRI 8192u
 #define CPB_BUTTON_CARPLAY 16384u
+
+/* cpb_telemetry.display_options, read in a record of 144 bytes or more: bit 0 the driver side, bits 1-2 the dock. */
+#define CPB_DISPLAY_RIGHT_HAND_DRIVE 1u
+#define CPB_DISPLAY_DOCK_AUTO 0u
+#define CPB_DISPLAY_DOCK_DRIVER 2u
+#define CPB_DISPLAY_DOCK_BOTTOM 4u
 
 /* cpb_status.screen */
 #define CPB_SCREEN_CARPLAY 0u
@@ -73,7 +81,7 @@ struct cpb_status {
 struct cpb_telemetry {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 140 */
+    uint16_t size;              /*   6: 144 */
     uint32_t seq;               /*   8 */
     uint32_t counter;           /*  12 */
     uint32_t flags;             /*  16 */
@@ -96,7 +104,8 @@ struct cpb_telemetry {
     uint32_t display_width;     /* 128: the car's display: CarPlay's picture width, px, even */
     uint32_t display_height;    /* 132: its height, px, even */
     uint32_t display_width_mm;  /* 136: the display's width, mm, for CarPlay's scale */
-    uint8_t reserved[116];      /* 140 */
+    uint32_t display_options;   /* 140: CPB_DISPLAY_RIGHT_HAND_DRIVE, one CPB_DISPLAY_DOCK_* */
+    uint8_t reserved[112];      /* 144 */
 };
 
 static_assert(sizeof(struct cpb_status) == 256, "status size");
@@ -148,6 +157,7 @@ static_assert(offsetof(struct cpb_telemetry, volume_steps) == 124, "volume_steps
 static_assert(offsetof(struct cpb_telemetry, display_width) == 128, "display_width");
 static_assert(offsetof(struct cpb_telemetry, display_height) == 132, "display_height");
 static_assert(offsetof(struct cpb_telemetry, display_width_mm) == 136, "display_width_mm");
-static_assert(offsetof(struct cpb_telemetry, reserved) == 140, "telemetry reserved");
+static_assert(offsetof(struct cpb_telemetry, display_options) == 140, "display_options");
+static_assert(offsetof(struct cpb_telemetry, reserved) == 144, "telemetry reserved");
 
 #endif

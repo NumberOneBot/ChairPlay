@@ -2,6 +2,7 @@ package io.github.numberonebot.chairplay.bridge
 
 import io.github.numberonebot.chairplay.config.AreaRect
 import io.github.numberonebot.chairplay.config.CarDisplay
+import io.github.numberonebot.chairplay.phone.Dock
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -14,7 +15,7 @@ object BridgeLayout {
     const val STATUS_FILE = "ChairPlay.Bridge.v1"
     const val TELEMETRY_FILE = "ChairPlay.Telemetry.v1"
     const val STATUS_SIZE = 140
-    const val TELEMETRY_SIZE = 140
+    const val TELEMETRY_SIZE = 144
 
     fun textureName(generation: Int): String = "ChairPlay.Main.v1.$generation"
 
@@ -120,8 +121,10 @@ data class TelemetryRecord(
     val position: Boolean = true,
     /** The game's buttons and steps (flag bit 9); null when not given. */
     val controls: GameControls? = null,
-    /** The car's display (flag bit 10), for CarPlay's picture; null when not given or a size no setting could hold. */
+    /** The car's display (flag bit 10), for CarPlay's picture; null when not given, or a size or dock no setting could hold. */
     val display: CarDisplay? = null,
+    /** The car's look (flag bit 11): dark (bit 12) or light; null when not given. */
+    val dark: Boolean? = null,
 ) {
     companion object {
         private const val MAGIC = 0
@@ -149,6 +152,14 @@ data class TelemetryRecord(
         private const val DISPLAY_WIDTH = 128
         private const val DISPLAY_HEIGHT = 132
         private const val DISPLAY_WIDTH_MM = 136
+        private const val DISPLAY_OPTIONS = 140
+        /** The record's size from which [DISPLAY_OPTIONS] is given. */
+        private const val SIZE_WITH_OPTIONS = 144
+        private const val OPTION_RIGHT_HAND_DRIVE = 1
+        /** Bits 1-2 of the options: the dock, by its place here; 3 is none. */
+        private const val DOCK_SHIFT = 1
+        private const val DOCK_MASK = 3
+        private val DOCKS = listOf(Dock.AUTO, Dock.DRIVER, Dock.BOTTOM)
         private const val FLAG_RPM = 1
         private const val FLAG_GEAR = 2
         private const val FLAG_PAUSED = 4
@@ -160,6 +171,8 @@ data class TelemetryRecord(
         private const val FLAG_POSITION = 256
         private const val FLAG_CONTROLS = 512
         private const val FLAG_DISPLAY = 1024
+        private const val FLAG_THEME = 2048
+        private const val FLAG_DARK = 4096
         /** A red line at or below 1000 rpm or above 20000 is no engine's (and would number a dial past reading). */
         private const val LOWEST_REDLINE = 1000.0
         private const val HIGHEST_REDLINE = 20000.0
@@ -206,12 +219,22 @@ data class TelemetryRecord(
                 position = position,
                 controls = if (flags and FLAG_CONTROLS == 0) null else
                     GameControls(b.getInt(BUTTONS), b.getInt(KNOB_STEPS), b.getInt(ZOOM_STEPS), b.getInt(VOLUME_STEPS)),
-                // As display.width and display.height take them: even pixels above 0; millimetres above 0.
-                display = CarDisplay(b.getInt(DISPLAY_WIDTH), b.getInt(DISPLAY_HEIGHT), b.getInt(DISPLAY_WIDTH_MM)).takeIf {
-                    flags and FLAG_DISPLAY != 0 && it.width > 0 && it.width % 2 == 0 && it.height > 0 && it.height % 2 == 0 &&
-                        it.widthMm > 0
-                },
+                display = if (flags and FLAG_DISPLAY == 0) null else display(b),
+                dark = if (flags and FLAG_THEME == 0) null else flags and FLAG_DARK != 0,
             )
+        }
+
+        /**
+         * As display.width and display.height take them: even pixels above 0; millimetres above 0; a known dock. A
+         * record shorter than [SIZE_WITH_OPTIONS] (an older writer) leaves the driving side and the dock to the settings.
+         */
+        private fun display(b: ByteBuffer): CarDisplay? {
+            val size = CarDisplay(b.getInt(DISPLAY_WIDTH), b.getInt(DISPLAY_HEIGHT), b.getInt(DISPLAY_WIDTH_MM))
+            if (size.width <= 0 || size.width % 2 != 0 || size.height <= 0 || size.height % 2 != 0 || size.widthMm <= 0) return null
+            if (b.getShort(SIZE).toInt() and 0xFFFF < SIZE_WITH_OPTIONS) return size
+            val options = b.getInt(DISPLAY_OPTIONS)
+            val dock = DOCKS.getOrNull((options shr DOCK_SHIFT) and DOCK_MASK) ?: return null
+            return size.copy(rightHandDrive = options and OPTION_RIGHT_HAND_DRIVE != 0, dock = dock)
         }
 
         /** Writes the record over the first bytes of [into], clearing the rest; for tests and tools. */
@@ -234,6 +257,8 @@ data class TelemetryRecord(
             if (record.position) flags = flags or FLAG_POSITION
             if (record.controls != null) flags = flags or FLAG_CONTROLS
             if (record.display != null) flags = flags or FLAG_DISPLAY
+            if (record.dark != null) flags = flags or FLAG_THEME
+            if (record.dark == true) flags = flags or FLAG_DARK
             b.putInt(FLAGS, flags)
             b.putInt(GEAR, record.gear ?: 0)
             b.putDouble(SPEED, record.speed)
@@ -257,6 +282,8 @@ data class TelemetryRecord(
                 b.putInt(DISPLAY_WIDTH, it.width)
                 b.putInt(DISPLAY_HEIGHT, it.height)
                 b.putInt(DISPLAY_WIDTH_MM, it.widthMm)
+                val side = if (it.rightHandDrive == true) OPTION_RIGHT_HAND_DRIVE else 0
+                b.putInt(DISPLAY_OPTIONS, side or (DOCKS.indexOf(it.dock ?: Dock.AUTO) shl DOCK_SHIFT))
             }
         }
     }

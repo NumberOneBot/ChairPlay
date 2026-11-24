@@ -61,4 +61,37 @@ class CarPlayThemeTest {
 
         assertEquals(listOf(true, false), link.nights)
     }
+
+    // A game's look (telemetry bits 11 and 12) over display.theme while it gives one, sent at once and once per change;
+    // given back, the setting's look is in force again, the system's too.
+    @Test
+    fun `a game's theme holds over the setting until given back`() {
+        val shell = FakeShell(dark = false)
+        val link = FakeLink()
+        val theme = CarPlayTheme(Theme.SYSTEM, watch, touchSender, AtomicReference<PhoneLink?>(link)::get, shell::appsDark)
+
+        theme.send(link)
+        theme.game(true)
+        theme.game(true)
+        theme.game(null)
+        theme.saved("dark")
+        theme.game(false)
+        theme.game(null)
+        touchSender.submit {}.get(5, TimeUnit.SECONDS)
+
+        assertEquals(listOf(false, true, false, true, false, true), link.nights)
+    }
+
+    @Test
+    fun `a session that starts while a game holds the theme gets the game's`() {
+        val active = AtomicReference<PhoneLink?>()
+        val theme = CarPlayTheme(Theme.PHONE, watch, touchSender, active::get, FakeShell(dark = false)::appsDark)
+        theme.game(true)
+        val link = FakeLink()
+        active.set(link)
+
+        theme.send(link)
+        touchSender.submit {}.get(5, TimeUnit.SECONDS)
+        assertEquals(listOf(true), link.nights)
+    }
 }

@@ -65,7 +65,10 @@ internal class AppControls(
         // at once, through a reconnect (owner, 2026-11-24).
         driving.carDisplay = { display ->
             if (config.takeGameDisplay(display)) {
-                log("CarPlay display from the game: ${display.width}x${display.height} px, ${display.widthMm} mm wide")
+                val side = display.rightHandDrive?.let { if (it) "right" else "left" } ?: "as set"
+                val dock = display.dock?.name?.lowercase() ?: "as set"
+                log("CarPlay display from the game: ${display.width}x${display.height} px, ${display.widthMm} mm wide, " +
+                    "driver side $side, dock $dock")
                 if (active() != null) send(Control.Reconnect)
             }
         }

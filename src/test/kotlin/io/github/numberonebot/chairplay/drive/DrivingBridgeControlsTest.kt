@@ -5,6 +5,7 @@ import io.github.numberonebot.chairplay.bridge.TelemetryInput
 import io.github.numberonebot.chairplay.bridge.TelemetryRecord
 import io.github.numberonebot.chairplay.config.CarDisplay
 import io.github.numberonebot.chairplay.input.Control
+import io.github.numberonebot.chairplay.phone.Dock
 import io.github.numberonebot.chairplay.phone.KnobInput
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -129,19 +130,41 @@ class DrivingBridgeControlsTest {
         assertTrue(Control.Knob(KnobInput(home = true), false) in sent)
     }
 
-    // A game's car display goes to the app once per change, the GPS on or off: the app reconnects for each.
+    // A game's look goes to the app once per change, paused too; a record without it, the game quiet for half a second,
+    // or the switch off gives it back (null), as the knob is let go.
+    @Test
+    fun `a game's theme is told once per change and given back`() {
+        val themes = mutableListOf<Boolean?>()
+        val driving = driving(on.copy(enabled = false)).also { it.carTheme = { dark -> themes += dark } }.found()
+        for ((counter, dark) in listOf(true, true, false, null, true).withIndex()) {
+            source.record = record(counter + 2, paused = true).copy(dark = dark)
+            driving.step()
+        }
+        at(0.6)
+        driving.step()
+        source.record = record(7).copy(dark = false)
+        driving.step()
+        driving.saved(on.copy(enabled = false, external = false), setOf("bridge.telemetry"))
+        driving.step()
+
+        assertEquals(listOf(true, false, null, true, null, false, null), themes)
+    }
+
+    // A game's car display goes to the app once per change, of its driving side or dock alone too, the GPS on or off:
+    // the app reconnects for each.
     @Test
     fun `a game's car display is told once per change`() {
         val shown = mutableListOf<CarDisplay>()
         val driving = driving(on.copy(enabled = false)).also { it.carDisplay = { display -> shown += display } }.found()
-        source.record = record(2).copy(display = CarDisplay(800, 480, 180))
-        driving.step()
-        source.record = record(3).copy(display = CarDisplay(800, 480, 180))
-        driving.step()
-        source.record = record(4).copy(display = CarDisplay(1280, 720, 300))
-        driving.step()
+        val small = CarDisplay(800, 480, 180, rightHandDrive = false, dock = Dock.AUTO)
+        val large = CarDisplay(1280, 720, 300, rightHandDrive = false, dock = Dock.AUTO)
+        val docked = large.copy(rightHandDrive = true, dock = Dock.BOTTOM)
+        for ((counter, display) in listOf(small, small, large, docked).withIndex()) {
+            source.record = record(counter + 2).copy(display = display)
+            driving.step()
+        }
 
-        assertEquals(listOf(CarDisplay(800, 480, 180), CarDisplay(1280, 720, 300)), shown)
+        assertEquals(listOf(small, large, docked), shown)
     }
 
     private companion object {
