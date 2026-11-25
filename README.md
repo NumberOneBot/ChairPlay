@@ -45,7 +45,7 @@ A newer installer updates ChairPlay and keeps your settings, pairing and MFi fil
 
 **Portable.** `ChairPlay-…-portable.zip` runs without installing: unpack it to a folder you can write to and open `ChairPlay.exe`. Its settings, pairing and logs stay in that folder. To update, close ChairPlay, delete the `app` and `runtime` folders, and unpack the new zip over the old one. After moving the folder, Get started asks for the firewall rule again. The iPhone sees the installed copy and a portable one as two different cars and pairs with each, and only one copy runs at a time.
 
-See the [changelog](CHANGELOG.md) for changes between versions and the [1.1.2 release notes](docs/RELEASE-NOTES-1.1.2.md) for this update.
+See the [changelog](CHANGELOG.md) for changes between versions and the [1.1.3 release notes](docs/RELEASE-NOTES-1.1.3.md) for this update.
 
 ## Features
 
@@ -70,7 +70,7 @@ See the [changelog](CHANGELOG.md) for changes between versions and the [1.1.2 re
 
   [Watch it at full frame rate (MP4)](docs/images/track-playback.mp4)
 
-- **Integrations** (experimental): another app on this PC can show the CarPlay picture from a shared texture and drive the GPS car with its own position, speed, pedals, and steering wheel. See [Integrations](docs/INTEGRATIONS.md).
+- **Integrations** (experimental): another app on this PC can show the CarPlay picture from a shared texture, work CarPlay's controls, and drive the GPS car with its own position, speed, pedals, and steering wheel. See [Integrations](docs/INTEGRATIONS.md).
 
 Settings are in the app and in any browser on the PC at http://localhost:7529 (or from the local network when allowed), and save as you change them. Tested on Windows 11 with an iPhone 15 on iOS 18.6 and iOS 27.2.
 
