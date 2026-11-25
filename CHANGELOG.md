@@ -11,6 +11,7 @@ New features and fixed bugs in ChairPlay.
 - Another app can set CarPlay's display for the car it shows, its picture's size and physical width, the driver side, and the dock, through the telemetry file: ChairPlay reconnects to take it, and keeps it until it restarts, its own display settings unchanged. It can also set CarPlay's light or dark theme, which changes at once, without a reconnect, and touch CarPlay's picture as a click in the window does.
 - The shared picture's status file says whether the app's car display shows CarPlay or the car's own screen, as a car decides it: the armchair (or Back on CarPlay's home screen) goes to the car's own screen, Siri and calls show CarPlay while they last, and the app's own CarPlay button goes back to CarPlay.
 - The shared picture's status file is there whenever ChairPlay runs, with picture sharing off too, and gives ChairPlay's version and the port of its local API, so a launcher can tell that ChairPlay runs and work it.
+- ChairPlay can start minimized: its window follows **Run: Minimized** in a shortcut, `start /min`, or an app that starts it minimized.
 
 ### Changed
 

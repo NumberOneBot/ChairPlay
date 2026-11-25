@@ -11,6 +11,16 @@ fun glfwErrorCallback(log: AppLog): GLFWErrorCallback = GLFWErrorCallback.create
     log.log(LogLevel.WARNING, "[glfw] 0x${code.toString(16)}: ${GLFWErrorCallback.getDescription(description)}")
 }
 
+/**
+ * GLFW's default window hints. With [startupShow] the window's first show takes the show state its starter gave the
+ * process (STARTUPINFO: a shortcut's Run, `start /min`, or CreateProcess with SW_SHOWMINNOACTIVE), so it can start
+ * minimized; without, or when the starter gave none, it shows as GLFW shows any window.
+ */
+internal fun defaultWindowHints(startupShow: Boolean) {
+    glfwDefaultWindowHints()
+    glfwWindowHint(GLFW_WIN32_SHOWDEFAULT, if (startupShow) GLFW_TRUE else GLFW_FALSE)
+}
+
 /** The wait between passes while a fade runs: a little over a frame at 120 Hz. */
 private const val FADE_FRAME_SECONDS = 0.008
 

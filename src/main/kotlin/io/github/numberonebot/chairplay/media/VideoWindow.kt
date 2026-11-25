@@ -277,7 +277,7 @@ class VideoWindow(
 
     /** Creates the window, hidden until it is in place, with its own GL context. GLFW is initialised. */
     internal fun open() {
-        glfwDefaultWindowHints()
+        defaultWindowHints(startupShow = !hideOnClose) // the main window: the AltScreen and controls hide on close
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3)
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
