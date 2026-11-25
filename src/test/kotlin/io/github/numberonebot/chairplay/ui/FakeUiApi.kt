@@ -24,6 +24,7 @@ internal class FakeUiApi : UiApi {
         return SaveResult(emptyMap(), mapOf("window.width" to "restart"))
     }
     override fun connect(): String? = connectError ?: null.also { calls += "connect" }
+    override fun checkUpdates(): Boolean = true.also { calls += "check updates" }
     override fun reconnect() {
         calls += "reconnect"
     }
