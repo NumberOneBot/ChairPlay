@@ -28,11 +28,11 @@ class GpsConfigTest {
         assertNull(off.start)
         assertEquals(0.0, off.headingDegrees, 0.0)
         assertEquals(CarSpec(), off.car)
-        // The experiments: 10 fixes a second by default, as USB's (owner, 2026-11-24), and DiPlay's sentences.
-        assertEquals(10, off.rate)
+        // The experiments: the rate the iPhone asks for, 4 (owner, 2026-11-25: not USB's 10), and DiPlay's sentences.
+        assertEquals(4, off.rate)
         assertEquals(NmeaDialect.CLASSIC, off.nmea)
         // Any whole number of fixes a second from 1 to 20.
-        for (rate in listOf(1, 7, 10, 20)) assertEquals(rate, configWith("gps.rate=$rate").gps.rate)
+        for (rate in listOf(1, 7, 10, 20)) assertEquals(rate, configWith("gps.carplay.rate=$rate").gps.rate)
         assertEquals(NmeaDialect.MODERN, configWith("gps.nmea=modern").gps.nmea)
         assertEquals(NmeaFraming.PARAMETERS, off.framing)
         assertEquals(NmeaFraming.JOINED, configWith("gps.framing=joined").gps.framing)
@@ -76,14 +76,15 @@ class GpsConfigTest {
         val old = configWith("gps.enabled=true", "gps.rate=10").gps
         assertEquals(GpsMethod.CARPLAY, old.method)
         assertTrue(old.enabled)
-        assertEquals(10, old.rate)
-        // USB's own rate, 10 a second by default (owner, 2026-11-22), apart from CarPlay's.
+        // gps.rate is gps.carplay.rate since 1.1.3, the old key left unread (owner, 2026-11-25): the default, 4.
+        assertEquals(4, old.rate)
+        // USB's own rate, 10 a second by default (owner, 2026-11-22), CarPlay's staying 4.
         assertEquals(10, old.usbRate)
         assertNull(old.usbDevice)
         val usb = configWith("gps.method=usb", "gps.usb.rate=5", "gps.usb.device=00008110-000A").gps
         assertEquals(GpsMethod.USB, usb.method)
         assertEquals(5, usb.usbRate)
-        assertEquals(10, usb.rate)
+        assertEquals(4, usb.rate)
         assertEquals("00008110-000A", usb.usbDevice)
         assertEquals(GpsMethod.CARPLAY, configWith("gps.method=pigeon").gps.method)
     }
@@ -92,7 +93,7 @@ class GpsConfigTest {
     fun `rejects GPS values the car cannot have`() {
         for (bad in listOf(
             "gps.start=Kyiv", "gps.heading=north", "gps.heading=360", "gps.car.power.hp=5", "gps.car.mass.kg=50",
-            "gps.rate=0", "gps.rate=21", "gps.rate=2.5", "gps.rate=fast", "gps.usb.rate=0", "gps.usb.rate=21",
+            "gps.carplay.rate=0", "gps.carplay.rate=21", "gps.carplay.rate=2.5", "gps.carplay.rate=fast", "gps.usb.rate=0", "gps.usb.rate=21",
         )) {
             val key = bad.substringBefore('=')
             val error = assertThrows(IllegalArgumentException::class.java) { configWith(bad).gps }

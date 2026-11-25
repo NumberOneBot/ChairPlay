@@ -63,13 +63,13 @@ class EditableSettingsTest {
         assertEquals(Applies.RECONNECT, EditableSettings.applies("gps.wheel.speed"))
         // The GPS output's coordinator says itself when its switch needs a reconnect (D4).
         assertEquals(Applies.NOW, EditableSettings.applies("gps.enabled"))
-        assertEquals(emptyMap<String, String>(), errors("gps.rate" to "10", "gps.nmea" to "modern"))
-        for (rate in listOf("1", "3", "7", "20", "")) assertEquals(rate, emptyMap<String, String>(), errors("gps.rate" to rate))
-        for (rate in listOf("0", "21", "2.5", "fast")) assertTrue(rate, "gps.rate" in errors("gps.rate" to rate))
+        assertEquals(emptyMap<String, String>(), errors("gps.carplay.rate" to "10", "gps.nmea" to "modern"))
+        for (rate in listOf("1", "3", "7", "20", "")) assertEquals(rate, emptyMap<String, String>(), errors("gps.carplay.rate" to rate))
+        for (rate in listOf("0", "21", "2.5", "fast")) assertTrue(rate, "gps.carplay.rate" in errors("gps.carplay.rate" to rate))
         assertTrue("gps.nmea" in errors("gps.nmea" to "ancient"))
         assertEquals(emptyMap<String, String>(), errors("gps.framing" to "messages"))
         assertTrue("gps.framing" in errors("gps.framing" to "pigeons"))
-        for (key in listOf("gps.start", "gps.heading", "gps.car.power.hp", "gps.car.mass.kg", "gps.rate", "gps.nmea", "gps.framing")) {
+        for (key in listOf("gps.start", "gps.heading", "gps.car.power.hp", "gps.car.mass.kg", "gps.carplay.rate", "gps.nmea", "gps.framing")) {
             assertEquals(Applies.NOW, EditableSettings.applies(key))
         }
 

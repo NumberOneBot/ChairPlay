@@ -235,7 +235,7 @@ internal val SETTINGS_TEMPLATE = listOf(
     SettingBlock(
         "Experiments in what the iPhone takes from the GPS: fixes a second, a whole number from 1 to 20 (the iPhone asks for 4);\n" +
             "and the sentences, 'classic' (\$GPGGA, \$GPRMC) or 'modern' (\$GNGGA, \$GNRMC, \$GNGSA, \$GNVTG).",
-        "gps.rate" to "10", "gps.nmea" to "classic",
+        "gps.carplay.rate" to "4", "gps.nmea" to "classic",
     ),
     SettingBlock(
         "How an update's sentences go to the iPhone: 'params' (a parameter each, in one message) or 'messages' (a\n" +

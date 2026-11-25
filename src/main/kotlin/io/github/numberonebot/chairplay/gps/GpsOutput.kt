@@ -89,7 +89,7 @@ data class GpsOutput(
     val device: UsbDeviceView?,
     /** Commands the method's channel took this run: CarPlay updates, or helper-acknowledged USB sets. */
     val successfulSends: Long,
-    /** The method's fixes a second: gps.rate for CarPlay, gps.usb.rate for USB. */
+    /** The method's fixes a second: gps.carplay.rate for CarPlay, gps.usb.rate for USB. */
     val rateHz: Int,
     /** Moves on with each accepted method change; a gps-method command names the one it saw. */
     val generation: Long,

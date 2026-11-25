@@ -43,7 +43,7 @@ class CarPlayLocationDrivingTest {
     }
 
     // The GPS page hears of the car on the status tick alone, and only when what it shows changed: the fixes sent at
-    // gps.rate tell it nothing.
+    // gps.carplay.rate tell it nothing.
     @Test
     fun `the GPS page is told on the status tick, only of a change`() {
         val driving = driving(GpsSettings(true, start = kyiv, rate = 10))

@@ -1,6 +1,6 @@
 > start
-  log GPS: the iPhone asks for GGA, RMC, PASCD; sending classic sentences at 10 a second, params
-  period 100
+  log GPS: the iPhone asks for GGA, RMC, PASCD; sending classic sentences at 4 a second, params
+  period 250
 > nowhere
   sent $PASCD,0.250,C,P,0,1,0.00,0.000*62\r\n
   car CarState(speed=0.0, headingDegrees=30.0, rpm=0.0, gear=1, parked=true)
@@ -114,7 +114,7 @@
   sent $GPGGA,165731.00,5027.0324,N,03031.4262,E,1,08,0.5,0.0,M,0.0,M,,*50\r\n | $GPRMC,165731.00,A,5027.0324,N,03031.4262,E,10.31,182.56,261026,,*08\r\n | $PASCD,13.000,C,R,0,1,0.00,5.306*55\r\n
   car CarState(speed=-5.306379973639849, headingDegrees=2.5571572536224494, rpm=2397.757641685159, gear=-1, parked=false)
 > a minute on
-  log GPS: last 63 s updates=53 withPosition=51 wheelSpeedSamples=53 rate=10 nmea=classic speed=19.0 km/h
+  log GPS: last 63 s updates=53 withPosition=51 wheelSpeedSamples=53 rate=4 nmea=classic speed=19.0 km/h
   sent $GPGGA,165821.25,5027.0315,N,03031.4262,E,1,08,0.5,0.0,M,0.0,M,,*5B\r\n | $GPRMC,165821.25,A,5027.0315,N,03031.4262,E,10.23,182.56,261026,,*00\r\n | $PASCD,63.250,C,R,0,1,0.00,5.265*51\r\n
   car CarState(speed=-5.264717800706442, headingDegrees=2.5571572536224494, rpm=2378.9860114410662, gear=-1, parked=false)
 > framed joined

@@ -127,7 +127,7 @@ object EditableSettings {
         "gps.wheel" to choice("heading", "steering", applies = Applies.NOW),
         "gps.units" to choice("metric", "imperial", applies = Applies.NOW),
         // The next fix goes so.
-        "gps.rate" to Setting(Applies.NOW) { checkWhole(it, GpsSettings.RATE, "a rate", "fixes a second") },
+        "gps.carplay.rate" to Setting(Applies.NOW) { checkWhole(it, GpsSettings.RATE, "a rate", "fixes a second") },
         "gps.nmea" to choice("classic", "modern", applies = Applies.NOW),
         "gps.framing" to choice("joined", "messages", "params", applies = Applies.NOW),
     )

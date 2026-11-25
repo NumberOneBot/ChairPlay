@@ -258,7 +258,7 @@ These hold with bit 8 and GPS spoofing on. Without either, the app's position mo
 | `counter` never changed since ChairPlay opened the file | The gamepad and keys drive the car |
 
 - The pause flag counts at once, even without a new `counter`. To stop the car right away, set bit 2; to hand the car back, stop updating `counter` for 5 s.
-- ChairPlay sends the car to the iPhone as it does in its own GPS simulation: its position, course, and speed, and with `gps.wheel.speed` on (the default) its wheel speed, all of one moment, `gps.rate` times a second over CarPlay and `gps.usb.rate` times over USB, 10 by default.
+- ChairPlay sends the car to the iPhone as it does in its own GPS simulation: its position, course, and speed, and with `gps.wheel.speed` on (the default) its wheel speed, all of one moment, `gps.carplay.rate` times a second over CarPlay (4 by default) and `gps.usb.rate` times over USB (10 by default).
 - With **Receive from other apps** off, ChairPlay does not read the file and closes its handle.
 - ChairPlay's log notes the `source` name when an app starts sending, and why the file did not open, if it did not.
 

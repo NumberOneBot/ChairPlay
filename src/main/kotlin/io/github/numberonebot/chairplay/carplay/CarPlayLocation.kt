@@ -25,9 +25,8 @@ import kotlin.math.abs
  * gps.nmea picks; and $PASCD, its wheel speed at the same moment, when asked, for the iPhone to reckon between the fixes.
  * A car not [placed] anywhere yet sends no position, only its wheel speed.
  *
- * [attach]ed to the tunnel, it sends on its own at gps.rate updates a second, 10 by default (the iPhone asks for one
- * every 250 ms), each with its own time, and DiPlay's once-a-second update sends nothing; unattached, it answers that
- * update.
+ * [attach]ed to the tunnel, it sends on its own at gps.carplay.rate updates a second (the iPhone asks for one every
+ * 250 ms), each with its own time, and DiPlay's once-a-second update sends nothing; unattached, it answers that update.
  */
 class CarPlayLocation(
     private val drive: Drive,
@@ -123,7 +122,7 @@ class CarPlayLocation(
         }
     }
 
-    /** One update: the position and the wheel speed since the last. */
+    /** One update: the position and the wheel speed of one moment. */
     private fun compose(): String? {
         val now = settings()
         val car = drive.snapshot()
@@ -145,7 +144,7 @@ class CarPlayLocation(
     }
 
     // One sample, the car's speed in the same snapshot as the position: everything the iPhone gets goes at one rate,
-    // gps.rate (owner, 2026-11-24).
+    // gps.carplay.rate (owner, 2026-11-24).
     private fun wheelSpeed(car: DriveSnapshot): VehicleSpeedReading {
         val samples = listOf(VehicleSpeedSample(nanoTime() / 1_000_000, abs(car.car.speed)))
         val gear = when {

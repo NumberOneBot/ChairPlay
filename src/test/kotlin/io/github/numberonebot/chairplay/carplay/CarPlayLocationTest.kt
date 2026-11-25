@@ -81,7 +81,7 @@ class CarPlayLocationTest {
     }
 
     // $PASCD when asked (selector 4), with the gear: one sample, the car's speed at the moment the position is taken.
-    // One rate, gps.rate, for all the iPhone gets: place, course, speed and wheel speed alike (owner, 2026-11-24).
+    // One rate, gps.carplay.rate, for all the iPhone gets: place, course, speed and wheel speed alike (owner, 2026-11-24).
     @Test
     fun `wheel speed goes with the position when asked`() {
         val drive = drive()

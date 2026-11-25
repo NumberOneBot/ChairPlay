@@ -24,7 +24,7 @@ import java.time.Instant
  * it, before it moved here as CarPlayLocation: the move changed nothing the iPhone is sent. From "a game drives" on it
  * was recorded again once the status tick, not the window loop, looked for a game: the car follows it a tick later.
  * Its $GPGSV went with the satellites in view, the rest unchanged. Recorded again once $PASCD carried one sample, the
- * car's speed at each update, and gps.rate went to 10 by default (owner, 2026-11-24): $GPGGA and $GPRMC unchanged.
+ * car's speed at each update (owner, 2026-11-24): $GPGGA and $GPRMC unchanged.
  */
 class CarPlayLocationTranscriptTest {
     private val kyiv = GeoPoint(50.4501, 30.5234)
@@ -130,10 +130,10 @@ class CarPlayLocationTranscriptTest {
         ticks("framed joined")
         save(settings.copy(framing = NmeaFraming.MESSAGES), "gps.framing")
         ticks("framed a message each")
-        save(settings.copy(framing = NmeaFraming.PARAMETERS, nmea = NmeaDialect.MODERN, rate = 10), "gps.nmea", "gps.rate")
+        save(settings.copy(framing = NmeaFraming.PARAMETERS, nmea = NmeaDialect.MODERN, rate = 10), "gps.nmea", "gps.carplay.rate")
         lines += "  period ${schedule.period!!()}"
         ticks("modern sentences")
-        save(settings.copy(nmea = NmeaDialect.CLASSIC, rate = 4, sendHeading = false), "gps.nmea", "gps.rate", "gps.heading.send")
+        save(settings.copy(nmea = NmeaDialect.CLASSIC, rate = 4, sendHeading = false), "gps.nmea", "gps.carplay.rate", "gps.heading.send")
         ticks("no heading sent")
         save(settings.copy(sendHeading = true, external = true), "gps.heading.send", "bridge.telemetry")
         source.game = record(speed = 20.0, gear = 3)
