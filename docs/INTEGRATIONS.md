@@ -391,7 +391,8 @@ struct cpb_telemetry {
 #include <d3d11_1.h>
 #include "bridge_layout.h"
 
-// The status file's view, kept open; null until ChairPlay has made the file.
+// The status file's handle and view, both kept open; null until ChairPlay has made the file.
+static HANDLE status_mapping;
 static const volatile cpb_status* status_view;
 
 static bool open_status() {
@@ -399,8 +400,13 @@ static bool open_status() {
     HANDLE mapping = OpenFileMappingW(FILE_MAP_READ, FALSE, L"Local\\ChairPlay.Bridge.v1");
     if (!mapping) return false;  // ChairPlay is not running: try again later
     status_view = (const volatile cpb_status*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, CPB_FILE_SIZE);
-    CloseHandle(mapping);  // the view keeps the file
-    return status_view != nullptr;
+    if (!status_view) {
+        CloseHandle(mapping);
+        return false;
+    }
+    // Keep the handle: the view alone does not keep the file's name, so a restarted ChairPlay would make a new file.
+    status_mapping = mapping;
+    return true;
 }
 
 // True when out holds a whole copy: seq was even and did not change while copying.
