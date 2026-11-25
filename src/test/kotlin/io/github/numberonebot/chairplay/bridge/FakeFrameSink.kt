@@ -19,6 +19,11 @@ internal class FakeFrameSink(
     var state = 0
     var onPublish: (ByteBuffer) -> Unit = {}
 
+    override fun announce(uiPort: Int, version: String): String? {
+        events += "announce $uiPort $version"
+        return null
+    }
+
     override fun open(): String? {
         events += "open"
         if (openError == null) state = 1

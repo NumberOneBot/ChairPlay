@@ -88,6 +88,8 @@ private object MacBridge : GameBridge {
 }
 
 private object MacFrames : FrameSink {
+    override fun announce(uiPort: Int, version: String): String? = notReady()
+
     override fun open(): String? = notReady()
 
     override fun publish(bgra: ByteBuffer, width: Int, height: Int, safe: AreaRect): String? = notReady()

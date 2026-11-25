@@ -10,9 +10,14 @@
 #define CPB_API __declspec(dllexport)
 #endif
 
-/* Creates the D3D11 device on the high-performance adapter (WARP when warp != 0) and the status file
-   Local\ChairPlay.Bridge.v1, zeroed, then state 1. Generations go on past the newest one the file (when a game still
-   holds it) or this process has seen; the process' first is 1. Already open: 0, unchanged. */
+/* Creates the status file Local\ChairPlay.Bridge.v1 when it is not there yet, zeroed, in state 0, and writes ChairPlay's
+   local API port and version (UTF-8, cut to 15 bytes) into it. Once made, by this call or cpb_frame_open, the file stays
+   for the process' life; cpb_frame_close leaves it in state 0. */
+CPB_API int cpb_status_open(int ui_port, const char* app_version);
+
+/* Creates the D3D11 device on the high-performance adapter (WARP when warp != 0), and the status file when needed,
+   clears the picture's fields in it, then state 1. Generations go on past the newest one the file (when a game still
+   holds it from an earlier run) or this process has seen; the process' first is 1. Already open: 0, unchanged. */
 CPB_API int cpb_frame_open(int warp);
 
 /* Copies one BGRA picture into the shared texture ChairPlay.Main.v1.<generation>. A new size makes a new texture and
@@ -29,8 +34,7 @@ CPB_API void cpb_frame_state(int state);
    open starts at 0; nothing when closed. */
 CPB_API void cpb_frame_screen(int screen);
 
-/* Writes state 0 and an empty texture name, then releases the device and the textures; the status file goes with
-   its last handle. */
+/* Writes state 0 and an empty texture name, then releases the device and the textures; the status file stays. */
 CPB_API void cpb_frame_close(void);
 
 /* The calling thread's last failure, with its HRESULT in hex; empty when none. */

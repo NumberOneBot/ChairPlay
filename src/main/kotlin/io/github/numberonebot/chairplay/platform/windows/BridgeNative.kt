@@ -15,7 +15,13 @@ import java.nio.ByteBuffer
  */
 @Suppress("FunctionName")
 internal interface BridgeLibrary : Library {
-    /** Creates the device (WARP when [warp] is 1) and the status file in state 1; 0, else negative ([cpb_last_error]). */
+    /**
+     * Creates the status file in state 0 when it is not open, and writes the local API's port and the version into it;
+     * the file then stays for the process' life. 0, else negative ([cpb_last_error]).
+     */
+    fun cpb_status_open(uiPort: Int, appVersion: String): Int
+
+    /** Creates the device (WARP when [warp] is 1), and the status file when needed, in state 1; 0, else negative. */
     fun cpb_frame_open(warp: Int): Int
 
     /** Copies one BGRA picture into the shared texture, a new one (and generation) when the size changes; 0 or negative. */
@@ -25,7 +31,7 @@ internal interface BridgeLibrary : Library {
 
     fun cpb_frame_state(state: Int)
 
-    /** Writes state 0 for a game still holding the status file, then releases the device and textures. */
+    /** Writes state 0 to the status file, which stays, then releases the device and textures. */
     fun cpb_frame_close()
 
     /** Writes whose screen a game shows to the status file: 0 CarPlay's, 1 the car's own; nothing when closed. */

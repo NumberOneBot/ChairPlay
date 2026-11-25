@@ -58,7 +58,7 @@
 struct cpb_status {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 140 */
+    uint16_t size;              /*   6: 160 */
     uint32_t seq;               /*   8: odd while being written */
     uint32_t state;             /*  12: 0 none, 1 waiting, 2 flowing, 3 frozen */
     uint32_t generation;        /*  16 */
@@ -76,7 +76,9 @@ struct cpb_status {
     uint32_t producer_pid;      /*  68 */
     char texture_name[64];      /*  72 */
     uint32_t screen;            /* 136: whose screen to show: 0 CarPlay's (the texture), 1 the car's own */
-    uint8_t reserved[116];      /* 140 */
+    uint32_t ui_port;           /* 140: ChairPlay's local API, http://127.0.0.1:<ui_port>/api/ */
+    char app_version[16];       /* 144: ChairPlay's version, X.Y.Z; empty for a development build */
+    uint8_t reserved[96];       /* 160 */
 };
 
 struct cpb_telemetry {
@@ -133,7 +135,9 @@ static_assert(offsetof(struct cpb_status, stream_fps) == 64, "stream_fps");
 static_assert(offsetof(struct cpb_status, producer_pid) == 68, "producer_pid");
 static_assert(offsetof(struct cpb_status, texture_name) == 72, "texture_name");
 static_assert(offsetof(struct cpb_status, screen) == 136, "screen");
-static_assert(offsetof(struct cpb_status, reserved) == 140, "status reserved");
+static_assert(offsetof(struct cpb_status, ui_port) == 140, "ui_port");
+static_assert(offsetof(struct cpb_status, app_version) == 144, "app_version");
+static_assert(offsetof(struct cpb_status, reserved) == 160, "status reserved");
 
 static_assert(sizeof(struct cpb_telemetry) == 256, "telemetry size");
 static_assert(offsetof(struct cpb_telemetry, magic) == 0, "magic");

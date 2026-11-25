@@ -12,7 +12,7 @@ object BridgeLayout {
     const val VERSION = 1
     const val STATUS_FILE = "ChairPlay.Bridge.v1"
     const val TELEMETRY_FILE = "ChairPlay.Telemetry.v1"
-    const val STATUS_SIZE = 140
+    const val STATUS_SIZE = 160
     const val TELEMETRY_SIZE = 156
 
     fun textureName(generation: Int): String = "ChairPlay.Main.v1.$generation"
@@ -49,6 +49,10 @@ data class BridgeStatus(
     val textureName: String,
     /** Whose screen a game's car display shows: 0 CarPlay's (the texture), 1 the car's own; 0 at each open. */
     val screen: Int,
+    /** The port of ChairPlay's local API (UiServer), for a launcher; 0 in a record of fewer than 160 bytes. */
+    val uiPort: Int,
+    /** ChairPlay's release version (X.Y.Z); empty for a development build. */
+    val appVersion: String,
 ) {
     companion object {
         private const val MAGIC = 0
@@ -67,6 +71,9 @@ data class BridgeStatus(
         private const val TEXTURE_NAME = 72
         private const val TEXTURE_NAME_MAX = 64
         private const val SCREEN = 136
+        private const val UI_PORT = 140
+        private const val APP_VERSION = 144
+        private const val APP_VERSION_MAX = 16
 
         /** Null when the magic or the version differ. */
         fun parse(bytes: ByteBuffer): BridgeStatus? {
@@ -86,6 +93,8 @@ data class BridgeStatus(
                 producerPid = b.getInt(PRODUCER_PID),
                 textureName = BridgeLayout.readText(b, TEXTURE_NAME, TEXTURE_NAME_MAX),
                 screen = b.getInt(SCREEN),
+                uiPort = b.getInt(UI_PORT),
+                appVersion = BridgeLayout.readText(b, APP_VERSION, APP_VERSION_MAX),
             )
         }
     }

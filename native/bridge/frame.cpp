@@ -2,6 +2,7 @@
 // the device and the textures are frame_device.cpp's. Nothing here waits on a reader: there is no keyed mutex.
 #include <windows.h>
 #include <d3d11.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "bridge.h"
@@ -23,18 +24,20 @@ CpbBridge& bridge = cpb_bridge;
 bool lose_device = false;
 bool fail_new_device = false;
 
+// The status file stays: a launcher reads ChairPlay's port and version in it while no picture is shared.
 void close_locked() {
     cpb_release_gpu();
-    if (cpb_status* s = bridge.status) {
-        // A game may hold the file past this close: tell it the picture is gone.
+    cpb_status* s = bridge.status;
+    if (s) {
         cpb_seq_begin(s);
         s->state = 0;
         memset(s->texture_name, 0, sizeof s->texture_name);
         cpb_seq_end(s);
-        UnmapViewOfFile(s);
     }
-    if (bridge.mapping) CloseHandle(bridge.mapping);
+    HANDLE mapping = bridge.mapping;
     bridge = CpbBridge();
+    bridge.mapping = mapping;
+    bridge.status = s;
 }
 
 int abandon(int result) {
@@ -42,28 +45,25 @@ int abandon(int result) {
     return result;
 }
 
-int open_locked(int warp) {
-    if (bridge.device) return 0;
-    LUID luid = {};
-    int result = cpb_make_device(warp, &bridge.device, &bridge.context, &luid);
-    if (result != 0) return abandon(result);
-    bridge.warp = warp;
-
-    bridge.mapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, CPB_FILE_SIZE,
+// Makes the status file, in state 0, once for the process' life.
+int map_locked() {
+    if (bridge.status) return 0;
+    HANDLE mapping = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, CPB_FILE_SIZE,
                                         CPB_STATUS_MAPPING);
-    if (!bridge.mapping) return abandon(cpb_fail("CreateFileMappingW", HRESULT_FROM_WIN32(GetLastError())));
+    if (!mapping) return cpb_fail("CreateFileMappingW", HRESULT_FROM_WIN32(GetLastError()));
     bool existed = GetLastError() == ERROR_ALREADY_EXISTS;
-    bridge.status = (cpb_status*)MapViewOfFile(bridge.mapping, FILE_MAP_WRITE, 0, 0, CPB_FILE_SIZE);
-    if (!bridge.status) return abandon(cpb_fail("MapViewOfFile", HRESULT_FROM_WIN32(GetLastError())));
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    bridge.frequency = frequency.QuadPart;
-
-    cpb_status* s = bridge.status;
-    // Goes on from the newest generation the file (when a game still holds it) or this process has seen: a game
-    // may still hold the last texture by name after the file went.
+    cpb_status* s = (cpb_status*)MapViewOfFile(mapping, FILE_MAP_WRITE, 0, 0, CPB_FILE_SIZE);
+    if (!s) {
+        HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+        CloseHandle(mapping);
+        return cpb_fail("MapViewOfFile", hr);
+    }
+    bridge.mapping = mapping;
+    bridge.status = s;
+    // Goes on from the newest generation the file (when a game still holds it from an earlier run) or this process
+    // has seen: a game may still hold the last texture by name.
     unsigned held = existed && s->magic == CPB_STATUS_MAGIC ? s->generation : 0;
-    bridge.generation = held > cpb_last_generation ? held : cpb_last_generation;
+    if (held > cpb_last_generation) cpb_last_generation = held;
     // Readers may be on a held file: clear it inside the seqlock, all but seq. A writer that died mid-write left
     // seq odd, so readers already retry and the write goes on from there.
     if ((*cpb_seq(s) & 1) == 0) cpb_seq_begin(s);
@@ -71,9 +71,32 @@ int open_locked(int warp) {
     memset(s, 0, offsetof(cpb_status, seq));
     memset((char*)s + offsetof(cpb_status, state), 0, CPB_FILE_SIZE - offsetof(cpb_status, state));
     s->magic = CPB_STATUS_MAGIC;
-    s->generation = bridge.generation;
     s->version = CPB_VERSION;
     s->size = offsetof(cpb_status, reserved);
+    s->generation = cpb_last_generation;
+    s->producer_pid = GetCurrentProcessId();
+    cpb_seq_end(s);
+    return 0;
+}
+
+int open_locked(int warp) {
+    if (bridge.device) return 0;
+    int result = map_locked();
+    if (result != 0) return result;
+    LUID luid = {};
+    result = cpb_make_device(warp, &bridge.device, &bridge.context, &luid);
+    if (result != 0) return abandon(result);
+    bridge.warp = warp;
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    bridge.frequency = frequency.QuadPart;
+    bridge.generation = cpb_last_generation;
+
+    // The picture's fields start over; the header, the port and the version stay.
+    cpb_status* s = bridge.status;
+    cpb_seq_begin(s);
+    memset((char*)s + offsetof(cpb_status, state), 0, offsetof(cpb_status, ui_port) - offsetof(cpb_status, state));
+    s->generation = bridge.generation;
     s->state = 1;
     s->dxgi_format = CPB_DXGI_FORMAT_B8G8R8A8_UNORM;
     s->adapter_luid_low = luid.LowPart;
@@ -167,6 +190,18 @@ int publish_locked(const void* bgra, int width, int height, int stride, int sx, 
 }
 
 }  // namespace
+
+CPB_API int cpb_status_open(int ui_port, const char* app_version) {
+    CpbLock lock;
+    int result = map_locked();
+    if (result != 0) return result;
+    cpb_status* s = bridge.status;
+    cpb_seq_begin(s);
+    s->ui_port = (uint32_t)ui_port;
+    snprintf(s->app_version, sizeof s->app_version, "%s", app_version ? app_version : "");
+    cpb_seq_end(s);
+    return 0;
+}
 
 CPB_API int cpb_frame_open(int warp) {
     CpbLock lock;

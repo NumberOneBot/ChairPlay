@@ -216,6 +216,9 @@ class ChairPlayUi(
     init {
         server.start()
         log("UI at ${server.browserUrl}")
+        // From now on the bridge's status file tells a launcher that ChairPlay runs, its version and this port.
+        runCatching { Platforms.current.bridge.frames.announce(server.port, BuildInfo.load().version.orEmpty()) }
+            .getOrElse { it.toString() }?.let { log("bridge status file not made: $it") }
         // WebView2's profile (its cache) stays with the app's other data, so a copied or moved folder takes it along.
         val userData = dir.resolve("webview2")
         val debug = System.getenv("CHAIRPLAY_UI_DEBUG") == "1"

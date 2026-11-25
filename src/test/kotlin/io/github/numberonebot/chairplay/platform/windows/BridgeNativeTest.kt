@@ -150,10 +150,27 @@ class BridgeNativeTest {
         assertEquals(3, status().state)
     }
 
-    @Test fun `closing removes the status file`() {
-        status()
+    // A launcher learns that ChairPlay runs, its version and its local API's port, with sharing off too.
+    @Test fun `the status says the port and version with no picture shared`() {
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_status_open(7529, "1.1.3"))
         lib.cpb_frame_close()
-        assertEquals(0, lib.cpb_test_read_status(ByteBuffer.allocateDirect(BridgeLayout.SIZE)))
+        val closed = status()
+        assertEquals(0, closed.state)
+        assertEquals(7529, closed.uiPort)
+        assertEquals("1.1.3", closed.appVersion)
+        assertEquals(ProcessHandle.current().pid().toInt(), closed.producerPid)
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_frame_open(warp))
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        assertEquals(7529 to "1.1.3", status().let { it.uiPort to it.appVersion })
+    }
+
+    @Test fun `closing keeps the status file and releases the texture`() {
+        assertEquals(lib.cpb_last_error(), 0, publish(800, 480))
+        val shared = status().textureName
+        lib.cpb_frame_close()
+        assertEquals(0, status().state)
+        assertEquals(lib.cpb_last_error(), 0, lib.cpb_frame_open(warp))
+        assertNotEquals(0, lib.cpb_test_open_texture(shared, IntByReference(), IntByReference(), IntByReference()))
     }
 
     @Test fun `a telemetry record written by a game is read back whole`() {

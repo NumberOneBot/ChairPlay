@@ -13,6 +13,12 @@ internal object WindowsGameBridge : GameBridge {
 }
 
 private object NativeFrameSink : FrameSink {
+    override fun announce(uiPort: Int, version: String): String? {
+        BridgeNative.loadError?.let { return it }
+        val lib = BridgeNative.lib
+        return if (lib.cpb_status_open(uiPort, version) == 0) null else lib.cpb_last_error()
+    }
+
     override fun open(): String? {
         BridgeNative.loadError?.let { return it }
         val lib = BridgeNative.lib

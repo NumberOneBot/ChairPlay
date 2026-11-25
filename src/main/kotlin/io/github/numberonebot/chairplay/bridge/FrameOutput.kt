@@ -33,7 +33,7 @@ interface FrameTap {
  * the latest picture wins, and the decoder never waits on the worker or a game. The worker alone talks to [sink]: it
  * publishes, and between pictures wakes every 0.5 s to mark a picture over 1 s old frozen while the stream lasts.
  * The first failure is logged and ends publishing until [enabled] is turned off and on. Off holds no thread, buffer or
- * native side. The safe rect ([safe], in the pixels of [screen]) is scaled to a picture of another size.
+ * texture. The safe rect ([safe], in the pixels of [screen]) is scaled to a picture of another size.
  */
 internal class FrameOutput(
     private val sink: FrameSink = Platforms.current.bridge.frames,

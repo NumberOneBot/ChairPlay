@@ -33,6 +33,8 @@ class BridgeLayoutTest {
         b.putInt(68, 4242)
         text(b, 72, "ChairPlay.Main.v1.7")
         b.putInt(136, 1)
+        b.putInt(140, 7529)
+        text(b, 144, "1.1.3")
         return b
     }
 
@@ -51,6 +53,8 @@ class BridgeLayoutTest {
         assertEquals(4242, s.producerPid)
         assertEquals("ChairPlay.Main.v1.7", s.textureName)
         assertEquals(1, s.screen)
+        assertEquals(7529, s.uiPort)
+        assertEquals("1.1.3", s.appVersion)
     }
 
     @Test

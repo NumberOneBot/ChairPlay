@@ -11,7 +11,7 @@ This is interface version 1. It is experimental: the names and layouts stay as d
 
 ## Turn them on
 
-Both switches are in the settings, on the **Experiments** page under **Integrations**. Both are off by default; off, ChairPlay creates no device, file, or thread for them.
+Both switches are in the settings, on the **Experiments** page under **Integrations**. Both are off by default; off, ChairPlay creates no device, texture, or thread for them. The picture's [status file](#status-file) is there whenever ChairPlay runs.
 
 | Row | Switch | Setting | Needs |
 |---|---|---|---|
@@ -42,13 +42,13 @@ The texture name has no `Local\` prefix: pass it as it is to `OpenSharedResource
 
 ### Status file
 
-ChairPlay creates `Local\ChairPlay.Bridge.v1` when **Publish as a shared texture** is turned on and is its only writer. Open it read-only with `OpenFileMappingW(FILE_MAP_READ, FALSE, L"Local\\ChairPlay.Bridge.v1")`. If it does not exist, ChairPlay is not running or sharing is off; try again later, for example once a second.
+ChairPlay creates `Local\ChairPlay.Bridge.v1` as it starts, with **Publish as a shared texture** on or off, keeps it while it runs, and is its only writer. Open it read-only with `OpenFileMappingW(FILE_MAP_READ, FALSE, L"Local\\ChairPlay.Bridge.v1")`. If it does not exist, ChairPlay is not running, or it is a version before 1.1.3, which creates the file only while sharing is on; try again later, for example once a second.
 
 | Offset | Type | Field | Meaning |
 |---:|---|---|---|
 | 0 | u32 | `magic` | `0x52425043` ("CPBR" in memory) |
 | 4 | u16 | `version` | 1 |
-| 6 | u16 | `size` | Bytes of defined fields: 140 in version 1 (136 before `screen`) |
+| 6 | u16 | `size` | Bytes of defined fields: 160 in version 1 (136 before `screen`, 140 before `uiPort`) |
 | 8 | u32 | `seq` | Seqlock: odd while ChairPlay writes |
 | 12 | u32 | `state` | 0 no picture, 1 waiting for the iPhone, 2 picture flowing, 3 picture still |
 | 16 | u32 | `generation` | Goes up each time ChairPlay makes a new texture |
@@ -66,20 +66,24 @@ ChairPlay creates `Local\ChairPlay.Bridge.v1` when **Publish as a shared texture
 | 68 | u32 | `producerPid` | ChairPlay's process ID |
 | 72 | char[64] | `textureName` | The current texture's name, UTF-8, zero-ended; empty when there is none |
 | 136 | u32 | `screen` | What the car's display shows: 0 CarPlay (the texture), 1 the car's own screen; see [The car's own screen](#the-cars-own-screen) |
-| 140 | — | reserved | Zero, up to byte 256 |
+| 140 | u32 | `uiPort` | The port of ChairPlay's settings page and its local HTTP API, at `http://127.0.0.1:<uiPort>/` |
+| 144 | char[16] | `appVersion` | ChairPlay's version, such as `1.1.3`, UTF-8, zero-ended; empty for a development build |
+| 160 | — | reserved | Zero, up to byte 256 |
+
+`uiPort` and `appVersion` are for an app that starts or works ChairPlay, such as a launcher; read them in a record whose `size` is 160 or more. The API takes requests that name `127.0.0.1:<uiPort>` or `localhost:<uiPort>` in their `Host` header, and a POST only with `Content-Type: application/json`.
 
 ### States
 
 | `state` | Meaning | Show |
 |---:|---|---|
-| 0 | No picture: sharing was turned off, or it failed | Your own picture |
+| 0 | No picture: sharing is off, or it failed | Your own picture |
 | 1 | Waiting: sharing is on, but no CarPlay session is running, or the GPU device is being made again | Your own picture |
 | 2 | A picture is flowing | The texture |
 | 3 | Still: the session runs, but no new picture came for over a second | The texture |
 
 State 3 is not a failure. CarPlay sends no pictures while its screen does not change, and the texture keeps the last one. When sharing is turned on while the screen is still, ChairPlay asks the iPhone for a new picture, so the texture fills at once.
 
-When ChairPlay turns sharing off or closes normally, it writes `state = 0` and an empty `textureName`. If ChairPlay ends without that (it crashed or was killed), the file still says what it said last: treat a `producerPid` that is no longer a running process as state 0.
+When ChairPlay turns sharing off or closes normally, it writes `state = 0` and an empty `textureName`, and releases the texture; the file stays while ChairPlay runs. If ChairPlay ends without that (it crashed or was killed), the file still says what it said last: treat a `producerPid` that is no longer a running process as state 0, and as ChairPlay not running.
 
 ### The car's own screen
 
@@ -323,7 +327,7 @@ These snippets use [`bridge_layout.h`](../native/bridge/bridge_layout.h), whose 
 struct cpb_status {
     uint32_t magic;             /*   0 */
     uint16_t version;           /*   4 */
-    uint16_t size;              /*   6: 140 */
+    uint16_t size;              /*   6: 160 */
     uint32_t seq;               /*   8: odd while being written */
     uint32_t state;             /*  12: 0 none, 1 waiting, 2 flowing, 3 frozen */
     uint32_t generation;        /*  16 */
@@ -341,7 +345,9 @@ struct cpb_status {
     uint32_t producer_pid;      /*  68 */
     char texture_name[64];      /*  72 */
     uint32_t screen;            /* 136: whose screen to show: 0 CarPlay's (the texture), 1 the car's own */
-    uint8_t reserved[116];      /* 140 */
+    uint32_t ui_port;           /* 140: ChairPlay's local API, http://127.0.0.1:<ui_port>/api/ */
+    char app_version[16];       /* 144: ChairPlay's version, X.Y.Z; empty for a development build */
+    uint8_t reserved[96];       /* 160 */
 };
 
 struct cpb_telemetry {
@@ -391,7 +397,7 @@ static const volatile cpb_status* status_view;
 static bool open_status() {
     if (status_view) return true;
     HANDLE mapping = OpenFileMappingW(FILE_MAP_READ, FALSE, L"Local\\ChairPlay.Bridge.v1");
-    if (!mapping) return false;  // ChairPlay is not running, or sharing is off: try again later
+    if (!mapping) return false;  // ChairPlay is not running: try again later
     status_view = (const volatile cpb_status*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, CPB_FILE_SIZE);
     CloseHandle(mapping);  // the view keeps the file
     return status_view != nullptr;
