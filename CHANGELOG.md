@@ -2,7 +2,7 @@
 
 New features and fixed bugs in ChairPlay.
 
-## Unreleased
+## 1.1.4 - 2026-11-26
 
 ### Added
 
@@ -12,6 +12,8 @@ New features and fixed bugs in ChairPlay.
 
 - The controls window has no taskbar button of its own: it belongs to CarPlay's window, stays above it, and hides while it is minimized.
 - Without WebView2, the car button on CarPlay's home screen no longer minimizes ChairPlay's window.
+
+[Release notes](docs/RELEASE-NOTES-1.1.4.md) · [Changes since v1.1.3](https://github.com/NumberOneBot/ChairPlay/compare/v1.1.3...v1.1.4)
 
 ## 1.1.3 - 2026-11-25
 
