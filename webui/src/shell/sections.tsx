@@ -31,6 +31,7 @@ const APPLICATION_KEYS = new Set([
   'ui.network',
   'window.always.on.top',
   'window.front.on.call',
+  'window.tray',
   'altscreen.always.on.top',
 ])
 

@@ -34,7 +34,12 @@ internal class WindowsWindowHooks : WindowHooks {
         User32.INSTANCE.FlashWindowEx(info)
     }
 
+    override fun own(window: Long, owner: Long) {
+        User32.INSTANCE.SetWindowLongPtr(HWND(Pointer(nativeHandle(window))), GWLP_HWNDPARENT, Pointer(nativeHandle(owner)))
+    }
+
     private companion object {
+        const val GWLP_HWNDPARENT = -8
         const val FLASHW_STOP = 0
         const val FLASHW_TRAY = 2
         const val FLASHW_TIMERNOFG = 12

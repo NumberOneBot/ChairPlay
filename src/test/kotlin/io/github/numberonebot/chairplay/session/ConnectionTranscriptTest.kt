@@ -41,10 +41,7 @@ class ConnectionTranscriptTest : WirelessBootstrapFixture() {
     private val ui = object : UiSessions {
         override fun sessionActive() = model.sessionActive()
         override fun sessionEnded() = model.sessionEnded()
-        override fun carButton(): Boolean {
-            model.carButton()
-            return true
-        }
+        override fun carButton() = model.carButton()
     }
     private val touchSender = Executors.newSingleThreadExecutor()
     private val watch = Executors.newSingleThreadScheduledExecutor()

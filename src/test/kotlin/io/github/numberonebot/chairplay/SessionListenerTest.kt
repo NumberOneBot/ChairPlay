@@ -60,10 +60,9 @@ class SessionListenerTest {
             model.sessionEnded()
         }
 
-        override fun carButton(): Boolean {
+        override fun carButton() {
             calls += "car button"
             model.carButton()
-            return true
         }
     }
     private val touchSender = Executors.newSingleThreadExecutor()

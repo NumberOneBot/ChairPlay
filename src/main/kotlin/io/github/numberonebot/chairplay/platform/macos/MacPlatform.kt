@@ -80,6 +80,8 @@ private object MacWindows : WindowHooks {
     override fun mediaKeys(window: Long, key: (key: Int, action: Int, mods: Int) -> Unit) = notReady()
 
     override fun flash(window: Long, on: Boolean) = notReady()
+
+    override fun own(window: Long, owner: Long) = notReady()
 }
 
 private object MacBridge : GameBridge {

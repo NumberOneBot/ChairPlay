@@ -38,16 +38,9 @@ internal class SessionListener(
         }
     }
 
-    /**
-     * The phone asked for the car's own screen (the car button): the settings screen covers the phone's. With the page
-     * in a browser instead, the window gives the screen back to Windows, as before.
-     */
+    /** The phone asked for the car's own screen (the car button): the settings screen covers the phone's. */
     fun carButton() {
-        if (ui.carButton()) {
-            log("CarPlay asked for ChairPlay's screen (the car button, or Back on its home screen): showing the settings")
-        } else {
-            log("CarPlay asked for the Windows screen; minimizing the window")
-            window.minimize()
-        }
+        log("CarPlay asked for ChairPlay's screen (the car button, or Back on its home screen): showing the settings")
+        ui.carButton()
     }
 }

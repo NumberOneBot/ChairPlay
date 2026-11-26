@@ -27,6 +27,9 @@ internal class AppWindows(dir: Path, config: DesktopConfig, mainTitle: String) {
     val controls: VideoWindow
     val altscreen: VideoWindow
 
+    /** The notification area's icon (window.tray); the controls window, owned by CarPlay's, goes and comes with it. */
+    private val tray: AppTray
+
     init {
         val placements = WindowPlacementStore(dir)
         main = VideoWindow(
@@ -52,6 +55,7 @@ internal class AppWindows(dir: Path, config: DesktopConfig, mainTitle: String) {
                 it.onPlacement = { placement ->
                     runCatching { placements.save(placement, CONTROLS_SIZE) }.onFailure { error -> log("controls window place not saved: $error") }
                 }
+                it.commands.owner = main.commands
             }
         }
         // The altscreen (altscreen.enabled) gets a window of its own beside the main one; it takes no clicks, so a press
@@ -74,9 +78,11 @@ internal class AppWindows(dir: Path, config: DesktopConfig, mainTitle: String) {
                 }
             }
         }
+        tray = AppTray(main, altscreen).also { it.enabled(config.windowOnTop.tray) }
     }
 
     fun saved(changes: Map<String, String>) {
+        changes["window.tray"]?.let { tray.enabled(it == "true") }
         changes["window.always.on.top"]?.let { main.commands.setAlwaysOnTop(it == "true") }
         changes["altscreen.always.on.top"]?.let { altscreen.commands.setAlwaysOnTop(it == "true") }
     }

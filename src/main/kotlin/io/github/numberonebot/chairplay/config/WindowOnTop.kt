@@ -9,4 +9,7 @@ class WindowOnTop(settings: Properties) {
 
     /** window.front.on.call: an incoming call shows the CarPlay window and brings it to the front. */
     val frontOnCall = settings.booleanSetting("window.front.on.call", false)
+
+    /** window.tray: ChairPlay's icon in the notification area, where minimized windows go (AppTray). */
+    val tray = settings.booleanSetting("window.tray", false)
 }

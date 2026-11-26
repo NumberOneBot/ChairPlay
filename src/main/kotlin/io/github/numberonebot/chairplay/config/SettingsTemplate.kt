@@ -131,6 +131,12 @@ internal val SETTINGS_TEMPLATE = listOf(
         "window.front.on.call" to "false",
     ),
     SettingBlock(
+        "'true' keeps ChairPlay's icon in the notification area: minimizing the CarPlay window takes it there, off\n" +
+            "the taskbar, with the other windows. A click on the icon shows them or hides them again.\n" +
+            "Changes apply immediately.",
+        "window.tray" to "false",
+    ),
+    SettingBlock(
         "'true' resizes the windows only with the picture's shape (a maximized one still fills the screen),\n" +
             "'false' lets them take any shape.",
         "window.keep.aspect" to "true",

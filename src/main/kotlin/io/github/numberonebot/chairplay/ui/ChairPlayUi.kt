@@ -39,8 +39,8 @@ interface UiSessions {
 
     fun sessionEnded()
 
-    /** The settings screen covers the phone's; false when the page is not in the window but in a browser. */
-    fun carButton(): Boolean
+    /** The settings screen covers the phone's. */
+    fun carButton()
 }
 
 /**
@@ -263,14 +263,8 @@ class ChairPlayUi(
 
     override fun sessionEnded() = model.sessionEnded()
 
-    /**
-     * The car button on the CarPlay home screen: the settings screen covers CarPlay. Returns false when the page is
-     * not in the window, where the browser shows the settings instead.
-     */
-    override fun carButton(): Boolean {
-        model.carButton()
-        return controller.embedded
-    }
+    /** The car button on the CarPlay home screen: the settings screen covers CarPlay, or shows in the browser. */
+    override fun carButton() = model.carButton()
 
     override fun close() {
         timeSaver.cancel()

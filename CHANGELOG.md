@@ -2,6 +2,17 @@
 
 New features and fixed bugs in ChairPlay.
 
+## Unreleased
+
+### Added
+
+- **Minimize to the notification area** on the Application page: minimizing CarPlay's window, or starting ChairPlay minimized, takes it to ChairPlay's icon there, off the taskbar, with the AltScreen and the controls. A click on the icon shows them or hides them again.
+
+### Changed
+
+- The controls window has no taskbar button of its own: it belongs to CarPlay's window, stays above it, and hides while it is minimized.
+- Without WebView2, the car button on CarPlay's home screen no longer minimizes ChairPlay's window.
+
 ## 1.1.3 - 2026-11-25
 
 ### Added

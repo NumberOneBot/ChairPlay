@@ -6,7 +6,7 @@ import { appState, control } from '../testing'
 
 afterEach(cleanup)
 
-const MOVED = ['window.always.on.top', 'window.front.on.call', 'altscreen.always.on.top']
+const MOVED = ['window.always.on.top', 'window.front.on.call', 'window.tray', 'altscreen.always.on.top']
 
 /** The shell on the page of tab [tab], once the settings are in. */
 async function page(tab: string, backend: FakeBackend) {
@@ -21,6 +21,7 @@ describe('Windows', () => {
     ['app-carplay-on-top', 'window.always.on.top'],
     ['app-carplay-front-on-call', 'window.front.on.call'],
     ['app-altscreen-on-top', 'altscreen.always.on.top'],
+    ['app-tray', 'window.tray'],
   ])('%s saves only its own window preference without reconnecting', async (testId, key) => {
     const backend = new FakeBackend()
     await page('application', backend)

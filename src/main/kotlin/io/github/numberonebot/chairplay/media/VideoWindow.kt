@@ -66,7 +66,6 @@ class VideoWindow(
     private val minRequest = AtomicReference<WindowSize?>()
     private val latest = AtomicReference<DecodedFrame?>()
     private val closing = AtomicBoolean()
-    private val minimizing = AtomicBoolean()
     val commands = WindowCommands(::wake, hooks)
     fun toggleFullscreen() = commands.toggleFullscreen()
     private val screenshotRequest = AtomicReference<((BufferedImage) -> Unit)?>()
@@ -225,12 +224,6 @@ class VideoWindow(
 
     fun show(frame: DecodedFrame) {
         latest.getAndSet(frame)?.release()
-        wake()
-    }
-
-    /** Safe from any thread: iconifies the window and leaves the session running, like a car's Home button. */
-    fun minimize() {
-        minimizing.set(true)
         wake()
     }
 
@@ -409,7 +402,6 @@ class VideoWindow(
         GL.setCapabilities(capabilities)
         val gl = checkNotNull(gl)
         tracker?.let { commands.apply(window, it, uiShown = child?.covers == true) }
-        if (minimizing.getAndSet(false)) glfwIconifyWindow(window)
         shownRequest.getAndSet(null)?.let { applyShown(window, it) }
         streamRequest.getAndSet(null)?.let { size ->
             minRequest.getAndSet(null)?.let { minSize = it }

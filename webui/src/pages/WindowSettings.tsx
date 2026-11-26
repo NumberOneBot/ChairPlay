@@ -26,6 +26,9 @@ export function WindowSettings({ settings }: { settings: Settings }) {
       <Row title="Show the CarPlay window and bring it to the front when a call comes in. Its taskbar button flashes on a call either way.">
         {toggle('window.front.on.call', 'Bring to front on a call', 'app-carplay-front-on-call')}
       </Row>
+      <Row title="Keep ChairPlay's icon in the notification area. Minimizing the CarPlay window takes it there, off the taskbar, with the other windows. Click the icon to show or hide them.">
+        {toggle('window.tray', 'Minimize to the notification area', 'app-tray')}
+      </Row>
     </>
   )
 }

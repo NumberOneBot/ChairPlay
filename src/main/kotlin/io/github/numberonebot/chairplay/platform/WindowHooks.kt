@@ -32,4 +32,7 @@ interface WindowHooks {
 
     /** Flashes the window's taskbar button until the window comes to the front ([on]), or stops it. */
     fun flash(window: Long, on: Boolean)
+
+    /** Makes [owner] the window's owner: no taskbar button of its own, above [owner], minimized with it. */
+    fun own(window: Long, owner: Long)
 }
