@@ -227,7 +227,7 @@ private fun runCarPlay(windowsOpen: () -> Unit) {
     // The iPhone's now playing, while a session runs: the controls window's page shows pause or play by it. An incoming
     // call flashes the CarPlay window's taskbar button, and brings the window forward with window.front.on.call.
     appControls.playing = { active.get() != null && carPlay.bus.snapshot().nowPlaying?.playing == true }
-    watchPhoneData(carPlay.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowOnTop.frontOnCall }
+    watchPhoneData(carPlay.bus, appControls.playing, { controlsChanged.get()() }, window) { config.now().windowBehavior.frontOnCall }
     altView.paint(carPlay.bus, driving, config.accent)
     val connection = carPlay.connection
     restartBootstrap.set(connection::restart)

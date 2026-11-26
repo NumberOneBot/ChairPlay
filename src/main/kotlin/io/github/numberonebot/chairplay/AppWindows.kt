@@ -37,7 +37,7 @@ internal class AppWindows(dir: Path, config: DesktopConfig, mainTitle: String) {
             aspect = WindowSize(config.displayWidth, config.displayHeight).takeIf { config.keepAspect },
             minSize = MAIN_WINDOW_MIN_SIZE,
             stream = WindowSize(config.displayWidth, config.displayHeight),
-        ).also { it.commands.setAlwaysOnTop(config.windowOnTop.main) }
+        ).also { it.commands.setAlwaysOnTop(config.windowBehavior.mainOnTop) }
         main.onPlacement = { placement ->
             runCatching { placements.save(placement, config.window) }.onFailure { log("window place not saved: $it") }
         }
@@ -71,14 +71,14 @@ internal class AppWindows(dir: Path, config: DesktopConfig, mainTitle: String) {
                 minSize = WindowSize(ALTSCREEN_MIN_WIDTH, 1).fittedTo(size), minScales = false,
                 stream = size, dragAnywhere = true,
             ).also {
-                it.commands.setAlwaysOnTop(config.windowOnTop.altscreen)
+                it.commands.setAlwaysOnTop(config.windowBehavior.altscreenOnTop)
                 it.onPlacement = { placement ->
                     val now = it.stream ?: size
                     runCatching { altPlacements.save(placement, now) }.onFailure { error -> log("altscreen place not saved: $error") }
                 }
             }
         }
-        tray = AppTray(main, altscreen).also { it.enabled(config.windowOnTop.tray) }
+        tray = AppTray(main, altscreen).also { it.enabled(config.windowBehavior.tray) }
     }
 
     fun saved(changes: Map<String, String>) {
