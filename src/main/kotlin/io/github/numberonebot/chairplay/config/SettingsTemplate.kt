@@ -131,7 +131,7 @@ internal val SETTINGS_TEMPLATE = listOf(
         "window.front.on.call" to "false",
     ),
     SettingBlock(
-        "'true' keeps ChairPlay's icon in the notification area: minimizing the CarPlay window takes it there, off\n" +
+        "'true' keeps ChairPlay's icon in the system tray: minimizing the CarPlay window takes it there, off\n" +
             "the taskbar, with the other windows. A click on the icon shows them or hides them again.\n" +
             "Changes apply immediately.",
         "window.tray" to "false",

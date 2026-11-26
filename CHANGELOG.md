@@ -6,7 +6,7 @@ New features and fixed bugs in ChairPlay.
 
 ### Added
 
-- **Minimize to the notification area** on the Application page: minimizing CarPlay's window, or starting ChairPlay minimized, takes it to ChairPlay's icon there, off the taskbar, with the AltScreen and the controls. A click on the icon shows them or hides them again.
+- **Minimize to the system tray** on the Application page: minimizing CarPlay's window, or starting ChairPlay minimized, takes it to ChairPlay's icon there, off the taskbar, with the AltScreen and the controls. A click on the icon shows them or hides them again.
 
 ### Changed
 

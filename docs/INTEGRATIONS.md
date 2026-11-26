@@ -529,7 +529,7 @@ Leave out a flag for a value the game does not have; ChairPlay then ignores that
 
 ## Starting ChairPlay minimized
 
-ChairPlay's main window first shows the way its starter asks in the process' start-up information. An app that starts `ChairPlay.exe` minimized passes `STARTF_USESHOWWINDOW` with `SW_SHOWMINNOACTIVE` in `STARTUPINFOW` to `CreateProcessW` (or `SW_SHOWMINNOACTIVE` as `nShowCmd` to `ShellExecuteW`). From cmd, `start /min "" ChairPlay.exe` does the same, and so does **Run: Minimized** in a shortcut's properties. Pass no arguments: they replace ChairPlay's own. The AltScreen shows as usual, and the controls window, which belongs to the main one, waits hidden until it is restored. With **Minimize to the notification area** on (`window.tray`), ChairPlay starts in the notification area, off the taskbar, the AltScreen with it. A main window last closed maximized opens maximized.
+ChairPlay's main window first shows the way its starter asks in the process' start-up information. An app that starts `ChairPlay.exe` minimized passes `STARTF_USESHOWWINDOW` with `SW_SHOWMINNOACTIVE` in `STARTUPINFOW` to `CreateProcessW` (or `SW_SHOWMINNOACTIVE` as `nShowCmd` to `ShellExecuteW`). From cmd, `start /min "" ChairPlay.exe` does the same, and so does **Run: Minimized** in a shortcut's properties. Pass no arguments: they replace ChairPlay's own. The AltScreen shows as usual, and the controls window, which belongs to the main one, waits hidden until it is restored. With **Minimize to the system tray** on (`window.tray`), ChairPlay starts in the system tray, off the taskbar, the AltScreen with it. A main window last closed maximized opens maximized.
 
 ## Compatibility
 

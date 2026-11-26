@@ -31,7 +31,7 @@ class WindowCommands internal constructor(private val wake: () -> Unit, private 
      */
     fun flash(on: Boolean) { flashing.set(on); wake() }
 
-    /** Hides the window, minimized and off the taskbar, for the notification area ([on]), or brings it back. */
+    /** Hides the window, minimized and off the taskbar, for the system tray ([on]), or brings it back. */
     fun tray(on: Boolean) { tray.set(on); wake() }
 
     /** Apply a saved preference before the newly created window is shown. */

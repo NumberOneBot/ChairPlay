@@ -1,11 +1,11 @@
 package io.github.numberonebot.chairplay.media
 
 /**
- * Which of the app's windows wait in the notification area while [enabled] (window.tray), as the owner set it
+ * Which of the app's windows wait in the system tray while [enabled] (window.tray), as the owner set it
  * (2026-11-26): minimizing [main] takes it there with each of [others] [shown] then (not hidden by its close button);
- * another minimizes to the taskbar as usual. A click on the icon brings back all that wait there, or takes the windows
- * there when none does. [move] hides a window into the area (true) or brings it back (false). The windows Windows has [main]
- * own (the controls) go and come back with it on their own.
+ * the others minimize to the taskbar as usual, so only [main] reports [minimized]. A click on the icon brings back all
+ * that wait there, or takes the windows there when none does. [move] hides a window into the tray (true) or brings it
+ * back (false). The windows Windows has [main] own (the controls) go and come back with it on their own.
  */
 internal class TrayWindows<W>(
     private val main: W,
@@ -23,10 +23,10 @@ internal class TrayWindows<W>(
             if (!value) bringBack()
         }
 
-    /** The window was minimized: by its button, as it started, or by [move] hiding it, heard once more. */
+    /** [main] was minimized: by its button, as it started, or by [move] hiding it, heard once more. */
     @Synchronized
-    fun minimized(window: W) {
-        if (!enabled || window != main || main in waiting) return
+    fun minimized() {
+        if (!enabled || main in waiting) return
         for (each in listOf(main) + others.filter { shown(it) && it !in waiting }) {
             waiting += each
             move(each, true)
@@ -42,7 +42,7 @@ internal class TrayWindows<W>(
     @Synchronized
     fun clicked() {
         if (!enabled) return
-        if (waiting.isEmpty()) minimized(main) else bringBack()
+        if (waiting.isEmpty()) minimized() else bringBack()
     }
 
     // The main window last: the window brought back last takes the focus.

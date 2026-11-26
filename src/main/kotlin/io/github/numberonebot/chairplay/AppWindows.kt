@@ -27,7 +27,7 @@ internal class AppWindows(dir: Path, config: DesktopConfig, mainTitle: String) {
     val controls: VideoWindow
     val altscreen: VideoWindow
 
-    /** The notification area's icon (window.tray); the controls window, owned by CarPlay's, goes and comes with it. */
+    /** The system tray's icon (window.tray); the controls window, owned by CarPlay's, goes and comes with it. */
     private val tray: AppTray
 
     init {

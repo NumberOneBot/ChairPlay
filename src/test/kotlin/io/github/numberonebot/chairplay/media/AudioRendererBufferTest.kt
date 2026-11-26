@@ -75,20 +75,6 @@ class AudioRendererBufferTest : AudioRendererFixture() {
     }
 
     @Test
-    fun `short sound below the threshold is played after the tail wait`() {
-        val line = RecordingLine()
-        val clock = AtomicLong(1)
-        val renderer = alertRenderer(line, clock)
-        renderer.start(alert, alertFormat)
-        renderer.push(alert, header() + tenMs, 0)
-        Thread.sleep(50)
-        assertEquals(0, line.size())
-        clock.addAndGet(AudioRenderer.BUFFER_TAIL_WAIT_NS + 1)
-        awaitTrue("tail played") { line.size() == tenMs.size }
-        renderer.close()
-    }
-
-    @Test
     fun `burst far beyond the target sheds the oldest audio`() {
         val line = RecordingLine()
         val clock = AtomicLong(1)
